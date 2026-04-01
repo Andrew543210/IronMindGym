@@ -1,0 +1,24 @@
+name: ironmind
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ironmind
+      POSTGRES_USER: ironmind
+      # The fallback is for a database reachable only from this computer.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ironmind-local}
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      # PostgreSQL 18 images keep their data under /var/lib/postgresql/18.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ironmind -d ironmind']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  db-data:
