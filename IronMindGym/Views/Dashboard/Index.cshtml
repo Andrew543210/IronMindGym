@@ -1,0 +1,41 @@
+﻿@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2>Вітаю, @Model.Username</h2>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>Аватар</h5>
+                <p class="mb-1">Статус: <strong>@Model.AvatarName</strong></p>
+                <p class="mb-0">Коефіцієнт сили: @Model.StrengthCoefficient</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>План тижня</h5>
+                <p>Заплановано: @Model.PlannedWorkoutsPerWeek</p>
+                <p>Виконано: @Model.CompletedThisWeek</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 d-flex align-items-center">
+        <a asp-controller="WorkoutLogger" asp-action="Index" class="btn btn-danger w-100">Швидкий старт тренування</a>
+    </div>
+</div>
+
+<h4>Наукова стрічка</h4>
+@foreach (var item in Model.FeedItems)
+{
+    <div class="border rounded p-3 mb-2">
+        <div class="small text-muted">@item.PublishedAt.ToLocalTime().ToString("yyyy-MM-dd")</div>
+        <strong>@item.ResearchItem.Title</strong>
+        <div>@item.ResearchItem.ThesisText</div>
+        <div class="small">Джерело: @item.ResearchItem.Source</div>
+    </div>
+}
+

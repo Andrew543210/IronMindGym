@@ -1,0 +1,48 @@
+﻿@model WorkoutLoggerViewModel
+@{
+    ViewData["Title"] = "Workout Logger";
+}
+
+<h2>Активне тренування</h2>
+<form method="post" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <label asp-for="SessionName" class="form-label">Назва сесії</label>
+        <input asp-for="SessionName" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label asp-for="DurationMinutes" class="form-label">Тривалість (хв)</label>
+        <input asp-for="DurationMinutes" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label asp-for="ExerciseId" class="form-label">Вправа</label>
+        <select asp-for="ExerciseId" asp-items="ViewBag.Exercises" class="form-select"></select>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="SetTypeId" class="form-label">Тип підходу</label>
+        <select asp-for="SetTypeId" asp-items="ViewBag.SetTypes" class="form-select"></select>
+    </div>
+    <div class="col-md-2">
+        <label asp-for="SetsCount" class="form-label">Підходів</label>
+        <input asp-for="SetsCount" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label asp-for="WeightKg" class="form-label">Вага</label>
+        <input asp-for="WeightKg" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label asp-for="Reps" class="form-label">Повторення</label>
+        <input asp-for="Reps" class="form-control" />
+    </div>
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Додати підходи і зберегти сесію</button>
+    </div>
+</form>
+
+<h4>Останні 5 тренувань</h4>
+<ul class="list-group">
+    @foreach (var s in Model.RecentSessions)
+    {
+        <li class="list-group-item">@s.SessionDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm") - @s.Name (@s.DurationMinutes хв)</li>
+    }
+</ul>
+

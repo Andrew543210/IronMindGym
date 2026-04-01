@@ -1,0 +1,57 @@
+﻿using IronMindGym.Data;
+using IronMindGym.Services;
+using IronMindGym.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace IronMindGym.Controllers;
+
+public class DashboardController(IronMindDbContext db, IAvatarService avatarService) : Controller
+{
+    private const int DemoUserId = 1;
+
+    public IActionResult Index()
+    {
+        var user = db.Users
+            .Include(u => u.Benchmarks)
+            .First(u => u.Id == DemoUserId);
+
+        var latestAnthropometry = db.AnthropometryLogs
+            .Where(a => a.UserId == DemoUserId)
+            .OrderByDescending(a => a.RecordedAt)
+            .FirstOrDefault();
+
+        var activePlan = db.WorkoutPlans
+            .FirstOrDefault(p => p.UserId == DemoUserId && p.IsActive);
+
+        var startOfWeek = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.Date.DayOfWeek + (int)DayOfWeek.Monday);
+        if (startOfWeek > DateTime.UtcNow.Date)
+        {
+            startOfWeek = startOfWeek.AddDays(-7);
+        }
+
+        var completedThisWeek = db.WorkoutSessions.Count(s => s.UserId == DemoUserId && s.SessionDate >= startOfWeek);
+
+        var feed = db.ActivityFeeds
+            .Include(f => f.ResearchItem)
+            .OrderByDescending(f => f.PublishedAt)
+            .Take(10)
+            .ToList();
+
+        var strengthCoefficient = avatarService.CalculateStrengthCoefficient(user.Benchmarks, latestAnthropometry);
+        var avatar = avatarService.ResolveAvatar(db.Avatars.AsNoTracking().ToList(), user.Benchmarks, latestAnthropometry);
+
+        var vm = new DashboardViewModel
+        {
+            Username = user.Username,
+            AvatarName = avatar.Name,
+            StrengthCoefficient = strengthCoefficient,
+            PlannedWorkoutsPerWeek = activePlan?.WorkoutsPerWeek ?? 0,
+            CompletedThisWeek = completedThisWeek,
+            FeedItems = feed
+        };
+
+        return View(vm);
+    }
+}
+
