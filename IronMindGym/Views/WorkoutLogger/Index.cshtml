@@ -1,48 +1,352 @@
 ﻿@model WorkoutLoggerViewModel
+@using System.Text.Json
 @{
     ViewData["Title"] = "Workout Logger";
+    var catalogJson = JsonSerializer.Serialize(Model.ExerciseCatalog);
 }
 
 <h2>Активне тренування</h2>
-<form method="post" class="row g-3 mb-4">
-    <div class="col-md-4">
-        <label asp-for="SessionName" class="form-label">Назва сесії</label>
-        <input asp-for="SessionName" class="form-control" />
-    </div>
-    <div class="col-md-2">
-        <label asp-for="DurationMinutes" class="form-label">Тривалість (хв)</label>
-        <input asp-for="DurationMinutes" class="form-control" />
-    </div>
-    <div class="col-md-3">
-        <label asp-for="ExerciseId" class="form-label">Вправа</label>
-        <select asp-for="ExerciseId" asp-items="ViewBag.Exercises" class="form-select"></select>
-    </div>
-    <div class="col-md-3">
-        <label asp-for="SetTypeId" class="form-label">Тип підходу</label>
-        <select asp-for="SetTypeId" asp-items="ViewBag.SetTypes" class="form-select"></select>
-    </div>
-    <div class="col-md-2">
-        <label asp-for="SetsCount" class="form-label">Підходів</label>
-        <input asp-for="SetsCount" class="form-control" />
-    </div>
-    <div class="col-md-2">
-        <label asp-for="WeightKg" class="form-label">Вага</label>
-        <input asp-for="WeightKg" class="form-control" />
-    </div>
-    <div class="col-md-2">
-        <label asp-for="Reps" class="form-label">Повторення</label>
-        <input asp-for="Reps" class="form-control" />
-    </div>
+<form method="post" asp-action="Finish" class="row g-3 mb-4" id="finishWorkoutForm">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
     <div class="col-12">
-        <button type="submit" class="btn btn-primary">Додати підходи і зберегти сесію</button>
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">Шапка тренування</div>
+            <div class="card-body row g-3">
+                <div class="col-md-3">
+                    <label asp-for="SplitTypeId" class="form-label">Тип спліта</label>
+                    <select asp-for="SplitTypeId" asp-items="ViewBag.SplitTypes" class="form-select"></select>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="SplitDayLabel" class="form-label">День спліта</label>
+                    <input asp-for="SplitDayLabel" class="form-control" placeholder="Напр. Ноги" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="SessionName" class="form-label">Назва тренування</label>
+                    <input asp-for="SessionName" class="form-control" placeholder="Введіть назву вручну" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="DurationMinutes" class="form-label">Тривалість (хв)</label>
+                    <input asp-for="DurationMinutes" class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card border-secondary">
+            <div class="card-header">Додавання вправ і підходів</div>
+            <div class="card-body row g-3">
+                <div class="col-md-4">
+                    <label asp-for="SelectedMuscleGroupId" class="form-label">1) Група м'язів</label>
+                    <select asp-for="SelectedMuscleGroupId" asp-items="ViewBag.MuscleGroups" class="form-select" id="muscleGroupFilter">
+                        <option value="">Оберіть групу</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="SelectedMuscleSubGroupId" class="form-label">2) Підгрупа м'язів (необов'язково)</label>
+                    <select asp-for="SelectedMuscleSubGroupId" class="form-select" id="muscleSubGroupFilter" disabled>
+                        <option value="">Спочатку оберіть групу</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ExerciseId" class="form-label">3) Вправа</label>
+                    <select asp-for="ExerciseId" class="form-select" id="exerciseSelect" disabled>
+                        <option value="">Спочатку оберіть групу</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="SetTypeId" class="form-label">Тип підходу</label>
+                    <select asp-for="SetTypeId" asp-items="ViewBag.SetTypes" class="form-select" id="setTypeSelect"></select>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="WeightKg" class="form-label">Вага (кг)</label>
+                    <input asp-for="WeightKg" class="form-control" id="weightInput" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Reps" class="form-label">Повторення</label>
+                    <input asp-for="Reps" class="form-control" id="repsInput" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="RestSeconds" class="form-label">Перерва (сек)</label>
+                    <input asp-for="RestSeconds" class="form-control" id="restInput" />
+                </div>
+
+                <div class="col-12">
+                    <button type="button" class="btn btn-primary" id="addSetBtn">Додати підхід</button>
+                </div>
+
+                <div class="col-12">
+                    <div class="alert alert-secondary d-flex align-items-center justify-content-between" id="restTimerPanel">
+                        <span>Таймер відпочинку: <strong id="restTimerValue">02:00</strong></span>
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="startTimerBtn">Старт таймера</button>
+                            <button type="button" class="btn btn-outline-warning btn-sm" id="skipTimerBtn">Пропустити перерву</button>
+                        </div>
+                    </div>
+                    <div class="text-success fw-bold" id="timerReadyText"></div>
+                </div>
+
+                <div class="col-12">
+                    <h5>Додані підходи в поточній сесії</h5>
+                    <table class="table table-sm" id="draftSetsTable">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Вправа</th>
+                            <th>Тип</th>
+                            <th>Вага</th>
+                            <th>Повторення</th>
+                            <th>Перерва</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <label asp-for="ReviewRating" class="form-label">Оцінка</label>
+        <input asp-for="ReviewRating" class="form-control" min="1" max="5" />
+    </div>
+    <div class="col-md-10">
+        <label asp-for="ReviewComment" class="form-label">Відгук</label>
+        <input asp-for="ReviewComment" class="form-control" placeholder="Як пройшло тренування?" />
+    </div>
+
+    <input asp-for="DraftPayloadJson" type="hidden" id="draftPayloadJson" />
+    <input asp-for="StartedAtUtc" type="hidden" />
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-success" id="finishWorkoutBtn">Завершити тренування</button>
     </div>
 </form>
+
+@if (Model.LastSummary != null)
+{
+    <div class="card mb-4 border-success">
+        <div class="card-body">
+            <h5>@Model.LastSummary.SessionName</h5>
+            <p class="mb-1">Середній відпочинок: <strong>@Model.LastSummary.AverageRestSeconds сек</strong></p>
+            <p class="mb-3">Ще тренувань цього тижня: <strong>@Model.LastSummary.RemainingWorkoutsThisWeek</strong></p>
+            <table class="table table-sm">
+                <thead><tr><th>Вправа</th><th>Сер. навантаження</th><th>Пікове</th><th>% до PR</th><th>Статус</th></tr></thead>
+                <tbody>
+                @foreach (var stat in Model.LastSummary.ExerciseStats)
+                {
+                    <tr>
+                        <td>@stat.ExerciseName</td>
+                        <td>@stat.AverageLoad</td>
+                        <td>@stat.PeakLoad</td>
+                        <td>@(stat.PercentToPersonalRecord.HasValue ? $"{stat.PercentToPersonalRecord}%" : "-" )</td>
+                        <td>@(stat.IsNewRecord ? "Новий рекорд" : "Без нового рекорду")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <a class="btn btn-outline-success btn-sm" asp-action="Details" asp-route-id="@Model.LastSummary.WorkoutSessionId">Деталі</a>
+        </div>
+    </div>
+}
 
 <h4>Останні 5 тренувань</h4>
 <ul class="list-group">
     @foreach (var s in Model.RecentSessions)
     {
-        <li class="list-group-item">@s.SessionDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm") - @s.Name (@s.DurationMinutes хв)</li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>@s.SessionDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm") - @s.Name (@s.DurationMinutes хв)</span>
+            <a class="btn btn-outline-primary btn-sm" asp-action="Details" asp-route-id="@s.Id">Деталі</a>
+        </li>
     }
 </ul>
+
+<script>
+    const catalog = @Html.Raw(catalogJson);
+    const draftSets = [];
+    let timer = null;
+    let timerLeft = 120;
+
+    const groupFilter = document.getElementById("muscleGroupFilter");
+    const subGroupFilter = document.getElementById("muscleSubGroupFilter");
+    const exerciseSelect = document.getElementById("exerciseSelect");
+
+    function getUniqueSubGroups(groupId) {
+        const map = new Map();
+        catalog
+            .filter(x => x.MuscleGroupId === groupId)
+            .forEach(x => {
+                if (!map.has(x.MuscleSubGroupId)) {
+                    map.set(x.MuscleSubGroupId, x.MuscleSubGroupName);
+                }
+            });
+
+        return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+    }
+
+    function renderSubGroupOptions() {
+        const groupId = parseInt(groupFilter.value || "0", 10);
+        subGroupFilter.innerHTML = "";
+        exerciseSelect.innerHTML = "";
+
+        if (!groupId) {
+            subGroupFilter.disabled = true;
+            exerciseSelect.disabled = true;
+            subGroupFilter.innerHTML = '<option value="">Спочатку оберіть групу</option>';
+            exerciseSelect.innerHTML = '<option value="">Спочатку оберіть групу</option>';
+            return;
+        }
+
+        const subGroups = getUniqueSubGroups(groupId);
+        subGroupFilter.disabled = false;
+        subGroupFilter.innerHTML = '<option value="">Усі підгрупи</option>';
+        subGroups.forEach(sg => {
+            const option = document.createElement("option");
+            option.value = sg.id;
+            option.textContent = sg.name;
+            subGroupFilter.appendChild(option);
+        });
+    }
+
+    function renderExerciseOptions() {
+        const groupId = parseInt(groupFilter.value || "0", 10);
+        const subGroupId = parseInt(subGroupFilter.value || "0", 10);
+        exerciseSelect.innerHTML = "";
+
+        if (!groupId) {
+            exerciseSelect.disabled = true;
+            exerciseSelect.innerHTML = '<option value="">Спочатку оберіть групу</option>';
+            return;
+        }
+
+        const filtered = catalog.filter(x =>
+            x.MuscleGroupId === groupId &&
+            (!subGroupId || x.MuscleSubGroupId === subGroupId));
+
+        exerciseSelect.disabled = filtered.length === 0;
+
+        if (filtered.length === 0) {
+            exerciseSelect.innerHTML = '<option value="">Немає вправ для цієї групи</option>';
+            return;
+        }
+
+        filtered.forEach(x => {
+            const option = document.createElement("option");
+            option.value = x.ExerciseId;
+            option.textContent = x.ExerciseName;
+            exerciseSelect.appendChild(option);
+        });
+    }
+
+    function renderDraftTable() {
+        const tbody = document.querySelector("#draftSetsTable tbody");
+        tbody.innerHTML = "";
+
+        draftSets.forEach((item, index) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.exerciseName}</td>
+                <td>${item.setTypeName}</td>
+                <td>${item.weightKg}</td>
+                <td>${item.reps}</td>
+                <td>${item.restSeconds} сек</td>
+                <td><button type="button" class="btn btn-sm btn-outline-danger" data-index="${index}">Видалити</button></td>`;
+            tbody.appendChild(row);
+        });
+
+        document.getElementById("draftPayloadJson").value = JSON.stringify(draftSets);
+    }
+
+    function resetTimerText() {
+        const minutes = Math.floor(timerLeft / 60).toString().padStart(2, "0");
+        const seconds = (timerLeft % 60).toString().padStart(2, "0");
+        document.getElementById("restTimerValue").textContent = `${minutes}:${seconds}`;
+    }
+
+    function stopTimer() {
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+    }
+
+    function startTimer() {
+        stopTimer();
+        timerLeft = parseInt(document.getElementById("restInput").value || "120", 10);
+        if (timerLeft < 0) timerLeft = 120;
+        document.getElementById("timerReadyText").textContent = "";
+        resetTimerText();
+
+        timer = setInterval(() => {
+            timerLeft--;
+            if (timerLeft <= 0) {
+                stopTimer();
+                timerLeft = 0;
+                resetTimerText();
+                document.getElementById("timerReadyText").textContent = "Можна приступати до вправи";
+                return;
+            }
+
+            resetTimerText();
+        }, 1000);
+    }
+
+    document.getElementById("addSetBtn").addEventListener("click", () => {
+        const selectedExercise = exerciseSelect.options[exerciseSelect.selectedIndex];
+        const setTypeSelect = document.getElementById("setTypeSelect");
+        const selectedSetType = setTypeSelect.options[setTypeSelect.selectedIndex];
+
+        if (!selectedExercise || !selectedSetType || !selectedExercise.value) {
+            return;
+        }
+
+        draftSets.push({
+            exerciseId: parseInt(selectedExercise.value, 10),
+            exerciseName: selectedExercise.text,
+            setTypeId: parseInt(selectedSetType.value, 10),
+            setTypeName: selectedSetType.text,
+            weightKg: parseFloat(document.getElementById("weightInput").value || "0"),
+            reps: parseInt(document.getElementById("repsInput").value || "0", 10),
+            restSeconds: parseInt(document.getElementById("restInput").value || "120", 10)
+        });
+
+        renderDraftTable();
+        startTimer();
+    });
+
+    document.querySelector("#draftSetsTable tbody").addEventListener("click", (event) => {
+        if (event.target.tagName !== "BUTTON") {
+            return;
+        }
+
+        const index = parseInt(event.target.getAttribute("data-index"), 10);
+        if (!isNaN(index)) {
+            draftSets.splice(index, 1);
+            renderDraftTable();
+        }
+    });
+
+    document.getElementById("startTimerBtn").addEventListener("click", startTimer);
+    document.getElementById("skipTimerBtn").addEventListener("click", () => {
+        stopTimer();
+        timerLeft = 0;
+        resetTimerText();
+        document.getElementById("timerReadyText").textContent = "Можна приступати до вправи";
+    });
+
+    groupFilter.addEventListener("change", () => {
+        renderSubGroupOptions();
+        renderExerciseOptions();
+    });
+    subGroupFilter.addEventListener("change", renderExerciseOptions);
+
+    resetTimerText();
+    renderSubGroupOptions();
+    renderExerciseOptions();
+    renderDraftTable();
+</script>
 

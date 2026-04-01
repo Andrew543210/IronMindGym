@@ -135,17 +135,22 @@ public static class DataSeeder
             new ActivityFeed { ResearchItem = research1, PublishedAt = DateTime.UtcNow.AddDays(-1) },
             new ActivityFeed { ResearchItem = research2, PublishedAt = DateTime.UtcNow });
 
-        var achievement = new Achievement
+        var achievements = new[]
         {
-            Name = "Перші 100 кг у жимі",
-            ConditionDescription = "Досягнути жиму лежачи 100 кг"
+            new Achievement { Code = "FIRST_WORKOUT", Name = "Перший крок", ConditionDescription = "Завершити перше тренування" },
+            new Achievement { Code = "WORKOUTS_5", Name = "Серія 5", ConditionDescription = "Завершити 5 тренувань" },
+            new Achievement { Code = "WORKOUTS_20", Name = "Режим чемпіона", ConditionDescription = "Завершити 20 тренувань" },
+            new Achievement { Code = "BENCH_100", Name = "Перші 100 кг у жимі", ConditionDescription = "Досягнути 100 кг у жимі" },
+            new Achievement { Code = "SQUAT_140", Name = "Міцні ноги", ConditionDescription = "Досягнути 140 кг у присіданнях" },
+            new Achievement { Code = "DEADLIFT_180", Name = "Тягова міць", ConditionDescription = "Досягнути 180 кг у становій тязі" },
+            new Achievement { Code = "MONTHLY_TONNAGE_20K", Name = "20K тоннажу", ConditionDescription = "Набрати 20 000 кг тоннажу за 30 днів" }
         };
-        db.Achievements.Add(achievement);
-        db.UserAchievements.Add(new UserAchievement { User = user, Achievement = achievement, AchievedAt = DateTime.UtcNow.AddDays(-5) });
+        db.Achievements.AddRange(achievements);
+        db.UserAchievements.Add(new UserAchievement { User = user, Achievement = achievements[3], AchievedAt = DateTime.UtcNow.AddDays(-5) });
 
         db.PersonalRecords.AddRange(
-            new PersonalRecord { User = user, Exercise = exercises["Жим лежачи"], MaxWeightKg = 105 },
-            new PersonalRecord { User = user, Exercise = exercises["Присідання зі штангою"], MaxWeightKg = 155 });
+            new PersonalRecord { User = user, Exercise = exercises["Жим лежачи"], MaxWeightKg = 105, UpdatedAt = DateTime.UtcNow.AddDays(-10) },
+            new PersonalRecord { User = user, Exercise = exercises["Присідання зі штангою"], MaxWeightKg = 155, UpdatedAt = DateTime.UtcNow.AddDays(-12) });
 
         db.Friendships.Add(new Friendship { User1 = user, User2 = friend, Status = "Accepted" });
 

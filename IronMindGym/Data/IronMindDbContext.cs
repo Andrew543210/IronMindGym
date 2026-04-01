@@ -47,6 +47,10 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             .HasIndex(u => u.Email)
             .IsUnique();
 
+        modelBuilder.Entity<Achievement>()
+            .HasIndex(a => a.Code)
+            .IsUnique();
+
         modelBuilder.Entity<User>()
             .HasOne(u => u.Profile)
             .WithOne(p => p.User)

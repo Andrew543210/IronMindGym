@@ -7,6 +7,13 @@ public class ProfileViewModel
     public string Gender { get; set; } = string.Empty;
     public int Age { get; set; }
     public string AvatarName { get; set; } = string.Empty;
-    public List<string> Achievements { get; set; } = new();
+    public List<ProfileAchievementViewModel> Achievements { get; set; } = new();
+}
+
+public class ProfileAchievementViewModel
+{
+    public string Name { get; set; } = string.Empty;
+    public string ConditionDescription { get; set; } = string.Empty;
+    public DateTime AchievedAt { get; set; }
 }
 

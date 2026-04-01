@@ -20,7 +20,13 @@ public class DashboardController(IronMindDbContext db, IAvatarService avatarServ
 
         var user = db.Users
             .Include(u => u.Benchmarks)
-            .First(u => u.Id == currentUserId);
+            .FirstOrDefault(u => u.Id == currentUserId);
+
+        if (user == null)
+        {
+            HttpContext.Session.Remove("UserId");
+            return RedirectToAction("Login", "Auth");
+        }
 
         var latestAnthropometry = db.AnthropometryLogs
             .Where(a => a.UserId == currentUserId)

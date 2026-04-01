@@ -1,0 +1,64 @@
+﻿@model WorkoutDetailsViewModel
+@{
+    ViewData["Title"] = "Деталі тренування";
+}
+
+<h2>Деталі тренування</h2>
+<div class="card mb-3">
+    <div class="card-body">
+        <h5>@Model.Session.Name</h5>
+        <div>Дата: @Model.Session.SessionDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+        <div>Тривалість: @Model.Session.DurationMinutes хв</div>
+        <div>Оцінка: @(Model.Session.Review?.Rating ?? 0)/5</div>
+        <div>Коментар: @(string.IsNullOrWhiteSpace(Model.Session.Review?.Comment) ? "-" : Model.Session.Review!.Comment)</div>
+    </div>
+</div>
+
+@foreach (var performed in Model.Session.PerformedExercises.OrderBy(x => x.OrderInWorkout))
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h6>@performed.Exercise.Name</h6>
+            <table class="table table-sm">
+                <thead><tr><th>Підхід</th><th>Тип</th><th>Вага</th><th>Повторення</th><th>Відпочинок</th></tr></thead>
+                <tbody>
+                @foreach (var set in performed.Sets.OrderBy(s => s.SetNumber))
+                {
+                    <tr>
+                        <td>@set.SetNumber</td>
+                        <td>@set.SetType.Name</td>
+                        <td>@set.WeightKg кг</td>
+                        <td>@set.Reps</td>
+                        <td>@set.RestSeconds сек</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="card border-success">
+    <div class="card-body">
+        <h5>Статистика сесії</h5>
+        <p class="mb-1">Середній відпочинок: <strong>@Model.Summary.AverageRestSeconds сек</strong></p>
+        <p class="mb-3">Ще тренувань цього тижня: <strong>@Model.Summary.RemainingWorkoutsThisWeek</strong></p>
+        <table class="table table-sm">
+            <thead><tr><th>Вправа</th><th>Підходи</th><th>Сер. навантаження</th><th>Пікове навантаження</th><th>% до рекорду</th><th>Рекорд</th></tr></thead>
+            <tbody>
+            @foreach (var stat in Model.Summary.ExerciseStats)
+            {
+                <tr>
+                    <td>@stat.ExerciseName</td>
+                    <td>@stat.SetsCount</td>
+                    <td>@stat.AverageLoad</td>
+                    <td>@stat.PeakLoad</td>
+                    <td>@(stat.PercentToPersonalRecord.HasValue ? $"{stat.PercentToPersonalRecord}%" : "-")</td>
+                    <td>@(stat.IsNewRecord ? "Новий рекорд" : "Без нового")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+

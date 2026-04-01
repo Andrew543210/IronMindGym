@@ -17,6 +17,10 @@
         <input asp-for="Password" class="form-control" type="password" />
         <span asp-validation-for="Password" class="text-danger"></span>
     </div>
+    <div class="col-12 form-check">
+        <input asp-for="RememberMe" class="form-check-input" />
+        <label asp-for="RememberMe" class="form-check-label">Запам'ятати мене</label>
+    </div>
     <div class="col-12">
         <button type="submit" class="btn btn-primary">Увійти</button>
         <a asp-action="Register" class="btn btn-outline-secondary">Реєстрація</a>
