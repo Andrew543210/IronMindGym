@@ -10,6 +10,13 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<IronMindDbContext>(options =>
     options.UseInMemoryDatabase("IronMindDb"));
 
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.IdleTimeout = TimeSpan.FromHours(8);
+});
+
 builder.Services.AddScoped<IAvatarService, AvatarService>();
 builder.Services.AddScoped<INutritionAdviceService, NutritionAdviceService>();
 
@@ -31,6 +38,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(

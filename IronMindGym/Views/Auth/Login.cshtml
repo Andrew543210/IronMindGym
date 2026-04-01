@@ -5,6 +5,8 @@
 
 <h2>Вхід</h2>
 <form method="post" class="row g-3">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
     <div class="col-md-6">
         <label asp-for="Email" class="form-label"></label>
         <input asp-for="Email" class="form-control" />
@@ -20,4 +22,3 @@
         <a asp-action="Register" class="btn btn-outline-secondary">Реєстрація</a>
     </div>
 </form>
-

@@ -1,5 +1,6 @@
 ﻿using IronMindGym.Data;
 using IronMindGym.Models;
+using IronMindGym.Security;
 
 namespace IronMindGym.Seed;
 
@@ -42,32 +43,13 @@ public static class DataSeeder
         };
         db.Avatars.AddRange(avatars);
 
-        var chest = new MuscleGroup { Name = "Груди" };
-        var back = new MuscleGroup { Name = "Спина" };
-        var legs = new MuscleGroup { Name = "Ноги" };
-        db.MuscleGroups.AddRange(chest, back, legs);
-
-        var subGroups = new[]
-        {
-            new MuscleSubGroup { Name = "Верх грудей", MuscleGroup = chest },
-            new MuscleSubGroup { Name = "Широчайші", MuscleGroup = back },
-            new MuscleSubGroup { Name = "Квадрицепс", MuscleGroup = legs }
-        };
-        db.MuscleSubGroups.AddRange(subGroups);
-
-        var exercises = new[]
-        {
-            new Exercise { Name = "Жим лежачи", Description = "Базова вправа для грудей", MuscleSubGroup = subGroups[0] },
-            new Exercise { Name = "Тяга штанги в нахилі", Description = "Силова вправа для спини", MuscleSubGroup = subGroups[1] },
-            new Exercise { Name = "Присідання зі штангою", Description = "Базова вправа для ніг", MuscleSubGroup = subGroups[2] }
-        };
-        db.Exercises.AddRange(exercises);
+        var exercises = ExerciseCatalogSeeder.Seed(db);
 
         var user = new User
         {
             Username = "demo_athlete",
             Email = "demo@ironmind.app",
-            PasswordHash = "demo123",
+            PasswordHash = PasswordHashUtility.Hash("demo123"),
             Profile = new Profile { Gender = "Male", Age = 24, AccountCreatedAt = DateTime.UtcNow.AddDays(-40) },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 100, SquatKg = 140, DeadliftKg = 170 }
         };
@@ -76,7 +58,7 @@ public static class DataSeeder
         {
             Username = "fit_friend",
             Email = "friend@ironmind.app",
-            PasswordHash = "friend123",
+            PasswordHash = PasswordHashUtility.Hash("friend123"),
             Profile = new Profile { Gender = "Female", Age = 23, AccountCreatedAt = DateTime.UtcNow.AddDays(-20) },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 65, SquatKg = 95, DeadliftKg = 120 }
         };
@@ -114,7 +96,7 @@ public static class DataSeeder
         var performed = new PerformedExercise
         {
             WorkoutSession = session,
-            Exercise = exercises[0],
+            Exercise = exercises["Жим лежачи"],
             OrderInWorkout = 1
         };
 
@@ -162,8 +144,8 @@ public static class DataSeeder
         db.UserAchievements.Add(new UserAchievement { User = user, Achievement = achievement, AchievedAt = DateTime.UtcNow.AddDays(-5) });
 
         db.PersonalRecords.AddRange(
-            new PersonalRecord { User = user, Exercise = exercises[0], MaxWeightKg = 105 },
-            new PersonalRecord { User = user, Exercise = exercises[2], MaxWeightKg = 155 });
+            new PersonalRecord { User = user, Exercise = exercises["Жим лежачи"], MaxWeightKg = 105 },
+            new PersonalRecord { User = user, Exercise = exercises["Присідання зі штангою"], MaxWeightKg = 155 });
 
         db.Friendships.Add(new Friendship { User1 = user, User2 = friend, Status = "Accepted" });
 

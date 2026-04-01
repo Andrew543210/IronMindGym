@@ -7,12 +7,17 @@ namespace IronMindGym.Controllers;
 
 public class StatisticsController(IronMindDbContext db) : Controller
 {
-    private const int DemoUserId = 1;
-
     public IActionResult Index()
     {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var currentUserId = userId.Value;
         var sessions = db.WorkoutSessions
-            .Where(s => s.UserId == DemoUserId)
+            .Where(s => s.UserId == currentUserId)
             .Include(s => s.PerformedExercises)
             .ThenInclude(pe => pe.Sets)
             .ToList();
@@ -24,12 +29,12 @@ public class StatisticsController(IronMindDbContext db) : Controller
             .Sum(set => set.WeightKg * set.Reps);
 
         var nutrition = db.DailyNutritions
-            .Where(n => n.UserId == DemoUserId && n.Date >= DateTime.UtcNow.AddDays(-7))
+            .Where(n => n.UserId == currentUserId && n.Date >= DateTime.UtcNow.AddDays(-7))
             .ToList();
 
         var personalRecords = db.PersonalRecords
             .Include(pr => pr.Exercise)
-            .Where(pr => pr.UserId == DemoUserId)
+            .Where(pr => pr.UserId == currentUserId)
             .AsNoTracking()
             .ToList();
 

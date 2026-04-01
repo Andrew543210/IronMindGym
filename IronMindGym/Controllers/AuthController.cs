@@ -1,7 +1,9 @@
 ﻿using IronMindGym.Data;
 using IronMindGym.Models;
+using IronMindGym.Security;
 using IronMindGym.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Controllers;
 
@@ -18,14 +20,18 @@ public class AuthController(IronMindDbContext db) : Controller
             return View(model);
         }
 
-        var user = db.Users.FirstOrDefault(u => u.Email == model.Email && u.PasswordHash == model.Password);
-        if (user is null)
+        var user = db.Users
+            .AsNoTracking()
+            .FirstOrDefault(u => u.Email == model.Email);
+
+        if (user is null || !PasswordHashUtility.Verify(model.Password, user.PasswordHash))
         {
             ModelState.AddModelError(string.Empty, "Невірний email або пароль.");
             return View(model);
         }
 
-        TempData["Message"] = $"Вітаю, {user.Username}! Для лаби використовується демо-сесія.";
+        HttpContext.Session.SetInt32("UserId", user.Id);
+        TempData["Message"] = $"Вітаю, {user.Username}!";
         return RedirectToAction("Index", "Dashboard");
     }
 
@@ -40,9 +46,15 @@ public class AuthController(IronMindDbContext db) : Controller
             return View(model);
         }
 
-        if (db.Users.Any(u => u.Email == model.Email || u.Username == model.Username))
+        if (db.Users.Any(u => u.Email == model.Email))
         {
-            ModelState.AddModelError(string.Empty, "Користувач з таким email або username вже існує.");
+            ModelState.AddModelError(nameof(model.Email), "Користувач з таким email вже існує.");
+            return View(model);
+        }
+
+        if (db.Users.Any(u => u.Username == model.Username))
+        {
+            ModelState.AddModelError(nameof(model.Username), "Такий username вже зайнято.");
             return View(model);
         }
 
@@ -50,15 +62,24 @@ public class AuthController(IronMindDbContext db) : Controller
         {
             Username = model.Username,
             Email = model.Email,
-            PasswordHash = model.Password,
+            PasswordHash = PasswordHashUtility.Hash(model.Password),
             Profile = new Profile { Age = 18, Gender = "Unknown", AccountCreatedAt = DateTime.UtcNow }
         };
 
         db.Users.Add(user);
         db.SaveChanges();
 
-        TempData["Message"] = "Реєстрація успішна. Можна перейти до стартового налаштування.";
+        HttpContext.Session.SetInt32("UserId", user.Id);
+        TempData["Message"] = "Реєстрація успішна. Заповни стартові дані профілю.";
+
         return RedirectToAction("Index", "Setup");
     }
-}
 
+    [HttpPost]
+    public IActionResult Logout()
+    {
+        HttpContext.Session.Remove("UserId");
+        TempData["Message"] = "Ви вийшли з акаунту.";
+        return RedirectToAction(nameof(Login));
+    }
+}

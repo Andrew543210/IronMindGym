@@ -9,15 +9,20 @@ namespace IronMindGym.Controllers;
 
 public class WorkoutLoggerController(IronMindDbContext db) : Controller
 {
-    private const int DemoUserId = 1;
-
     [HttpGet]
     public IActionResult Index()
     {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var currentUserId = userId.Value;
         var vm = new WorkoutLoggerViewModel
         {
             RecentSessions = db.WorkoutSessions
-                .Where(s => s.UserId == DemoUserId)
+                .Where(s => s.UserId == currentUserId)
                 .OrderByDescending(s => s.SessionDate)
                 .Take(5)
                 .ToList()
@@ -30,12 +35,19 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
     [HttpPost]
     public IActionResult Index(WorkoutLoggerViewModel model)
     {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var currentUserId = userId.Value;
         FillSelections(model.ExerciseId, model.SetTypeId);
 
         if (!ModelState.IsValid)
         {
             model.RecentSessions = db.WorkoutSessions
-                .Where(s => s.UserId == DemoUserId)
+                .Where(s => s.UserId == currentUserId)
                 .OrderByDescending(s => s.SessionDate)
                 .Take(5)
                 .ToList();
@@ -44,7 +56,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
 
         var session = new WorkoutSession
         {
-            UserId = DemoUserId,
+            UserId = currentUserId,
             Name = model.SessionName,
             SessionDate = DateTime.UtcNow,
             DurationMinutes = model.DurationMinutes
@@ -88,4 +100,3 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         ViewBag.SetTypes = new SelectList(db.SetTypes.AsNoTracking().OrderBy(s => s.Name), "Id", "Name", selectedSetTypeId);
     }
 }
-

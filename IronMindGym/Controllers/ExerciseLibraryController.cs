@@ -1,4 +1,5 @@
 ﻿using IronMindGym.Data;
+using IronMindGym.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,9 +7,27 @@ namespace IronMindGym.Controllers;
 
 public class ExerciseLibraryController(IronMindDbContext db) : Controller
 {
-    public IActionResult Index(int? muscleGroupId)
+    public IActionResult Index(int? muscleGroupId, int? muscleSubGroupId, string? search)
     {
-        var groups = db.MuscleGroups.AsNoTracking().OrderBy(g => g.Name).ToList();
+        if (!HttpContext.Session.GetInt32("UserId").HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var groups = db.MuscleGroups
+            .AsNoTracking()
+            .OrderBy(g => g.Name)
+            .ToList();
+
+        var subGroupsQuery = db.MuscleSubGroups
+            .AsNoTracking()
+            .OrderBy(sg => sg.Name)
+            .AsQueryable();
+
+        if (muscleGroupId.HasValue)
+        {
+            subGroupsQuery = subGroupsQuery.Where(sg => sg.MuscleGroupId == muscleGroupId.Value);
+        }
 
         var exercisesQuery = db.Exercises
             .Include(e => e.MuscleSubGroup)
@@ -21,10 +40,29 @@ public class ExerciseLibraryController(IronMindDbContext db) : Controller
             exercisesQuery = exercisesQuery.Where(e => e.MuscleSubGroup.MuscleGroupId == muscleGroupId.Value);
         }
 
-        ViewBag.MuscleGroups = groups;
-        ViewBag.SelectedGroupId = muscleGroupId;
+        if (muscleSubGroupId.HasValue)
+        {
+            exercisesQuery = exercisesQuery.Where(e => e.MuscleSubGroupId == muscleSubGroupId.Value);
+        }
 
-        return View(exercisesQuery.OrderBy(e => e.Name).ToList());
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var normalizedSearch = search.Trim();
+            exercisesQuery = exercisesQuery.Where(e =>
+                e.Name.Contains(normalizedSearch) ||
+                e.Description.Contains(normalizedSearch));
+        }
+
+        var vm = new ExerciseLibraryViewModel
+        {
+            MuscleGroups = groups,
+            MuscleSubGroups = subGroupsQuery.ToList(),
+            Exercises = exercisesQuery.OrderBy(e => e.Name).ToList(),
+            SelectedGroupId = muscleGroupId,
+            SelectedSubGroupId = muscleSubGroupId,
+            Search = search ?? string.Empty
+        };
+
+        return View(vm);
     }
 }
-
