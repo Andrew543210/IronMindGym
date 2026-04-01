@@ -20,7 +20,11 @@
             <ul>
                 @foreach (var achievement in Model.Achievements)
                 {
-                    <li>@achievement</li>
+                    <li>
+                        <strong>@achievement.Name</strong><br />
+                        <span class="small text-muted">@achievement.ConditionDescription</span><br />
+                        <span class="small text-muted">@achievement.AchievedAt.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                    </li>
                 }
             </ul>
         </div></div>

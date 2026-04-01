@@ -2,8 +2,11 @@
 using IronMindGym.Models;
 using IronMindGym.Security;
 using IronMindGym.ViewModels;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace IronMindGym.Controllers;
 
@@ -13,7 +16,7 @@ public class AuthController(IronMindDbContext db) : Controller
     public IActionResult Login() => View(new LoginViewModel());
 
     [HttpPost]
-    public IActionResult Login(LoginViewModel model)
+    public async Task<IActionResult> Login(LoginViewModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -30,7 +33,7 @@ public class AuthController(IronMindDbContext db) : Controller
             return View(model);
         }
 
-        HttpContext.Session.SetInt32("UserId", user.Id);
+        await SignInUserAsync(user.Id, user.Username, model.RememberMe);
         TempData["Message"] = $"Вітаю, {user.Username}!";
         return RedirectToAction("Index", "Dashboard");
     }
@@ -39,7 +42,7 @@ public class AuthController(IronMindDbContext db) : Controller
     public IActionResult Register() => View(new RegisterViewModel());
 
     [HttpPost]
-    public IActionResult Register(RegisterViewModel model)
+    public async Task<IActionResult> Register(RegisterViewModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -69,17 +72,41 @@ public class AuthController(IronMindDbContext db) : Controller
         db.Users.Add(user);
         db.SaveChanges();
 
-        HttpContext.Session.SetInt32("UserId", user.Id);
+        await SignInUserAsync(user.Id, user.Username, false);
         TempData["Message"] = "Реєстрація успішна. Заповни стартові дані профілю.";
 
         return RedirectToAction("Index", "Setup");
     }
 
     [HttpPost]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
         HttpContext.Session.Remove("UserId");
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         TempData["Message"] = "Ви вийшли з акаунту.";
         return RedirectToAction(nameof(Login));
+    }
+
+    private async Task SignInUserAsync(int userId, string username, bool rememberMe)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimTypes.Name, username)
+        };
+
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal,
+            new AuthenticationProperties
+            {
+                IsPersistent = rememberMe,
+                ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null,
+                AllowRefresh = true
+            });
+
+        HttpContext.Session.SetInt32("UserId", userId);
     }
 }

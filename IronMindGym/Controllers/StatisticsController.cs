@@ -34,6 +34,8 @@ public class StatisticsController(IronMindDbContext db) : Controller
 
         var personalRecords = db.PersonalRecords
             .Include(pr => pr.Exercise)
+            .ThenInclude(e => e.MuscleSubGroup)
+            .ThenInclude(sg => sg.MuscleGroup)
             .Where(pr => pr.UserId == currentUserId)
             .AsNoTracking()
             .ToList();
@@ -48,9 +50,54 @@ public class StatisticsController(IronMindDbContext db) : Controller
                 : 0,
             PersonalRecords = personalRecords
                 .Select(pr => (pr.Exercise.Name, pr.MaxWeightKg))
+                .ToList(),
+            PersonalRecordItems = personalRecords
+                .OrderBy(pr => pr.Exercise.MuscleSubGroup.MuscleGroup.Name)
+                .ThenBy(pr => pr.Exercise.MuscleSubGroup.Name)
+                .ThenBy(pr => pr.Exercise.Name)
+                .Select(pr => new PersonalRecordListItemViewModel
+                {
+                    MuscleGroupName = pr.Exercise.MuscleSubGroup.MuscleGroup.Name,
+                    MuscleSubGroupName = pr.Exercise.MuscleSubGroup.Name,
+                    ExerciseName = pr.Exercise.Name,
+                    MaxWeightKg = pr.MaxWeightKg,
+                    UpdatedAt = pr.UpdatedAt
+                })
                 .ToList()
         };
 
         return View(vm);
+    }
+
+    [HttpGet]
+    public IActionResult Records()
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var currentUserId = userId.Value;
+        var records = db.PersonalRecords
+            .Where(pr => pr.UserId == currentUserId)
+            .Include(pr => pr.Exercise)
+            .ThenInclude(e => e.MuscleSubGroup)
+            .ThenInclude(ms => ms.MuscleGroup)
+            .AsNoTracking()
+            .OrderBy(pr => pr.Exercise.MuscleSubGroup.MuscleGroup.Name)
+            .ThenBy(pr => pr.Exercise.MuscleSubGroup.Name)
+            .ThenBy(pr => pr.Exercise.Name)
+            .Select(pr => new PersonalRecordListItemViewModel
+            {
+                MuscleGroupName = pr.Exercise.MuscleSubGroup.MuscleGroup.Name,
+                MuscleSubGroupName = pr.Exercise.MuscleSubGroup.Name,
+                ExerciseName = pr.Exercise.Name,
+                MaxWeightKg = pr.MaxWeightKg,
+                UpdatedAt = pr.UpdatedAt
+            })
+            .ToList();
+
+        return View(records);
     }
 }

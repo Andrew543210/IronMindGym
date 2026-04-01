@@ -1,7 +1,10 @@
 using IronMindGym.Data;
 using IronMindGym.Services;
 using IronMindGym.Seed;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +12,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<IronMindDbContext>(options =>
     options.UseInMemoryDatabase("IronMindDb"));
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.LogoutPath = "/Auth/Logout";
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
+        options.SlidingExpiration = true;
+    });
 
 builder.Services.AddSession(options =>
 {
@@ -39,6 +51,30 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSession();
+app.UseAuthentication();
+app.Use(async (context, next) =>
+{
+    if (!context.Session.GetInt32("UserId").HasValue && context.User.Identity?.IsAuthenticated == true)
+    {
+        var userIdClaim = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (int.TryParse(userIdClaim, out var userId))
+        {
+            var db = context.RequestServices.GetRequiredService<IronMindDbContext>();
+            var userExists = db.Users.AsNoTracking().Any(u => u.Id == userId);
+            if (userExists)
+            {
+                context.Session.SetInt32("UserId", userId);
+            }
+            else
+            {
+                context.Session.Remove("UserId");
+                await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        }
+    }
+
+    await next();
+});
 app.UseAuthorization();
 
 app.MapControllerRoute(

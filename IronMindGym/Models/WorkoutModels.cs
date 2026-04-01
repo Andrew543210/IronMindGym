@@ -84,6 +84,7 @@ public class WorkoutSet
     public double WeightKg { get; set; }
     public int Reps { get; set; }
     public int SetNumber { get; set; }
+    public int RestSeconds { get; set; } = 120;
 
     public int SetTypeId { get; set; }
     public SetType SetType { get; set; } = null!;
@@ -123,6 +124,7 @@ public class PersonalRecord
     public Exercise Exercise { get; set; } = null!;
 
     public double MaxWeightKg { get; set; }
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public class HeartRateLog

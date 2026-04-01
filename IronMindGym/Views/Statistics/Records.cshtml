@@ -1,0 +1,30 @@
+﻿@model List<PersonalRecordListItemViewModel>
+@{
+    ViewData["Title"] = "Рекорди";
+}
+
+<h2>Особисті рекорди</h2>
+<table class="table table-striped table-sm">
+    <thead>
+    <tr>
+        <th>Група</th>
+        <th>Підгрупа</th>
+        <th>Вправа</th>
+        <th>Макс. вага</th>
+        <th>Оновлено</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var record in Model)
+    {
+        <tr>
+            <td>@record.MuscleGroupName</td>
+            <td>@record.MuscleSubGroupName</td>
+            <td>@record.ExerciseName</td>
+            <td>@record.MaxWeightKg кг</td>
+            <td>@record.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
