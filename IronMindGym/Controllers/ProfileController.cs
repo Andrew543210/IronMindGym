@@ -8,19 +8,24 @@ namespace IronMindGym.Controllers;
 
 public class ProfileController(IronMindDbContext db, IAvatarService avatarService) : Controller
 {
-    private const int DemoUserId = 1;
-
     public IActionResult Index()
     {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var currentUserId = userId.Value;
         var user = db.Users
             .Include(u => u.Profile)
             .Include(u => u.Benchmarks)
             .Include(u => u.UserAchievements)
             .ThenInclude(ua => ua.Achievement)
-            .First(u => u.Id == DemoUserId);
+            .First(u => u.Id == currentUserId);
 
         var latestAnthro = db.AnthropometryLogs
-            .Where(a => a.UserId == DemoUserId)
+            .Where(a => a.UserId == currentUserId)
             .OrderByDescending(a => a.RecordedAt)
             .FirstOrDefault();
 
@@ -39,4 +44,3 @@ public class ProfileController(IronMindDbContext db, IAvatarService avatarServic
         return View(vm);
     }
 }
-

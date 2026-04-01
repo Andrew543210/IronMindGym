@@ -4,7 +4,7 @@ namespace IronMindGym.ViewModels;
 
 public class LoginViewModel
 {
-    [Required]
+    [Required, EmailAddress]
     public string Email { get; set; } = string.Empty;
 
     [Required]
@@ -21,5 +21,7 @@ public class RegisterViewModel
 
     [Required, MinLength(6)]
     public string Password { get; set; } = string.Empty;
-}
 
+    [Required, Compare(nameof(Password), ErrorMessage = "Паролі повинні співпадати")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}

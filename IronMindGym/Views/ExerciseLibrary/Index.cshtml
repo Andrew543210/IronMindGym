@@ -1,45 +1,61 @@
-﻿@model List<Exercise>
+﻿@model ExerciseLibraryViewModel
 @{
     ViewData["Title"] = "Бібліотека вправ";
-    var groups = ViewBag.MuscleGroups as List<MuscleGroup> ?? new List<MuscleGroup>();
-    int? selectedGroupId = ViewBag.SelectedGroupId as int?;
 }
 
 <h2>Бібліотека вправ</h2>
-<form method="get" class="mb-3">
+<form method="get" class="mb-4">
     <div class="row g-2">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <select name="muscleGroupId" class="form-select">
                 <option value="">Всі м'язові групи</option>
-                @foreach (var group in groups)
+                @foreach (var group in Model.MuscleGroups)
                 {
-                    <option value="@group.Id" selected="@(selectedGroupId == group.Id)">@group.Name</option>
+                    <option value="@group.Id" selected="@(Model.SelectedGroupId == group.Id)">@group.Name</option>
                 }
             </select>
         </div>
-        <div class="col-md-2">
+
+        <div class="col-md-3">
+            <select name="muscleSubGroupId" class="form-select">
+                <option value="">Всі підгрупи</option>
+                @foreach (var subGroup in Model.MuscleSubGroups)
+                {
+                    <option value="@subGroup.Id" selected="@(Model.SelectedSubGroupId == subGroup.Id)">@subGroup.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <input name="search" value="@Model.Search" class="form-control" placeholder="Пошук вправи або опису" />
+        </div>
+
+        <div class="col-md-2 d-grid">
             <button type="submit" class="btn btn-outline-primary">Фільтр</button>
         </div>
     </div>
 </form>
 
+<div class="mb-2 text-muted">Знайдено вправ: @Model.Exercises.Count</div>
+
 <table class="table table-striped">
     <thead>
     <tr>
         <th>Вправа</th>
+        <th>Група</th>
         <th>Підгрупа</th>
         <th>Опис</th>
     </tr>
     </thead>
     <tbody>
-    @foreach (var ex in Model)
+    @foreach (var ex in Model.Exercises)
     {
         <tr>
             <td>@ex.Name</td>
-            <td>@ex.MuscleSubGroup.Name (@ex.MuscleSubGroup.MuscleGroup.Name)</td>
+            <td>@ex.MuscleSubGroup.MuscleGroup.Name</td>
+            <td>@ex.MuscleSubGroup.Name</td>
             <td>@ex.Description</td>
         </tr>
     }
     </tbody>
 </table>
-

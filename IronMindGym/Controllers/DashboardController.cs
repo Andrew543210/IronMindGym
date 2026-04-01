@@ -8,21 +8,27 @@ namespace IronMindGym.Controllers;
 
 public class DashboardController(IronMindDbContext db, IAvatarService avatarService) : Controller
 {
-    private const int DemoUserId = 1;
-
     public IActionResult Index()
     {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var currentUserId = userId.Value;
+
         var user = db.Users
             .Include(u => u.Benchmarks)
-            .First(u => u.Id == DemoUserId);
+            .First(u => u.Id == currentUserId);
 
         var latestAnthropometry = db.AnthropometryLogs
-            .Where(a => a.UserId == DemoUserId)
+            .Where(a => a.UserId == currentUserId)
             .OrderByDescending(a => a.RecordedAt)
             .FirstOrDefault();
 
         var activePlan = db.WorkoutPlans
-            .FirstOrDefault(p => p.UserId == DemoUserId && p.IsActive);
+            .FirstOrDefault(p => p.UserId == currentUserId && p.IsActive);
 
         var startOfWeek = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.Date.DayOfWeek + (int)DayOfWeek.Monday);
         if (startOfWeek > DateTime.UtcNow.Date)
@@ -30,7 +36,7 @@ public class DashboardController(IronMindDbContext db, IAvatarService avatarServ
             startOfWeek = startOfWeek.AddDays(-7);
         }
 
-        var completedThisWeek = db.WorkoutSessions.Count(s => s.UserId == DemoUserId && s.SessionDate >= startOfWeek);
+        var completedThisWeek = db.WorkoutSessions.Count(s => s.UserId == currentUserId && s.SessionDate >= startOfWeek);
 
         var feed = db.ActivityFeeds
             .Include(f => f.ResearchItem)
@@ -54,4 +60,3 @@ public class DashboardController(IronMindDbContext db, IAvatarService avatarServ
         return View(vm);
     }
 }
-

@@ -1,4 +1,4 @@
-﻿.using IronMindGym.Models;
+﻿using IronMindGym.Models;
 
 namespace IronMindGym.ViewModels;
 
@@ -11,4 +11,3 @@ public class ExerciseLibraryViewModel
     public int? SelectedSubGroupId { get; set; }
     public string Search { get; set; } = string.Empty;
 }
-

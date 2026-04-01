@@ -9,11 +9,14 @@ namespace IronMindGym.Controllers;
 
 public class SetupController(IronMindDbContext db) : Controller
 {
-    private const int DemoUserId = 1;
-
     [HttpGet]
     public IActionResult Index()
     {
+        if (!HttpContext.Session.GetInt32("UserId").HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
         ViewBag.SplitTypes = new SelectList(db.SplitTypes.AsNoTracking().ToList(), "Id", "Name");
         return View(new SetupViewModel());
     }
@@ -21,6 +24,12 @@ public class SetupController(IronMindDbContext db) : Controller
     [HttpPost]
     public IActionResult Index(SetupViewModel model)
     {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
         ViewBag.SplitTypes = new SelectList(db.SplitTypes.AsNoTracking().ToList(), "Id", "Name", model.SplitTypeId);
 
         if (!ModelState.IsValid)
@@ -28,7 +37,8 @@ public class SetupController(IronMindDbContext db) : Controller
             return View(model);
         }
 
-        var user = db.Users.Include(u => u.Benchmarks).First(u => u.Id == DemoUserId);
+        var currentUserId = userId.Value;
+        var user = db.Users.Include(u => u.Benchmarks).First(u => u.Id == currentUserId);
         user.Benchmarks ??= new InitialBenchmarks { UserId = user.Id };
 
         user.Benchmarks.BenchPressKg = model.BenchPressKg;
@@ -63,4 +73,3 @@ public class SetupController(IronMindDbContext db) : Controller
         return RedirectToAction("Index", "Dashboard");
     }
 }
-

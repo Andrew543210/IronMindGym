@@ -9,13 +9,18 @@ namespace IronMindGym.Controllers;
 
 public class NutritionController(IronMindDbContext db, INutritionAdviceService adviceService) : Controller
 {
-    private const int DemoUserId = 1;
-
     [HttpGet]
     public IActionResult Index()
     {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var currentUserId = userId.Value;
         var today = DateTime.UtcNow.Date;
-        var log = db.DailyNutritions.AsNoTracking().FirstOrDefault(n => n.UserId == DemoUserId && n.Date == today);
+        var log = db.DailyNutritions.AsNoTracking().FirstOrDefault(n => n.UserId == currentUserId && n.Date == today);
 
         var vm = new NutritionViewModel();
         if (log is not null)
@@ -33,17 +38,24 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
     [HttpPost]
     public IActionResult Index(NutritionViewModel model)
     {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
         if (!ModelState.IsValid)
         {
             return View(model);
         }
 
+        var currentUserId = userId.Value;
         var today = DateTime.UtcNow.Date;
-        var log = db.DailyNutritions.FirstOrDefault(n => n.UserId == DemoUserId && n.Date == today);
+        var log = db.DailyNutritions.FirstOrDefault(n => n.UserId == currentUserId && n.Date == today);
 
         if (log is null)
         {
-            log = new DailyNutrition { UserId = DemoUserId, Date = today };
+            log = new DailyNutrition { UserId = currentUserId, Date = today };
             db.DailyNutritions.Add(log);
         }
 
@@ -60,4 +72,3 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
         return View(model);
     }
 }
-
