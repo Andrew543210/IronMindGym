@@ -1,0 +1,28 @@
+﻿@model FriendsViewModel
+@{
+    ViewData["Title"] = "Друзі";
+}
+
+<h2>Друзі</h2>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input name="searchUsername" value="@Model.SearchUsername" class="form-control" placeholder="Пошук за username" />
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-outline-primary" type="submit">Пошук</button>
+    </div>
+</form>
+
+@foreach (var friend in Model.Friends)
+{
+    <div class="card mb-2">
+        <div class="card-body d-flex justify-content-between">
+            <div>
+                <strong>@friend.Username</strong>
+                <div class="small text-muted">Статус: @friend.Status</div>
+            </div>
+            <div>Останні тренування: @friend.LastFiveWorkoutsCount</div>
+        </div>
+    </div>
+}
+

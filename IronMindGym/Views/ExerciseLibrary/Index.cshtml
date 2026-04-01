@@ -1,0 +1,45 @@
+﻿@model List<Exercise>
+@{
+    ViewData["Title"] = "Бібліотека вправ";
+    var groups = ViewBag.MuscleGroups as List<MuscleGroup> ?? new List<MuscleGroup>();
+    int? selectedGroupId = ViewBag.SelectedGroupId as int?;
+}
+
+<h2>Бібліотека вправ</h2>
+<form method="get" class="mb-3">
+    <div class="row g-2">
+        <div class="col-md-4">
+            <select name="muscleGroupId" class="form-select">
+                <option value="">Всі м'язові групи</option>
+                @foreach (var group in groups)
+                {
+                    <option value="@group.Id" selected="@(selectedGroupId == group.Id)">@group.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-primary">Фільтр</button>
+        </div>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Вправа</th>
+        <th>Підгрупа</th>
+        <th>Опис</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var ex in Model)
+    {
+        <tr>
+            <td>@ex.Name</td>
+            <td>@ex.MuscleSubGroup.Name (@ex.MuscleSubGroup.MuscleGroup.Name)</td>
+            <td>@ex.Description</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
