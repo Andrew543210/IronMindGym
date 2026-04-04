@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="Seed/exercises.json" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
         <!-- Keeps EF Core on the same patch as the design-time tools; the provider alone would select an older one. -->
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.15" />

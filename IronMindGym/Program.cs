@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using IronMindGym.Data;
+using IronMindGym.Seed;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<IronMindDbContext>();
     DatabaseMigrations.Apply(db);
+    DataSeeder.Seed(db);
 }
 
 if (!app.Environment.IsDevelopment())

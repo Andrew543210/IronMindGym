@@ -1,0 +1,1109 @@
+[
+  {
+    "name": "Barbell Bicep Curls",
+    "nameUk": "Згинання рук зі штангою на біцепс",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Basic movement for bicep mass",
+    "descriptionUk": "Базова вправа для маси біцепса"
+  },
+  {
+    "name": "Concentration Curl",
+    "nameUk": "Концентроване згинання руки",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Isolated bicep work",
+    "descriptionUk": "Ізольована робота на біцепс"
+  },
+  {
+    "name": "EZ-Bar Curl",
+    "nameUk": "Згинання рук з EZ-грифом",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Biceps curl using an angled bar grip.",
+    "descriptionUk": "Згинання на біцепс із кутовим хватом на вигнутому грифі."
+  },
+  {
+    "name": "Hammer Curls",
+    "nameUk": "Молоткові згинання з гантелями",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Brachialis emphasis",
+    "descriptionUk": "Акцент на плечовий м’яз"
+  },
+  {
+    "name": "Preacher Curl",
+    "nameUk": "Згинання рук на лаві Скотта",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Elbow flexion with the upper arms supported on a preacher bench.",
+    "descriptionUk": "Згинання в ліктях з опорою плечей на лаву Скотта."
+  },
+  {
+    "name": "Seated Dumbbell Curl",
+    "nameUk": "Згинання рук з гантелями сидячи",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Range of motion control",
+    "descriptionUk": "Контроль амплітуди руху"
+  },
+  {
+    "name": "Farmer's Walk",
+    "nameUk": "Прогулянка фермера",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "Timed",
+    "description": "Loaded walking carry. Log duration and the same load convention each session.",
+    "descriptionUk": "Ходьба з вагою в руках. Записуйте тривалість і щоразу вказуйте вагу однаково."
+  },
+  {
+    "name": "Reverse Barbell Curl",
+    "nameUk": "Згинання рук зі штангою зворотним хватом",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "StrengthTraining",
+    "description": "Reverse Barbell Curl. Track controlled sets and use a comfortable range of motion.",
+    "descriptionUk": "Згинання рук зі штангою зворотним хватом. Виконуйте підходи під контролем і в комфортній амплітуді."
+  },
+  {
+    "name": "Seated Wrist Curls",
+    "nameUk": "Згинання зап’ясть сидячи",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "StrengthTraining",
+    "description": "Forearm flexor development",
+    "descriptionUk": "Розвиток згиначів передпліччя"
+  },
+  {
+    "name": "Seated Wrist Extensions",
+    "nameUk": "Розгинання зап’ясть сидячи",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "StrengthTraining",
+    "description": "Forearm extensor development",
+    "descriptionUk": "Розвиток розгиначів передпліччя"
+  },
+  {
+    "name": "Timed Dead Hang",
+    "nameUk": "Вис на перекладині на час",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "Timed",
+    "description": "Hang from a bar for a recorded duration. Log added external load only.",
+    "descriptionUk": "Вис на перекладині на час. Записуйте лише додаткову вагу."
+  },
+  {
+    "name": "Wrist Roller",
+    "nameUk": "Кистьовий ролик",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "StrengthTraining",
+    "description": "Complex grip load",
+    "descriptionUk": "Комплексне навантаження на хват"
+  },
+  {
+    "name": "Close-Grip Bench Press",
+    "nameUk": "Жим лежачи вузьким хватом",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Strength exercise for triceps",
+    "descriptionUk": "Силова вправа на трицепс"
+  },
+  {
+    "name": "Close-Grip Push-Ups",
+    "nameUk": "Віджимання з вузькою постановкою рук",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Basic bodyweight exercise",
+    "descriptionUk": "Базова вправа з власною вагою"
+  },
+  {
+    "name": "Lying French Press",
+    "nameUk": "Французький жим лежачи",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Triceps long head development",
+    "descriptionUk": "Розвиток довгої головки трицепса"
+  },
+  {
+    "name": "Overhead Dumbbell Extension",
+    "nameUk": "Розгинання рук з гантеллю з-за голови",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Elbow extension with a dumbbell held overhead; keep the same one-arm or two-arm variation between logs.",
+    "descriptionUk": "Розгинання в ліктях з гантеллю над головою; щоразу виконуйте той самий варіант — однією чи двома руками."
+  },
+  {
+    "name": "Overhead Rope Extension",
+    "nameUk": "Розгинання рук з канатом з-за голови",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Long head emphasis",
+    "descriptionUk": "Акцент на довгу головку"
+  },
+  {
+    "name": "Triceps Pushdown",
+    "nameUk": "Розгинання рук на блоці на трицепс",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Classic triceps isolation",
+    "descriptionUk": "Класична ізоляція трицепса"
+  },
+  {
+    "name": "Lat Pulldown",
+    "nameUk": "Тяга верхнього блока до грудей",
+    "group": "Back",
+    "subgroup": "Lats",
+    "type": "StrengthTraining",
+    "description": "Controlled vertical pulling movement",
+    "descriptionUk": "Контрольована вертикальна тяга"
+  },
+  {
+    "name": "One-Arm Dumbbell Row",
+    "nameUk": "Тяга гантелі однією рукою в нахилі",
+    "group": "Back",
+    "subgroup": "Lats",
+    "type": "StrengthTraining",
+    "description": "Unilateral lat load",
+    "descriptionUk": "Одностороннє навантаження на найширші"
+  },
+  {
+    "name": "Straight-Arm Cable Pulldown",
+    "nameUk": "Пуловер на блоці прямими руками",
+    "group": "Back",
+    "subgroup": "Lats",
+    "type": "StrengthTraining",
+    "description": "Lat isolation without elbow flexion",
+    "descriptionUk": "Ізоляція найширших без згинання в ліктях"
+  },
+  {
+    "name": "Wide-Grip Pull-ups",
+    "nameUk": "Підтягування широким хватом",
+    "group": "Back",
+    "subgroup": "Lats",
+    "type": "StrengthTraining",
+    "description": "Lat width development",
+    "descriptionUk": "Розвиток ширини найширших"
+  },
+  {
+    "name": "Bent-Over Barbell Row",
+    "nameUk": "Тяга штанги в нахилі",
+    "group": "Back",
+    "subgroup": "Rows & upper back",
+    "type": "StrengthTraining",
+    "description": "Basic movement for back mass",
+    "descriptionUk": "Базова вправа для маси спини"
+  },
+  {
+    "name": "T-Bar Row",
+    "nameUk": "Тяга Т-грифа",
+    "group": "Back",
+    "subgroup": "Rows & upper back",
+    "type": "StrengthTraining",
+    "description": "Strength movement for thickness and width",
+    "descriptionUk": "Силова вправа для товщини й ширини спини"
+  },
+  {
+    "name": "Hyperextension",
+    "nameUk": "Гіперекстензія",
+    "group": "Back",
+    "subgroup": "Spinal erectors",
+    "type": "StrengthTraining",
+    "description": "Strengthening spinal erectors",
+    "descriptionUk": "Зміцнення розгиначів спини"
+  },
+  {
+    "name": "Tilt control and back stabilization",
+    "nameUk": "Контроль нахилу й стабілізація спини",
+    "group": "Back",
+    "subgroup": "Spinal erectors",
+    "type": "StrengthTraining",
+    "description": "General back stabilization entry. Record the specific drill in your session notes, or select a named exercise for consistent comparisons.",
+    "descriptionUk": "Загальний запис для стабілізації спини. Конкретну вправу вкажіть у нотатках до тренування або оберіть вправу з назвою, щоб порівняння були послідовними."
+  },
+  {
+    "name": "Barbell Shrugs",
+    "nameUk": "Шраги зі штангою",
+    "group": "Back",
+    "subgroup": "Upper back & traps",
+    "type": "StrengthTraining",
+    "description": "Upper traps focus",
+    "descriptionUk": "Акцент на верхню частину трапецій"
+  },
+  {
+    "name": "Dumbbell Shrugs",
+    "nameUk": "Шраги з гантелями",
+    "group": "Back",
+    "subgroup": "Upper back & traps",
+    "type": "StrengthTraining",
+    "description": "Free range of motion variation",
+    "descriptionUk": "Варіант із вільною амплітудою"
+  },
+  {
+    "name": "Incline Bench Y-Raises",
+    "nameUk": "Y-підйоми на похилій лаві",
+    "group": "Back",
+    "subgroup": "Upper back & traps",
+    "type": "StrengthTraining",
+    "description": "Scapular stabilizers",
+    "descriptionUk": "Стабілізатори лопаток"
+  },
+  {
+    "name": "Chest-Level Cable Flyes",
+    "nameUk": "Зведення рук у кросовері на рівні грудей",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Horizontal isolated movement",
+    "descriptionUk": "Горизонтальний ізольований рух"
+  },
+  {
+    "name": "Flat Bench Press",
+    "nameUk": "Жим штанги лежачи",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Core exercise for overall chest strength",
+    "descriptionUk": "Базова вправа для загальної сили грудей"
+  },
+  {
+    "name": "Flat Dumbbell Press",
+    "nameUk": "Жим гантелей лежачи",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Balance of left and right sides",
+    "descriptionUk": "Баланс лівої й правої сторін"
+  },
+  {
+    "name": "Incline Push-ups (Hands on bench)",
+    "nameUk": "Віджимання з упором руками на лаву",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Push-up with the hands supported above the feet. Keep support height consistent between logs.",
+    "descriptionUk": "Віджимання з руками вище за ноги. Щоразу тримайте ту саму висоту опори."
+  },
+  {
+    "name": "Pec Deck Flyes",
+    "nameUk": "Зведення рук у тренажері «метелик»",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Seated chest fly using a machine with a guided movement path.",
+    "descriptionUk": "Зведення рук сидячи в тренажері з заданою траєкторією."
+  },
+  {
+    "name": "Push-Ups",
+    "nameUk": "Віджимання",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Classic movement for chest and triceps",
+    "descriptionUk": "Класична вправа для грудей і трицепса"
+  },
+  {
+    "name": "Seated Machine Chest Press",
+    "nameUk": "Жим від грудей у тренажері сидячи",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Seated pressing movement with a machine-guided path.",
+    "descriptionUk": "Жим сидячи в тренажері з заданою траєкторією."
+  },
+  {
+    "name": "Chest Dips",
+    "nameUk": "Віджимання на брусах з акцентом на груди",
+    "group": "Chest",
+    "subgroup": "Lower chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Forward lean for chest emphasis",
+    "descriptionUk": "Нахил уперед для акценту на груди"
+  },
+  {
+    "name": "Decline Barbell Press",
+    "nameUk": "Жим штанги лежачи головою вниз",
+    "group": "Chest",
+    "subgroup": "Lower chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Focus on lower chest fibers",
+    "descriptionUk": "Акцент на нижню частину грудей"
+  },
+  {
+    "name": "Decline Dumbbell Press",
+    "nameUk": "Жим гантелей лежачи головою вниз",
+    "group": "Chest",
+    "subgroup": "Lower chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Increased range of motion for lower chest",
+    "descriptionUk": "Більша амплітуда для нижньої частини грудей"
+  },
+  {
+    "name": "Decline Smith Machine Press",
+    "nameUk": "Жим у Сміті лежачи головою вниз",
+    "group": "Chest",
+    "subgroup": "Lower chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Decline pressing movement with a guided bar path.",
+    "descriptionUk": "Жим головою вниз із заданою траєкторією грифа."
+  },
+  {
+    "name": "High Cable Crossover",
+    "nameUk": "Зведення рук у кросовері з верхніх блоків",
+    "group": "Chest",
+    "subgroup": "Lower chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Downward load direction",
+    "descriptionUk": "Навантаження спрямоване донизу"
+  },
+  {
+    "name": "Decline Push-ups (Feet on elevation)",
+    "nameUk": "Віджимання з ногами на підвищенні",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Bodyweight with upper chest focus",
+    "descriptionUk": "Вправа з власною вагою з акцентом на верх грудей"
+  },
+  {
+    "name": "Incline Barbell Bench Press",
+    "nameUk": "Жим штанги на похилій лаві",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Incline pressing with an emphasis on the clavicular chest; front delts and triceps assist.",
+    "descriptionUk": "Жим на похилій лаві з акцентом на ключичну частину грудей; допомагають передні дельти й трицепс."
+  },
+  {
+    "name": "Incline Dumbbell Bench Press",
+    "nameUk": "Жим гантелей на похилій лаві",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Stabilization and greater range of motion",
+    "descriptionUk": "Стабілізація та більша амплітуда"
+  },
+  {
+    "name": "Incline Dumbbell Flyes",
+    "nameUk": "Розведення гантелей на похилій лаві",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Chest fly performed on an incline bench.",
+    "descriptionUk": "Розведення рук на похилій лаві."
+  },
+  {
+    "name": "Incline Smith Machine Press",
+    "nameUk": "Жим у Сміті на похилій лаві",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Controlled trajectory",
+    "descriptionUk": "Контрольована траєкторія"
+  },
+  {
+    "name": "Low Cable Crossover",
+    "nameUk": "Зведення рук у кросовері з нижніх блоків",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Upward cable fly performed from low pulleys.",
+    "descriptionUk": "Зведення рук знизу вгору з нижніх блоків."
+  },
+  {
+    "name": "Burpees",
+    "nameUk": "Берпі",
+    "group": "Conditioning",
+    "subgroup": "Bodyweight circuits",
+    "type": "StrengthTraining",
+    "description": "Full-body functional movement",
+    "descriptionUk": "Функціональна вправа на все тіло"
+  },
+  {
+    "name": "Air Bike Intervals",
+    "nameUk": "Інтервали на ейрбайку",
+    "group": "Conditioning",
+    "subgroup": "Intervals",
+    "type": "Cardio",
+    "description": "High-intensity workload",
+    "descriptionUk": "Високоінтенсивне навантаження"
+  },
+  {
+    "name": "Comprehensive full-body mobilization",
+    "nameUk": "Комплексна мобілізація всього тіла",
+    "group": "Mobility",
+    "subgroup": "General mobility",
+    "type": "Timed",
+    "description": "General mobility sequence. Log duration and note the movements in your session review.",
+    "descriptionUk": "Загальний комплекс на мобільність. Записуйте тривалість, а рухи вкажіть у відгуку про тренування."
+  },
+  {
+    "name": "Jump Rope Intervals",
+    "nameUk": "Інтервали зі скакалкою",
+    "group": "Conditioning",
+    "subgroup": "Intervals",
+    "type": "Cardio",
+    "description": "Coordination and endurance development",
+    "descriptionUk": "Розвиток координації та витривалості"
+  },
+  {
+    "name": "Rowing Machine Intervals",
+    "nameUk": "Інтервали на гребному тренажері",
+    "group": "Conditioning",
+    "subgroup": "Intervals",
+    "type": "Cardio",
+    "description": "Cardio with endurance emphasis",
+    "descriptionUk": "Кардіо з акцентом на витривалість"
+  },
+  {
+    "name": "Sprints 30/30",
+    "nameUk": "Спринти 30/30",
+    "group": "Conditioning",
+    "subgroup": "Intervals",
+    "type": "Cardio",
+    "description": "High-intensity interval cardio",
+    "descriptionUk": "Високоінтенсивне інтервальне кардіо"
+  },
+  {
+    "name": "Sled Push",
+    "nameUk": "Штовхання саней",
+    "group": "Conditioning",
+    "subgroup": "Loaded conditioning",
+    "type": "Timed",
+    "description": "Push a loaded sled. Log duration and keep distance and surface comparable between sessions.",
+    "descriptionUk": "Штовхання навантажених саней. Записуйте тривалість і тримайте схожі дистанцію й покриття від тренування до тренування."
+  },
+  {
+    "name": "Jump Rope",
+    "nameUk": "Скакалка",
+    "group": "Conditioning",
+    "subgroup": "Steady cardio",
+    "type": "Cardio",
+    "description": "Repeated rope jumps logged by duration and perceived effort.",
+    "descriptionUk": "Стрибки через скакалку; записуйте тривалість і відчуте зусилля."
+  },
+  {
+    "name": "Weighted Plank",
+    "nameUk": "Планка з обтяженням",
+    "group": "Core",
+    "subgroup": "Anti-extension",
+    "type": "Timed",
+    "description": "Isometric core stabilization. Log duration; add external load only when used.",
+    "descriptionUk": "Ізометрична стабілізація кору. Записуйте тривалість; додаткову вагу — лише якщо вона була."
+  },
+  {
+    "name": "Captain's Chair Knee Raises",
+    "nameUk": "Підйоми колін в упорі на ліктях",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Easier hanging variation",
+    "descriptionUk": "Легший варіант підйомів у висі"
+  },
+  {
+    "name": "Hanging Leg Raises",
+    "nameUk": "Підйоми ніг у висі",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Hanging leg raise involving hip flexion and trunk control.",
+    "descriptionUk": "Підйом ніг у висі: згинання в кульшових суглобах і контроль корпусу."
+  },
+  {
+    "name": "Lying Leg Raise",
+    "nameUk": "Підйоми ніг лежачи",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Supine leg raise involving hip flexion and trunk control.",
+    "descriptionUk": "Підйом ніг лежачи на спині: згинання в кульшових суглобах і контроль корпусу."
+  },
+  {
+    "name": "Plank Knee Tucks",
+    "nameUk": "Підтягування колін у планці",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Dynamic stabilization",
+    "descriptionUk": "Динамічна стабілізація"
+  },
+  {
+    "name": "Reverse Crunch",
+    "nameUk": "Зворотні скручування",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Controlled curl of the pelvis toward the rib cage.",
+    "descriptionUk": "Контрольоване підкручування таза до грудної клітки."
+  },
+  {
+    "name": "Scissor Kicks",
+    "nameUk": "«Ножиці»",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Alternating leg movement while controlling the trunk.",
+    "descriptionUk": "Почергові рухи ногами з контролем корпусу."
+  },
+  {
+    "name": "Side Plank",
+    "nameUk": "Бічна планка",
+    "group": "Core",
+    "subgroup": "Lateral stability",
+    "type": "Timed",
+    "description": "Isometric oblique work. Log duration; add external load only when used.",
+    "descriptionUk": "Ізометрична робота косих м’язів. Записуйте тривалість; додаткову вагу — лише якщо вона була."
+  },
+  {
+    "name": "Cable Woodchopper",
+    "nameUk": "«Дроворуб» на блоці",
+    "group": "Core",
+    "subgroup": "Rotation & lateral stability",
+    "type": "StrengthTraining",
+    "description": "Diagonal rotational movement",
+    "descriptionUk": "Діагональний обертальний рух"
+  },
+  {
+    "name": "Knee to Elbow Crunches",
+    "nameUk": "Скручування «коліно до ліктя»",
+    "group": "Core",
+    "subgroup": "Rotation & lateral stability",
+    "type": "StrengthTraining",
+    "description": "Coordination and rotation",
+    "descriptionUk": "Координація й обертання"
+  },
+  {
+    "name": "Russian Twists",
+    "nameUk": "Російські скручування",
+    "group": "Core",
+    "subgroup": "Rotation & lateral stability",
+    "type": "StrengthTraining",
+    "description": "Core rotation and obliques",
+    "descriptionUk": "Обертання корпусу та косі м’язи"
+  },
+  {
+    "name": "Side Crunches",
+    "nameUk": "Бічні скручування",
+    "group": "Core",
+    "subgroup": "Rotation & lateral stability",
+    "type": "StrengthTraining",
+    "description": "Emphasis on oblique muscles",
+    "descriptionUk": "Акцент на косі м’язи живота"
+  },
+  {
+    "name": "Weighted Russian Twists",
+    "nameUk": "Російські скручування з обтяженням",
+    "group": "Core",
+    "subgroup": "Rotation & lateral stability",
+    "type": "StrengthTraining",
+    "description": "Additional weight for obliques",
+    "descriptionUk": "Додаткова вага для косих м’язів"
+  },
+  {
+    "name": "Cable Crunch",
+    "nameUk": "Скручування на блоці",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Constant tension on abs",
+    "descriptionUk": "Постійне напруження м’язів пресу"
+  },
+  {
+    "name": "Fitball Crunches",
+    "nameUk": "Скручування на фітболі",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Stretch and core control",
+    "descriptionUk": "Розтягнення й контроль кору"
+  },
+  {
+    "name": "Floor Crunches",
+    "nameUk": "Скручування на підлозі",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Trunk flexion from a supine position.",
+    "descriptionUk": "Згинання корпусу з положення лежачи на спині."
+  },
+  {
+    "name": "Incline Bench Crunches",
+    "nameUk": "Скручування на похилій лаві",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Increased range of motion",
+    "descriptionUk": "Збільшена амплітуда"
+  },
+  {
+    "name": "Machine Crunch",
+    "nameUk": "Скручування в тренажері",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Controlled isolation",
+    "descriptionUk": "Контрольована ізоляція"
+  },
+  {
+    "name": "Weighted Crunches",
+    "nameUk": "Скручування з обтяженням",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Additional resistance",
+    "descriptionUk": "Додатковий опір"
+  },
+  {
+    "name": "Leg Press Calf Raise",
+    "nameUk": "Підйоми на носки в тренажері для жиму ногами",
+    "group": "Legs",
+    "subgroup": "Calves",
+    "type": "StrengthTraining",
+    "description": "Heavy weight for calves",
+    "descriptionUk": "Велика вага для литок"
+  },
+  {
+    "name": "Seated Calf Raise",
+    "nameUk": "Підйоми на носки сидячи",
+    "group": "Legs",
+    "subgroup": "Calves",
+    "type": "StrengthTraining",
+    "description": "Soleus muscle emphasis",
+    "descriptionUk": "Акцент на камбалоподібний м’яз"
+  },
+  {
+    "name": "Single-Leg Calf Raise",
+    "nameUk": "Підйоми на носок на одній нозі",
+    "group": "Legs",
+    "subgroup": "Calves",
+    "type": "StrengthTraining",
+    "description": "Unilateral control",
+    "descriptionUk": "Односторонній контроль"
+  },
+  {
+    "name": "Standing Calf Raise",
+    "nameUk": "Підйоми на носки стоячи",
+    "group": "Legs",
+    "subgroup": "Calves",
+    "type": "StrengthTraining",
+    "description": "Main movement for calves",
+    "descriptionUk": "Основна вправа для литок"
+  },
+  {
+    "name": "Tip-Toe Farmer's Walk",
+    "nameUk": "Прогулянка фермера на носках",
+    "group": "Legs",
+    "subgroup": "Calves",
+    "type": "Timed",
+    "description": "Statodynamic load. Log duration; add external load only when used.",
+    "descriptionUk": "Статодинамічне навантаження. Записуйте тривалість; додаткову вагу — лише якщо вона була."
+  },
+  {
+    "name": "Barbell Glute Bridge",
+    "nameUk": "Сідничний місток зі штангою",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Hip extension from the floor with a barbell across the hips. Primary focus: glutes.",
+    "descriptionUk": "Розгинання в кульшових суглобах з підлоги зі штангою на стегнах. Основний акцент — сідниці."
+  },
+  {
+    "name": "Cable Hip Abduction",
+    "nameUk": "Відведення ноги в кросовері",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Medius glute isolation",
+    "descriptionUk": "Ізоляція середнього сідничного м’яза"
+  },
+  {
+    "name": "Hip Thrust",
+    "nameUk": "Хіп-траст",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Hip extension with the upper back supported on a bench.",
+    "descriptionUk": "Розгинання в кульшових суглобах з опорою верхньою частиною спини на лаву."
+  },
+  {
+    "name": "Machine Hip Abduction",
+    "nameUk": "Розведення ніг у тренажері",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Abductor muscle isolation",
+    "descriptionUk": "Ізоляція відвідних м’язів"
+  },
+  {
+    "name": "Reverse Hyperextension",
+    "nameUk": "Зворотна гіперекстензія",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Lower back and glutes",
+    "descriptionUk": "Поперек і сідниці"
+  },
+  {
+    "name": "Reverse Lunges",
+    "nameUk": "Зворотні випади",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Stabilization and glute emphasis",
+    "descriptionUk": "Стабілізація та акцент на сідниці"
+  },
+  {
+    "name": "Step-Ups",
+    "nameUk": "Зашагування на платформу",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Functional single-leg work",
+    "descriptionUk": "Функціональна робота на одній нозі"
+  },
+  {
+    "name": "Dumbbell Romanian Deadlift",
+    "nameUk": "Румунська тяга з гантелями",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Hip hinge with dumbbells. Primary focus: hamstrings and glutes; keep the spine controlled.",
+    "descriptionUk": "Нахил із відведенням таза з гантелями. Основний акцент — задня поверхня стегна й сідниці; тримайте спину під контролем."
+  },
+  {
+    "name": "Glute-Ham Raise",
+    "nameUk": "Сіднично-стегнові підйоми (GHR)",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Strength exercise for hamstrings",
+    "descriptionUk": "Силова вправа для задньої поверхні стегна"
+  },
+  {
+    "name": "Lying Leg Curl",
+    "nameUk": "Згинання ніг лежачи",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Hamstring isolation",
+    "descriptionUk": "Ізоляція задньої поверхні стегна"
+  },
+  {
+    "name": "Romanian Deadlift",
+    "nameUk": "Румунська тяга",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Posterior chain and lower back",
+    "descriptionUk": "Задній ланцюг і поперек"
+  },
+  {
+    "name": "Seated Leg Curl",
+    "nameUk": "Згинання ніг сидячи",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Controlled hamstring isolation",
+    "descriptionUk": "Контрольована ізоляція задньої поверхні стегна"
+  },
+  {
+    "name": "Stiff-Leg Deadlift",
+    "nameUk": "Тяга на прямих ногах",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Tension and strengthening of the posterior chain",
+    "descriptionUk": "Напруження й зміцнення заднього ланцюга"
+  },
+  {
+    "name": "Deadlift",
+    "nameUk": "Станова тяга",
+    "group": "Legs",
+    "subgroup": "Posterior chain",
+    "type": "StrengthTraining",
+    "description": "Complex strength exercise",
+    "descriptionUk": "Комплексна силова вправа"
+  },
+  {
+    "name": "Barbell Back Squat",
+    "nameUk": "Присідання зі штангою на спині",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Base for leg strength and mass",
+    "descriptionUk": "Основа сили й маси ніг"
+  },
+  {
+    "name": "Bulgarian Split Squat",
+    "nameUk": "Болгарські спліт-присідання",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Deep range of motion for quads",
+    "descriptionUk": "Глибока амплітуда для квадрицепсів"
+  },
+  {
+    "name": "Dumbbell Lunges",
+    "nameUk": "Випади з гантелями",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Unilateral work and balance",
+    "descriptionUk": "Одностороння робота й баланс"
+  },
+  {
+    "name": "Front Squats",
+    "nameUk": "Фронтальні присідання",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Greater quad emphasis",
+    "descriptionUk": "Більший акцент на квадрицепси"
+  },
+  {
+    "name": "Leg Extension",
+    "nameUk": "Розгинання ніг у тренажері",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Quad isolation",
+    "descriptionUk": "Ізоляція квадрицепсів"
+  },
+  {
+    "name": "Leg Press",
+    "nameUk": "Жим ногами",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Strength movement in machine",
+    "descriptionUk": "Силова вправа в тренажері"
+  },
+  {
+    "name": "Hip Mobilization",
+    "nameUk": "Мобілізація кульшових суглобів",
+    "group": "Mobility",
+    "subgroup": "Hip mobility",
+    "type": "Timed",
+    "description": "Preparation for squats. Log duration; add external load only when used.",
+    "descriptionUk": "Підготовка до присідань. Записуйте тривалість; додаткову вагу — лише якщо вона була."
+  },
+  {
+    "name": "Hamstring Stretch",
+    "nameUk": "Розтяжка задньої поверхні стегна",
+    "group": "Mobility",
+    "subgroup": "Lower body stretches",
+    "type": "Timed",
+    "description": "Reduced hamstring stiffness. Log duration; add external load only when used.",
+    "descriptionUk": "Зменшення скутості задньої поверхні стегна. Записуйте тривалість; додаткову вагу — лише якщо вона була."
+  },
+  {
+    "name": "Wall Calf Stretch",
+    "nameUk": "Розтяжка литок біля стіни",
+    "group": "Mobility",
+    "subgroup": "Lower body stretches",
+    "type": "Timed",
+    "description": "Ankle mobility improvement. Log duration; add external load only when used.",
+    "descriptionUk": "Покращення рухливості гомілковостопного суглоба. Записуйте тривалість; додаткову вагу — лише якщо вона була."
+  },
+  {
+    "name": "Cat-Cow",
+    "nameUk": "«Кішка-корова»",
+    "group": "Mobility",
+    "subgroup": "Spine mobility",
+    "type": "StrengthTraining",
+    "description": "Spinal mobility",
+    "descriptionUk": "Рухливість хребта"
+  },
+  {
+    "name": "Thoracic Opening",
+    "nameUk": "Розкриття грудного відділу",
+    "group": "Mobility",
+    "subgroup": "Spine mobility",
+    "type": "Timed",
+    "description": "Shoulder girdle mobility improvement. Log duration; add external load only when used.",
+    "descriptionUk": "Покращення рухливості плечового пояса. Записуйте тривалість; додаткову вагу — лише якщо вона була."
+  },
+  {
+    "name": "Arnold Press",
+    "nameUk": "Жим Арнольда",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Rotational movement for full shoulder development",
+    "descriptionUk": "Жим з обертанням для всебічного розвитку плечей"
+  },
+  {
+    "name": "Dumbbell Front Raise",
+    "nameUk": "Підйом гантелей перед собою",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Front delt isolation",
+    "descriptionUk": "Ізоляція передніх дельт"
+  },
+  {
+    "name": "Front Plate Raises",
+    "nameUk": "Підйом млинця перед собою",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Front delt load",
+    "descriptionUk": "Навантаження на передні дельти"
+  },
+  {
+    "name": "Seated Dumbbell Press",
+    "nameUk": "Жим гантелей сидячи",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Stable version for delts",
+    "descriptionUk": "Стабільний варіант для дельт"
+  },
+  {
+    "name": "Shoulder Press Machine",
+    "nameUk": "Жим угору в тренажері",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Overhead pressing movement with a machine-guided path.",
+    "descriptionUk": "Жим угору в тренажері з заданою траєкторією."
+  },
+  {
+    "name": "Standing Dumbbell Press",
+    "nameUk": "Жим гантелей стоячи",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Strength version for shoulders",
+    "descriptionUk": "Силовий варіант для плечей"
+  },
+  {
+    "name": "Standing Overhead Press",
+    "nameUk": "Армійський жим стоячи",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Strength exercise for front delt",
+    "descriptionUk": "Силова вправа для передніх дельт"
+  },
+  {
+    "name": "Face Pull",
+    "nameUk": "Тяга канату до обличчя",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Face Pull. Track controlled sets and use a comfortable range of motion.",
+    "descriptionUk": "Тяга канату до обличчя. Виконуйте підходи під контролем і в комфортній амплітуді."
+  },
+  {
+    "name": "Face Pull with Pause",
+    "nameUk": "Тяга канату до обличчя з паузою",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Rear delt peak contraction",
+    "descriptionUk": "Пікове скорочення задніх дельт"
+  },
+  {
+    "name": "Prone Dumbbell Rear Delt Row",
+    "nameUk": "Тяга гантелей на задні дельти лежачи на лаві",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Rear delt work without momentum",
+    "descriptionUk": "Робота задніх дельт без інерції"
+  },
+  {
+    "name": "Reverse Dumbbell Flyes",
+    "nameUk": "Розведення гантелей у нахилі",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Rear delt isolation",
+    "descriptionUk": "Ізоляція задніх дельт"
+  },
+  {
+    "name": "Reverse Pec Deck",
+    "nameUk": "Зворотні розведення в тренажері «метелик»",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Controlled machine movement",
+    "descriptionUk": "Контрольований рух у тренажері"
+  },
+  {
+    "name": "Wide-Grip Barbell Row to Chest",
+    "nameUk": "Тяга штанги широким хватом до грудей",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Rear delts and traps",
+    "descriptionUk": "Задні дельти й трапеції"
+  },
+  {
+    "name": "Cable Lateral Raise",
+    "nameUk": "Махи в сторону на нижньому блоці",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Constant tension throughout the movement",
+    "descriptionUk": "Постійне напруження впродовж усього руху"
+  },
+  {
+    "name": "Dumbbell Lateral Raises",
+    "nameUk": "Махи гантелями в сторони",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Classic side delt isolation",
+    "descriptionUk": "Класична ізоляція середніх дельт"
+  },
+  {
+    "name": "Dumbbell Upright Row",
+    "nameUk": "Тяга гантелей до підборіддя",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Alternative to upright barbell row",
+    "descriptionUk": "Альтернатива тязі штанги до підборіддя"
+  },
+  {
+    "name": "Machine Lateral Raise",
+    "nameUk": "Махи в сторони в тренажері",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Stabilized isolation",
+    "descriptionUk": "Стабілізована ізоляція"
+  },
+  {
+    "name": "Single-Arm Lateral Raise",
+    "nameUk": "Мах однією рукою в сторону",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Symmetry focus",
+    "descriptionUk": "Акцент на симетрію"
+  },
+  {
+    "name": "Upright Row",
+    "nameUk": "Тяга штанги до підборіддя",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Traps and delts",
+    "descriptionUk": "Трапеції та дельти"
+  }
+]
