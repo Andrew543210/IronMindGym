@@ -1,6 +1,7 @@
 ﻿using IronMindGym.Data;
 using IronMindGym.Models;
 using IronMindGym.Security;
+using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Seed;
 
@@ -8,6 +9,8 @@ public static class DataSeeder
 {
     public static void Seed(IronMindDbContext db)
     {
+        EnsureSpecificUsersDemographics(db);
+
         if (db.Users.Any())
         {
             return;
@@ -153,6 +156,34 @@ public static class DataSeeder
             new PersonalRecord { User = user, Exercise = exercises["Присідання зі штангою"], MaxWeightKg = 155, UpdatedAt = DateTime.UtcNow.AddDays(-12) });
 
         db.Friendships.Add(new Friendship { User1 = user, User2 = friend, Status = "Accepted" });
+
+        db.SaveChanges();
+    }
+
+    private static void EnsureSpecificUsersDemographics(IronMindDbContext db)
+    {
+        var targetUsernames = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "AndrewKhrushch19",
+            "PavloKhrushch"
+        };
+
+        var users = db.Users
+            .Include(u => u.Profile)
+            .Where(u => targetUsernames.Contains(u.Username))
+            .ToList();
+
+        if (users.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var user in users)
+        {
+            user.Profile ??= new Profile { UserId = user.Id, AccountCreatedAt = DateTime.UtcNow };
+            user.Profile.Gender = "Male";
+            user.Profile.Age = 14;
+        }
 
         db.SaveChanges();
     }

@@ -5,8 +5,9 @@ namespace IronMindGym.ViewModels;
 
 public class WorkoutLoggerViewModel
 {
-    [Required, MaxLength(120)]
-    public string SessionName { get; set; } = "Силове тренування";
+    public bool IsTrainingActive { get; set; }
+
+    public string ActiveSplitTypeName { get; set; } = string.Empty;
 
     [Range(10, 240)]
     public int DurationMinutes { get; set; } = 60;
@@ -15,8 +16,8 @@ public class WorkoutLoggerViewModel
 
     public int? SplitTypeId { get; set; }
 
-    [MaxLength(80)]
-    public string SplitDayLabel { get; set; } = "День сили";
+    [Required, MaxLength(80)]
+    public string SplitDayLabel { get; set; } = string.Empty;
 
     [Required]
     public int ExerciseId { get; set; }
@@ -83,8 +84,8 @@ public class WorkoutSummaryViewModel
 public class ExerciseWorkoutSummaryViewModel
 {
     public string ExerciseName { get; set; } = string.Empty;
-    public double AverageLoad { get; set; }
-    public double PeakLoad { get; set; }
+    public double? AverageLoad { get; set; }
+    public double? PeakLoad { get; set; }
     public double PeakWeightKg { get; set; }
     public double? PercentToPersonalRecord { get; set; }
     public bool IsNewRecord { get; set; }

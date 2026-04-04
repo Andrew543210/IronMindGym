@@ -9,8 +9,10 @@ using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Data Source=ironmind.db";
 builder.Services.AddDbContext<IronMindDbContext>(options =>
-    options.UseInMemoryDatabase("IronMindDb"));
+    options.UseSqlite(connectionString));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -36,6 +38,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<IronMindDbContext>();
+    dbContext.Database.EnsureCreated();
     DataSeeder.Seed(dbContext);
 }
 

@@ -11,7 +11,7 @@ namespace IronMindGym.Controllers;
 public class WorkoutLoggerController(IronMindDbContext db) : Controller
 {
     [HttpGet]
-    public IActionResult Index()
+    public IActionResult Index(bool startTraining = false)
     {
         var userId = HttpContext.Session.GetInt32("UserId");
         if (!userId.HasValue)
@@ -19,8 +19,8 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             return RedirectToAction("Login", "Auth");
         }
 
-        var vm = BuildIndexViewModel(userId.Value);
-        FillSelections(vm);
+        var vm = BuildIndexViewModel(userId.Value, startTraining);
+        FillSelections(vm, userId.Value);
         return View(vm);
     }
 
@@ -34,7 +34,8 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         }
 
         var currentUserId = userId.Value;
-        FillSelections(model);
+        model.IsTrainingActive = true;
+        FillSelections(model, currentUserId);
 
         List<DraftSetItemViewModel>? draftSets;
         try
@@ -56,15 +57,18 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         if (!ModelState.IsValid)
         {
             model.RecentSessions = BuildRecentSessions(currentUserId);
-            return View(model);
+            return View("Index", model);
         }
 
         var safeDraftSets = draftSets!;
 
         var splitTypeName = db.SplitTypes.AsNoTracking().FirstOrDefault(s => s.Id == model.SplitTypeId)?.Name;
-        var sessionName = string.IsNullOrWhiteSpace(model.SessionName)
-            ? "Силове тренування"
-            : model.SessionName.Trim();
+        var splitDayLabel = string.IsNullOrWhiteSpace(model.SplitDayLabel)
+            ? "Тренування"
+            : model.SplitDayLabel.Trim();
+        var sessionName = splitDayLabel.StartsWith("День ", StringComparison.OrdinalIgnoreCase)
+            ? splitDayLabel
+            : $"День {splitDayLabel}";
 
         var session = new WorkoutSession
         {
@@ -114,14 +118,17 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             db.PerformedExercises.Add(performedExercise);
 
             var exerciseName = db.Exercises.AsNoTracking().First(e => e.Id == exerciseGroup.Key).Name;
-            var loads = exerciseGroup.Select(x => x.WeightKg * x.Reps).ToList();
             var peakWeight = exerciseGroup.Max(x => x.WeightKg);
             var existingRecord = db.PersonalRecords.FirstOrDefault(pr => pr.UserId == currentUserId && pr.ExerciseId == exerciseGroup.Key);
+            var baselineRecordWeight = existingRecord?.MaxWeightKg;
+
+            var setLoadPercents = (baselineRecordWeight.HasValue && baselineRecordWeight.Value > 0)
+                ? exerciseGroup.Select(x => x.WeightKg / baselineRecordWeight.Value * 100.0).ToList()
+                : new List<double>();
 
             var isNewRecord = existingRecord == null || peakWeight > existingRecord.MaxWeightKg;
-            var percentToRecord = existingRecord == null
-                ? (double?)null
-                : Math.Round(peakWeight / existingRecord.MaxWeightKg * 100.0, 1);
+            var averagePercent = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Average(), 1);
+            var peakPercent = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Max(), 1);
 
             if (isNewRecord)
             {
@@ -146,10 +153,10 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             {
                 ExerciseName = exerciseName,
                 SetsCount = exerciseGroup.Count(),
-                AverageLoad = Math.Round(loads.Average(), 1),
-                PeakLoad = Math.Round(loads.Max(), 1),
+                AverageLoad = averagePercent,
+                PeakLoad = peakPercent,
                 PeakWeightKg = peakWeight,
-                PercentToPersonalRecord = percentToRecord,
+                PercentToPersonalRecord = peakPercent,
                 IsNewRecord = isNewRecord
             });
         }
@@ -220,19 +227,30 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         var stats = session.PerformedExercises
             .Select(pe =>
             {
-                var loads = pe.Sets.Select(set => set.WeightKg * set.Reps).ToList();
                 var peakWeight = pe.Sets.Max(set => set.WeightKg);
-                var currentRecord = db.PersonalRecords.AsNoTracking().FirstOrDefault(pr => pr.UserId == currentUserId && pr.ExerciseId == pe.ExerciseId);
+                var previousRecordWeight = db.PerformedExercises
+                    .AsNoTracking()
+                    .Where(x => x.ExerciseId == pe.ExerciseId && x.WorkoutSession.UserId == currentUserId && x.WorkoutSessionId != session.Id)
+                    .SelectMany(x => x.Sets)
+                    .Select(x => (double?)x.WeightKg)
+                    .Max();
+
+                var setLoadPercents = (previousRecordWeight.HasValue && previousRecordWeight.Value > 0)
+                    ? pe.Sets.Select(set => set.WeightKg / previousRecordWeight.Value * 100.0).ToList()
+                    : new List<double>();
+
+                var averagePercent = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Average(), 1);
+                var peakPercent = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Max(), 1);
 
                 return new ExerciseWorkoutSummaryViewModel
                 {
                     ExerciseName = pe.Exercise.Name,
                     SetsCount = pe.Sets.Count,
-                    AverageLoad = Math.Round(loads.Average(), 1),
-                    PeakLoad = Math.Round(loads.Max(), 1),
+                    AverageLoad = averagePercent,
+                    PeakLoad = peakPercent,
                     PeakWeightKg = peakWeight,
-                    PercentToPersonalRecord = currentRecord == null ? null : Math.Round(peakWeight / currentRecord.MaxWeightKg * 100.0, 1),
-                    IsNewRecord = currentRecord != null && peakWeight >= currentRecord.MaxWeightKg
+                    PercentToPersonalRecord = peakPercent,
+                    IsNewRecord = !previousRecordWeight.HasValue || peakWeight > previousRecordWeight.Value
                 };
             })
             .ToList();
@@ -264,10 +282,11 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         return View(detailsVm);
     }
 
-    private WorkoutLoggerViewModel BuildIndexViewModel(int currentUserId)
+    private WorkoutLoggerViewModel BuildIndexViewModel(int currentUserId, bool startTraining)
     {
         var vm = new WorkoutLoggerViewModel
         {
+            IsTrainingActive = startTraining,
             RecentSessions = BuildRecentSessions(currentUserId)
         };
 
@@ -295,8 +314,19 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             .ToList();
     }
 
-    private void FillSelections(WorkoutLoggerViewModel model)
+    private void FillSelections(WorkoutLoggerViewModel model, int currentUserId)
     {
+        var activePlan = db.WorkoutPlans
+            .AsNoTracking()
+            .Include(p => p.SplitType)
+            .FirstOrDefault(p => p.UserId == currentUserId && p.IsActive);
+
+        if (activePlan != null)
+        {
+            model.SplitTypeId = activePlan.SplitTypeId;
+            model.ActiveSplitTypeName = activePlan.SplitType.Name;
+        }
+
         var groups = db.MuscleGroups.AsNoTracking().OrderBy(g => g.Name).ToList();
         var subGroups = db.MuscleSubGroups.AsNoTracking().OrderBy(s => s.Name).ToList();
         var exercises = db.Exercises
@@ -306,7 +336,20 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             .OrderBy(e => e.Name)
             .ToList();
 
-        ViewBag.SplitTypes = new SelectList(db.SplitTypes.AsNoTracking().OrderBy(s => s.Name), "Id", "Name", model.SplitTypeId);
+        var splitTypeItems = activePlan == null
+            ? db.SplitTypes.AsNoTracking().OrderBy(s => s.Name).ToList()
+            : new List<SplitType> { activePlan.SplitType };
+
+        ViewBag.SplitTypes = new SelectList(splitTypeItems, "Id", "Name", model.SplitTypeId);
+
+        var selectedSplitTypeName = splitTypeItems.FirstOrDefault(s => s.Id == model.SplitTypeId)?.Name;
+        var splitDays = BuildSplitDayOptions(selectedSplitTypeName);
+        if (!splitDays.Contains(model.SplitDayLabel, StringComparer.OrdinalIgnoreCase))
+        {
+            model.SplitDayLabel = splitDays.First();
+        }
+
+        ViewBag.SplitDays = new SelectList(splitDays, model.SplitDayLabel);
         ViewBag.MuscleGroups = new SelectList(groups, "Id", "Name", model.SelectedMuscleGroupId);
         ViewBag.MuscleSubGroups = new SelectList(subGroups, "Id", "Name", model.SelectedMuscleSubGroupId);
         ViewBag.Exercises = new SelectList(exercises, "Id", "Name", model.ExerciseId);
@@ -321,6 +364,33 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             MuscleSubGroupId = e.MuscleSubGroupId,
             MuscleSubGroupName = e.MuscleSubGroup.Name
         }).ToList();
+    }
+
+    private static List<string> BuildSplitDayOptions(string? splitTypeName)
+    {
+        if (string.IsNullOrWhiteSpace(splitTypeName))
+        {
+            return new List<string> { "Тренувальний день" };
+        }
+
+        var normalized = splitTypeName.Trim().ToLowerInvariant();
+
+        if (normalized.Contains("legs-back-chest"))
+        {
+            return new List<string> { "Legs", "Back", "Chest" };
+        }
+
+        if (normalized.Contains("upper-lower"))
+        {
+            return new List<string> { "Upper", "Lower" };
+        }
+
+        if (normalized.Contains("full-body"))
+        {
+            return new List<string> { "Full Body" };
+        }
+
+        return new List<string> { "Тренувальний день" };
     }
 
     private void AssignAchievements(int userId)

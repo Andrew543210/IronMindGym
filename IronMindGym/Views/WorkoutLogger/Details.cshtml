@@ -44,16 +44,15 @@
         <p class="mb-1">Середній відпочинок: <strong>@Model.Summary.AverageRestSeconds сек</strong></p>
         <p class="mb-3">Ще тренувань цього тижня: <strong>@Model.Summary.RemainingWorkoutsThisWeek</strong></p>
         <table class="table table-sm">
-            <thead><tr><th>Вправа</th><th>Підходи</th><th>Сер. навантаження</th><th>Пікове навантаження</th><th>% до рекорду</th><th>Рекорд</th></tr></thead>
+            <thead><tr><th>Вправа</th><th>Підходи</th><th>Сер. навантаження (% від PR)</th><th>Пікове (% від PR)</th><th>Рекорд</th></tr></thead>
             <tbody>
             @foreach (var stat in Model.Summary.ExerciseStats)
             {
                 <tr>
                     <td>@stat.ExerciseName</td>
                     <td>@stat.SetsCount</td>
-                    <td>@stat.AverageLoad</td>
-                    <td>@stat.PeakLoad</td>
-                    <td>@(stat.PercentToPersonalRecord.HasValue ? $"{stat.PercentToPersonalRecord}%" : "-")</td>
+                    <td>@(stat.AverageLoad.HasValue ? $"{stat.AverageLoad}%" : "-")</td>
+                    <td>@(stat.PeakLoad.HasValue ? $"{stat.PeakLoad}%" : "-")</td>
                     <td>@(stat.IsNewRecord ? "Новий рекорд" : "Без нового")</td>
                 </tr>
             }
