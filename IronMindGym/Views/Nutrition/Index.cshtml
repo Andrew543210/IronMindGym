@@ -29,7 +29,58 @@
 @if (!string.IsNullOrWhiteSpace(Model.SystemAdvice))
 {
     <div class="alert alert-info mt-4">
-        <strong>Оцінка системи:</strong> @Model.SystemAdvice
+        <div><strong>Оцінка системи:</strong> @Model.SystemAdvice</div>
+        <div class="mt-1"><strong>Вердикт:</strong> @Model.SystemVerdict</div>
+        <div><strong>Score:</strong> <span class="metric">@Model.SystemScore</span>/100</div>
+
+        @if (Model.AdviceItems.Any())
+        {
+            <hr />
+            <ul class="mb-0">
+                @foreach (var tip in Model.AdviceItems)
+                {
+                    <li>@tip</li>
+                }
+            </ul>
+        }
     </div>
 }
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5>Журнал (останні 10 днів)</h5>
+        @if (!Model.RecentLogs.Any())
+        {
+            <p class="mb-0">Ще немає записів.</p>
+        }
+        else
+        {
+            <table class="table table-sm mt-3 mb-0">
+                <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Калорії</th>
+                    <th>Б</th>
+                    <th>Ж</th>
+                    <th>В</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var day in Model.RecentLogs)
+                {
+                    <tr>
+                        <td class="metric">@day.Date.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                        <td class="metric">@day.CaloriesKcal</td>
+                        <td class="metric">@day.ProteinG</td>
+                        <td class="metric">@day.FatG</td>
+                        <td class="metric">@day.CarbsG</td>
+                        <td><a asp-action="Details" asp-route-id="@day.Id" class="btn btn-outline-light btn-sm">Деталі</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
 

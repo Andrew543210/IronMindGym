@@ -1,0 +1,161 @@
+﻿body.mono-theme {
+    background: #0A0A0A;
+    color: #FFFFFF;
+}
+
+.mono-theme .container {
+    color: #FFFFFF;
+}
+
+.mono-theme .navbar,
+.mono-theme .modal-content,
+.mono-theme .dropdown-menu,
+.mono-theme .card,
+.mono-theme .list-group-item,
+.mono-theme .table,
+.mono-theme .alert,
+.mono-theme .form-control,
+.mono-theme .form-select,
+.mono-theme .input-group-text {
+    background: #111111;
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.mono-theme .card-header,
+.mono-theme .card-footer,
+.mono-theme .table thead th {
+    background: #111111;
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.mono-theme .table,
+.mono-theme .table td,
+.mono-theme .table th,
+.mono-theme .list-group-item,
+.mono-theme .alert,
+.mono-theme .form-control,
+.mono-theme .form-select,
+.mono-theme .btn,
+.mono-theme .navbar,
+.mono-theme .nav-link,
+.mono-theme .navbar-brand {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.mono-theme .table {
+    --bs-table-bg: #111111;
+    --bs-table-color: #FFFFFF;
+    --bs-table-border-color: rgba(255, 255, 255, 0.1);
+    --bs-table-striped-bg: #161616;
+    --bs-table-striped-color: #FFFFFF;
+    --bs-table-hover-bg: #1A1A1A;
+    --bs-table-hover-color: #FFFFFF;
+}
+
+.mono-theme .text-muted,
+.mono-theme .form-text,
+.mono-theme .small {
+    color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.mono-theme .nav-link,
+.mono-theme .navbar-brand,
+.mono-theme .form-label,
+.mono-theme .form-check-label,
+.mono-theme p,
+.mono-theme span,
+.mono-theme li,
+.mono-theme td,
+.mono-theme th {
+    color: #FFFFFF !important;
+}
+
+.mono-theme ::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+    opacity: 1;
+}
+
+.mono-theme h1,
+.mono-theme h2,
+.mono-theme h3,
+.mono-theme h4,
+.mono-theme h5,
+.mono-theme h6,
+.mono-theme .card-header,
+.mono-theme .navbar-brand {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.mono-theme .btn-primary,
+.mono-theme .btn-success,
+.mono-theme .btn-dark {
+    background: #FFFFFF;
+    color: #000000;
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.mono-theme .btn-primary:hover,
+.mono-theme .btn-success:hover,
+.mono-theme .btn-dark:hover {
+    background: #E8E8E8;
+    color: #000000;
+}
+
+.mono-theme .btn-outline-primary,
+.mono-theme .btn-outline-success,
+.mono-theme .btn-outline-secondary,
+.mono-theme .btn-outline-warning,
+.mono-theme .btn-outline-danger,
+.mono-theme .btn-outline-light {
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+.mono-theme .btn-outline-primary:hover,
+.mono-theme .btn-outline-success:hover,
+.mono-theme .btn-outline-secondary:hover,
+.mono-theme .btn-outline-warning:hover,
+.mono-theme .btn-outline-danger:hover,
+.mono-theme .btn-outline-light:hover {
+    background: #FFFFFF;
+    color: #000000;
+}
+
+.mono-theme .metric,
+.mono-theme .numeric,
+.mono-theme input[type="number"],
+.mono-theme #restTimerValue {
+    font-family: Consolas, "Courier New", monospace;
+}
+
+.mono-theme .card,
+.mono-theme .btn,
+.mono-theme .form-control,
+.mono-theme .form-select,
+.mono-theme .alert,
+.mono-theme .list-group-item,
+.mono-theme .table,
+.mono-theme .navbar {
+    border-radius: 0.2rem !important;
+}
+
+.mono-theme .form-control:focus,
+.mono-theme .form-select:focus {
+    color: #FFFFFF;
+    background: #0F0F0F;
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 0 0.15rem rgba(255, 255, 255, 0.08);
+}
+
+.mono-theme a {
+    color: #FFFFFF;
+}
+
+.mono-theme a:hover {
+    color: #E8E8E8;
+}
+
+

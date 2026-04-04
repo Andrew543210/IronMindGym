@@ -10,7 +10,7 @@ public class LoginViewModel
     [Required]
     public string Password { get; set; } = string.Empty;
 
-    public bool RememberMe { get; set; }
+    public bool RememberMe { get; set; } = true;
 }
 
 public class RegisterViewModel
@@ -20,6 +20,9 @@ public class RegisterViewModel
 
     [Required, EmailAddress]
     public string Email { get; set; } = string.Empty;
+
+    [Range(12, 100)]
+    public int Age { get; set; } = 18;
 
     [Required, MinLength(6)]
     public string Password { get; set; } = string.Empty;

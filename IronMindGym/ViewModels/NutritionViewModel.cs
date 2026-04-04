@@ -17,5 +17,29 @@ public class NutritionViewModel
     public double CarbsG { get; set; }
 
     public string SystemAdvice { get; set; } = string.Empty;
+    public string SystemVerdict { get; set; } = string.Empty;
+    public int SystemScore { get; set; }
+    public List<string> AdviceItems { get; set; } = new();
+    public List<NutritionLogListItemViewModel> RecentLogs { get; set; } = new();
+}
+
+public class NutritionLogListItemViewModel
+{
+    public int Id { get; set; }
+    public DateTime Date { get; set; }
+    public double CaloriesKcal { get; set; }
+    public double ProteinG { get; set; }
+    public double FatG { get; set; }
+    public double CarbsG { get; set; }
+}
+
+public class NutritionDetailsViewModel
+{
+    public NutritionLogListItemViewModel Log { get; set; } = new();
+    public string SystemAdvice { get; set; } = string.Empty;
+    public string SystemVerdict { get; set; } = string.Empty;
+    public int SystemScore { get; set; }
+    public List<string> AdviceItems { get; set; } = new();
+    public List<NutritionLogListItemViewModel> RecentLogs { get; set; } = new();
 }
 

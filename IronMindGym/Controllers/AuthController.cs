@@ -66,13 +66,13 @@ public class AuthController(IronMindDbContext db) : Controller
             Username = model.Username,
             Email = model.Email,
             PasswordHash = PasswordHashUtility.Hash(model.Password),
-            Profile = new Profile { Age = 18, Gender = "Unknown", AccountCreatedAt = DateTime.UtcNow }
+            Profile = new Profile { Age = model.Age, Gender = "Unknown", AccountCreatedAt = DateTime.UtcNow }
         };
 
         db.Users.Add(user);
         db.SaveChanges();
 
-        await SignInUserAsync(user.Id, user.Username, false);
+        await SignInUserAsync(user.Id, user.Username, true);
         TempData["Message"] = "Реєстрація успішна. Заповни стартові дані профілю.";
 
         return RedirectToAction("Index", "Setup");

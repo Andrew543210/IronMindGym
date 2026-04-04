@@ -13,22 +13,81 @@
     </div>
 </form>
 
+@if (!Model.Friends.Any())
+{
+    <div class="alert alert-secondary">Нічого не знайдено за вказаним username.</div>
+}
+
 @foreach (var friend in Model.Friends)
 {
-    <div class="card mb-2">
+    <div class="card mb-3">
         <div class="card-body">
             <div>
                 <strong>@friend.Username</strong>
                 <div class="small text-muted">Статус: @friend.Status</div>
-                <div class="small text-muted">Середній калораж: @Math.Round(friend.AverageKcal, 1) ккал</div>
+                <div class="small text-muted">Середній калораж: <span class="metric">@Math.Round(friend.AverageKcal, 1)</span> ккал</div>
             </div>
-            <div class="mt-2">Останні тренування: @friend.LastFiveWorkoutsCount</div>
-            <ul class="mb-0 mt-1">
-                @foreach (var workout in friend.LastFiveWorkouts)
-                {
-                    <li>@workout.SessionDate.ToLocalTime().ToString("MM-dd HH:mm") - @workout.Name (@workout.DurationMinutes хв)</li>
-                }
-            </ul>
+
+            <hr />
+            <h6>Останні 5 тренувань</h6>
+            @if (!friend.LastFiveWorkouts.Any())
+            {
+                <div class="small text-muted">Тренувань поки немає.</div>
+            }
+            else
+            {
+                <ul class="mb-0 mt-1">
+                    @foreach (var workout in friend.LastFiveWorkouts)
+                    {
+                        <li><span class="metric">@workout.SessionDate.ToLocalTime().ToString("MM-dd HH:mm")</span> - @workout.Name (<span class="metric">@workout.DurationMinutes</span> хв)</li>
+                    }
+                </ul>
+            }
+
+            <hr />
+            <h6>Харчування (останні 10 днів)</h6>
+            @if (!friend.LastNutritionLogs.Any())
+            {
+                <div class="small text-muted">Харчові записи відсутні.</div>
+            }
+            else
+            {
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Дата</th><th>Ккал</th><th>Б</th><th>Ж</th><th>В</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var log in friend.LastNutritionLogs)
+                    {
+                        <tr>
+                            <td class="metric">@log.Date.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                            <td class="metric">@log.CaloriesKcal</td>
+                            <td class="metric">@log.ProteinG</td>
+                            <td class="metric">@log.FatG</td>
+                            <td class="metric">@log.CarbsG</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+
+            <hr />
+            <h6>Рекорди</h6>
+            @if (!friend.PersonalRecords.Any())
+            {
+                <div class="small text-muted">Персональні рекорди ще не зафіксовано.</div>
+            }
+            else
+            {
+                <ul class="mb-0 mt-1">
+                    @foreach (var record in friend.PersonalRecords)
+                    {
+                        <li>@record.ExerciseName: <span class="metric">@record.MaxWeightKg</span> кг (<span class="metric">@record.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd")</span>)</li>
+                    }
+                </ul>
+            }
         </div>
     </div>
 }
