@@ -158,4 +158,66 @@
     color: #E8E8E8;
 }
 
+.mono-theme .brand-logo {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 0.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.mono-theme .hero-image {
+    width: 100%;
+    height: min(72vh, 760px);
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.2rem;
+}
+
+.mono-theme .formula-target {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.2rem;
+    background: #111111;
+    transition: all 0.15s ease;
+}
+
+.mono-theme .formula-target:hover {
+    background: #FFFFFF;
+    color: #000000 !important;
+    border-color: rgba(255, 255, 255, 0.65);
+}
+
+.mono-theme .formula-target:hover .metric {
+    color: #000000 !important;
+}
+
+.mono-theme .formula-hint {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+    font-size: 0.8rem;
+    line-height: 1.35;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease, opacity 0.2s ease;
+}
+
+.mono-theme .formula-target:hover .formula-hint {
+    max-height: 180px;
+    opacity: 1;
+}
+
+.mono-theme .formula-target:hover .formula-hint,
+.mono-theme .formula-target:hover .formula-hint .metric {
+    color: #000000 !important;
+    border-top-color: rgba(0, 0, 0, 0.3);
+}
+
+.mono-theme .quick-start-btn {
+    min-height: 110px;
+    font-size: 1.02rem;
+    letter-spacing: 0.08em;
+}
+
 

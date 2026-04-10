@@ -1,35 +1,54 @@
 ﻿@model WorkoutDetailsViewModel
+@using IronMindGym.Controllers
 @{
-    ViewData["Title"] = "Деталі тренування";
+    ViewData["Title"] = "Workout Details";
 }
 
-<h2>Деталі тренування</h2>
+<h2>Workout Details</h2>
 <div class="card mb-3">
     <div class="card-body">
-        <h5>@Model.Session.Name</h5>
-        <div>Дата: @Model.Session.SessionDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
-        <div>Тривалість: @Model.Session.DurationMinutes хв</div>
-        <div>Оцінка: @(Model.Session.Review?.Rating ?? 0)/5</div>
-        <div>Коментар: @(string.IsNullOrWhiteSpace(Model.Session.Review?.Comment) ? "-" : Model.Session.Review!.Comment)</div>
+        <h5>@ExerciseLibraryController.TranslateSessionNameForDisplay(Model.Session.Name)</h5>
+        <div>Date: @Model.Session.SessionDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+        <div>Duration: @Model.Session.DurationMinutes min</div>
+        <div>Rating: @(Model.Session.Review?.Rating ?? 0)/5</div>
+        <div>Comment: @(string.IsNullOrWhiteSpace(Model.Session.Review?.Comment) ? "-" : Model.Session.Review!.Comment)</div>
     </div>
 </div>
 
 @foreach (var performed in Model.Session.PerformedExercises.OrderBy(x => x.OrderInWorkout))
 {
+    var hasSetType = performed.Sets.Any(s =>
+        s.SetType != null &&
+        !string.IsNullOrWhiteSpace(s.SetType.Name) &&
+        !s.SetType.Name.Equals("Failure", StringComparison.OrdinalIgnoreCase));
     <div class="card mb-3">
         <div class="card-body">
-            <h6>@performed.Exercise.Name</h6>
+            <h6>@ExerciseLibraryController.TranslateExerciseNameForDisplay(performed.Exercise.Name)</h6>
             <table class="table table-sm">
-                <thead><tr><th>Підхід</th><th>Тип</th><th>Вага</th><th>Повторення</th><th>Відпочинок</th></tr></thead>
+                <thead>
+                <tr>
+                    <th>Set</th>
+                    @if (hasSetType)
+                    {
+                        <th>Type</th>
+                    }
+                    <th>Weight</th>
+                    <th>Reps</th>
+                    <th>Rest</th>
+                </tr>
+                </thead>
                 <tbody>
                 @foreach (var set in performed.Sets.OrderBy(s => s.SetNumber))
                 {
                     <tr>
                         <td>@set.SetNumber</td>
-                        <td>@set.SetType.Name</td>
-                        <td>@set.WeightKg кг</td>
+                        @if (hasSetType)
+                        {
+                            <td>@(set.SetType?.Name ?? string.Empty)</td>
+                        }
+                        <td>@set.WeightKg kg</td>
                         <td>@set.Reps</td>
-                        <td>@set.RestSeconds сек</td>
+                        <td>@set.RestSeconds sec</td>
                     </tr>
                 }
                 </tbody>
@@ -40,11 +59,11 @@
 
 <div class="card border-success">
     <div class="card-body">
-        <h5>Статистика сесії</h5>
-        <p class="mb-1">Середній відпочинок: <strong>@Model.Summary.AverageRestSeconds сек</strong></p>
-        <p class="mb-3">Ще тренувань цього тижня: <strong>@Model.Summary.RemainingWorkoutsThisWeek</strong></p>
+        <h5>Session Statistics</h5>
+        <p class="mb-1">Average rest: <strong>@Model.Summary.AverageRestSeconds sec</strong></p>
+        <p class="mb-3">Workouts left this week: <strong>@Model.Summary.RemainingWorkoutsThisWeek</strong></p>
         <table class="table table-sm">
-            <thead><tr><th>Вправа</th><th>Підходи</th><th>Сер. навантаження (% від PR)</th><th>Пікове (% від PR)</th><th>Рекорд</th></tr></thead>
+            <thead><tr><th>Exercise</th><th>Sets</th><th>Avg load (% of PR)</th><th>Peak (% of PR)</th><th>Record</th></tr></thead>
             <tbody>
             @foreach (var stat in Model.Summary.ExerciseStats)
             {
@@ -53,7 +72,7 @@
                     <td>@stat.SetsCount</td>
                     <td>@(stat.AverageLoad.HasValue ? $"{stat.AverageLoad}%" : "-")</td>
                     <td>@(stat.PeakLoad.HasValue ? $"{stat.PeakLoad}%" : "-")</td>
-                    <td>@(stat.IsNewRecord ? "Новий рекорд" : "Без нового")</td>
+                    <td>@(stat.IsNewRecord ? "New record" : "No update")</td>
                 </tr>
             }
             </tbody>

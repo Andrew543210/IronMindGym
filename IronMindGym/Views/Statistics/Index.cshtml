@@ -1,24 +1,24 @@
 ﻿@model StatisticsViewModel
 @{
-    ViewData["Title"] = "Статистика";
+    ViewData["Title"] = "Statistics";
 }
 
-<h2>Статистика</h2>
-<a class="btn btn-outline-primary btn-sm mb-3" asp-action="Records">Відкрити сторінку рекордів</a>
+<h2>Statistics</h2>
+<a class="btn btn-outline-primary btn-sm mb-3" asp-action="Records">Open records page</a>
 <div class="row g-3 mb-4">
-    <div class="col-md-3"><div class="card"><div class="card-body">Занять: <strong>@Model.WorkoutsCompleted</strong></div></div></div>
-    <div class="col-md-3"><div class="card"><div class="card-body">Тоннаж (30 днів): <strong>@Model.MonthlyTotalTonnage</strong></div></div></div>
-    <div class="col-md-3"><div class="card"><div class="card-body">Сер. калораж: <strong>@Model.AvgWeeklyCalories</strong></div></div></div>
-    <div class="col-md-3"><div class="card"><div class="card-body">Білок-норма: <strong>@Model.ProteinGoalAdherencePercent%</strong></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body">Workouts: <strong>@Model.WorkoutsCompleted</strong></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body">Tonnage (30 days): <strong>@Model.MonthlyTotalTonnage</strong></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body">Avg calories: <strong>@Model.AvgWeeklyCalories</strong></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body">Protein target adherence: <strong>@Model.ProteinGoalAdherencePercent%</strong></div></div></div>
 </div>
 
-<h4>Особисті рекорди</h4>
+<h4>Personal Records</h4>
 <table class="table">
-    <thead><tr><th>Вправа</th><th>Max вага</th></tr></thead>
+    <thead><tr><th>Exercise</th><th>Max weight</th></tr></thead>
     <tbody>
     @foreach (var pr in Model.PersonalRecords)
     {
-        <tr><td>@pr.ExerciseName</td><td>@pr.MaxWeight кг</td></tr>
+        <tr><td>@pr.ExerciseName</td><td>@pr.MaxWeight kg</td></tr>
     }
     </tbody>
 </table>

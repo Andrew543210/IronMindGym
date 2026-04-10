@@ -1,21 +1,21 @@
 ﻿@model FriendsViewModel
 @{
-    ViewData["Title"] = "Друзі";
+    ViewData["Title"] = "Friends";
 }
 
-<h2>Друзі</h2>
+<h2>Friends</h2>
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-4">
-        <input name="searchUsername" value="@Model.SearchUsername" class="form-control" placeholder="Пошук за username" />
+        <input name="searchUsername" value="@Model.SearchUsername" class="form-control" placeholder="Search by username" />
     </div>
     <div class="col-md-2">
-        <button class="btn btn-outline-primary" type="submit">Пошук</button>
+        <button class="btn btn-outline-primary" type="submit">Search</button>
     </div>
 </form>
 
 @if (!Model.Friends.Any())
 {
-    <div class="alert alert-secondary">Нічого не знайдено за вказаним username.</div>
+    <div class="alert alert-secondary">No users were found by this username.</div>
 }
 
 @foreach (var friend in Model.Friends)
@@ -24,38 +24,41 @@
         <div class="card-body">
             <div>
                 <strong>@friend.Username</strong>
-                <div class="small text-muted">Статус: @friend.Status</div>
-                <div class="small text-muted">Середній калораж: <span class="metric">@Math.Round(friend.AverageKcal, 1)</span> ккал</div>
+                <div class="small text-muted">Status: @friend.Status</div>
+                <div class="small text-muted">Average calories: <span class="metric">@Math.Round(friend.AverageKcal, 1)</span> kcal</div>
             </div>
 
             <hr />
-            <h6>Останні 5 тренувань</h6>
+            <h6>Last 5 workouts</h6>
             @if (!friend.LastFiveWorkouts.Any())
             {
-                <div class="small text-muted">Тренувань поки немає.</div>
+                <div class="small text-muted">No workouts yet.</div>
             }
             else
             {
                 <ul class="mb-0 mt-1">
                     @foreach (var workout in friend.LastFiveWorkouts)
                     {
-                        <li><span class="metric">@workout.SessionDate.ToLocalTime().ToString("MM-dd HH:mm")</span> - @workout.Name (<span class="metric">@workout.DurationMinutes</span> хв)</li>
+                        <li>
+                            <span class="metric">@workout.SessionDate.ToLocalTime().ToString("MM-dd HH:mm")</span> - @workout.Name (<span class="metric">@workout.DurationMinutes</span> min)
+                            <a class="btn btn-outline-light btn-sm ms-2" asp-action="WorkoutDetails" asp-route-friendId="@friend.UserId" asp-route-workoutSessionId="@workout.WorkoutSessionId">Details</a>
+                        </li>
                     }
                 </ul>
             }
 
             <hr />
-            <h6>Харчування (останні 10 днів)</h6>
+            <h6>Nutrition (last 10 days)</h6>
             @if (!friend.LastNutritionLogs.Any())
             {
-                <div class="small text-muted">Харчові записи відсутні.</div>
+                <div class="small text-muted">No nutrition logs yet.</div>
             }
             else
             {
                 <table class="table table-sm">
                     <thead>
                     <tr>
-                        <th>Дата</th><th>Ккал</th><th>Б</th><th>Ж</th><th>В</th>
+                        <th>Date</th><th>Kcal</th><th>P</th><th>F</th><th>C</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -74,17 +77,36 @@
             }
 
             <hr />
-            <h6>Рекорди</h6>
+            <h6>Personal records</h6>
             @if (!friend.PersonalRecords.Any())
             {
-                <div class="small text-muted">Персональні рекорди ще не зафіксовано.</div>
+                <div class="small text-muted">No personal records yet.</div>
             }
             else
             {
                 <ul class="mb-0 mt-1">
                     @foreach (var record in friend.PersonalRecords)
                     {
-                        <li>@record.ExerciseName: <span class="metric">@record.MaxWeightKg</span> кг (<span class="metric">@record.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd")</span>)</li>
+                        <li>@record.ExerciseName: <span class="metric">@record.MaxWeightKg</span> kg (<span class="metric">@record.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd")</span>)</li>
+                    }
+                </ul>
+            }
+
+            <hr />
+            <h6>Awards</h6>
+            @if (!friend.Achievements.Any())
+            {
+                <div class="small text-muted">No awards yet.</div>
+            }
+            else
+            {
+                <ul class="mb-0 mt-1">
+                    @foreach (var award in friend.Achievements)
+                    {
+                        <li>
+                            <strong>@award.Name</strong>
+                            <span class="small text-muted">- @award.ConditionDescription (@award.AchievedAt.ToLocalTime().ToString("yyyy-MM-dd"))</span>
+                        </li>
                     }
                 </ul>
             }

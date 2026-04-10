@@ -1,40 +1,40 @@
 ﻿@model SetupViewModel
 @{
-    ViewData["Title"] = "Початкове налаштування";
+    ViewData["Title"] = "Initial Setup";
 }
 
-<h2>Початкове налаштування</h2>
+<h2>Initial Setup</h2>
 <form method="post" class="row g-3">
     <div class="col-md-3">
-        <label asp-for="WeightKg" class="form-label">Вага (кг)</label>
+        <label asp-for="WeightKg" class="form-label">Weight (kg)</label>
         <input asp-for="WeightKg" class="form-control" />
     </div>
     <div class="col-md-3">
-        <label asp-for="HeightCm" class="form-label">Зріст (см)</label>
+        <label asp-for="HeightCm" class="form-label">Height (cm)</label>
         <input asp-for="HeightCm" class="form-control" />
     </div>
     <div class="col-md-2">
-        <label asp-for="BenchPressKg" class="form-label">Жим</label>
+        <label asp-for="BenchPressKg" class="form-label">Bench</label>
         <input asp-for="BenchPressKg" class="form-control" />
     </div>
     <div class="col-md-2">
-        <label asp-for="SquatKg" class="form-label">Присід</label>
+        <label asp-for="SquatKg" class="form-label">Squat</label>
         <input asp-for="SquatKg" class="form-control" />
     </div>
     <div class="col-md-2">
-        <label asp-for="DeadliftKg" class="form-label">Тяга</label>
+        <label asp-for="DeadliftKg" class="form-label">Deadlift</label>
         <input asp-for="DeadliftKg" class="form-control" />
     </div>
     <div class="col-md-4">
-        <label asp-for="WorkoutsPerWeek" class="form-label">Тренувань на тиждень</label>
+        <label asp-for="WorkoutsPerWeek" class="form-label">Workouts per week</label>
         <input asp-for="WorkoutsPerWeek" class="form-control" />
     </div>
     <div class="col-md-8">
-        <label asp-for="SplitTypeId" class="form-label">Тип спліту</label>
+        <label asp-for="SplitTypeId" class="form-label">Split type</label>
         <select asp-for="SplitTypeId" asp-items="ViewBag.SplitTypes" class="form-select"></select>
     </div>
     <div class="col-12">
-        <button type="submit" class="btn btn-primary">Зберегти</button>
+        <button type="submit" class="btn btn-primary">Save</button>
     </div>
 </form>
 

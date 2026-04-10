@@ -51,7 +51,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
 
         if (draftSets == null || draftSets.Count == 0)
         {
-            ModelState.AddModelError(string.Empty, "Додайте хоча б один підхід перед завершенням тренування.");
+            ModelState.AddModelError(string.Empty, "Add at least one set before finishing the workout.");
         }
 
         if (!ModelState.IsValid)
@@ -64,11 +64,11 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
 
         var splitTypeName = db.SplitTypes.AsNoTracking().FirstOrDefault(s => s.Id == model.SplitTypeId)?.Name;
         var splitDayLabel = string.IsNullOrWhiteSpace(model.SplitDayLabel)
-            ? "Тренування"
+            ? "Training"
             : model.SplitDayLabel.Trim();
-        var sessionName = splitDayLabel.StartsWith("День ", StringComparison.OrdinalIgnoreCase)
+        var sessionName = splitDayLabel.StartsWith("Day ", StringComparison.OrdinalIgnoreCase)
             ? splitDayLabel
-            : $"День {splitDayLabel}";
+            : $"Day {splitDayLabel}";
 
         var session = new WorkoutSession
         {
@@ -85,7 +85,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
 
         if (groupedByExercise.Any(g => g.Key <= 0) || groupedByExercise.Any(g => !db.Exercises.Any(e => e.Id == g.Key)))
         {
-            ModelState.AddModelError(string.Empty, "Некоректні дані вправ у тренуванні. Додайте підходи ще раз.");
+            ModelState.AddModelError(string.Empty, "Invalid exercise data in this workout. Please add sets again.");
             model.RecentSessions = BuildRecentSessions(currentUserId);
             return View("Index", model);
         }
@@ -195,7 +195,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             ExerciseStats = summaryRows
         };
 
-        TempData["Message"] = "Тренування збережено.";
+        TempData["Message"] = "Workout saved.";
         TempData["WorkoutSummary"] = JsonSerializer.Serialize(summary);
         return RedirectToAction(nameof(Index));
     }
@@ -353,7 +353,28 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         ViewBag.MuscleGroups = new SelectList(groups, "Id", "Name", model.SelectedMuscleGroupId);
         ViewBag.MuscleSubGroups = new SelectList(subGroups, "Id", "Name", model.SelectedMuscleSubGroupId);
         ViewBag.Exercises = new SelectList(exercises, "Id", "Name", model.ExerciseId);
-        ViewBag.SetTypes = new SelectList(db.SetTypes.AsNoTracking().OrderBy(s => s.Name), "Id", "Name", model.SetTypeId);
+
+        var setTypes = db.SetTypes
+            .AsNoTracking()
+            .ToList();
+
+        // Keep sports-friendly default for quick logging if user doesn't choose type manually.
+        var defaultSetTypeId = setTypes
+            .FirstOrDefault(s => s.Name.Equals("Working", StringComparison.OrdinalIgnoreCase))?.Id
+            ?? setTypes.FirstOrDefault()?.Id
+            ?? 0;
+
+        if (model.SetTypeId <= 0)
+        {
+            model.SetTypeId = defaultSetTypeId;
+        }
+
+        var orderedSetTypes = setTypes
+            .OrderBy(s => s.Id == defaultSetTypeId ? 0 : 1)
+            .ThenBy(s => s.Name)
+            .ToList();
+
+        ViewBag.SetTypes = new SelectList(orderedSetTypes, "Id", "Name", model.SetTypeId);
 
         model.ExerciseCatalog = exercises.Select(e => new ExerciseCatalogItemViewModel
         {
@@ -370,7 +391,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
     {
         if (string.IsNullOrWhiteSpace(splitTypeName))
         {
-            return new List<string> { "Тренувальний день" };
+            return new List<string> { "Training Day" };
         }
 
         var normalized = splitTypeName.Trim().ToLowerInvariant();
@@ -390,7 +411,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             return new List<string> { "Full Body" };
         }
 
-        return new List<string> { "Тренувальний день" };
+        return new List<string> { "Training Day" };
     }
 
     private void AssignAchievements(int userId)
@@ -425,11 +446,11 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             .AsNoTracking()
             .ToList();
 
-        if (records.Any(pr => pr.Exercise.Name.Contains("Жим лежачи", StringComparison.OrdinalIgnoreCase) && pr.MaxWeightKg >= 100))
+        if (records.Any(pr => pr.Exercise.Name.Contains("Bench Press", StringComparison.OrdinalIgnoreCase) && pr.MaxWeightKg >= 100))
             Grant("BENCH_100");
-        if (records.Any(pr => pr.Exercise.Name.Contains("Присідання", StringComparison.OrdinalIgnoreCase) && pr.MaxWeightKg >= 140))
+        if (records.Any(pr => pr.Exercise.Name.Contains("Squat", StringComparison.OrdinalIgnoreCase) && pr.MaxWeightKg >= 140))
             Grant("SQUAT_140");
-        if (records.Any(pr => pr.Exercise.Name.Contains("Станова тяга", StringComparison.OrdinalIgnoreCase) && pr.MaxWeightKg >= 180))
+        if (records.Any(pr => pr.Exercise.Name.Contains("Deadlift", StringComparison.OrdinalIgnoreCase) && pr.MaxWeightKg >= 180))
             Grant("DEADLIFT_180");
 
         var monthlyTonnage = db.WorkoutSessions

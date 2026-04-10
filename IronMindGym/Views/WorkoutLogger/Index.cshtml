@@ -8,10 +8,10 @@
 <h2>Workout Logger</h2>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="mb-0 text-muted">Останні тренування та швидкий запуск нової сесії.</p>
+    <p class="mb-0 text-muted">Latest workouts and quick launch of a new session.</p>
     @if (!Model.IsTrainingActive)
     {
-        <a class="btn btn-primary" asp-action="Index" asp-route-startTraining="true">Розпочати тренування</a>
+        <a class="btn btn-primary" asp-action="Index" asp-route-startTraining="true">Start workout</a>
     }
 </div>
 
@@ -20,10 +20,10 @@
     <div class="card mb-4 border-success">
         <div class="card-body">
             <h5>@Model.LastSummary.SessionName</h5>
-            <p class="mb-1">Середній відпочинок: <strong class="metric">@Model.LastSummary.AverageRestSeconds сек</strong></p>
-            <p class="mb-3">Ще тренувань цього тижня: <strong class="metric">@Model.LastSummary.RemainingWorkoutsThisWeek</strong></p>
+            <p class="mb-1">Average rest: <strong class="metric">@Model.LastSummary.AverageRestSeconds sec</strong></p>
+            <p class="mb-3">Workouts remaining this week: <strong class="metric">@Model.LastSummary.RemainingWorkoutsThisWeek</strong></p>
             <table class="table table-sm">
-                <thead><tr><th>Вправа</th><th>Сер. навантаження (% від PR)</th><th>Пікове (% від PR)</th><th>Статус</th></tr></thead>
+                <thead><tr><th>Exercise</th><th>Avg load (% of PR)</th><th>Peak load (% of PR)</th><th>Status</th></tr></thead>
                 <tbody>
                 @foreach (var stat in Model.LastSummary.ExerciseStats)
                 {
@@ -31,23 +31,23 @@
                         <td>@stat.ExerciseName</td>
                         <td class="metric">@(stat.AverageLoad.HasValue ? $"{stat.AverageLoad}%" : "-")</td>
                         <td class="metric">@(stat.PeakLoad.HasValue ? $"{stat.PeakLoad}%" : "-")</td>
-                        <td>@(stat.IsNewRecord ? "Новий рекорд" : "Без нового рекорду")</td>
+                        <td>@(stat.IsNewRecord ? "New record" : "No new record")</td>
                     </tr>
                 }
                 </tbody>
             </table>
-            <a class="btn btn-outline-success btn-sm" asp-action="Details" asp-route-id="@Model.LastSummary.WorkoutSessionId">Деталі</a>
+            <a class="btn btn-outline-success btn-sm" asp-action="Details" asp-route-id="@Model.LastSummary.WorkoutSessionId">Details</a>
         </div>
     </div>
 }
 
-<h4>Останні 5 тренувань</h4>
+<h4>Last 5 workouts</h4>
 <ul class="list-group mb-4">
     @foreach (var s in Model.RecentSessions)
     {
         <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span><span class="metric">@s.SessionDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span> - @s.Name (<span class="metric">@s.DurationMinutes</span> хв)</span>
-            <a class="btn btn-outline-primary btn-sm" asp-action="Details" asp-route-id="@s.Id">Деталі</a>
+            <span><span class="metric">@s.SessionDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span> - @s.Name (<span class="metric">@s.DurationMinutes</span> min)</span>
+            <a class="btn btn-outline-primary btn-sm" asp-action="Details" asp-route-id="@s.Id">Details</a>
         </li>
     }
 </ul>
@@ -59,10 +59,10 @@
 
     <div class="col-12">
         <div class="card border-primary">
-            <div class="card-header">Активне тренування</div>
+            <div class="card-header">Active Workout</div>
             <div class="card-body row g-3">
                 <div class="col-md-4">
-                    <label asp-for="SplitTypeId" class="form-label">Тип спліта</label>
+                    <label asp-for="SplitTypeId" class="form-label">Split type</label>
                     @if (Model.ActiveSplitTypeName.Length > 0)
                     {
                         <select asp-for="SplitTypeId" asp-items="ViewBag.SplitTypes" class="form-select" disabled></select>
@@ -74,11 +74,11 @@
                     }
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="SplitDayLabel" class="form-label">День спліта</label>
+                    <label asp-for="SplitDayLabel" class="form-label">Split day</label>
                     <select asp-for="SplitDayLabel" asp-items="ViewBag.SplitDays" class="form-select"></select>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="DurationMinutes" class="form-label">Тривалість (хв)</label>
+                    <label asp-for="DurationMinutes" class="form-label">Duration (min)</label>
                     <input asp-for="DurationMinutes" class="form-control" />
                 </div>
             </div>
@@ -87,70 +87,70 @@
 
     <div class="col-12">
         <div class="card border-secondary">
-            <div class="card-header">Додавання вправ і підходів</div>
+            <div class="card-header">Add exercises and sets</div>
             <div class="card-body row g-3">
                 <div class="col-md-4">
-                    <label asp-for="SelectedMuscleGroupId" class="form-label">1) Група м'язів</label>
+                    <label asp-for="SelectedMuscleGroupId" class="form-label">1) Muscle group</label>
                     <select asp-for="SelectedMuscleGroupId" asp-items="ViewBag.MuscleGroups" class="form-select" id="muscleGroupFilter">
-                        <option value="">Оберіть групу</option>
+                        <option value="">Select group</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="SelectedMuscleSubGroupId" class="form-label">2) Підгрупа м'язів (необов'язково)</label>
+                    <label asp-for="SelectedMuscleSubGroupId" class="form-label">2) Muscle subgroup (optional)</label>
                     <select asp-for="SelectedMuscleSubGroupId" class="form-select" id="muscleSubGroupFilter" disabled>
-                        <option value="">Спочатку оберіть групу</option>
+                        <option value="">Select a group first</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="ExerciseId" class="form-label">3) Вправа</label>
+                    <label asp-for="ExerciseId" class="form-label">3) Exercise</label>
                     <select asp-for="ExerciseId" class="form-select" id="exerciseSelect" disabled>
-                        <option value="">Спочатку оберіть групу</option>
+                        <option value="">Select a group first</option>
                     </select>
                 </div>
 
                 <div class="col-md-3">
-                    <label asp-for="SetTypeId" class="form-label">Тип підходу</label>
+                    <label asp-for="SetTypeId" class="form-label">Set type</label>
                     <select asp-for="SetTypeId" asp-items="ViewBag.SetTypes" class="form-select" id="setTypeSelect"></select>
                 </div>
                 <div class="col-md-3">
-                    <label asp-for="WeightKg" class="form-label">Вага (кг)</label>
+                    <label asp-for="WeightKg" class="form-label">Weight (kg)</label>
                     <input asp-for="WeightKg" class="form-control" id="weightInput" />
                 </div>
                 <div class="col-md-3">
-                    <label asp-for="Reps" class="form-label">Повторення</label>
+                    <label asp-for="Reps" class="form-label">Reps</label>
                     <input asp-for="Reps" class="form-control" id="repsInput" />
                 </div>
                 <div class="col-md-3">
-                    <label asp-for="RestSeconds" class="form-label">Перерва (сек)</label>
+                    <label asp-for="RestSeconds" class="form-label">Rest (sec)</label>
                     <input asp-for="RestSeconds" class="form-control" id="restInput" />
                 </div>
 
                 <div class="col-12">
-                    <button type="button" class="btn btn-primary" id="addSetBtn">Додати підхід</button>
+                    <button type="button" class="btn btn-primary" id="addSetBtn">Add set</button>
                 </div>
 
                 <div class="col-12">
                     <div class="alert alert-secondary d-flex align-items-center justify-content-between" id="restTimerPanel">
-                        <span>Таймер відпочинку: <strong class="metric" id="restTimerValue">02:00</strong></span>
+                        <span>Rest timer: <strong class="metric" id="restTimerValue">02:00</strong></span>
                         <div>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="startTimerBtn">Старт таймера</button>
-                            <button type="button" class="btn btn-outline-warning btn-sm" id="skipTimerBtn">Пропустити перерву</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="startTimerBtn">Start timer</button>
+                            <button type="button" class="btn btn-outline-warning btn-sm" id="skipTimerBtn">Skip rest</button>
                         </div>
                     </div>
                     <div class="text-white fw-bold" id="timerReadyText"></div>
                 </div>
 
                 <div class="col-12">
-                    <h5>Додані підходи в поточній сесії</h5>
+                    <h5>Added sets in current session</h5>
                     <table class="table table-sm" id="draftSetsTable">
                         <thead>
                         <tr>
                             <th>#</th>
-                            <th>Вправа</th>
-                            <th>Тип</th>
-                            <th>Вага</th>
-                            <th>Повторення</th>
-                            <th>Перерва</th>
+                            <th>Exercise</th>
+                            <th>Type</th>
+                            <th>Weight</th>
+                            <th>Reps</th>
+                            <th>Rest</th>
                             <th></th>
                         </tr>
                         </thead>
@@ -162,19 +162,19 @@
     </div>
 
     <div class="col-md-2">
-        <label asp-for="ReviewRating" class="form-label">Оцінка</label>
+        <label asp-for="ReviewRating" class="form-label">Rating</label>
         <input asp-for="ReviewRating" class="form-control" min="1" max="5" />
     </div>
     <div class="col-md-10">
-        <label asp-for="ReviewComment" class="form-label">Відгук</label>
-        <input asp-for="ReviewComment" class="form-control" placeholder="Як пройшло тренування?" />
+        <label asp-for="ReviewComment" class="form-label">Review</label>
+        <input asp-for="ReviewComment" class="form-control" placeholder="How did the workout go?" />
     </div>
 
     <input asp-for="DraftPayloadJson" type="hidden" id="draftPayloadJson" />
     <input asp-for="StartedAtUtc" type="hidden" />
 
     <div class="col-12">
-        <button type="submit" class="btn btn-success" id="finishWorkoutBtn">Завершити тренування</button>
+        <button type="submit" class="btn btn-success" id="finishWorkoutBtn">Finish workout</button>
     </div>
 </form>
 }
@@ -212,14 +212,14 @@
         if (!groupId) {
             subGroupFilter.disabled = true;
             exerciseSelect.disabled = true;
-            subGroupFilter.innerHTML = '<option value="">Спочатку оберіть групу</option>';
-            exerciseSelect.innerHTML = '<option value="">Спочатку оберіть групу</option>';
+            subGroupFilter.innerHTML = '<option value="">Select a group first</option>';
+            exerciseSelect.innerHTML = '<option value="">Select a group first</option>';
             return;
         }
 
         const subGroups = getUniqueSubGroups(groupId);
         subGroupFilter.disabled = false;
-        subGroupFilter.innerHTML = '<option value="">Усі підгрупи</option>';
+        subGroupFilter.innerHTML = '<option value="">All subgroups</option>';
         subGroups.forEach(sg => {
             const option = document.createElement("option");
             option.value = sg.id;
@@ -235,7 +235,7 @@
 
         if (!groupId) {
             exerciseSelect.disabled = true;
-            exerciseSelect.innerHTML = '<option value="">Спочатку оберіть групу</option>';
+            exerciseSelect.innerHTML = '<option value="">Select a group first</option>';
             return;
         }
 
@@ -246,7 +246,7 @@
         exerciseSelect.disabled = filtered.length === 0;
 
         if (filtered.length === 0) {
-            exerciseSelect.innerHTML = '<option value="">Немає вправ для цієї групи</option>';
+            exerciseSelect.innerHTML = '<option value="">No exercises for this group</option>';
             return;
         }
 
@@ -270,8 +270,8 @@
                 <td>${item.setTypeName}</td>
                 <td>${item.weightKg}</td>
                 <td>${item.reps}</td>
-                <td>${item.restSeconds} сек</td>
-                <td><button type="button" class="btn btn-sm btn-outline-danger" data-index="${index}">Видалити</button></td>`;
+                <td>${item.restSeconds} sec</td>
+                <td><button type="button" class="btn btn-sm btn-outline-danger" data-index="${index}">Remove</button></td>`;
             tbody.appendChild(row);
         });
 
@@ -304,7 +304,7 @@
                 stopTimer();
                 timerLeft = 0;
                 resetTimerText();
-                document.getElementById("timerReadyText").textContent = "Можна приступати до вправи";
+                document.getElementById("timerReadyText").textContent = "You can start the next set";
                 return;
             }
 
@@ -352,7 +352,7 @@
         stopTimer();
         timerLeft = 0;
         resetTimerText();
-        document.getElementById("timerReadyText").textContent = "Можна приступати до вправи";
+        document.getElementById("timerReadyText").textContent = "You can start the next set";
     });
 
     groupFilter.addEventListener("change", () => {

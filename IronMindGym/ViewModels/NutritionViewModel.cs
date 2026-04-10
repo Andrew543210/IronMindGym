@@ -20,6 +20,17 @@ public class NutritionViewModel
     public string SystemVerdict { get; set; } = string.Empty;
     public int SystemScore { get; set; }
     public List<string> AdviceItems { get; set; } = new();
+    public double TargetCaloriesKcal { get; set; }
+    public double TargetProteinG { get; set; }
+    public double TargetFatG { get; set; }
+    public double TargetCarbsG { get; set; }
+    public double BasalMetabolicRate { get; set; }
+    public double ActivityMultiplier { get; set; }
+    public string BmrFormulaText { get; set; } = string.Empty;
+    public string CaloriesFormulaText { get; set; } = string.Empty;
+    public string ProteinFormulaText { get; set; } = string.Empty;
+    public string FatFormulaText { get; set; } = string.Empty;
+    public string CarbsFormulaText { get; set; } = string.Empty;
     public List<NutritionLogListItemViewModel> RecentLogs { get; set; } = new();
 }
 
@@ -40,6 +51,17 @@ public class NutritionDetailsViewModel
     public string SystemVerdict { get; set; } = string.Empty;
     public int SystemScore { get; set; }
     public List<string> AdviceItems { get; set; } = new();
+    public double TargetCaloriesKcal { get; set; }
+    public double TargetProteinG { get; set; }
+    public double TargetFatG { get; set; }
+    public double TargetCarbsG { get; set; }
+    public double BasalMetabolicRate { get; set; }
+    public double ActivityMultiplier { get; set; }
+    public string BmrFormulaText { get; set; } = string.Empty;
+    public string CaloriesFormulaText { get; set; } = string.Empty;
+    public string ProteinFormulaText { get; set; } = string.Empty;
+    public string FatFormulaText { get; set; } = string.Empty;
+    public string CarbsFormulaText { get; set; } = string.Empty;
     public List<NutritionLogListItemViewModel> RecentLogs { get; set; } = new();
 }
 

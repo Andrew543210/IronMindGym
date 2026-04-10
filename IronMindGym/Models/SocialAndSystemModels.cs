@@ -159,7 +159,7 @@ public class Settings
     public User User { get; set; } = null!;
 
     [MaxLength(10)]
-    public string Language { get; set; } = "uk";
+    public string Language { get; set; } = "en";
 
     public int UIThemeId { get; set; }
     public UITheme UITheme { get; set; } = null!;

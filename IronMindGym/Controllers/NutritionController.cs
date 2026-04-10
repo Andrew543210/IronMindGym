@@ -21,6 +21,13 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
         var currentUserId = userId.Value;
         var today = DateTime.UtcNow.Date;
         var log = db.DailyNutritions.AsNoTracking().FirstOrDefault(n => n.UserId == currentUserId && n.Date == today);
+        var recentLogs = db.DailyNutritions
+            .AsNoTracking()
+            .Where(x => x.UserId == currentUserId)
+            .OrderByDescending(x => x.Date)
+            .Take(14)
+            .ToList();
+        var profile = BuildNutritionProfile(currentUserId);
 
         var vm = new NutritionViewModel();
         vm.RecentLogs = BuildRecentLogs(currentUserId);
@@ -31,25 +38,23 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
             vm.FatG = log.FatG;
             vm.CarbsG = log.CarbsG;
 
-            var latestWeight = db.AnthropometryLogs
-                .AsNoTracking()
-                .Where(x => x.UserId == currentUserId)
-                .OrderByDescending(x => x.RecordedAt)
-                .Select(x => (double?)x.WeightKg)
-                .FirstOrDefault();
-
-            var recentLogs = db.DailyNutritions
-                .AsNoTracking()
-                .Where(x => x.UserId == currentUserId)
-                .OrderByDescending(x => x.Date)
-                .Take(14)
-                .ToList();
-
-            var advice = adviceService.BuildAdvice(log, latestWeight, recentLogs);
-            vm.SystemAdvice = advice.Summary;
-            vm.SystemVerdict = advice.Verdict;
-            vm.SystemScore = advice.Score;
-            vm.AdviceItems = advice.Tips;
+            var advice = adviceService.BuildAdvice(log, profile, recentLogs);
+            ApplyAdvice(vm, advice);
+        }
+        else
+        {
+            var previewAdvice = adviceService.BuildAdvice(new DailyNutrition { Date = today }, profile, recentLogs);
+            vm.TargetCaloriesKcal = previewAdvice.TargetCaloriesKcal;
+            vm.TargetProteinG = previewAdvice.TargetProteinG;
+            vm.TargetFatG = previewAdvice.TargetFatG;
+            vm.TargetCarbsG = previewAdvice.TargetCarbsG;
+            vm.BasalMetabolicRate = previewAdvice.BasalMetabolicRate;
+            vm.ActivityMultiplier = previewAdvice.ActivityMultiplier;
+            vm.BmrFormulaText = previewAdvice.BmrFormulaText;
+            vm.CaloriesFormulaText = previewAdvice.CaloriesFormulaText;
+            vm.ProteinFormulaText = previewAdvice.ProteinFormulaText;
+            vm.FatFormulaText = previewAdvice.FatFormulaText;
+            vm.CarbsFormulaText = previewAdvice.CarbsFormulaText;
         }
 
         return View(vm);
@@ -66,6 +71,33 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
 
         if (!ModelState.IsValid)
         {
+            var profile = BuildNutritionProfile(userId.Value);
+            var recentLogs = db.DailyNutritions
+                .AsNoTracking()
+                .Where(x => x.UserId == userId.Value)
+                .OrderByDescending(x => x.Date)
+                .Take(14)
+                .ToList();
+            var previewAdvice = adviceService.BuildAdvice(new DailyNutrition
+            {
+                Date = DateTime.UtcNow.Date,
+                CaloriesKcal = model.CaloriesKcal,
+                ProteinG = model.ProteinG,
+                FatG = model.FatG,
+                CarbsG = model.CarbsG
+            }, profile, recentLogs);
+
+            model.TargetCaloriesKcal = previewAdvice.TargetCaloriesKcal;
+            model.TargetProteinG = previewAdvice.TargetProteinG;
+            model.TargetFatG = previewAdvice.TargetFatG;
+            model.TargetCarbsG = previewAdvice.TargetCarbsG;
+            model.BasalMetabolicRate = previewAdvice.BasalMetabolicRate;
+            model.ActivityMultiplier = previewAdvice.ActivityMultiplier;
+            model.BmrFormulaText = previewAdvice.BmrFormulaText;
+            model.CaloriesFormulaText = previewAdvice.CaloriesFormulaText;
+            model.ProteinFormulaText = previewAdvice.ProteinFormulaText;
+            model.FatFormulaText = previewAdvice.FatFormulaText;
+            model.CarbsFormulaText = previewAdvice.CarbsFormulaText;
             model.RecentLogs = BuildRecentLogs(userId.Value);
             return View(model);
         }
@@ -87,13 +119,6 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
 
         db.SaveChanges();
 
-        var latestWeightAfterSave = db.AnthropometryLogs
-            .AsNoTracking()
-            .Where(x => x.UserId == currentUserId)
-            .OrderByDescending(x => x.RecordedAt)
-            .Select(x => (double?)x.WeightKg)
-            .FirstOrDefault();
-
         var recentLogsAfterSave = db.DailyNutritions
             .AsNoTracking()
             .Where(x => x.UserId == currentUserId)
@@ -101,14 +126,12 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
             .Take(14)
             .ToList();
 
-        var adviceResult = adviceService.BuildAdvice(log, latestWeightAfterSave, recentLogsAfterSave);
-        model.SystemAdvice = adviceResult.Summary;
-        model.SystemVerdict = adviceResult.Verdict;
-        model.SystemScore = adviceResult.Score;
-        model.AdviceItems = adviceResult.Tips;
+        var profileAfterSave = BuildNutritionProfile(currentUserId);
+        var adviceResult = adviceService.BuildAdvice(log, profileAfterSave, recentLogsAfterSave);
+        ApplyAdvice(model, adviceResult);
         model.RecentLogs = BuildRecentLogs(currentUserId);
 
-        TempData["Message"] = "Харчовий запис оновлено.";
+        TempData["Message"] = "Nutrition log has been updated.";
 
         return View(model);
     }
@@ -132,13 +155,6 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
             return NotFound();
         }
 
-        var latestWeight = db.AnthropometryLogs
-            .AsNoTracking()
-            .Where(x => x.UserId == currentUserId)
-            .OrderByDescending(x => x.RecordedAt)
-            .Select(x => (double?)x.WeightKg)
-            .FirstOrDefault();
-
         var recentLogs = db.DailyNutritions
             .AsNoTracking()
             .Where(x => x.UserId == currentUserId)
@@ -146,7 +162,8 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
             .Take(14)
             .ToList();
 
-        var advice = adviceService.BuildAdvice(log, latestWeight, recentLogs);
+        var profile = BuildNutritionProfile(currentUserId);
+        var advice = adviceService.BuildAdvice(log, profile, recentLogs);
 
         var vm = new NutritionDetailsViewModel
         {
@@ -163,6 +180,17 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
             SystemVerdict = advice.Verdict,
             SystemScore = advice.Score,
             AdviceItems = advice.Tips,
+            TargetCaloriesKcal = advice.TargetCaloriesKcal,
+            TargetProteinG = advice.TargetProteinG,
+            TargetFatG = advice.TargetFatG,
+            TargetCarbsG = advice.TargetCarbsG,
+            BasalMetabolicRate = advice.BasalMetabolicRate,
+            ActivityMultiplier = advice.ActivityMultiplier,
+            BmrFormulaText = advice.BmrFormulaText,
+            CaloriesFormulaText = advice.CaloriesFormulaText,
+            ProteinFormulaText = advice.ProteinFormulaText,
+            FatFormulaText = advice.FatFormulaText,
+            CarbsFormulaText = advice.CarbsFormulaText,
             RecentLogs = BuildRecentLogs(currentUserId)
         };
 
@@ -186,5 +214,55 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
                 CarbsG = n.CarbsG
             })
             .ToList();
+    }
+
+    private NutritionProfileSnapshot BuildNutritionProfile(int userId)
+    {
+        var latestAnthro = db.AnthropometryLogs
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.RecordedAt)
+            .Select(x => new { x.WeightKg, x.HeightCm })
+            .FirstOrDefault();
+
+        var profile = db.Profiles
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .Select(x => new { x.Age, x.Gender })
+            .FirstOrDefault();
+
+        var workoutsPerWeek = db.WorkoutPlans
+            .AsNoTracking()
+            .Where(x => x.UserId == userId && x.IsActive)
+            .Select(x => x.WorkoutsPerWeek)
+            .FirstOrDefault();
+
+        return new NutritionProfileSnapshot
+        {
+            WeightKg = latestAnthro?.WeightKg,
+            HeightCm = latestAnthro?.HeightCm,
+            Age = profile?.Age,
+            Gender = profile?.Gender ?? "Unknown",
+            WorkoutsPerWeek = workoutsPerWeek
+        };
+    }
+
+    private static void ApplyAdvice(NutritionViewModel model, NutritionAdviceResult advice)
+    {
+        model.SystemAdvice = advice.Summary;
+        model.SystemVerdict = advice.Verdict;
+        model.SystemScore = advice.Score;
+        model.AdviceItems = advice.Tips;
+        model.TargetCaloriesKcal = advice.TargetCaloriesKcal;
+        model.TargetProteinG = advice.TargetProteinG;
+        model.TargetFatG = advice.TargetFatG;
+        model.TargetCarbsG = advice.TargetCarbsG;
+        model.BasalMetabolicRate = advice.BasalMetabolicRate;
+        model.ActivityMultiplier = advice.ActivityMultiplier;
+        model.BmrFormulaText = advice.BmrFormulaText;
+        model.CaloriesFormulaText = advice.CaloriesFormulaText;
+        model.ProteinFormulaText = advice.ProteinFormulaText;
+        model.FatFormulaText = advice.FatFormulaText;
+        model.CarbsFormulaText = advice.CarbsFormulaText;
     }
 }

@@ -22,11 +22,11 @@ public class RegisterViewModel
     public string Email { get; set; } = string.Empty;
 
     [Range(12, 100)]
-    public int Age { get; set; } = 18;
+    public int Age { get; set; } = 19;
 
     [Required, MinLength(6)]
     public string Password { get; set; } = string.Empty;
 
-    [Required, Compare(nameof(Password), ErrorMessage = "Паролі повинні співпадати")]
+    [Required, Compare(nameof(Password), ErrorMessage = "Passwords must match")]
     public string ConfirmPassword { get; set; } = string.Empty;
 }

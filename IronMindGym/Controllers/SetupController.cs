@@ -68,7 +68,7 @@ public class SetupController(IronMindDbContext db) : Controller
         });
 
         db.SaveChanges();
-        TempData["Message"] = "Стартові дані збережено.";
+        TempData["Message"] = "Initial setup data saved.";
 
         return RedirectToAction("Index", "Dashboard");
     }

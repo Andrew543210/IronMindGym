@@ -58,6 +58,7 @@ public class FriendsController(IronMindDbContext db) : Controller
                         .Take(5)
                         .Select(s => new FriendWorkoutPreviewViewModel
                         {
+                            WorkoutSessionId = s.Id,
                             Name = s.Name,
                             SessionDate = s.SessionDate,
                             DurationMinutes = s.DurationMinutes
@@ -92,20 +93,108 @@ public class FriendsController(IronMindDbContext db) : Controller
                         })
                         .ToList();
 
+                    var achievements = db.UserAchievements
+                        .AsNoTracking()
+                        .Include(ua => ua.Achievement)
+                        .Where(ua => ua.UserId == friend.Id)
+                        .OrderByDescending(ua => ua.AchievedAt)
+                        .Select(ua => new FriendAchievementPreviewViewModel
+                        {
+                            Name = ua.Achievement.Name,
+                            ConditionDescription = ua.Achievement.ConditionDescription,
+                            AchievedAt = ua.AchievedAt
+                        })
+                        .ToList();
+
                     return new FriendCardViewModel
                     {
                     UserId = friend.Id,
                     Username = friend.Username,
-                    Status = isAcceptedFriend ? "Друг" : "Знайдений користувач",
+                    Status = isAcceptedFriend ? "Friend" : "Found user",
                     LastFiveWorkoutsCount = workouts.Count,
                     AverageKcal = nutritionLogs.Select(n => n.CaloriesKcal).DefaultIfEmpty(0).Average(),
                     LastFiveWorkouts = workouts,
                     LastNutritionLogs = nutritionLogs,
-                    PersonalRecords = records
+                    PersonalRecords = records,
+                    Achievements = achievements
                 };})
                 .ToList()
         };
 
         return View(vm);
+    }
+
+    [HttpGet]
+    public IActionResult WorkoutDetails(int friendId, int workoutSessionId)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var session = db.WorkoutSessions
+            .AsNoTracking()
+            .Include(s => s.PerformedExercises)
+            .ThenInclude(pe => pe.Exercise)
+            .Include(s => s.PerformedExercises)
+            .ThenInclude(pe => pe.Sets)
+            .ThenInclude(set => set.SetType)
+            .Include(s => s.Review)
+            .FirstOrDefault(s => s.Id == workoutSessionId && s.UserId == friendId);
+
+        if (session == null)
+        {
+            return NotFound();
+        }
+
+        var stats = session.PerformedExercises
+            .Select(pe =>
+            {
+                var peakWeight = pe.Sets.Max(set => set.WeightKg);
+                var previousRecordWeight = db.PerformedExercises
+                    .AsNoTracking()
+                    .Where(x => x.ExerciseId == pe.ExerciseId && x.WorkoutSession.UserId == friendId && x.WorkoutSessionId != session.Id)
+                    .SelectMany(x => x.Sets)
+                    .Select(x => (double?)x.WeightKg)
+                    .Max();
+
+                var setLoadPercents = (previousRecordWeight.HasValue && previousRecordWeight.Value > 0)
+                    ? pe.Sets.Select(set => set.WeightKg / previousRecordWeight.Value * 100.0).ToList()
+                    : new List<double>();
+
+                return new ExerciseWorkoutSummaryViewModel
+                {
+                    ExerciseName = pe.Exercise.Name,
+                    SetsCount = pe.Sets.Count,
+                    AverageLoad = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Average(), 1),
+                    PeakLoad = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Max(), 1),
+                    PeakWeightKg = peakWeight,
+                    PercentToPersonalRecord = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Max(), 1),
+                    IsNewRecord = !previousRecordWeight.HasValue || peakWeight > previousRecordWeight.Value
+                };
+            })
+            .ToList();
+
+        var detailsVm = new FriendWorkoutDetailsViewModel
+        {
+            FriendUsername = db.Users.AsNoTracking().Where(x => x.Id == friendId).Select(x => x.Username).FirstOrDefault() ?? "Friend",
+            Details = new WorkoutDetailsViewModel
+            {
+                Session = session,
+                Summary = new WorkoutSummaryViewModel
+                {
+                    WorkoutSessionId = session.Id,
+                    SessionName = session.Name,
+                    AverageRestSeconds = session.PerformedExercises.SelectMany(pe => pe.Sets).Any()
+                        ? Math.Round(session.PerformedExercises.SelectMany(pe => pe.Sets).Average(set => set.RestSeconds), 1)
+                        : 0,
+                    RemainingWorkoutsThisWeek = 0,
+                    ExerciseStats = stats
+                }
+            }
+        };
+
+        return View(detailsVm);
     }
 }

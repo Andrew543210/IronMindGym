@@ -1,22 +1,22 @@
 ﻿@model ProfileViewModel
 @{
-    ViewData["Title"] = "Профіль";
+    ViewData["Title"] = "Profile";
 }
 
-<h2>Профіль</h2>
+<h2>Profile</h2>
 <div class="row g-3 mb-4">
     <div class="col-md-6">
         <div class="card"><div class="card-body">
             <p><strong>Username:</strong> @Model.Username</p>
             <p><strong>Email:</strong> @Model.Email</p>
-            <p><strong>Стать:</strong> @Model.Gender</p>
-            <p><strong>Вік:</strong> @Model.Age</p>
-            <p><strong>Аватар:</strong> @Model.AvatarName</p>
+            <p><strong>Gender:</strong> @Model.Gender</p>
+            <p><strong>Age:</strong> @Model.Age</p>
+            <p><strong>Avatar:</strong> @Model.AvatarName</p>
         </div></div>
     </div>
     <div class="col-md-6">
         <div class="card"><div class="card-body">
-            <h5>Мої нагороди</h5>
+            <h5>My Awards</h5>
             <ul>
                 @foreach (var achievement in Model.Achievements)
                 {

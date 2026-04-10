@@ -1,6 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Http
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,7 +14,10 @@
 }
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container">
-        <a class="navbar-brand" asp-controller="Dashboard" asp-action="Index">IronMind</a>
+        <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="Dashboard" asp-action="Index">
+            <img src="~/images/logo.jpg" alt="IronMind logo" class="brand-logo" />
+            <span>IronMind</span>
+        </a>
         <div class="navbar-nav me-auto">
             @if (isLoggedIn)
             {

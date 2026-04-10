@@ -1,14 +1,14 @@
 ﻿@model ExerciseLibraryViewModel
 @{
-    ViewData["Title"] = "Бібліотека вправ";
+    ViewData["Title"] = "Exercise Library";
 }
 
-<h2>Бібліотека вправ</h2>
+<h2>Exercise Library</h2>
 <form method="get" class="mb-4">
     <div class="row g-2">
         <div class="col-md-3">
             <select name="muscleGroupId" class="form-select">
-                <option value="">Всі м'язові групи</option>
+                <option value="">All muscle groups</option>
                 @foreach (var group in Model.MuscleGroups)
                 {
                     <option value="@group.Id" selected="@(Model.SelectedGroupId == group.Id)">@group.Name</option>
@@ -18,7 +18,7 @@
 
         <div class="col-md-3">
             <select name="muscleSubGroupId" class="form-select">
-                <option value="">Всі підгрупи</option>
+                <option value="">All subgroups</option>
                 @foreach (var subGroup in Model.MuscleSubGroups)
                 {
                     <option value="@subGroup.Id" selected="@(Model.SelectedSubGroupId == subGroup.Id)">@subGroup.Name</option>
@@ -27,24 +27,24 @@
         </div>
 
         <div class="col-md-4">
-            <input name="search" value="@Model.Search" class="form-control" placeholder="Пошук вправи або опису" />
+            <input name="search" value="@Model.Search" class="form-control" placeholder="Search exercise or description" />
         </div>
 
         <div class="col-md-2 d-grid">
-            <button type="submit" class="btn btn-outline-primary">Фільтр</button>
+            <button type="submit" class="btn btn-outline-primary">Filter</button>
         </div>
     </div>
 </form>
 
-<div class="mb-2 text-muted">Знайдено вправ: @Model.Exercises.Count</div>
+<div class="mb-2 text-muted">Exercises found: @Model.Exercises.Count</div>
 
 <table class="table table-striped">
     <thead>
     <tr>
-        <th>Вправа</th>
-        <th>Група</th>
-        <th>Підгрупа</th>
-        <th>Опис</th>
+        <th>Exercise</th>
+        <th>Group</th>
+        <th>Subgroup</th>
+        <th>Description</th>
     </tr>
     </thead>
     <tbody>
