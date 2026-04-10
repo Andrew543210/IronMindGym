@@ -10,6 +10,8 @@ public static class DataSeeder
     public static void Seed(IronMindDbContext db)
     {
         EnsureSpecificUsersDemographics(db);
+        EnsureEnglishReferenceData(db);
+        EnsureResearchFeed(db);
 
         if (db.Users.Any())
         {
@@ -32,17 +34,17 @@ public static class DataSeeder
 
         var setTypes = new[]
         {
-            new SetType { Name = "Робочий" },
-            new SetType { Name = "Розминка" },
-            new SetType { Name = "Відмова" }
+            new SetType { Name = "Working" },
+            new SetType { Name = "Warm-up" },
+            new SetType { Name = "Failure" }
         };
         db.SetTypes.AddRange(setTypes);
 
         var avatars = new[]
         {
-            new Avatar { Name = "Новачок", MinStrengthCoefficient = 0.0, IconPath = "/images/avatar-novice.png" },
-            new Avatar { Name = "Атлет", MinStrengthCoefficient = 3.0, IconPath = "/images/avatar-athlete.png" },
-            new Avatar { Name = "Титан", MinStrengthCoefficient = 4.5, IconPath = "/images/avatar-titan.png" }
+            new Avatar { Name = "Novice", MinStrengthCoefficient = 0.0, IconPath = "/images/avatar-novice.png" },
+            new Avatar { Name = "Athlete", MinStrengthCoefficient = 3.0, IconPath = "/images/avatar-athlete.png" },
+            new Avatar { Name = "Titan", MinStrengthCoefficient = 4.5, IconPath = "/images/avatar-titan.png" }
         };
         db.Avatars.AddRange(avatars);
 
@@ -99,7 +101,7 @@ public static class DataSeeder
         var performed = new PerformedExercise
         {
             WorkoutSession = session,
-            Exercise = exercises["Жим лежачи"],
+            Exercise = FindExerciseByAnyName(exercises, "Bench Press", "Жим лежачи"),
             OrderInWorkout = 1
         };
 
@@ -107,7 +109,7 @@ public static class DataSeeder
         performed.Sets.Add(new WorkoutSet { SetNumber = 2, SetType = setTypes[0], WeightKg = 85, Reps = 6 });
         db.PerformedExercises.Add(performed);
 
-        db.WorkoutReviews.Add(new WorkoutReview { WorkoutSession = session, Rating = 5, Comment = "Сильне тренування" });
+        db.WorkoutReviews.Add(new WorkoutReview { WorkoutSession = session, Rating = 5, Comment = "Strong training session" });
 
         db.DailyNutritions.Add(new DailyNutrition
         {
@@ -119,45 +121,39 @@ public static class DataSeeder
             CarbsG = 280
         });
 
-        var research1 = new ResearchItem
-        {
-            Title = "Силовий обсяг і гіпертрофія",
-            ThesisText = "Збільшення тренувального обсягу до помірної межі корелює з ростом м'язової маси.",
-            Source = "Sports Medicine Journal"
-        };
-
-        var research2 = new ResearchItem
-        {
-            Title = "Білок для силових спортсменів",
-            ThesisText = "Діапазон 1.6-2.2 г білка/кг маси тіла є ефективним для відновлення.",
-            Source = "International Society of Sports Nutrition"
-        };
-
-        db.ResearchItems.AddRange(research1, research2);
-        db.ActivityFeeds.AddRange(
-            new ActivityFeed { ResearchItem = research1, PublishedAt = DateTime.UtcNow.AddDays(-1) },
-            new ActivityFeed { ResearchItem = research2, PublishedAt = DateTime.UtcNow });
-
         var achievements = new[]
         {
-            new Achievement { Code = "FIRST_WORKOUT", Name = "Перший крок", ConditionDescription = "Завершити перше тренування" },
-            new Achievement { Code = "WORKOUTS_5", Name = "Серія 5", ConditionDescription = "Завершити 5 тренувань" },
-            new Achievement { Code = "WORKOUTS_20", Name = "Режим чемпіона", ConditionDescription = "Завершити 20 тренувань" },
-            new Achievement { Code = "BENCH_100", Name = "Перші 100 кг у жимі", ConditionDescription = "Досягнути 100 кг у жимі" },
-            new Achievement { Code = "SQUAT_140", Name = "Міцні ноги", ConditionDescription = "Досягнути 140 кг у присіданнях" },
-            new Achievement { Code = "DEADLIFT_180", Name = "Тягова міць", ConditionDescription = "Досягнути 180 кг у становій тязі" },
-            new Achievement { Code = "MONTHLY_TONNAGE_20K", Name = "20K тоннажу", ConditionDescription = "Набрати 20 000 кг тоннажу за 30 днів" }
+            new Achievement { Code = "FIRST_WORKOUT", Name = "First Step", ConditionDescription = "Complete your first workout" },
+            new Achievement { Code = "WORKOUTS_5", Name = "5 Workout Streak", ConditionDescription = "Complete 5 workouts" },
+            new Achievement { Code = "WORKOUTS_20", Name = "Champion Mode", ConditionDescription = "Complete 20 workouts" },
+            new Achievement { Code = "BENCH_100", Name = "100 kg Bench", ConditionDescription = "Reach 100 kg in bench press" },
+            new Achievement { Code = "SQUAT_140", Name = "Iron Legs", ConditionDescription = "Reach 140 kg in squat" },
+            new Achievement { Code = "DEADLIFT_180", Name = "Pull Power", ConditionDescription = "Reach 180 kg in deadlift" },
+            new Achievement { Code = "MONTHLY_TONNAGE_20K", Name = "20K Tonnage", ConditionDescription = "Lift 20,000 kg total volume in 30 days" }
         };
         db.Achievements.AddRange(achievements);
         db.UserAchievements.Add(new UserAchievement { User = user, Achievement = achievements[3], AchievedAt = DateTime.UtcNow.AddDays(-5) });
 
         db.PersonalRecords.AddRange(
-            new PersonalRecord { User = user, Exercise = exercises["Жим лежачи"], MaxWeightKg = 105, UpdatedAt = DateTime.UtcNow.AddDays(-10) },
-            new PersonalRecord { User = user, Exercise = exercises["Присідання зі штангою"], MaxWeightKg = 155, UpdatedAt = DateTime.UtcNow.AddDays(-12) });
+            new PersonalRecord { User = user, Exercise = FindExerciseByAnyName(exercises, "Bench Press", "Жим лежачи"), MaxWeightKg = 105, UpdatedAt = DateTime.UtcNow.AddDays(-10) },
+            new PersonalRecord { User = user, Exercise = FindExerciseByAnyName(exercises, "Barbell Back Squat", "Присідання зі штангою"), MaxWeightKg = 155, UpdatedAt = DateTime.UtcNow.AddDays(-12) });
 
         db.Friendships.Add(new Friendship { User1 = user, User2 = friend, Status = "Accepted" });
 
         db.SaveChanges();
+    }
+
+    private static Exercise FindExerciseByAnyName(IReadOnlyDictionary<string, Exercise> exercises, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (exercises.TryGetValue(name, out var exercise))
+            {
+                return exercise;
+            }
+        }
+
+        return exercises.Values.First();
     }
 
     private static void EnsureSpecificUsersDemographics(IronMindDbContext db)
@@ -183,6 +179,108 @@ public static class DataSeeder
             user.Profile ??= new Profile { UserId = user.Id, AccountCreatedAt = DateTime.UtcNow };
             user.Profile.Gender = "Male";
             user.Profile.Age = 14;
+        }
+
+        db.SaveChanges();
+    }
+
+    private static void EnsureEnglishReferenceData(IronMindDbContext db)
+    {
+        var setTypeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Робочий"] = "Working",
+            ["Розминка"] = "Warm-up",
+            ["Відмова"] = "Failure"
+        };
+
+        foreach (var setType in db.SetTypes)
+        {
+            if (setTypeMap.TryGetValue(setType.Name, out var mappedName))
+            {
+                setType.Name = mappedName;
+            }
+        }
+
+        var avatarMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Новачок"] = "Novice",
+            ["Атлет"] = "Athlete",
+            ["Титан"] = "Titan"
+        };
+
+        foreach (var avatar in db.Avatars)
+        {
+            if (avatarMap.TryGetValue(avatar.Name, out var mappedName))
+            {
+                avatar.Name = mappedName;
+            }
+        }
+
+        var achievementMap = new Dictionary<string, (string Name, string Condition)>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["FIRST_WORKOUT"] = ("First Step", "Complete your first workout"),
+            ["WORKOUTS_5"] = ("5 Workout Streak", "Complete 5 workouts"),
+            ["WORKOUTS_20"] = ("Champion Mode", "Complete 20 workouts"),
+            ["BENCH_100"] = ("100 kg Bench", "Reach 100 kg in bench press"),
+            ["SQUAT_140"] = ("Iron Legs", "Reach 140 kg in squat"),
+            ["DEADLIFT_180"] = ("Pull Power", "Reach 180 kg in deadlift"),
+            ["MONTHLY_TONNAGE_20K"] = ("20K Tonnage", "Lift 20,000 kg total volume in 30 days")
+        };
+
+        foreach (var achievement in db.Achievements)
+        {
+            if (achievementMap.TryGetValue(achievement.Code, out var mapped))
+            {
+                achievement.Name = mapped.Name;
+                achievement.ConditionDescription = mapped.Condition;
+            }
+        }
+
+        db.SaveChanges();
+    }
+
+    private static void EnsureResearchFeed(IronMindDbContext db)
+    {
+        var studies = new (string Title, string Thesis, string Source)[]
+        {
+            ("Resistance Training Volume and Hypertrophy", "Meta-analysis shows that higher weekly set volume generally improves muscle hypertrophy up to an individual recovery limit.", "Sports Medicine (Schoenfeld et al.)|https://pubmed.ncbi.nlm.nih.gov/27433992/"),
+            ("Protein Intake for Strength Athletes", "A practical range of 1.6-2.2 g/kg/day supports recovery and muscle adaptation during resistance training.", "Journal of the International Society of Sports Nutrition|https://pubmed.ncbi.nlm.nih.gov/28698222/"),
+            ("Creatine and Performance", "Creatine monohydrate consistently improves strength, repeated high-intensity effort, and lean mass over time.", "Nutrients Review|https://pubmed.ncbi.nlm.nih.gov/33526090/"),
+            ("Sleep and Athletic Recovery", "Insufficient sleep reduces recovery quality, reaction speed, and can impair strength performance.", "Sports Medicine Review|https://pubmed.ncbi.nlm.nih.gov/27400005/"),
+            ("Training Frequency and Strength", "When weekly volume is equated, frequency can be distributed across days to improve fatigue management.", "Sports Medicine Meta-analysis|https://pubmed.ncbi.nlm.nih.gov/30558493/"),
+            ("Velocity Loss and Fatigue", "Higher velocity loss in sets increases fatigue and can alter adaptation; autoregulation helps maintain quality.", "Scandinavian Journal of Medicine and Science in Sports|https://pubmed.ncbi.nlm.nih.gov/31399902/"),
+            ("Rest Intervals and Hypertrophy", "Longer rest intervals often maintain training quality and can improve hypertrophy outcomes in compound lifts.", "Journal of Strength and Conditioning Research|https://pubmed.ncbi.nlm.nih.gov/26605807/"),
+            ("Energy Availability in Athletes", "Low energy availability can compromise performance, endocrine health, and recovery in both sexes.", "IOC Consensus Statement|https://pubmed.ncbi.nlm.nih.gov/30587314/"),
+            ("Carbohydrates and Strength Training", "Sufficient carbohydrate availability supports training intensity, session quality, and total work output.", "Nutrients|https://pubmed.ncbi.nlm.nih.gov/32899481/"),
+            ("Concurrent Training Interference", "Combining endurance and strength is possible, but scheduling and fatigue management are key to reduce interference.", "Sports Medicine|https://pubmed.ncbi.nlm.nih.gov/22002517/"),
+            ("Deloads and Fatigue Management", "Planned reductions in volume/intensity can restore readiness and support long-term progression.", "Strength and Conditioning Journal|https://pubmed.ncbi.nlm.nih.gov/34567420/"),
+            ("Women and Resistance Training", "Women gain significant strength and hypertrophy from progressive resistance training with sex-specific periodization considerations.", "Sports Medicine|https://pubmed.ncbi.nlm.nih.gov/29423684/")
+        };
+
+        foreach (var study in studies)
+        {
+            var existing = db.ResearchItems.FirstOrDefault(x => x.Title == study.Title);
+            if (existing == null)
+            {
+                existing = new ResearchItem
+                {
+                    Title = study.Title,
+                    ThesisText = study.Thesis,
+                    Source = study.Source
+                };
+                db.ResearchItems.Add(existing);
+                db.SaveChanges();
+            }
+
+            var existsInFeed = db.ActivityFeeds.Any(f => f.ResearchItemId == existing.Id);
+            if (!existsInFeed)
+            {
+                db.ActivityFeeds.Add(new ActivityFeed
+                {
+                    ResearchItemId = existing.Id,
+                    PublishedAt = DateTime.UtcNow.AddDays(-db.ActivityFeeds.Count())
+                });
+            }
         }
 
         db.SaveChanges();

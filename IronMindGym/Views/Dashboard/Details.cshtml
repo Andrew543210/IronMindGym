@@ -1,0 +1,25 @@
+﻿@model DashboardResearchDetailsViewModel
+@{
+    ViewData["Title"] = "Research Details";
+}
+
+<h2>Research Details</h2>
+
+<div class="card">
+    <div class="card-body">
+        <div class="small text-muted mb-2">@Model.Item.PublishedAt.ToLocalTime().ToString("yyyy-MM-dd")</div>
+        <h4 class="mb-3">@Model.Item.Title</h4>
+        <p>@Model.Item.ThesisText</p>
+        <p class="mb-3"><strong>Source:</strong> @Model.Item.Source</p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Item.SourceUrl))
+        {
+            <a href="@Model.Item.SourceUrl" target="_blank" rel="noopener noreferrer" class="btn btn-light text-dark">Open Original Study</a>
+        }
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-outline-light">Back to dashboard</a>
+</div>
+

@@ -29,12 +29,12 @@ public class AuthController(IronMindDbContext db) : Controller
 
         if (user is null || !PasswordHashUtility.Verify(model.Password, user.PasswordHash))
         {
-            ModelState.AddModelError(string.Empty, "Невірний email або пароль.");
+            ModelState.AddModelError(string.Empty, "Invalid email or password.");
             return View(model);
         }
 
         await SignInUserAsync(user.Id, user.Username, model.RememberMe);
-        TempData["Message"] = $"Вітаю, {user.Username}!";
+        TempData["Message"] = $"Welcome, {user.Username}!";
         return RedirectToAction("Index", "Dashboard");
     }
 
@@ -51,13 +51,13 @@ public class AuthController(IronMindDbContext db) : Controller
 
         if (db.Users.Any(u => u.Email == model.Email))
         {
-            ModelState.AddModelError(nameof(model.Email), "Користувач з таким email вже існує.");
+            ModelState.AddModelError(nameof(model.Email), "A user with this email already exists.");
             return View(model);
         }
 
         if (db.Users.Any(u => u.Username == model.Username))
         {
-            ModelState.AddModelError(nameof(model.Username), "Такий username вже зайнято.");
+            ModelState.AddModelError(nameof(model.Username), "This username is already taken.");
             return View(model);
         }
 
@@ -73,7 +73,7 @@ public class AuthController(IronMindDbContext db) : Controller
         db.SaveChanges();
 
         await SignInUserAsync(user.Id, user.Username, true);
-        TempData["Message"] = "Реєстрація успішна. Заповни стартові дані профілю.";
+        TempData["Message"] = "Registration successful. Complete your initial setup.";
 
         return RedirectToAction("Index", "Setup");
     }
@@ -83,7 +83,7 @@ public class AuthController(IronMindDbContext db) : Controller
     {
         HttpContext.Session.Remove("UserId");
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        TempData["Message"] = "Ви вийшли з акаунту.";
+        TempData["Message"] = "You have logged out.";
         return RedirectToAction(nameof(Login));
     }
 

@@ -3,39 +3,50 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<h2>Вітаю, @Model.Username</h2>
+<div class="mb-4">
+    <img src="@Model.HeroImagePath" alt="IronMind training" class="hero-image" />
+</div>
+
+<h2>Welcome, @Model.Username</h2>
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card">
+    <div class="col-md-4 d-flex">
+        <div class="card h-100 w-100">
             <div class="card-body">
-                <h5>Аватар</h5>
-                <p class="mb-1">Статус: <strong>@Model.AvatarName</strong></p>
-                <p class="mb-0">Коефіцієнт сили: @Model.StrengthCoefficient</p>
+                <h5>Avatar</h5>
+                <p class="mb-1">Status: <strong>@Model.AvatarName</strong></p>
+                <p class="mb-0">Strength coefficient: @Model.StrengthCoefficient</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
+    <div class="col-md-4 d-flex">
+        <div class="card h-100 w-100">
             <div class="card-body">
-                <h5>План тижня</h5>
-                <p>Заплановано: @Model.PlannedWorkoutsPerWeek</p>
-                <p>Виконано: @Model.CompletedThisWeek</p>
+                <h5>Weekly Plan</h5>
+                <p>Planned: @Model.PlannedWorkoutsPerWeek</p>
+                <p>Completed: @Model.CompletedThisWeek</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4 d-flex align-items-center">
-        <a asp-controller="WorkoutLogger" asp-action="Index" class="btn btn-light text-dark w-100">Швидкий старт тренування</a>
+    <div class="col-md-4 d-flex align-items-stretch">
+        <a asp-controller="WorkoutLogger" asp-action="Index" class="btn btn-light text-dark w-100 quick-start-btn d-flex align-items-center justify-content-center">Quick Start Workout</a>
     </div>
 </div>
 
-<h4>Наукова стрічка</h4>
+<h4>Science Feed</h4>
 @foreach (var item in Model.FeedItems)
 {
     <div class="border rounded p-3 mb-2">
         <div class="small text-muted">@item.PublishedAt.ToLocalTime().ToString("yyyy-MM-dd")</div>
-        <strong>@item.ResearchItem.Title</strong>
-        <div>@item.ResearchItem.ThesisText</div>
-        <div class="small">Джерело: @item.ResearchItem.Source</div>
+        <strong>@item.Title</strong>
+        <div>@item.ThesisText</div>
+        <div class="small">Source: @item.Source</div>
+        <div class="mt-2 d-flex gap-2">
+            <a asp-action="Details" asp-route-id="@item.FeedId" class="btn btn-outline-light btn-sm">Details</a>
+            @if (!string.IsNullOrWhiteSpace(item.SourceUrl))
+            {
+                <a href="@item.SourceUrl" target="_blank" rel="noopener noreferrer" class="btn btn-light btn-sm text-dark">Open Study</a>
+            }
+        </div>
     </div>
 }
 

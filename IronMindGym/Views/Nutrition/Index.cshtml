@@ -1,36 +1,88 @@
 ﻿@model NutritionViewModel
 @{
-    ViewData["Title"] = "Харчування";
+    ViewData["Title"] = "Nutrition";
 }
 
-<h2>Журнал КБЖУ</h2>
+<h2>Nutrition Log</h2>
 <form method="post" class="row g-3">
     <div class="col-md-3">
-        <label asp-for="CaloriesKcal" class="form-label">Калорії</label>
+        <label asp-for="CaloriesKcal" class="form-label">Calories</label>
         <input asp-for="CaloriesKcal" class="form-control" />
     </div>
     <div class="col-md-3">
-        <label asp-for="ProteinG" class="form-label">Білки (г)</label>
+        <label asp-for="ProteinG" class="form-label">Protein (g)</label>
         <input asp-for="ProteinG" class="form-control" />
     </div>
     <div class="col-md-3">
-        <label asp-for="FatG" class="form-label">Жири (г)</label>
+        <label asp-for="FatG" class="form-label">Fat (g)</label>
         <input asp-for="FatG" class="form-control" />
     </div>
     <div class="col-md-3">
-        <label asp-for="CarbsG" class="form-label">Вуглеводи (г)</label>
+        <label asp-for="CarbsG" class="form-label">Carbs (g)</label>
         <input asp-for="CarbsG" class="form-control" />
     </div>
     <div class="col-12">
-        <button type="submit" class="btn btn-primary">Зберегти</button>
+        <button type="submit" class="btn btn-primary">Save</button>
     </div>
 </form>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5>Calculated Daily Targets</h5>
+        <p class="small mb-2">Hover each target card to see the exact individual formula.</p>
+        <div class="mb-3">
+            <strong>Your KBJU norm:</strong>
+            <span class="metric">@Model.TargetCaloriesKcal</span> kcal /
+            <span class="metric">@Model.TargetProteinG</span> P /
+            <span class="metric">@Model.TargetFatG</span> F /
+            <span class="metric">@Model.TargetCarbsG</span> C
+        </div>
+        <div class="row g-2">
+            <div class="col-md-4">
+                <div class="formula-target p-2 h-100">
+                    <div>BMR: <span class="metric">@Model.BasalMetabolicRate</span> kcal</div>
+                    <div class="formula-hint">@Model.BmrFormulaText</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="formula-target p-2 h-100">
+                    <div>PAL: <span class="metric">@Model.ActivityMultiplier.ToString("F2")</span></div>
+                    <div class="formula-hint">@Model.CaloriesFormulaText</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="formula-target p-2 h-100">
+                    <div>Calories target: <span class="metric">@Model.TargetCaloriesKcal</span> kcal</div>
+                    <div class="formula-hint">@Model.CaloriesFormulaText</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="formula-target p-2 h-100">
+                    <div>Protein target: <span class="metric">@Model.TargetProteinG</span> g</div>
+                    <div class="formula-hint">@Model.ProteinFormulaText</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="formula-target p-2 h-100">
+                    <div>Fat target: <span class="metric">@Model.TargetFatG</span> g</div>
+                    <div class="formula-hint">@Model.FatFormulaText</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="formula-target p-2 h-100">
+                    <div>Carbs target: <span class="metric">@Model.TargetCarbsG</span> g</div>
+                    <div class="formula-hint">@Model.CarbsFormulaText</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @if (!string.IsNullOrWhiteSpace(Model.SystemAdvice))
 {
     <div class="alert alert-info mt-4">
-        <div><strong>Оцінка системи:</strong> @Model.SystemAdvice</div>
-        <div class="mt-1"><strong>Вердикт:</strong> @Model.SystemVerdict</div>
+        <div><strong>System Evaluation:</strong> @Model.SystemAdvice</div>
+        <div class="mt-1"><strong>Verdict:</strong> @Model.SystemVerdict</div>
         <div><strong>Score:</strong> <span class="metric">@Model.SystemScore</span>/100</div>
 
         @if (Model.AdviceItems.Any())
@@ -48,21 +100,21 @@
 
 <div class="card mt-4">
     <div class="card-body">
-        <h5>Журнал (останні 10 днів)</h5>
+        <h5>Log (last 10 days)</h5>
         @if (!Model.RecentLogs.Any())
         {
-            <p class="mb-0">Ще немає записів.</p>
+            <p class="mb-0">No entries yet.</p>
         }
         else
         {
             <table class="table table-sm mt-3 mb-0">
                 <thead>
                 <tr>
-                    <th>Дата</th>
-                    <th>Калорії</th>
-                    <th>Б</th>
-                    <th>Ж</th>
-                    <th>В</th>
+                    <th>Date</th>
+                    <th>Calories</th>
+                    <th>P</th>
+                    <th>F</th>
+                    <th>C</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -75,7 +127,7 @@
                         <td class="metric">@day.ProteinG</td>
                         <td class="metric">@day.FatG</td>
                         <td class="metric">@day.CarbsG</td>
-                        <td><a asp-action="Details" asp-route-id="@day.Id" class="btn btn-outline-light btn-sm">Деталі</a></td>
+                        <td><a asp-action="Details" asp-route-id="@day.Id" class="btn btn-outline-light btn-sm">Details</a></td>
                     </tr>
                 }
                 </tbody>

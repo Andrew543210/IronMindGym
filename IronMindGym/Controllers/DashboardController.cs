@@ -47,7 +47,7 @@ public class DashboardController(IronMindDbContext db, IAvatarService avatarServ
         var feed = db.ActivityFeeds
             .Include(f => f.ResearchItem)
             .OrderByDescending(f => f.PublishedAt)
-            .Take(10)
+            .Take(24)
             .ToList();
 
         var strengthCoefficient = avatarService.CalculateStrengthCoefficient(user.Benchmarks, latestAnthropometry);
@@ -61,8 +61,77 @@ public class DashboardController(IronMindDbContext db, IAvatarService avatarServ
             PlannedWorkoutsPerWeek = activePlan?.WorkoutsPerWeek ?? 0,
             CompletedThisWeek = completedThisWeek,
             FeedItems = feed
+                .Select(f => new DashboardResearchItemViewModel
+                {
+                    FeedId = f.Id,
+                    PublishedAt = f.PublishedAt,
+                    Title = f.ResearchItem.Title,
+                    ThesisText = f.ResearchItem.ThesisText,
+                    Source = BuildSourceName(f.ResearchItem.Source),
+                    SourceUrl = BuildSourceUrl(f.ResearchItem.Source)
+                })
+                .ToList()
         };
 
         return View(vm);
+    }
+
+    [HttpGet]
+    public IActionResult Details(int id)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var item = db.ActivityFeeds
+            .AsNoTracking()
+            .Include(x => x.ResearchItem)
+            .Where(x => x.Id == id)
+            .Select(x => new DashboardResearchItemViewModel
+            {
+                FeedId = x.Id,
+                PublishedAt = x.PublishedAt,
+                Title = x.ResearchItem.Title,
+                ThesisText = x.ResearchItem.ThesisText,
+                Source = BuildSourceName(x.ResearchItem.Source),
+                SourceUrl = BuildSourceUrl(x.ResearchItem.Source)
+            })
+            .FirstOrDefault();
+
+        if (item == null)
+        {
+            return NotFound();
+        }
+
+        return View(new DashboardResearchDetailsViewModel { Item = item });
+    }
+
+    private static string BuildSourceName(string source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return "Research Source";
+        }
+
+        var parts = source.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return parts.Length == 0 ? source : parts[0];
+    }
+
+    private static string BuildSourceUrl(string source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return string.Empty;
+        }
+
+        var parts = source.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length >= 2)
+        {
+            return parts[1];
+        }
+
+        return Uri.TryCreate(source, UriKind.Absolute, out _) ? source : string.Empty;
     }
 }
