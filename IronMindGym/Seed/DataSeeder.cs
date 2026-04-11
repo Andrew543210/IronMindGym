@@ -1,5 +1,6 @@
 using IronMindGym.Data;
 using IronMindGym.Models;
+using IronMindGym.Services;
 
 namespace IronMindGym.Seed;
 
@@ -36,6 +37,7 @@ public static class DataSeeder
         EnsureAvatarLadder(db);
         db.SaveChanges();
         EnsureResearchFeed(db);
+        AchievementEngine.EnsureCatalog(db);
         transaction.Commit();
     }
 

@@ -1,0 +1,61 @@
+using IronMindGym.Models;
+using IronMindGym.Security;
+using IronMindGym.Seed;
+using IronMindGym.Services;
+using Microsoft.EntityFrameworkCore;
+
+namespace IronMindGym.Tests.Domain;
+
+public class SeedingTests
+{
+    [Fact]
+    public void SeedingTwiceKeepsOneConsistentCatalog()
+    {
+        using var app = new TestApplication();
+        app.Query(db =>
+        {
+            var counts = (db.Exercises.Count(), db.Avatars.Count(), db.ActivityFeeds.Count(), db.Achievements.Count());
+
+            DataSeeder.Seed(db);
+
+            Assert.Equal(counts, (db.Exercises.Count(), db.Avatars.Count(), db.ActivityFeeds.Count(), db.Achievements.Count()));
+            Assert.Equal(ExerciseCatalogSeeder.Definitions().Count, db.Exercises.Count());
+            Assert.Equal(AchievementCatalog.All.Count, db.Achievements.Count());
+            Assert.Equal(DataSeeder.AvatarLadder.Length, db.Avatars.Count());
+            Assert.Equal("Hamstrings", db.Exercises.Include(e => e.MuscleSubGroup).Single(e => e.Name == "Romanian Deadlift").MuscleSubGroup.Name);
+            Assert.Equal(ExerciseType.Timed, db.Exercises.Single(e => e.Name == "Weighted Plank").Type);
+            Assert.Equal(0, db.Users.Count());
+            return true;
+        });
+    }
+
+    [Fact]
+    public void ReferenceDataGetsTheTranslationsItIsMissing()
+    {
+        using var app = new TestApplication();
+        app.Query(db =>
+        {
+            foreach (var exercise in db.Exercises)
+                (exercise.NameUk, exercise.DescriptionUk) = (null, null);
+            foreach (var group in db.MuscleGroups)
+                group.NameUk = null;
+            foreach (var setType in db.SetTypes)
+                setType.NameUk = null;
+            foreach (var avatar in db.Avatars)
+                avatar.NameUk = null;
+            db.Exercises.Single(e => e.Name == "Deadlift").Description = "Own notes";
+            db.SaveChanges();
+
+            DataSeeder.Seed(db);
+
+            Assert.Equal(0, db.Exercises.Count(e => e.NameUk == null));
+            Assert.Equal("Станова тяга", db.Exercises.Single(e => e.Name == "Deadlift").NameUk);
+            Assert.Null(db.Exercises.Single(e => e.Name == "Deadlift").DescriptionUk);
+            Assert.Equal("Груди", db.MuscleGroups.Single(g => g.Name == "Chest").NameUk);
+            Assert.Equal("Робочий", db.SetTypes.Single(s => s.Name == "Working").NameUk);
+            Assert.Equal(0, db.Avatars.Count(a => a.NameUk == null));
+            Assert.Equal(ExerciseCatalogSeeder.Definitions().Count, db.Exercises.Count());
+            return true;
+        });
+    }
+}
