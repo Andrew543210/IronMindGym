@@ -95,4 +95,25 @@ public class SessionApiTests
         Assert.All(statuses.Take(10), status => Assert.Equal(HttpStatusCode.BadRequest, status));
         Assert.Equal(HttpStatusCode.TooManyRequests, statuses[10]);
     }
+
+    [Fact]
+    public async Task SetupIsSavedOnceAndCompletesTheSession()
+    {
+        using var app = new TestApplication();
+        using var api = app.Api();
+        await api.Register();
+        var form = await api.Get<SetupFormResponse>("/api/setup");
+        Assert.NotEmpty(form.SplitTypes);
+        Assert.False(form.AlreadyCompleted);
+
+        var invalid = await api.Post("/api/setup", new { weightKg = 80, heightCm = 180, workoutsPerWeek = 3, splitTypeId = 9999 });
+        Assert.Contains("Choose a valid training split.", await ApiClient.Errors(invalid));
+        var setup = new { weightKg = 80.5, heightCm = 180, benchPressKg = 60, squatKg = 80, deadliftKg = 100, workoutsPerWeek = 3, splitTypeId = form.SplitTypes[0].Id };
+        await ApiClient.Ok(await api.Post("/api/setup", setup));
+        await ApiClient.Ok(await api.Post("/api/setup", setup));
+
+        Assert.True((await api.Get<SessionResponse>("/api/session")).SetupComplete);
+        Assert.Equal(1, app.Query(db => db.AnthropometryLogs.Count()));
+        Assert.Equal(1, app.Query(db => db.WorkoutPlans.Count(p => p.IsActive)));
+    }
 }
