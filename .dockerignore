@@ -1,0 +1,11 @@
+**/bin
+**/obj
+.git
+.github
+.vs
+.idea
+IronMindGym.Tests
+TestResults
+docs
+.env
+**/appsettings.Development.json

@@ -20,5 +20,21 @@ services:
       timeout: 3s
       retries: 12
 
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=ironmind;Username=ironmind;Password=${POSTGRES_PASSWORD:-ironmind-local}
+      DataProtection__KeyDirectory: /app/keys
+    ports:
+      - '127.0.0.1:${APP_PORT:-8080}:8080'
+    volumes:
+      - gym-keys:/app/keys
+
 volumes:
   db-data:
+  gym-keys:

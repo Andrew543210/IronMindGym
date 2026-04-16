@@ -2,9 +2,21 @@
 
 Особистий тренувальний щоденник: силові вправи, кардіо, прогрес, харчування та цілі в одному місці. ASP.NET Core Web API · React · PostgreSQL · Docker.
 
-## Розробка
+## Запуск
 
-Потрібні **Docker** (з Compose) і **.NET 10 SDK**.
+Потрібні **Docker** (з Compose), а для розробки — **.NET 10 SDK**.
+
+### Усе в контейнерах
+
+```sh
+git clone https://github.com/Andrew543210/IronMindGym.git
+cd IronMindGym
+docker compose up --build
+```
+
+API слухає [localhost:8080](http://localhost:8080). Дані PostgreSQL зберігаються в томі `db-data` і переживають перезапуск контейнерів.
+
+### Розробка
 
 ```sh
 docker compose up -d db
