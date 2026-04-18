@@ -12,9 +12,15 @@ public class SetupController(IronMindDbContext db) : Controller
     [HttpGet]
     public IActionResult Index()
     {
-        if (!HttpContext.Session.GetInt32("UserId").HasValue)
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
+        }
+
+        if (HasCompletedSetup(userId.Value))
+        {
+            return RedirectToAction("Index", "Dashboard");
         }
 
         ViewBag.SplitTypes = new SelectList(db.SplitTypes.AsNoTracking().ToList(), "Id", "Name");
@@ -28,6 +34,11 @@ public class SetupController(IronMindDbContext db) : Controller
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
+        }
+
+        if (HasCompletedSetup(userId.Value))
+        {
+            return RedirectToAction("Index", "Dashboard");
         }
 
         ViewBag.SplitTypes = new SelectList(db.SplitTypes.AsNoTracking().ToList(), "Id", "Name", model.SplitTypeId);
@@ -71,5 +82,11 @@ public class SetupController(IronMindDbContext db) : Controller
         TempData["Message"] = "Initial setup data saved.";
 
         return RedirectToAction("Index", "Dashboard");
+    }
+
+    private bool HasCompletedSetup(int userId)
+    {
+        return db.Users.Any(u => u.Id == userId && u.Benchmarks != null)
+               && db.AnthropometryLogs.Any(a => a.UserId == userId);
     }
 }

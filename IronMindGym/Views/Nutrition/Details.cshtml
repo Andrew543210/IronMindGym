@@ -96,6 +96,10 @@
 </div>
 
 <div class="mt-3">
+    @if (Model.Log.IsToday)
+    {
+        <a asp-action="EditToday" asp-route-id="@Model.Log.Id" class="btn btn-light text-dark">Edit today's entry</a>
+    }
     <a asp-action="Index" class="btn btn-light text-dark">Back to log</a>
 </div>
 

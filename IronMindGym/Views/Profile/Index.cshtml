@@ -9,9 +9,16 @@
         <div class="card"><div class="card-body">
             <p><strong>Username:</strong> @Model.Username</p>
             <p><strong>Email:</strong> @Model.Email</p>
-            <p><strong>Gender:</strong> @Model.Gender</p>
             <p><strong>Age:</strong> @Model.Age</p>
             <p><strong>Avatar:</strong> @Model.AvatarName</p>
+            <hr />
+            <p><strong>Weight:</strong> @(Model.WeightKg.HasValue ? $"{Model.WeightKg:F1} kg" : "-")</p>
+            <p><strong>Height:</strong> @(Model.HeightCm.HasValue ? $"{Model.HeightCm:F1} cm" : "-")</p>
+            <p><strong>Anthropometry date:</strong> @(Model.AnthropometryRecordedAt.HasValue ? Model.AnthropometryRecordedAt.Value.ToLocalTime().ToString("yyyy-MM-dd") : "-")</p>
+            <hr />
+            <p><strong>Initial Bench Press:</strong> @(Model.BenchPressKg.HasValue ? $"{Model.BenchPressKg:F1} kg" : "-")</p>
+            <p><strong>Initial Squat:</strong> @(Model.SquatKg.HasValue ? $"{Model.SquatKg:F1} kg" : "-")</p>
+            <p><strong>Initial Deadlift:</strong> @(Model.DeadliftKg.HasValue ? $"{Model.DeadliftKg:F1} kg" : "-")</p>
         </div></div>
     </div>
     <div class="col-md-6">
