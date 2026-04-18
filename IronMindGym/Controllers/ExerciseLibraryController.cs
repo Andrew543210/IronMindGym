@@ -9,6 +9,8 @@ namespace IronMindGym.Controllers;
 public class ExerciseLibraryController(IronMindDbContext db) : Controller
 {
     public static string TranslateExerciseNameForDisplay(string value) => TranslateExerciseName(value);
+    public static string TranslateMuscleGroupForDisplay(string value) => TranslateMuscleGroup(value);
+    public static string TranslateMuscleSubGroupForDisplay(string value) => TranslateMuscleSubGroup(value);
 
     public static string TranslateSessionNameForDisplay(string value)
     {

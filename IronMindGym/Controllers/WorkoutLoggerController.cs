@@ -1,5 +1,6 @@
 ﻿using IronMindGym.Data;
 using IronMindGym.Models;
+using IronMindGym.Services;
 using IronMindGym.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -117,7 +118,8 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
 
             db.PerformedExercises.Add(performedExercise);
 
-            var exerciseName = db.Exercises.AsNoTracking().First(e => e.Id == exerciseGroup.Key).Name;
+            var rawExerciseName = db.Exercises.AsNoTracking().First(e => e.Id == exerciseGroup.Key).Name;
+            var exerciseName = ExerciseLibraryController.TranslateExerciseNameForDisplay(rawExerciseName);
             var peakWeight = exerciseGroup.Max(x => x.WeightKg);
             var existingRecord = db.PersonalRecords.FirstOrDefault(pr => pr.UserId == currentUserId && pr.ExerciseId == exerciseGroup.Key);
             var baselineRecordWeight = existingRecord?.MaxWeightKg;
@@ -168,10 +170,17 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             Comment = model.ReviewComment
         });
 
-        db.SaveChanges();
-
-        AssignAchievements(currentUserId);
-        db.SaveChanges();
+        try
+        {
+            db.SaveChanges();
+            AchievementEngine.AssignAchievements(db, currentUserId);
+        }
+        catch
+        {
+            ModelState.AddModelError(string.Empty, "Unable to save workout right now. Please try again.");
+            model.RecentSessions = BuildRecentSessions(currentUserId);
+            return View("Index", model);
+        }
 
         var workoutsPerWeek = db.WorkoutPlans
             .Where(w => w.UserId == currentUserId && w.IsActive)
@@ -244,7 +253,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
 
                 return new ExerciseWorkoutSummaryViewModel
                 {
-                    ExerciseName = pe.Exercise.Name,
+                    ExerciseName = ExerciseLibraryController.TranslateExerciseNameForDisplay(pe.Exercise.Name),
                     SetsCount = pe.Sets.Count,
                     AverageLoad = averagePercent,
                     PeakLoad = peakPercent,
@@ -336,6 +345,30 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             .OrderBy(e => e.Name)
             .ToList();
 
+        var groupOptions = groups
+            .Select(g => new { g.Id, Name = ExerciseLibraryController.TranslateMuscleGroupForDisplay(g.Name) })
+            .OrderBy(g => g.Name)
+            .ToList();
+
+        var subGroupOptions = subGroups
+            .Select(s => new
+            {
+                s.Id,
+                s.MuscleGroupId,
+                Name = ExerciseLibraryController.TranslateMuscleSubGroupForDisplay(s.Name)
+            })
+            .OrderBy(s => s.Name)
+            .ToList();
+
+        var exerciseOptions = exercises
+            .Select(e => new
+            {
+                e.Id,
+                Name = ExerciseLibraryController.TranslateExerciseNameForDisplay(e.Name)
+            })
+            .OrderBy(e => e.Name)
+            .ToList();
+
         var splitTypeItems = activePlan == null
             ? db.SplitTypes.AsNoTracking().OrderBy(s => s.Name).ToList()
             : new List<SplitType> { activePlan.SplitType };
@@ -350,9 +383,9 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         }
 
         ViewBag.SplitDays = new SelectList(splitDays, model.SplitDayLabel);
-        ViewBag.MuscleGroups = new SelectList(groups, "Id", "Name", model.SelectedMuscleGroupId);
-        ViewBag.MuscleSubGroups = new SelectList(subGroups, "Id", "Name", model.SelectedMuscleSubGroupId);
-        ViewBag.Exercises = new SelectList(exercises, "Id", "Name", model.ExerciseId);
+        ViewBag.MuscleGroups = new SelectList(groupOptions, "Id", "Name", model.SelectedMuscleGroupId);
+        ViewBag.MuscleSubGroups = new SelectList(subGroupOptions, "Id", "Name", model.SelectedMuscleSubGroupId);
+        ViewBag.Exercises = new SelectList(exerciseOptions, "Id", "Name", model.ExerciseId);
 
         var setTypes = db.SetTypes
             .AsNoTracking()
@@ -379,11 +412,11 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         model.ExerciseCatalog = exercises.Select(e => new ExerciseCatalogItemViewModel
         {
             ExerciseId = e.Id,
-            ExerciseName = e.Name,
+            ExerciseName = ExerciseLibraryController.TranslateExerciseNameForDisplay(e.Name),
             MuscleGroupId = e.MuscleSubGroup.MuscleGroupId,
-            MuscleGroupName = e.MuscleSubGroup.MuscleGroup.Name,
+            MuscleGroupName = ExerciseLibraryController.TranslateMuscleGroupForDisplay(e.MuscleSubGroup.MuscleGroup.Name),
             MuscleSubGroupId = e.MuscleSubGroupId,
-            MuscleSubGroupName = e.MuscleSubGroup.Name
+            MuscleSubGroupName = ExerciseLibraryController.TranslateMuscleSubGroupForDisplay(e.MuscleSubGroup.Name)
         }).ToList();
     }
 
@@ -414,55 +447,5 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         return new List<string> { "Training Day" };
     }
 
-    private void AssignAchievements(int userId)
-    {
-        var unlocked = db.UserAchievements.Where(ua => ua.UserId == userId).Select(ua => ua.Achievement.Code).ToHashSet();
-        var all = db.Achievements.AsNoTracking().ToDictionary(a => a.Code, a => a.Id);
-
-        void Grant(string code)
-        {
-            if (!all.TryGetValue(code, out var achievementId) || unlocked.Contains(code))
-            {
-                return;
-            }
-
-            db.UserAchievements.Add(new UserAchievement
-            {
-                UserId = userId,
-                AchievementId = achievementId,
-                AchievedAt = DateTime.UtcNow
-            });
-            unlocked.Add(code);
-        }
-
-        var workoutsCount = db.WorkoutSessions.Count(s => s.UserId == userId);
-        if (workoutsCount >= 1) Grant("FIRST_WORKOUT");
-        if (workoutsCount >= 5) Grant("WORKOUTS_5");
-        if (workoutsCount >= 20) Grant("WORKOUTS_20");
-
-        var records = db.PersonalRecords
-            .Where(pr => pr.UserId == userId)
-            .Include(pr => pr.Exercise)
-            .AsNoTracking()
-            .ToList();
-
-        if (records.Any(pr => pr.Exercise.Name.Contains("Bench Press", StringComparison.OrdinalIgnoreCase) && pr.MaxWeightKg >= 100))
-            Grant("BENCH_100");
-        if (records.Any(pr => pr.Exercise.Name.Contains("Squat", StringComparison.OrdinalIgnoreCase) && pr.MaxWeightKg >= 140))
-            Grant("SQUAT_140");
-        if (records.Any(pr => pr.Exercise.Name.Contains("Deadlift", StringComparison.OrdinalIgnoreCase) && pr.MaxWeightKg >= 180))
-            Grant("DEADLIFT_180");
-
-        var monthlyTonnage = db.WorkoutSessions
-            .Where(s => s.UserId == userId && s.SessionDate >= DateTime.UtcNow.AddDays(-30))
-            .Include(s => s.PerformedExercises)
-            .ThenInclude(pe => pe.Sets)
-            .AsEnumerable()
-            .SelectMany(s => s.PerformedExercises)
-            .SelectMany(pe => pe.Sets)
-            .Sum(set => set.WeightKg * set.Reps);
-
-        if (monthlyTonnage >= 20000)
-            Grant("MONTHLY_TONNAGE_20K");
-    }
 }
+

@@ -38,6 +38,7 @@ public class NutritionLogListItemViewModel
 {
     public int Id { get; set; }
     public DateTime Date { get; set; }
+    public bool IsToday { get; set; }
     public double CaloriesKcal { get; set; }
     public double ProteinG { get; set; }
     public double FatG { get; set; }

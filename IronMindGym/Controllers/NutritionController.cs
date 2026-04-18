@@ -118,6 +118,7 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
         log.CarbsG = model.CarbsG;
 
         db.SaveChanges();
+        AchievementEngine.AssignAchievements(db, currentUserId);
 
         var recentLogsAfterSave = db.DailyNutritions
             .AsNoTracking()
@@ -134,6 +135,27 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
         TempData["Message"] = "Nutrition log has been updated.";
 
         return View(model);
+    }
+
+    [HttpGet]
+    public IActionResult EditToday(int id)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var today = DateTime.UtcNow.Date;
+        var editable = db.DailyNutritions.AsNoTracking().Any(x => x.Id == id && x.UserId == userId.Value && x.Date == today);
+        if (!editable)
+        {
+            TempData["Message"] = "Only today's nutrition entry can be edited.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        TempData["Message"] = "Editing today's nutrition entry.";
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
@@ -171,6 +193,7 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
             {
                 Id = log.Id,
                 Date = log.Date,
+                IsToday = log.Date == DateTime.UtcNow.Date,
                 CaloriesKcal = log.CaloriesKcal,
                 ProteinG = log.ProteinG,
                 FatG = log.FatG,
@@ -199,6 +222,7 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
 
     private List<NutritionLogListItemViewModel> BuildRecentLogs(int userId)
     {
+        var today = DateTime.UtcNow.Date;
         return db.DailyNutritions
             .AsNoTracking()
             .Where(n => n.UserId == userId)
@@ -208,6 +232,7 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
             {
                 Id = n.Id,
                 Date = n.Date,
+                IsToday = n.Date == today,
                 CaloriesKcal = n.CaloriesKcal,
                 ProteinG = n.ProteinG,
                 FatG = n.FatG,

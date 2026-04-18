@@ -35,9 +35,14 @@ public class ProfileController(IronMindDbContext db, IAvatarService avatarServic
         {
             Username = user.Username,
             Email = user.Email,
-            Gender = user.Profile?.Gender ?? "Unknown",
             Age = user.Profile?.Age ?? 0,
             AvatarName = avatar.Name,
+            WeightKg = latestAnthro?.WeightKg,
+            HeightCm = latestAnthro?.HeightCm,
+            AnthropometryRecordedAt = latestAnthro?.RecordedAt,
+            BenchPressKg = user.Benchmarks?.BenchPressKg,
+            SquatKg = user.Benchmarks?.SquatKg,
+            DeadliftKg = user.Benchmarks?.DeadliftKg,
             Achievements = user.UserAchievements
                 .OrderByDescending(a => a.AchievedAt)
                 .Select(a => new ProfileAchievementViewModel

@@ -127,7 +127,13 @@
                         <td class="metric">@day.ProteinG</td>
                         <td class="metric">@day.FatG</td>
                         <td class="metric">@day.CarbsG</td>
-                        <td><a asp-action="Details" asp-route-id="@day.Id" class="btn btn-outline-light btn-sm">Details</a></td>
+                        <td class="d-flex gap-2 justify-content-end">
+                            <a asp-action="Details" asp-route-id="@day.Id" class="btn btn-outline-light btn-sm">Details</a>
+                            @if (day.IsToday)
+                            {
+                                <a asp-action="EditToday" asp-route-id="@day.Id" class="btn btn-light text-dark btn-sm">Edit today</a>
+                            }
+                        </td>
                     </tr>
                 }
                 </tbody>

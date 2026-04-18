@@ -1,6 +1,7 @@
 ﻿using IronMindGym.Data;
 using IronMindGym.Models;
 using IronMindGym.Security;
+using IronMindGym.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Seed;
@@ -12,6 +13,7 @@ public static class DataSeeder
         EnsureSpecificUsersDemographics(db);
         EnsureEnglishReferenceData(db);
         EnsureResearchFeed(db);
+        AchievementEngine.EnsureCatalog(db);
 
         if (db.Users.Any())
         {
@@ -121,18 +123,11 @@ public static class DataSeeder
             CarbsG = 280
         });
 
-        var achievements = new[]
+        var seededBenchAchievement = db.Achievements.FirstOrDefault(a => a.Code == "BENCH_100");
+        if (seededBenchAchievement != null)
         {
-            new Achievement { Code = "FIRST_WORKOUT", Name = "First Step", ConditionDescription = "Complete your first workout" },
-            new Achievement { Code = "WORKOUTS_5", Name = "5 Workout Streak", ConditionDescription = "Complete 5 workouts" },
-            new Achievement { Code = "WORKOUTS_20", Name = "Champion Mode", ConditionDescription = "Complete 20 workouts" },
-            new Achievement { Code = "BENCH_100", Name = "100 kg Bench", ConditionDescription = "Reach 100 kg in bench press" },
-            new Achievement { Code = "SQUAT_140", Name = "Iron Legs", ConditionDescription = "Reach 140 kg in squat" },
-            new Achievement { Code = "DEADLIFT_180", Name = "Pull Power", ConditionDescription = "Reach 180 kg in deadlift" },
-            new Achievement { Code = "MONTHLY_TONNAGE_20K", Name = "20K Tonnage", ConditionDescription = "Lift 20,000 kg total volume in 30 days" }
-        };
-        db.Achievements.AddRange(achievements);
-        db.UserAchievements.Add(new UserAchievement { User = user, Achievement = achievements[3], AchievedAt = DateTime.UtcNow.AddDays(-5) });
+            db.UserAchievements.Add(new UserAchievement { User = user, Achievement = seededBenchAchievement, AchievedAt = DateTime.UtcNow.AddDays(-5) });
+        }
 
         db.PersonalRecords.AddRange(
             new PersonalRecord { User = user, Exercise = FindExerciseByAnyName(exercises, "Bench Press", "Жим лежачи"), MaxWeightKg = 105, UpdatedAt = DateTime.UtcNow.AddDays(-10) },
@@ -216,25 +211,7 @@ public static class DataSeeder
             }
         }
 
-        var achievementMap = new Dictionary<string, (string Name, string Condition)>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["FIRST_WORKOUT"] = ("First Step", "Complete your first workout"),
-            ["WORKOUTS_5"] = ("5 Workout Streak", "Complete 5 workouts"),
-            ["WORKOUTS_20"] = ("Champion Mode", "Complete 20 workouts"),
-            ["BENCH_100"] = ("100 kg Bench", "Reach 100 kg in bench press"),
-            ["SQUAT_140"] = ("Iron Legs", "Reach 140 kg in squat"),
-            ["DEADLIFT_180"] = ("Pull Power", "Reach 180 kg in deadlift"),
-            ["MONTHLY_TONNAGE_20K"] = ("20K Tonnage", "Lift 20,000 kg total volume in 30 days")
-        };
-
-        foreach (var achievement in db.Achievements)
-        {
-            if (achievementMap.TryGetValue(achievement.Code, out var mapped))
-            {
-                achievement.Name = mapped.Name;
-                achievement.ConditionDescription = mapped.Condition;
-            }
-        }
+        AchievementEngine.EnsureCatalog(db);
 
         db.SaveChanges();
     }

@@ -35,7 +35,14 @@ public class AuthController(IronMindDbContext db) : Controller
 
         await SignInUserAsync(user.Id, user.Username, model.RememberMe);
         TempData["Message"] = $"Welcome, {user.Username}!";
-        return RedirectToAction("Index", "Dashboard");
+
+        var hasSetup = db.Users
+            .Include(u => u.Benchmarks)
+            .Any(u => u.Id == user.Id && u.Benchmarks != null);
+
+        return hasSetup
+            ? RedirectToAction("Index", "Dashboard")
+            : RedirectToAction("Index", "Setup");
     }
 
     [HttpGet]
