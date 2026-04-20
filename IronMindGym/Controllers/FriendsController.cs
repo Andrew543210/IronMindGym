@@ -1,4 +1,5 @@
 ﻿using IronMindGym.Data;
+using IronMindGym.Models;
 using IronMindGym.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -133,6 +134,8 @@ public class FriendsController(IronMindDbContext db) : Controller
             return RedirectToAction("Login", "Auth");
         }
 
+        var currentUserId = userId.Value;
+
         var session = db.WorkoutSessions
             .AsNoTracking()
             .Include(s => s.PerformedExercises)
@@ -167,10 +170,10 @@ public class FriendsController(IronMindDbContext db) : Controller
                 {
                     ExerciseName = pe.Exercise.Name,
                     SetsCount = pe.Sets.Count,
-                    AverageLoad = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Average(), 1),
-                    PeakLoad = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Max(), 1),
+                    AverageLoad = setLoadPercents.Count == 0 ? null : Math.Round(setLoadPercents.Average(), 1),
+                    PeakLoad = setLoadPercents.Count == 0 ? null : Math.Round(setLoadPercents.Max(), 1),
                     PeakWeightKg = peakWeight,
-                    PercentToPersonalRecord = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Max(), 1),
+                    PercentToPersonalRecord = setLoadPercents.Count == 0 ? null : Math.Round(setLoadPercents.Max(), 1),
                     IsNewRecord = !previousRecordWeight.HasValue || peakWeight > previousRecordWeight.Value
                 };
             })
@@ -179,6 +182,21 @@ public class FriendsController(IronMindDbContext db) : Controller
         var detailsVm = new FriendWorkoutDetailsViewModel
         {
             FriendUsername = db.Users.AsNoTracking().Where(x => x.Id == friendId).Select(x => x.Username).FirstOrDefault() ?? "Friend",
+            WorkoutSessionId = session.Id,
+            LikesCount = db.ActivityLikes.Count(x => x.WorkoutSessionId == session.Id),
+            IsLikedByCurrentUser = db.ActivityLikes.Any(x => x.WorkoutSessionId == session.Id && x.UserId == currentUserId),
+            Comments = db.FriendComments
+                .AsNoTracking()
+                .Where(x => x.WorkoutSessionId == session.Id)
+                .Include(x => x.Author)
+                .OrderByDescending(x => x.Date)
+                .Select(x => new FriendWorkoutCommentViewModel
+                {
+                    AuthorUsername = x.Author.Username,
+                    Text = x.Text,
+                    Date = x.Date
+                })
+                .ToList(),
             Details = new WorkoutDetailsViewModel
             {
                 Session = session,
@@ -196,5 +214,80 @@ public class FriendsController(IronMindDbContext db) : Controller
         };
 
         return View(detailsVm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ToggleLike(int friendId, int workoutSessionId)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var currentUserId = userId.Value;
+
+        var exists = db.WorkoutSessions.AsNoTracking()
+            .Any(s => s.Id == workoutSessionId && s.UserId == friendId);
+        if (!exists)
+        {
+            return NotFound();
+        }
+
+        var existingLike = db.ActivityLikes
+            .FirstOrDefault(x => x.WorkoutSessionId == workoutSessionId && x.UserId == currentUserId);
+
+        if (existingLike == null)
+        {
+            db.ActivityLikes.Add(new ActivityLike
+            {
+                WorkoutSessionId = workoutSessionId,
+                UserId = currentUserId,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            db.ActivityLikes.Remove(existingLike);
+        }
+
+        db.SaveChanges();
+        return RedirectToAction(nameof(WorkoutDetails), new { friendId, workoutSessionId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult AddComment(int friendId, int workoutSessionId, string? commentText)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var text = (commentText ?? string.Empty).Trim();
+        if (text.Length == 0)
+        {
+            return RedirectToAction(nameof(WorkoutDetails), new { friendId, workoutSessionId });
+        }
+
+        var exists = db.WorkoutSessions.AsNoTracking()
+            .Any(s => s.Id == workoutSessionId && s.UserId == friendId);
+        if (!exists)
+        {
+            return NotFound();
+        }
+
+        db.FriendComments.Add(new FriendComment
+        {
+            WorkoutSessionId = workoutSessionId,
+            AuthorId = userId.Value,
+            Text = text,
+            Date = DateTime.UtcNow
+        });
+
+        db.SaveChanges();
+        return RedirectToAction(nameof(WorkoutDetails), new { friendId, workoutSessionId });
     }
 }

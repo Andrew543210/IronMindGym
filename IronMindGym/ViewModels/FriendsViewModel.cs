@@ -54,5 +54,17 @@ public class FriendWorkoutDetailsViewModel
 {
     public string FriendUsername { get; set; } = string.Empty;
     public WorkoutDetailsViewModel Details { get; set; } = new();
+    public int WorkoutSessionId { get; set; }
+    public int LikesCount { get; set; }
+    public bool IsLikedByCurrentUser { get; set; }
+    public List<FriendWorkoutCommentViewModel> Comments { get; set; } = new();
+    public string NewCommentText { get; set; } = string.Empty;
+}
+
+public class FriendWorkoutCommentViewModel
+{
+    public string AuthorUsername { get; set; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
 }
 

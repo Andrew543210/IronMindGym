@@ -276,6 +276,20 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         var detailsVm = new WorkoutDetailsViewModel
         {
             Session = session,
+            LikesCount = db.ActivityLikes.Count(x => x.WorkoutSessionId == session.Id),
+            IsLikedByCurrentUser = db.ActivityLikes.Any(x => x.WorkoutSessionId == session.Id && x.UserId == currentUserId),
+            Comments = db.FriendComments
+                .AsNoTracking()
+                .Where(x => x.WorkoutSessionId == session.Id)
+                .Include(x => x.Author)
+                .OrderByDescending(x => x.Date)
+                .Select(x => new WorkoutCommentViewModel
+                {
+                    AuthorUsername = x.Author.Username,
+                    Text = x.Text,
+                    Date = x.Date
+                })
+                .ToList(),
             Summary = new WorkoutSummaryViewModel
             {
                 WorkoutSessionId = session.Id,
@@ -289,6 +303,76 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         };
 
         return View(detailsVm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ToggleLike(int id)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var currentUserId = userId.Value;
+        var sessionExists = db.WorkoutSessions.AsNoTracking().Any(s => s.Id == id && s.UserId == currentUserId);
+        if (!sessionExists)
+        {
+            return NotFound();
+        }
+
+        var existingLike = db.ActivityLikes.FirstOrDefault(x => x.WorkoutSessionId == id && x.UserId == currentUserId);
+        if (existingLike == null)
+        {
+            db.ActivityLikes.Add(new ActivityLike
+            {
+                WorkoutSessionId = id,
+                UserId = currentUserId,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            db.ActivityLikes.Remove(existingLike);
+        }
+
+        db.SaveChanges();
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult AddComment(int id, string? commentText)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var currentUserId = userId.Value;
+        var sessionExists = db.WorkoutSessions.AsNoTracking().Any(s => s.Id == id && s.UserId == currentUserId);
+        if (!sessionExists)
+        {
+            return NotFound();
+        }
+
+        var text = (commentText ?? string.Empty).Trim();
+        if (text.Length > 0)
+        {
+            db.FriendComments.Add(new FriendComment
+            {
+                WorkoutSessionId = id,
+                AuthorId = currentUserId,
+                Text = text,
+                Date = DateTime.UtcNow
+            });
+
+            db.SaveChanges();
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     private WorkoutLoggerViewModel BuildIndexViewModel(int currentUserId, bool startTraining)

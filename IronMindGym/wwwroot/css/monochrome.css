@@ -220,4 +220,138 @@
     letter-spacing: 0.08em;
 }
 
+.mono-theme .avatar-scale-scroll {
+    overflow: visible;
+    width: 100%;
+    padding: 0.1rem 0 0.35rem;
+}
+
+.mono-theme .avatar-scale {
+    position: relative;
+    min-height: 120px;
+    width: 100%;
+    padding: 0 18px;
+}
+
+.mono-theme .avatar-scale-line {
+    position: absolute;
+    top: 38px;
+    left: 18px;
+    right: 18px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.mono-theme .avatar-scale-point,
+.mono-theme .avatar-scale-user {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.mono-theme .avatar-scale-point--start {
+    transform: translateX(0);
+}
+
+.mono-theme .avatar-scale-point--end {
+    transform: translateX(-100%);
+}
+
+.mono-theme .avatar-scale-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    background: #111111;
+    margin: 0 auto;
+}
+
+.mono-theme .avatar-scale-user-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    background: #FFFFFF;
+    margin: 0 auto;
+}
+
+.mono-theme .avatar-scale-label {
+    max-width: 96px;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.92);
+    white-space: normal;
+}
+
+.mono-theme .avatar-scale-value,
+.mono-theme .avatar-scale-user-label {
+    margin-top: 0.25rem;
+    font-size: 0.68rem;
+}
+
+.mono-theme .avatar-scale-user-label {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.mono-theme .avatar-scale-point {
+    top: 26px;
+}
+
+.mono-theme .avatar-scale-point .avatar-scale-value {
+    margin-top: 1rem;
+}
+
+.mono-theme .avatar-scale-point--current .avatar-scale-dot {
+    background: #FFFFFF;
+    border-color: #FFFFFF;
+}
+
+.mono-theme .avatar-scale-point--current .avatar-scale-value {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.mono-theme .avatar-scale-user {
+    top: -6px;
+}
+
+.mono-theme .avatar-scale-user--start {
+    transform: translateX(0);
+}
+
+.mono-theme .avatar-scale-user--end {
+    transform: translateX(-100%);
+}
+
+.mono-theme .avatar-scale-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.5rem;
+    margin-top: 1rem !important;
+}
+
+.mono-theme .avatar-legend-item {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 0.2rem;
+    background: #0F0F0F;
+    padding: 0.45rem 0.55rem;
+}
+
+.mono-theme .avatar-legend-item--current {
+    border-color: rgba(255, 255, 255, 0.7);
+    background: #151515;
+}
+
+.mono-theme .avatar-legend-coef {
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+}
+
+.mono-theme .avatar-legend-name {
+    font-size: 0.78rem;
+    line-height: 1.2;
+}
+
 

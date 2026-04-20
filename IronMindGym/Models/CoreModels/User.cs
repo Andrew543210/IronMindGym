@@ -48,6 +48,8 @@ public class User
     public ICollection<Friendship> FriendshipsAsUser2 { get; set; } = new List<Friendship>();
     public ICollection<UserAchievement> UserAchievements { get; set; } = new List<UserAchievement>();
     public ICollection<WeightLog> WeightLogs { get; set; } = new List<WeightLog>();
+    public ICollection<ActivityLike> ActivityLikes { get; set; } = new List<ActivityLike>();
+    public ICollection<FriendComment> FriendComments { get; set; } = new List<FriendComment>();
 
     public void UpdateEmail(string email) => Email = email;
     public void UpdateUsername(string username) => Username = username;

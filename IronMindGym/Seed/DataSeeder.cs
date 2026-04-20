@@ -10,8 +10,10 @@ public static class DataSeeder
 {
     public static void Seed(IronMindDbContext db)
     {
+        EnsureSocialTables(db);
         EnsureSpecificUsersDemographics(db);
         EnsureEnglishReferenceData(db);
+        EnsureAvatarLadder(db);
         EnsureResearchFeed(db);
         AchievementEngine.EnsureCatalog(db);
 
@@ -44,9 +46,17 @@ public static class DataSeeder
 
         var avatars = new[]
         {
-            new Avatar { Name = "Novice", MinStrengthCoefficient = 0.0, IconPath = "/images/avatar-novice.png" },
-            new Avatar { Name = "Athlete", MinStrengthCoefficient = 3.0, IconPath = "/images/avatar-athlete.png" },
-            new Avatar { Name = "Titan", MinStrengthCoefficient = 4.5, IconPath = "/images/avatar-titan.png" }
+            new Avatar { Name = "Noodle Nomad", MinStrengthCoefficient = 0.0, IconPath = "/images/avatar-novice.png" },
+            new Avatar { Name = "Couch Crusader", MinStrengthCoefficient = 0.5, IconPath = "/images/avatar-novice.png" },
+            new Avatar { Name = "Barbell Intern", MinStrengthCoefficient = 1.0, IconPath = "/images/avatar-novice.png" },
+            new Avatar { Name = "Dumbbell Bard", MinStrengthCoefficient = 1.5, IconPath = "/images/avatar-novice.png" },
+            new Avatar { Name = "Iron Squire", MinStrengthCoefficient = 2.0, IconPath = "/images/avatar-athlete.png" },
+            new Avatar { Name = "Steel Disciple", MinStrengthCoefficient = 2.5, IconPath = "/images/avatar-athlete.png" },
+            new Avatar { Name = "Gym Centurion", MinStrengthCoefficient = 3.0, IconPath = "/images/avatar-athlete.png" },
+            new Avatar { Name = "Berserker Prime", MinStrengthCoefficient = 3.5, IconPath = "/images/avatar-athlete.png" },
+            new Avatar { Name = "Titanium Overlord", MinStrengthCoefficient = 4.0, IconPath = "/images/avatar-titan.png" },
+            new Avatar { Name = "Celestial Colossus", MinStrengthCoefficient = 4.5, IconPath = "/images/avatar-titan.png" },
+            new Avatar { Name = "Omnipotent Origin", MinStrengthCoefficient = 5.0, IconPath = "/images/avatar-titan.png" }
         };
         db.Avatars.AddRange(avatars);
 
@@ -216,6 +226,40 @@ public static class DataSeeder
         db.SaveChanges();
     }
 
+    private static void EnsureAvatarLadder(IronMindDbContext db)
+    {
+        var targetAvatars = new[]
+        {
+            ("Noodle Nomad", 0.0, "/images/avatar-novice.png"),
+            ("Couch Crusader", 0.5, "/images/avatar-novice.png"),
+            ("Barbell Intern", 1.0, "/images/avatar-novice.png"),
+            ("Dumbbell Bard", 1.5, "/images/avatar-novice.png"),
+            ("Iron Squire", 2.0, "/images/avatar-athlete.png"),
+            ("Steel Disciple", 2.5, "/images/avatar-athlete.png"),
+            ("Gym Centurion", 3.0, "/images/avatar-athlete.png"),
+            ("Berserker Prime", 3.5, "/images/avatar-athlete.png"),
+            ("Titanium Overlord", 4.0, "/images/avatar-titan.png"),
+            ("Celestial Colossus", 4.5, "/images/avatar-titan.png"),
+            ("Omnipotent Origin", 5.0, "/images/avatar-titan.png")
+        };
+
+        var existingAvatars = db.Avatars.ToList();
+        if (existingAvatars.Count > 0)
+        {
+            db.Avatars.RemoveRange(existingAvatars);
+            db.SaveChanges();
+        }
+
+        db.Avatars.AddRange(targetAvatars.Select(x => new Avatar
+        {
+            Name = x.Item1,
+            MinStrengthCoefficient = x.Item2,
+            IconPath = x.Item3
+        }));
+
+        db.SaveChanges();
+    }
+
     private static void EnsureResearchFeed(IronMindDbContext db)
     {
         var studies = new (string Title, string Thesis, string Source)[]
@@ -261,5 +305,33 @@ public static class DataSeeder
         }
 
         db.SaveChanges();
+    }
+
+    private static void EnsureSocialTables(IronMindDbContext db)
+    {
+        db.Database.ExecuteSqlRaw(@"
+CREATE TABLE IF NOT EXISTS ActivityLikes (
+    Id INTEGER NOT NULL CONSTRAINT PK_ActivityLikes PRIMARY KEY AUTOINCREMENT,
+    UserId INTEGER NOT NULL,
+    WorkoutSessionId INTEGER NOT NULL,
+    CreatedAt TEXT NOT NULL,
+    CONSTRAINT FK_ActivityLikes_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE,
+    CONSTRAINT FK_ActivityLikes_WorkoutSessions_WorkoutSessionId FOREIGN KEY (WorkoutSessionId) REFERENCES WorkoutSessions (Id) ON DELETE CASCADE
+);");
+
+        db.Database.ExecuteSqlRaw(@"
+CREATE TABLE IF NOT EXISTS FriendComments (
+    Id INTEGER NOT NULL CONSTRAINT PK_FriendComments PRIMARY KEY AUTOINCREMENT,
+    Text TEXT NOT NULL,
+    AuthorId INTEGER NOT NULL,
+    WorkoutSessionId INTEGER NOT NULL,
+    Date TEXT NOT NULL,
+    CONSTRAINT FK_FriendComments_Users_AuthorId FOREIGN KEY (AuthorId) REFERENCES Users (Id) ON DELETE CASCADE,
+    CONSTRAINT FK_FriendComments_WorkoutSessions_WorkoutSessionId FOREIGN KEY (WorkoutSessionId) REFERENCES WorkoutSessions (Id) ON DELETE CASCADE
+);");
+
+        db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_ActivityLikes_UserId_WorkoutSessionId ON ActivityLikes (UserId, WorkoutSessionId);");
+        db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ActivityLikes_WorkoutSessionId ON ActivityLikes (WorkoutSessionId);");
+        db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_FriendComments_WorkoutSessionId ON FriendComments (WorkoutSessionId);");
     }
 }
