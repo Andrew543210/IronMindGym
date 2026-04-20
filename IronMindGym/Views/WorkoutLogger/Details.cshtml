@@ -15,10 +15,54 @@
     </div>
 </div>
 
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div>
+                <strong>Session reactions</strong>
+                <div class="small">Likes: <span class="metric">@Model.LikesCount</span></div>
+            </div>
+            <form method="post" asp-action="ToggleLike" class="mb-0">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Session.Id" />
+                <button type="submit" class="btn @(Model.IsLikedByCurrentUser ? "btn-light text-dark" : "btn-outline-light") btn-sm">
+                    @(Model.IsLikedByCurrentUser ? "Unlike" : "Like")
+                </button>
+            </form>
+        </div>
+
+        <form method="post" asp-action="AddComment" class="row g-2">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Session.Id" />
+            <div class="col-md-10">
+                <input type="text" name="commentText" maxlength="500" class="form-control" placeholder="Write a comment" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-light w-100">Post</button>
+            </div>
+        </form>
+
+        <hr />
+        @if (!Model.Comments.Any())
+        {
+            <div class="small text-muted">No comments yet.</div>
+        }
+        else
+        {
+            @foreach (var comment in Model.Comments)
+            {
+                <div class="mb-2">
+                    <div><strong>@comment.AuthorUsername</strong> <span class="small text-muted">@comment.Date.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span></div>
+                    <div>@comment.Text</div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
 @foreach (var performed in Model.Session.PerformedExercises.OrderBy(x => x.OrderInWorkout))
 {
     var hasSetType = performed.Sets.Any(s =>
-        s.SetType != null &&
         !string.IsNullOrWhiteSpace(s.SetType.Name) &&
         !s.SetType.Name.Equals("Failure", StringComparison.OrdinalIgnoreCase));
     <div class="card mb-3">
@@ -44,7 +88,7 @@
                         <td>@set.SetNumber</td>
                         @if (hasSetType)
                         {
-                            <td>@(set.SetType?.Name ?? string.Empty)</td>
+                            <td>@set.SetType.Name</td>
                         }
                         <td>@set.WeightKg kg</td>
                         <td>@set.Reps</td>

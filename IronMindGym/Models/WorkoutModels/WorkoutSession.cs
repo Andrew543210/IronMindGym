@@ -36,6 +36,8 @@ public class WorkoutSession
 
     public ICollection<PerformedExercise> PerformedExercises { get; set; } = new List<PerformedExercise>();
     public WorkoutReview? Review { get; set; }
+    public ICollection<ActivityLike> Likes { get; set; } = new List<ActivityLike>();
+    public ICollection<FriendComment> Comments { get; set; } = new List<FriendComment>();
 
     public void Rename(string newName) => Name = newName;
 

@@ -32,6 +32,27 @@
     </div>
 </div>
 
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Avatar World Scale</h5>
+        <div class="avatar-scale mt-3">
+            <div class="avatar-scale-line"></div>
+            @foreach (var point in Model.AvatarScalePoints)
+            {
+                <div class="avatar-scale-point" style="left:@point.PositionPercent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%">
+                    <div class="avatar-scale-dot"></div>
+                    <div class="avatar-scale-label">@point.Name</div>
+                    <div class="avatar-scale-value metric">@point.MinStrengthCoefficient.ToString("0.0")</div>
+                </div>
+            }
+            <div class="avatar-scale-user" style="left:@Model.CurrentAvatarPositionPercent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%">
+                <div class="avatar-scale-user-dot"></div>
+                <div class="avatar-scale-user-label">You: @Model.StrengthCoefficient.ToString("0.00")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <h4>Science Feed</h4>
 @foreach (var item in Model.FeedItems)
 {

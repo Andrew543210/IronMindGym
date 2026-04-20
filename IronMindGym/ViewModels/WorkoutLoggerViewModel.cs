@@ -104,5 +104,16 @@ public class WorkoutDetailsViewModel
 {
     public WorkoutSession Session { get; set; } = null!;
     public WorkoutSummaryViewModel Summary { get; set; } = new();
+    public int LikesCount { get; set; }
+    public bool IsLikedByCurrentUser { get; set; }
+    public List<WorkoutCommentViewModel> Comments { get; set; } = new();
+    public string NewCommentText { get; set; } = string.Empty;
+}
+
+public class WorkoutCommentViewModel
+{
+    public string AuthorUsername { get; set; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
 }
 

@@ -8,7 +8,18 @@ public class DashboardViewModel
     public int PlannedWorkoutsPerWeek { get; set; }
     public int CompletedThisWeek { get; set; }
     public string HeroImagePath { get; set; } = "/images/photo.jpg";
+    public List<AvatarScalePointViewModel> AvatarScalePoints { get; set; } = new();
+    public double CurrentAvatarPositionPercent { get; set; }
     public List<DashboardResearchItemViewModel> FeedItems { get; set; } = new();
+}
+
+public class AvatarScalePointViewModel
+{
+    public string Name { get; set; } = string.Empty;
+    public double MinStrengthCoefficient { get; set; }
+    public double PositionPercent { get; set; }
+    public string RangeLabel { get; set; } = string.Empty;
+    public bool IsCurrent { get; set; }
 }
 
 public class DashboardResearchItemViewModel

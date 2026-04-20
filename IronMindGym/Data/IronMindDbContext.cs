@@ -36,6 +36,8 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<UITheme> UIThemes => Set<UITheme>();
     public DbSet<Settings> Settings => Set<Settings>();
+    public DbSet<ActivityLike> ActivityLikes => Set<ActivityLike>();
+    public DbSet<FriendComment> FriendComments => Set<FriendComment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -85,6 +87,34 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             .HasOne(na => na.DailyNutrition)
             .WithOne(dn => dn.Assessment)
             .HasForeignKey<NutritionAssessment>(na => na.DailyNutritionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ActivityLike>()
+            .HasIndex(x => new { x.UserId, x.WorkoutSessionId })
+            .IsUnique();
+
+        modelBuilder.Entity<ActivityLike>()
+            .HasOne(x => x.User)
+            .WithMany(u => u.ActivityLikes)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ActivityLike>()
+            .HasOne(x => x.WorkoutSession)
+            .WithMany(ws => ws.Likes)
+            .HasForeignKey(x => x.WorkoutSessionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<FriendComment>()
+            .HasOne(x => x.Author)
+            .WithMany(u => u.FriendComments)
+            .HasForeignKey(x => x.AuthorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<FriendComment>()
+            .HasOne(x => x.WorkoutSession)
+            .WithMany(ws => ws.Comments)
+            .HasForeignKey(x => x.WorkoutSessionId)
             .OnDelete(DeleteBehavior.Cascade);
 
         base.OnModelCreating(modelBuilder);

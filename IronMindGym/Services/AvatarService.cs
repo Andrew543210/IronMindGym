@@ -10,7 +10,7 @@ public class AvatarService : IAvatarService
         return avatars
             .OrderByDescending(a => a.MinStrengthCoefficient)
             .FirstOrDefault(a => coefficient >= a.MinStrengthCoefficient)
-            ?? new Avatar { Name = "Novice", MinStrengthCoefficient = 0, IconPath = "/images/avatar-novice.png" };
+            ?? new Avatar { Name = "Noodle Nomad", MinStrengthCoefficient = 0, IconPath = "/images/avatar-novice.png" };
     }
 
     public double CalculateStrengthCoefficient(InitialBenchmarks? benchmarks, Anthropometry? latestAnthropometry)
