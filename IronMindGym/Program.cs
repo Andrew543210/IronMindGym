@@ -62,6 +62,7 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentCalendar>();
+builder.Services.AddScoped<GoalService>();
 builder.Services.AddScoped<WorkoutService>();
 
 var app = builder.Build();
