@@ -191,6 +191,26 @@ public class WorkoutsApiTests
         Assert.Equal(app.Query(db => db.Exercises.Count()), logger.Exercises.Count);
     }
 
+    [Fact]
+    public async Task OwnerCanCommentButLongCommentsAndOtherAthletesAreRefused()
+    {
+        using var app = new TestApplication();
+        using var owner = app.Api();
+        using var stranger = app.Api();
+        await owner.Register();
+        await stranger.Register("stranger");
+        var exercise = app.Query(db => db.Exercises.First(e => e.Type == ExerciseType.StrengthTraining).Id);
+        var id = await Save(app, owner, [new { exerciseId = exercise, setTypeId = SetType(app), weightKg = 60, reps = 5 }]);
+
+        await ApiClient.Ok(await owner.Post($"/api/workouts/{id}/comments", new { text = "  Felt strong  " }));
+        var tooLong = await owner.Post($"/api/workouts/{id}/comments", new { text = new string('a', 501) });
+        Assert.Contains("Comments are limited to 500 characters.", await ApiClient.Errors(tooLong));
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.Post($"/api/workouts/{id}/comments", new { text = "Hi" })).StatusCode);
+
+        var comment = Assert.Single((await owner.Get<WorkoutDetailsResponse>($"/api/workouts/{id}")).Comments);
+        Assert.Equal(("athlete", "Felt strong"), (comment.AuthorUsername, comment.Text));
+    }
+
     private static int SetType(TestApplication app) => app.Query(db => db.SetTypes.First().Id);
 
     private static async Task<int> Save(TestApplication app, ApiClient api, object[] sets, string label = "Full Body", Guid? draftId = null, string comment = "Training log")

@@ -11,6 +11,7 @@ namespace IronMindGym.Api;
 public class WorkoutsController(
     IronMindDbContext db,
     WorkoutService workouts,
+    WorkoutSocialService social,
     CurrentCalendar calendar,
     ILogger<WorkoutsController> logger) : ApiController
 {
@@ -114,6 +115,10 @@ public class WorkoutsController(
 
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id) => workouts.Delete(UserId, id) ? NoContent() : NotFound();
+
+    [HttpPost("{id:int}/comments")]
+    public ActionResult AddComment(int id, CommentRequest request) =>
+        social.AddComment(UserId, UserId, id, request.Text) ? NoContent() : NotFound();
 }
 
 public sealed record WorkoutHistoryResponse(List<WorkoutSessionListItem> Sessions, int Page, bool HasOlderSessions);
@@ -132,6 +137,8 @@ public sealed record WorkoutLoggerResponse(
 public sealed record PreviousSetResponse(double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds, int SetTypeId, string LocalDate);
 
 public sealed record SavedWorkoutResponse(int Id);
+
+public sealed record CommentRequest(string? Text);
 
 public sealed record WorkoutSetResponse(int SetNumber, string? SetTypeName, double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds);
 

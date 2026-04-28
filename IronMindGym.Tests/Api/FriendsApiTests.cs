@@ -1,0 +1,138 @@
+using System.Net;
+using System.Net.Http.Json;
+using IronMindGym.Api;
+using IronMindGym.Contracts;
+using IronMindGym.Models;
+using IronMindGym.Services;
+
+namespace IronMindGym.Tests.Api;
+
+public class FriendsApiTests
+{
+    [Fact]
+    public async Task FriendDataRequiresAnAcceptedRequestAndRemovalRevokesAccess()
+    {
+        using var app = new TestApplication();
+        using var owner = app.Api();
+        using var partner = app.Api();
+        await owner.Register("owner");
+        await partner.Register("partner");
+        var (ownerId, partnerId) = (UserId(app, "owner"), UserId(app, "partner"));
+        var sessionId = AddWorkout(app, ownerId, "Legs day");
+        var route = $"/api/friends/{ownerId}/workouts/{sessionId}";
+
+        Assert.Equal(HttpStatusCode.NotFound, (await partner.Http.GetAsync(route)).StatusCode);
+        var search = await partner.Get<FriendsOverview>("/api/friends?search=OWN");
+        var card = Assert.Single(search.Friends);
+        Assert.Equal(("owner", false, false, false), (card.Username, card.IsFriend, card.RequestSent, card.RequestReceived));
+        Assert.Empty(card.LastFiveWorkouts);
+
+        Assert.Equal(FriendshipService.RequestResult.Sent, await Request(partner, ownerId));
+        Assert.Equal(HttpStatusCode.NotFound, (await partner.Http.GetAsync(route)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await partner.Post($"/api/friends/{ownerId}/accept", new { })).StatusCode);
+        Assert.True((await owner.Get<FriendsOverview>("/api/friends")).Friends.Single().RequestReceived);
+
+        await ApiClient.Ok(await owner.Post($"/api/friends/{partnerId}/accept", new { }));
+        var friendWorkout = await partner.Get<FriendWorkoutResponse>(route);
+        Assert.Equal(("owner", "Legs day", false), (friendWorkout.FriendUsername, friendWorkout.Workout.Name, friendWorkout.Workout.IsOwner));
+        Assert.Null(friendWorkout.Workout.RemainingWorkoutsThisWeek);
+
+        await ApiClient.Ok(await owner.Delete($"/api/friends/{partnerId}"));
+        Assert.Equal(HttpStatusCode.NotFound, (await partner.Http.GetAsync(route)).StatusCode);
+        Assert.Empty((await partner.Get<FriendsOverview>("/api/friends")).Friends);
+        Assert.Equal(HttpStatusCode.NotFound, (await partner.Delete($"/api/friends/{ownerId}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task FriendCardShowsTheLatestFiveWorkoutsNewestFirst()
+    {
+        using var app = new TestApplication();
+        using var owner = app.Api();
+        using var partner = app.Api();
+        await owner.Register("owner");
+        await partner.Register("partner");
+        await Connect(app, owner, partner);
+        var ownerId = UserId(app, "owner");
+        for (var day = 1; day <= 7; day++)
+            AddWorkout(app, ownerId, $"Session {day}", DateTime.UtcNow.AddDays(-day));
+
+        var card = (await partner.Get<FriendsOverview>("/api/friends")).Friends.Single();
+
+        Assert.True(card.IsFriend);
+        Assert.Equal(["Session 1", "Session 2", "Session 3", "Session 4", "Session 5"], card.LastFiveWorkouts.Select(w => w.Name));
+    }
+
+    [Fact]
+    public async Task RequestsInBothDirectionsConnectAndParallelRequestsKeepOneRow()
+    {
+        using var app = new TestApplication();
+        using var first = app.Api();
+        using var second = app.Api();
+        await first.Register("first");
+        await second.Register("second");
+
+        var parallel = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => Request(first, UserId(app, "second"))));
+        Assert.Equal(1, app.Query(db => db.Friendships.Count()));
+        Assert.Contains(FriendshipService.RequestResult.Sent, parallel);
+        Assert.Equal(FriendshipService.RequestResult.Connected, await Request(second, UserId(app, "first")));
+        Assert.Equal(FriendshipService.RequestResult.AlreadyConnected, await Request(second, UserId(app, "first")));
+
+        Assert.Equal("Accepted", app.Query(db => db.Friendships.Single().Status));
+        var self = await first.Post($"/api/friends/{UserId(app, "first")}/request", new { });
+        Assert.Contains("Choose another registered user.", await ApiClient.Errors(self));
+    }
+
+    [Fact]
+    public async Task FriendsLikeOnceAndCommentWhileTheOwnerCannotLike()
+    {
+        using var app = new TestApplication();
+        using var owner = app.Api();
+        using var partner = app.Api();
+        await owner.Register("owner");
+        await partner.Register("partner");
+        await Connect(app, owner, partner);
+        var ownerId = UserId(app, "owner");
+        var sessionId = AddWorkout(app, ownerId, "Legs day");
+        var route = $"/api/friends/{ownerId}/workouts/{sessionId}";
+
+        await ApiClient.Ok(await partner.Put($"{route}/like", new { liked = true }));
+        await ApiClient.Ok(await partner.Put($"{route}/like", new { liked = true }));
+        Assert.Equal(1, app.Query(db => db.ActivityLikes.Count()));
+        Assert.True((await partner.Get<FriendWorkoutResponse>(route)).Workout.IsLikedByCurrentUser);
+        await ApiClient.Ok(await partner.Put($"{route}/like", new { liked = false }));
+        Assert.Equal(0, app.Query(db => db.ActivityLikes.Count()));
+        Assert.Equal(HttpStatusCode.NotFound, (await owner.Put($"{route}/like", new { liked = true })).StatusCode);
+
+        await ApiClient.Ok(await partner.Post($"{route}/comments", new { text = "Strong session" }));
+        var comments = (await owner.Get<WorkoutDetailsResponse>($"/api/workouts/{sessionId}")).Comments;
+        Assert.Equal(("partner", "Strong session"), (comments.Single().AuthorUsername, comments.Single().Text));
+
+        await ApiClient.Ok(await owner.Delete($"/api/friends/{UserId(app, "partner")}"));
+        Assert.Equal(HttpStatusCode.NotFound, (await partner.Post($"{route}/comments", new { text = "Still here?" })).StatusCode);
+        Assert.Equal(1, app.Query(db => db.FriendComments.Count()));
+    }
+
+    private static async Task Connect(TestApplication app, ApiClient owner, ApiClient partner)
+    {
+        Assert.Equal(FriendshipService.RequestResult.Sent, await Request(partner, UserId(app, "owner")));
+        await ApiClient.Ok(await owner.Post($"/api/friends/{UserId(app, "partner")}/accept", new { }));
+    }
+
+    private static async Task<FriendshipService.RequestResult> Request(ApiClient api, int userId)
+    {
+        var response = await api.Post($"/api/friends/{userId}/request", new { });
+        await ApiClient.Ok(response);
+        return (await response.Content.ReadFromJsonAsync<FriendRequestResponse>(ApiClient.Json))!.Result;
+    }
+
+    private static int UserId(TestApplication app, string username) =>
+        app.Query(db => db.Users.Single(u => u.Username == username).Id);
+
+    private static int AddWorkout(TestApplication app, int userId, string name, DateTime? date = null) => app.Query(db =>
+    {
+        var session = new WorkoutSession { UserId = userId, Name = name, SessionDate = date ?? DateTime.UtcNow.AddHours(-1), DurationMinutes = 40 };
+        db.WorkoutSessions.Add(session);
+        db.SaveChanges();
+        return session.Id;
+    });
+}
