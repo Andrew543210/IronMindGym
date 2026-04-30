@@ -97,4 +97,33 @@ public partial class LocalizationApiTests
         api.Http.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en");
         Assert.Equal("Legs day", (await api.Get<WorkoutDetailsResponse>($"/api/workouts/{id}")).Name);
     }
+
+    [Fact]
+    public async Task AccountRemembersTheInterfaceLanguage()
+    {
+        using var app = new TestApplication();
+        using var api = app.Api();
+        api.Http.DefaultRequestHeaders.AcceptLanguage.ParseAdd("uk");
+        await api.Register();
+        Assert.Equal("uk", (await api.Get<SessionResponse>("/api/session")).Language);
+
+        await ApiClient.Ok(await api.Put("/api/profile/language", new { language = "en" }));
+        Assert.Equal("en", (await api.Get<SessionResponse>("/api/session")).Language);
+        Assert.NotEmpty(await ApiClient.Errors(await api.Put("/api/profile/language", new { language = "de" })));
+
+        using var phone = app.Api();
+        await phone.SignIn("athlete@example.com");
+        Assert.Equal("en", (await phone.Get<SessionResponse>("/api/session")).Language);
+    }
+
+    [Fact]
+    public async Task LanguageIsSavedOnlyForASignedInAthlete()
+    {
+        using var app = new TestApplication();
+        using var api = app.Api();
+
+        var response = await api.Put("/api/profile/language", new { language = "uk" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }
