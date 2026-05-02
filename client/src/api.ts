@@ -1,0 +1,119 @@
+import { translate } from './i18n/i18n';
+import { currentLanguage } from './i18n/language';
+
+/**
+ * Talks to the .NET API. The session is an HttpOnly cookie the browser sends by itself;
+ * every change also carries the antiforgery token in the X-CSRF-TOKEN header.
+ * Accept-Language asks for names and messages in the interface language.
+ */
+
+export class ApiError extends Error {
+  readonly status: number;
+  readonly messages: string[];
+
+  constructor(status: number, messages: string[]) {
+    super(messages[0] ?? translate('errors.requestFailed', { status: String(status) }));
+    this.status = status;
+    this.messages = messages.length > 0 ? messages : [this.message];
+  }
+}
+
+export class FormError extends Error {}
+
+type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
+
+interface ProblemDetails {
+  title?: string;
+  errors?: Record<string, string[]>;
+}
+
+let csrfToken: string | null = null;
+let onSessionEnded: (() => void) | null = null;
+
+export function whenSessionEnds(handler: () => void) {
+  onSessionEnded = handler;
+}
+
+export function forgetCsrfToken() {
+  csrfToken = null;
+}
+
+export async function request<T>(method: Method, url: string, body?: unknown): Promise<T> {
+  let response: Response;
+  if (method === 'GET') {
+    response = await send(method, url);
+  } else {
+    csrfToken ??= await fetchCsrfToken();
+    response = await send(method, url, body, csrfToken);
+    // A token that expired, for example after the server's keys changed, is refused with an empty 400
+    // before the request does anything, so one retry with a fresh token is safe.
+    if (response.status === 400 && !isJson(response)) {
+      csrfToken = await fetchCsrfToken();
+      response = await send(method, url, body, csrfToken);
+    }
+  }
+  if (response.status === 401) {
+    onSessionEnded?.();
+    throw new ApiError(401, [translate('errors.sessionEnded')]);
+  }
+  if (!response.ok) throw await toApiError(response);
+  if (response.status === 204) return undefined as T;
+  return (await response.json()) as T;
+}
+
+export const api = {
+  get: <T>(url: string) => request<T>('GET', url),
+  post: <T = void>(url: string, body?: unknown) => request<T>('POST', url, body),
+  put: <T = void>(url: string, body?: unknown) => request<T>('PUT', url, body),
+  delete: <T = void>(url: string) => request<T>('DELETE', url),
+};
+
+export function errorMessages(error: unknown): string[] {
+  if (error instanceof ApiError) return error.messages;
+  if (error instanceof FormError) return [error.message];
+  return [translate('errors.generic')];
+}
+
+async function fetchCsrfToken(): Promise<string> {
+  const response = await send('GET', '/api/session/csrf');
+  if (!response.ok) throw await toApiError(response);
+  return ((await response.json()) as { token: string }).token;
+}
+
+async function send(method: Method, url: string, body?: unknown, token?: string): Promise<Response> {
+  const headers: Record<string, string> = { Accept: 'application/json', 'Accept-Language': currentLanguage() };
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (token) headers['X-CSRF-TOKEN'] = token;
+  try {
+    return await fetch(url, {
+      method,
+      headers,
+      credentials: 'same-origin',
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiError(0, [translate('errors.offline')]);
+  }
+}
+
+function isJson(response: Response) {
+  return response.headers.get('Content-Type')?.includes('json') ?? false;
+}
+
+async function toApiError(response: Response): Promise<ApiError> {
+  if (response.status === 429) return new ApiError(429, [translate('errors.tooMany')]);
+  if (response.status === 404) return new ApiError(404, [translate('errors.notFound')]);
+  let problem: ProblemDetails = {};
+  if (isJson(response)) {
+    try {
+      problem = (await response.json()) as ProblemDetails;
+    } catch {
+      // The body is not usable; the status decides the message below.
+    }
+  }
+  const messages = Object.values(problem.errors ?? {}).flat();
+  if (messages.length === 0 && response.status < 500 && problem.title) messages.push(problem.title);
+  if (messages.length === 0)
+    messages.push(translate(response.status >= 500 ? 'errors.server' : 'errors.request'));
+  return new ApiError(response.status, messages);
+}
