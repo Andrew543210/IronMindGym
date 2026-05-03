@@ -8,14 +8,17 @@ export const uk: Translation = {
   'common.loading': 'Завантаження…',
   'common.save': 'Зберегти',
   'common.saving': 'Збереження…',
+  'common.exercise': 'Вправа',
   'common.email': 'Електронна пошта',
   'common.password': 'Пароль',
   'common.username': 'Ім’я користувача',
 
+  'unit.kg': '{value} кг',
   'unit.kgShort': 'кг',
   'unit.gShort': 'г',
   'unit.kcalShort': 'ккал',
 
+  'count.sets': { one: '{count} підхід', few: '{count} підходи', many: '{count} підходів', other: '{count} підходу' },
   'count.minutes': { one: '{count} хвилина', few: '{count} хвилини', many: '{count} хвилин', other: '{count} хвилини' },
 
   'macro.protein': 'Білки',

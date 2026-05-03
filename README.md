@@ -64,10 +64,11 @@ dotnet list package --vulnerable --include-transitive
 cd client
 npm run lint
 npm run typecheck
+npm test
 npm run build
 ```
 
-Тести API запускають справжній PostgreSQL 18 у Docker (Testcontainers): кожен тест отримує власну базу, скопійовану з мігрованого шаблону, тож робоча база не використовується. Щоб узяти наявний сервер замість Docker, задайте `IRONMIND_TEST_POSTGRES` (рядок підключення до сервера з правом створювати бази).
+Тести API запускають справжній PostgreSQL 18 у Docker (Testcontainers): кожен тест отримує власну базу, скопійовану з мігрованого шаблону, тож робоча база не використовується. Щоб узяти наявний сервер замість Docker, задайте `IRONMIND_TEST_POSTGRES` (рядок підключення до сервера з правом створювати бази). Тести клієнта працюють у jsdom з підміненим API.
 
 CI на кожен push у `master` і pull request збирає API, запускає тести, перевіряє узгодженість схеми та відомі вразливості залежностей.
 

@@ -6,14 +6,17 @@ export const en = {
   'common.loading': 'Loading…',
   'common.save': 'Save',
   'common.saving': 'Saving…',
+  'common.exercise': 'Exercise',
   'common.email': 'Email',
   'common.password': 'Password',
   'common.username': 'Username',
 
+  'unit.kg': '{value} kg',
   'unit.kgShort': 'kg',
   'unit.gShort': 'g',
   'unit.kcalShort': 'kcal',
 
+  'count.sets': { one: '{count} set', other: '{count} sets' },
   'count.minutes': { one: '{count} minute', other: '{count} minutes' },
 
   'macro.protein': 'Protein',
