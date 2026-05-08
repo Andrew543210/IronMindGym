@@ -4,13 +4,7 @@ import { formatDay, formatFixed, formatNumber, localFormat, parseMoment } from '
 import { useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
 import { useAthlete } from '../session';
-
-interface GoalItem {
-  id: number;
-  title: string;
-  deadline: string;
-  isCompleted: boolean;
-}
+import type { GoalItem } from './GoalsPage';
 
 export interface WorkoutListItem {
   id: number;

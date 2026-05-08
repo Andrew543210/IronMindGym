@@ -6,6 +6,7 @@ import { LanguageSwitch } from './LanguageSwitch';
 
 const navigation: { to: string; label: MessageKey; number: string }[] = [
   { to: '/', label: 'nav.overview', number: '01' },
+  { to: '/goals', label: 'nav.goals', number: '02' },
 ];
 
 const quickLinks: { to: string; label: MessageKey; icon: string }[] = [
