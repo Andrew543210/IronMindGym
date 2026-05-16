@@ -6,6 +6,7 @@ import { GoalsPage } from './pages/GoalsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { SetupPage } from './pages/SetupPage';
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages';
+import { WorkoutLoggerPage } from './pages/workouts/WorkoutLoggerPage';
 
 export const routes: RouteObject[] = [
   {
@@ -20,6 +21,7 @@ export const routes: RouteObject[] = [
           { path: '/setup', element: <SetupPage /> },
           { path: '/feed/:id', element: <FeedNotePage /> },
           { path: '/goals', element: <GoalsPage /> },
+          { path: '/workouts/new', element: <WorkoutLoggerPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
