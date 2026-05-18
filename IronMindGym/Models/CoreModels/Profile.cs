@@ -4,16 +4,7 @@ namespace IronMindGym.Models;
 
 public class Profile
 {
-    private string _gender = "Unknown";
-
     public int Id { get; set; }
-
-    [MaxLength(20)]
-    public string Gender
-    {
-        get => _gender;
-        set => _gender = string.IsNullOrWhiteSpace(value) ? "Unknown" : value.Trim();
-    }
 
     [Range(0, 120)]
     public int Age { get; set; }
@@ -23,7 +14,16 @@ public class Profile
     public int UserId { get; set; }
     public User User { get; set; } = null!;
 
-    public void UpdateAge(int age) => Age = age;
+    public bool IsValidAge(int age) => age >= 0 && age <= 120;
 
-    public override string ToString() => $"Profile: Gender={Gender}, Age={Age}";
+    public void ValidateAndSetAge(int age)
+    {
+        if (!IsValidAge(age))
+            throw new ArgumentException("Age must be between 0 and 120.");
+        Age = age;
+    }
+
+    public void UpdateAge(int age) => ValidateAndSetAge(age);
+
+    public override string ToString() => $"Profile: Age={Age}";
 }

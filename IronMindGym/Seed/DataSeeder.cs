@@ -67,7 +67,7 @@ public static class DataSeeder
             Username = "demo_athlete",
             Email = "demo@ironmind.app",
             PasswordHash = PasswordHashUtility.Hash("demo123"),
-            Profile = new Profile { Gender = "Male", Age = 24, AccountCreatedAt = DateTime.UtcNow.AddDays(-40) },
+            Profile = new Profile { Age = 24, AccountCreatedAt = DateTime.UtcNow.AddDays(-40) },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 100, SquatKg = 140, DeadliftKg = 170 }
         };
 
@@ -76,7 +76,7 @@ public static class DataSeeder
             Username = "fit_friend",
             Email = "friend@ironmind.app",
             PasswordHash = PasswordHashUtility.Hash("friend123"),
-            Profile = new Profile { Gender = "Female", Age = 23, AccountCreatedAt = DateTime.UtcNow.AddDays(-20) },
+            Profile = new Profile { Age = 23, AccountCreatedAt = DateTime.UtcNow.AddDays(-20) },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 65, SquatKg = 95, DeadliftKg = 120 }
         };
 
@@ -182,7 +182,6 @@ public static class DataSeeder
         foreach (var user in users)
         {
             user.Profile ??= new Profile { UserId = user.Id, AccountCreatedAt = DateTime.UtcNow };
-            user.Profile.Gender = "Male";
             user.Profile.Age = 14;
         }
 

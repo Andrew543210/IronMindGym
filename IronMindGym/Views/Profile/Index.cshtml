@@ -3,7 +3,7 @@
     ViewData["Title"] = "Profile";
 }
 
-<h2>Profile</h2>
+<h2>PROFILE</h2>
 <div class="row g-3 mb-4">
     <div class="col-md-6">
         <div class="card"><div class="card-body">
@@ -19,22 +19,30 @@
             <p><strong>Initial Bench Press:</strong> @(Model.BenchPressKg.HasValue ? $"{Model.BenchPressKg:F1} kg" : "-")</p>
             <p><strong>Initial Squat:</strong> @(Model.SquatKg.HasValue ? $"{Model.SquatKg:F1} kg" : "-")</p>
             <p><strong>Initial Deadlift:</strong> @(Model.DeadliftKg.HasValue ? $"{Model.DeadliftKg:F1} kg" : "-")</p>
+            <hr />
+            <a href="/ProgressTracker" class="btn btn-primary btn-sm mt-2">VIEW PROGRESS TRACKER</a>
         </div></div>
     </div>
     <div class="col-md-6">
         <div class="card"><div class="card-body">
-            <h5>My Awards</h5>
-            <ul>
-                @foreach (var achievement in Model.Achievements)
-                {
-                    <li>
-                        <strong>@achievement.Name</strong><br />
-                        <span class="small text-muted">@achievement.ConditionDescription</span><br />
-                        <span class="small text-muted">@achievement.AchievedAt.ToLocalTime().ToString("yyyy-MM-dd")</span>
-                    </li>
-                }
-            </ul>
+            <h5>MY AWARDS</h5>
+            @if (Model.Achievements.Any())
+            {
+                <ul>
+                    @foreach (var achievement in Model.Achievements)
+                    {
+                        <li>
+                            <strong>@achievement.Name</strong><br />
+                            <span class="small text-muted">@achievement.ConditionDescription</span><br />
+                            <span class="small text-muted">@achievement.AchievedAt.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="text-muted">No achievements yet</p>
+            }
         </div></div>
     </div>
 </div>
-

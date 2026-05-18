@@ -1,0 +1,360 @@
+﻿@model ProgressTrackerViewModel
+@{
+    ViewData["Title"] = "Track Exercise Progress";
+    ViewBag.ExerciseId = ViewBag.ExerciseId ?? 0;
+}
+
+<h2>TRACK EXERCISE PROGRESS</h2>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <a href="/ProgressTracker" class="btn btn-outline-light btn-sm">← Back to Progress Tracker</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">SELECT EXERCISE</div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Muscle Group</label>
+                <select class="form-select" id="muscleGroupSelect" onchange="loadSubgroups()">
+                    <option value="">-- Select --</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Muscle Subgroup (Optional)</label>
+                <select class="form-select" id="muscleSubgroupSelect" onchange="loadExercises()" disabled>
+                    <option value="">-- All --</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Exercise</label>
+                <select class="form-select" id="exerciseSelect" onchange="selectExercise()" disabled>
+                    <option value="">-- Select --</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="progressContainer" style="display: none;">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-header bg-info text-dark">
+                    <h6 class="mb-0">INITIAL RESULTS</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" id="initialLabel">Weight (kg)</label>
+                        <input type="number" class="form-control" id="initialValue1" placeholder="Weight" min="0" step="0.5" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" id="initialLabel2">Reps</label>
+                        <input type="number" class="form-control" id="initialValue2" placeholder="Reps" min="0" />
+                    </div>
+                    <button class="btn btn-info w-100" onclick="saveInitialResults()">SET INITIAL</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-header bg-success text-dark">
+                    <h6 class="mb-0">YOUR PROGRESS</h6>
+                </div>
+                <div class="card-body text-center">
+                    <div id="progressDisplay">
+                        <p class="text-muted">Select initial and current results to see progress</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">CURRENT RESULTS</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" id="currentLabel">Weight (kg)</label>
+                        <input type="number" class="form-control" id="currentValue1" placeholder="Weight" min="0" step="0.5" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" id="currentLabel2">Reps</label>
+                        <input type="number" class="form-control" id="currentValue2" placeholder="Reps" min="0" />
+                    </div>
+                    <button class="btn btn-warning w-100" onclick="updateCurrentResults()">UPDATE CURRENT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let exerciseCatalog = [];
+    let selectedExerciseId = 0;
+    let isCardio = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/ProgressTracker/GetExerciseCatalog')
+            .then(r => r.json())
+            .then(data => {
+                exerciseCatalog = data;
+                loadMuscleGroups();
+            });
+    });
+
+    function loadMuscleGroups() {
+        const groupSelect = document.getElementById('muscleGroupSelect');
+        groupSelect.innerHTML = '<option value="">-- Select --</option>';
+        
+        const groups = [...new Set(exerciseCatalog.map(e => e.muscleGroupName))]
+            .filter(g => g)
+            .sort();
+        
+        groups.forEach(group => {
+            const opt = document.createElement('option');
+            opt.value = group;
+            opt.textContent = group;
+            groupSelect.appendChild(opt);
+        });
+    }
+
+    function loadSubgroups() {
+        const groupSelect = document.getElementById('muscleGroupSelect');
+        const subgroupSelect = document.getElementById('muscleSubgroupSelect');
+        const exerciseSelect = document.getElementById('exerciseSelect');
+        
+        subgroupSelect.innerHTML = '<option value="">-- All --</option>';
+        exerciseSelect.innerHTML = '<option value="">-- Select --</option>';
+        
+        const selectedGroup = groupSelect.value;
+        if (!selectedGroup) {
+            subgroupSelect.disabled = true;
+            exerciseSelect.disabled = true;
+            return;
+        }
+
+        const subgroups = [...new Set(
+            exerciseCatalog
+                .filter(e => e.muscleGroupName === selectedGroup)
+                .map(e => e.muscleSubGroupName)
+        )].sort();
+
+        subgroupSelect.disabled = false;
+        subgroups.forEach(sg => {
+            const opt = document.createElement('option');
+            opt.value = sg;
+            opt.textContent = sg;
+            subgroupSelect.appendChild(opt);
+        });
+        
+        loadExercises();
+    }
+
+    function loadExercises() {
+        const groupSelect = document.getElementById('muscleGroupSelect');
+        const subgroupSelect = document.getElementById('muscleSubgroupSelect');
+        const exerciseSelect = document.getElementById('exerciseSelect');
+        
+        exerciseSelect.innerHTML = '<option value="">-- Select --</option>';
+        
+        const selectedGroup = groupSelect.value;
+        const selectedSubgroup = subgroupSelect.value;
+        
+        if (!selectedGroup) {
+            exerciseSelect.disabled = true;
+            return;
+        }
+
+        const filtered = exerciseCatalog.filter(e => 
+            e.muscleGroupName === selectedGroup &&
+            (!selectedSubgroup || e.muscleSubGroupName === selectedSubgroup)
+        );
+
+        exerciseSelect.disabled = filtered.length === 0;
+        
+        filtered.forEach(ex => {
+            const opt = document.createElement('option');
+            opt.value = ex.exerciseId;
+            opt.textContent = ex.exerciseName;
+            opt.dataset.type = ex.exerciseType || 0;
+            exerciseSelect.appendChild(opt);
+        });
+    }
+
+    function selectExercise() {
+        const exerciseSelect = document.getElementById('exerciseSelect');
+        selectedExerciseId = parseInt(exerciseSelect.value || '0', 10);
+        
+        if (!selectedExerciseId) {
+            document.getElementById('progressContainer').style.display = 'none';
+            return;
+        }
+
+        const exercise = exerciseCatalog.find(e => e.exerciseId === selectedExerciseId);
+        
+        isCardio = exercise && exercise.muscleGroupName && 
+                   exercise.muscleGroupName.toLowerCase().includes('cardio');
+        
+        if (isCardio) {
+            document.getElementById('initialLabel').textContent = 'Duration (sec)';
+            document.getElementById('initialLabel2').textContent = 'Intensity (1-10)';
+            document.getElementById('currentLabel').textContent = 'Duration (sec)';
+            document.getElementById('currentLabel2').textContent = 'Intensity (1-10)';
+        } else {
+            document.getElementById('initialLabel').textContent = 'Weight (kg)';
+            document.getElementById('initialLabel2').textContent = 'Reps';
+            document.getElementById('currentLabel').textContent = 'Weight (kg)';
+            document.getElementById('currentLabel2').textContent = 'Reps';
+        }
+        
+        document.getElementById('progressContainer').style.display = 'block';
+        
+        loadExistingProgress();
+    }
+
+    function loadExistingProgress() {
+        const initialValue1 = document.getElementById('initialValue1');
+        const initialValue2 = document.getElementById('initialValue2');
+        const currentValue1 = document.getElementById('currentValue1');
+        const currentValue2 = document.getElementById('currentValue2');
+        
+        initialValue1.value = '';
+        initialValue2.value = '';
+        currentValue1.value = '';
+        currentValue2.value = '';
+    }
+
+    function saveInitialResults() {
+        if (!selectedExerciseId) {
+            alert('Please select an exercise');
+            return;
+        }
+
+        const value1 = parseFloat(document.getElementById('initialValue1').value || '0');
+        const value2 = parseInt(document.getElementById('initialValue2').value || '0', 10);
+        
+        if (isCardio && (value1 <= 0 || value2 < 1 || value2 > 10)) {
+            alert('Please enter valid duration and intensity');
+            return;
+        }
+        
+        if (!isCardio && (value1 < 0 || value2 <= 0)) {
+            alert('Please enter valid weight and reps');
+            return;
+        }
+
+        const data = new FormData();
+        data.append('exerciseId', selectedExerciseId);
+        
+        if (isCardio) {
+            data.append('durationSeconds', value1);
+            data.append('intensity', value2);
+        } else {
+            data.append('weightKg', value1);
+            data.append('reps', value2);
+        }
+
+        fetch('/ProgressTracker/SetInitialResults', {
+            method: 'POST',
+            body: data
+        }).then(r => r.json()).then(result => {
+            if (result.success) {
+                alert('Initial results saved!');
+                document.getElementById('initialValue1').disabled = true;
+                document.getElementById('initialValue2').disabled = true;
+            }
+        });
+    }
+
+    function updateCurrentResults() {
+        if (!selectedExerciseId) {
+            alert('Please select an exercise');
+            return;
+        }
+
+        const currentValue1 = parseFloat(document.getElementById('currentValue1').value || '0');
+        const currentValue2 = parseInt(document.getElementById('currentValue2').value || '0', 10);
+        const initialValue1 = parseFloat(document.getElementById('initialValue1').value || '0');
+        const initialValue2 = parseInt(document.getElementById('initialValue2').value || '0', 10);
+        
+        if (!initialValue1 || !initialValue2) {
+            alert('Please set initial results first');
+            return;
+        }
+        
+        if (isCardio && (currentValue1 <= 0 || currentValue2 < 1 || currentValue2 > 10)) {
+            alert('Please enter valid duration and intensity');
+            return;
+        }
+        
+        if (!isCardio && (currentValue1 < 0 || currentValue2 <= 0)) {
+            alert('Please enter valid weight and reps');
+            return;
+        }
+
+        let progressText = '';
+        
+        if (isCardio) {
+            const initialEffort = initialValue1 * initialValue2;
+            const currentEffort = currentValue1 * currentValue2;
+            const progressPercent = ((currentEffort - initialEffort) / initialEffort * 100).toFixed(1);
+            
+            progressText = `
+                <div class="text-center">
+                    <h4 class="text-success mb-3">+${progressPercent}%</h4>
+                    <p class="small text-muted">Effort Progress</p>
+                    <hr />
+                    <p class="mb-1"><strong>Initial:</strong> ${initialValue1}s × ${initialValue2} intensity</p>
+                    <p class="mb-1"><strong>Current:</strong> ${currentValue1}s × ${currentValue2} intensity</p>
+                    <hr />
+                    <p class="small mb-0">Initial Effort: ${initialEffort}</p>
+                    <p class="small">Current Effort: ${currentEffort}</p>
+                </div>
+            `;
+        } else {
+            const weightProgress = (currentValue1 - initialValue1).toFixed(1);
+            const weightProgressPercent = (((currentValue1 - initialValue1) / initialValue1) * 100).toFixed(1);
+            const repsProgress = currentValue2 - initialValue2;
+            
+            progressText = `
+                <div class="text-center">
+                    <h4 class="text-success mb-3">+${weightProgress} kg</h4>
+                    <p class="small text-success">(${weightProgressPercent}%)</p>
+                    <hr />
+                    <p class="mb-1"><strong>Initial:</strong> ${initialValue1} kg × ${initialValue2} reps</p>
+                    <p class="mb-1"><strong>Current:</strong> ${currentValue1} kg × ${currentValue2} reps</p>
+                    <hr />
+                    <p class="small mb-0">Reps Progress: +${repsProgress}</p>
+                </div>
+            `;
+        }
+        
+        document.getElementById('progressDisplay').innerHTML = progressText;
+        
+        const data = new FormData();
+        data.append('exerciseId', selectedExerciseId);
+        
+        if (isCardio) {
+            data.append('durationSeconds', currentValue1);
+            data.append('intensity', currentValue2);
+        } else {
+            data.append('weightKg', currentValue1);
+            data.append('reps', currentValue2);
+        }
+
+        fetch('/ProgressTracker/SetCurrentResults', {
+            method: 'POST',
+            body: data
+        }).then(r => r.json()).then(result => {
+            if (result.success) {
+                alert('Progress saved! Your achievement is recorded.');
+            }
+        });
+    }
+</script>
+

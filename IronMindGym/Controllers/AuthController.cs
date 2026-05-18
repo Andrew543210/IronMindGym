@@ -73,7 +73,7 @@ public class AuthController(IronMindDbContext db) : Controller
             Username = model.Username,
             Email = model.Email,
             PasswordHash = PasswordHashUtility.Hash(model.Password),
-            Profile = new Profile { Age = model.Age, Gender = "Unknown", AccountCreatedAt = DateTime.UtcNow }
+            Profile = new Profile { Age = model.Age, AccountCreatedAt = DateTime.UtcNow }
         };
 
         db.Users.Add(user);
