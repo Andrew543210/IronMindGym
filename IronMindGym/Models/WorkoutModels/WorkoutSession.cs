@@ -4,24 +4,10 @@ namespace IronMindGym.Models;
 
 public class WorkoutSession
 {
-    private string _name = string.Empty;
-
     public int Id { get; set; }
 
     [Required, MaxLength(120)]
-    public string Name
-    {
-        get => _name;
-        set
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                throw new ArgumentException("Workout session name is required.");
-            }
-
-            _name = value.Trim();
-        }
-    }
+    public string Name { get; set; } = string.Empty;
 
     public DateTime SessionDate { get; set; } = DateTime.UtcNow;
 
@@ -39,15 +25,23 @@ public class WorkoutSession
     public ICollection<ActivityLike> Likes { get; set; } = new List<ActivityLike>();
     public ICollection<FriendComment> Comments { get; set; } = new List<FriendComment>();
 
-    public void Rename(string newName) => Name = newName;
+    // Validation Methods
+    public bool IsValidName(string? name) => !string.IsNullOrWhiteSpace(name) && name.Length <= 120;
+    public bool IsValidDuration(int minutes) => minutes >= 0 && minutes <= 480;
+
+    public void ValidateAndSetName(string name)
+    {
+        if (!IsValidName(name))
+            throw new ArgumentException("Workout session name must be between 1 and 120 characters.");
+        Name = name.Trim();
+    }
+
+    public void Rename(string newName) => ValidateAndSetName(newName);
 
     public void SetDuration(int durationMinutes)
     {
-        if (durationMinutes < 0)
-        {
-            throw new ArgumentException("Duration cannot be negative.");
-        }
-
+        if (!IsValidDuration(durationMinutes))
+            throw new ArgumentException("Duration must be between 0 and 480 minutes.");
         DurationMinutes = durationMinutes;
     }
 

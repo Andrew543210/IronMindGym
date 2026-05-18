@@ -253,7 +253,7 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
         var profile = db.Profiles
             .AsNoTracking()
             .Where(x => x.UserId == userId)
-            .Select(x => new { x.Age, x.Gender })
+            .Select(x => new { x.Age })
             .FirstOrDefault();
 
         var workoutsPerWeek = db.WorkoutPlans
@@ -267,7 +267,6 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
             WeightKg = latestAnthro?.WeightKg,
             HeightCm = latestAnthro?.HeightCm,
             Age = profile?.Age,
-            Gender = profile?.Gender ?? "Unknown",
             WorkoutsPerWeek = workoutsPerWeek
         };
     }

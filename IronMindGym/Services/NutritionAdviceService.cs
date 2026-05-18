@@ -13,8 +13,7 @@ public class NutritionAdviceService : INutritionAdviceService
         var heightCm = Math.Max(profile.HeightCm ?? 175, 130);
         var age = Math.Clamp(profile.Age ?? 25, 12, 90);
         var pal = ResolvePal(profile.WorkoutsPerWeek);
-        var bmr = CalculateMifflinStJeor(weightKg, heightCm, age, profile.Gender);
-        var genderOffset = profile.Gender.Equals("Female", StringComparison.OrdinalIgnoreCase) ? -161 : 5;
+        var bmr = CalculateMifflinStJeor(weightKg, heightCm, age);
 
         var targetCalories = Math.Round(bmr * pal, 0);
         var targetProtein = Math.Round(weightKg * 1.9, 0);
@@ -134,7 +133,7 @@ public class NutritionAdviceService : INutritionAdviceService
             TargetCarbsG = targetCarbs,
             BasalMetabolicRate = Math.Round(bmr, 0),
             ActivityMultiplier = pal,
-            BmrFormulaText = $"BMR = 10*{weightKg:F1} + 6.25*{heightCm:F1} - 5*{age} {(genderOffset >= 0 ? "+" : "-")} {Math.Abs(genderOffset)} = {Math.Round(bmr)} kcal",
+            BmrFormulaText = $"BMR = 10*{weightKg:F1} + 6.25*{heightCm:F1} - 5*{age} - 78 = {Math.Round(bmr)} kcal (Mifflin-St Jeor average)",
             CaloriesFormulaText = $"Calories target = BMR ({Math.Round(bmr)}) * PAL ({pal:F2}) = {targetCalories} kcal",
             ProteinFormulaText = $"Protein target = 1.9 * weight({weightKg:F1}) = {targetProtein} g/day",
             FatFormulaText = $"Fat target = 1.0 * weight({weightKg:F1}) = {targetFat} g/day",
@@ -155,11 +154,11 @@ public class NutritionAdviceService : INutritionAdviceService
         };
     }
 
-    private static double CalculateMifflinStJeor(double weightKg, double heightCm, int age, string gender)
+    private static double CalculateMifflinStJeor(double weightKg, double heightCm, int age)
     {
-        var isFemale = gender.Equals("Female", StringComparison.OrdinalIgnoreCase);
+        // Using average between male and female coefficients
         var baseValue = 10 * weightKg + 6.25 * heightCm - 5 * age;
-        return isFemale ? baseValue - 161 : baseValue + 5;
+        return baseValue - 78; // Average offset between Female (-161) and Male (+5)
     }
 }
 

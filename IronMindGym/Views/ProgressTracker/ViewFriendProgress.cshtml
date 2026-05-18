@@ -1,0 +1,100 @@
+﻿@model FriendProgressTrackerViewModel
+@{
+    ViewData["Title"] = "Friend Progress Tracker";
+}
+
+<div class="container mt-4">
+    <h2>@Model.FriendUsername - PROGRESS TRACKER</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6>Current Strength Coefficient</h6>
+                    <h3>@Model.CurrentStrengthCoefficient.ToString("F2")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Exercises.Any())
+    {
+        <div class="row">
+            @foreach (var group in Model.Exercises.GroupBy(e => e.MuscleGroup))
+            {
+                <div class="col-md-12 mb-4">
+                    <h4>@group.Key</h4>
+                    <div class="row">
+                        @foreach (var exercise in group)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <strong>@exercise.ExerciseName</strong>
+                                        <br />
+                                        <small class="text-muted">@exercise.MuscleSubGroup</small>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4 text-center">
+                                                <h6 class="text-muted">INITIAL</h6>
+                                                @if (exercise.ExerciseType == ExerciseType.Cardio)
+                                                {
+                                                    <p>Duration: <strong>@(exercise.InitialDurationSeconds)s</strong></p>
+                                                    <p>Intensity: <strong>@exercise.InitialIntensity/10</strong></p>
+                                                }
+                                                else
+                                                {
+                                                    <p>Weight: <strong>@exercise.InitialWeightKg kg</strong></p>
+                                                    <p>Reps: <strong>@exercise.InitialReps</strong></p>
+                                                }
+                                            </div>
+
+                                            <div class="col-md-4 text-center border-start border-end">
+                                                <h6 class="text-success">PROGRESS</h6>
+                                                @if (exercise.ExerciseType == ExerciseType.Cardio)
+                                                {
+                                                    <p><strong>+@exercise.CardioEffortProgressPercent.ToString("F1")%</strong></p>
+                                                }
+                                                else
+                                                {
+                                                    <p><strong>+@exercise.WeightProgressKg.ToString("F1") kg</strong></p>
+                                                    <p class="small">(@exercise.WeightProgressPercent.ToString("F1")%)</p>
+                                                }
+                                            </div>
+
+                                            <div class="col-md-4 text-center">
+                                                <h6 class="text-info">CURRENT</h6>
+                                                @if (exercise.ExerciseType == ExerciseType.Cardio)
+                                                {
+                                                    <p>Duration: <strong>@exercise.CurrentDurationSeconds s</strong></p>
+                                                    <p>Intensity: <strong>@exercise.CurrentIntensity/10</strong></p>
+                                                }
+                                                else
+                                                {
+                                                    <p>Weight: <strong>@exercise.CurrentWeightKg kg</strong></p>
+                                                    <p>Reps: <strong>@exercise.CurrentReps</strong></p>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            @Model.FriendUsername hasn't tracked any progress yet.
+        </div>
+    }
+
+    <div class="mt-4">
+        <a href="/Friends" class="btn btn-outline-light">Back to Friends</a>
+    </div>
+</div>
+

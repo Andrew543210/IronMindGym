@@ -15,7 +15,6 @@ public class NutritionProfileSnapshot
     public double? WeightKg { get; set; }
     public double? HeightCm { get; set; }
     public int? Age { get; set; }
-    public string Gender { get; set; } = "Unknown";
     public int WorkoutsPerWeek { get; set; }
 }
 

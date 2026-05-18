@@ -38,6 +38,7 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
     public DbSet<Settings> Settings => Set<Settings>();
     public DbSet<ActivityLike> ActivityLikes => Set<ActivityLike>();
     public DbSet<FriendComment> FriendComments => Set<FriendComment>();
+    public DbSet<ExerciseProgress> ExerciseProgress => Set<ExerciseProgress>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -116,6 +117,22 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             .WithMany(ws => ws.Comments)
             .HasForeignKey(x => x.WorkoutSessionId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ExerciseProgress>()
+            .HasOne(ep => ep.User)
+            .WithMany(u => u.ExerciseProgress)
+            .HasForeignKey(ep => ep.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ExerciseProgress>()
+            .HasOne(ep => ep.Exercise)
+            .WithMany()
+            .HasForeignKey(ep => ep.ExerciseId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ExerciseProgress>()
+            .HasIndex(ep => new { ep.UserId, ep.ExerciseId })
+            .IsUnique();
 
         base.OnModelCreating(modelBuilder);
     }

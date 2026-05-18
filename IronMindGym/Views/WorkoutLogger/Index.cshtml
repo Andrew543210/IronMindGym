@@ -112,14 +112,27 @@
                     <label asp-for="SetTypeId" class="form-label">Set type</label>
                     <select asp-for="SetTypeId" asp-items="ViewBag.SetTypes" class="form-select" id="setTypeSelect"></select>
                 </div>
-                <div class="col-md-3">
+                
+                <!-- Strength Training Fields -->
+                <div class="col-md-3" id="weightContainer">
                     <label asp-for="WeightKg" class="form-label">Weight (kg)</label>
                     <input asp-for="WeightKg" class="form-control" id="weightInput" />
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3" id="repsContainer">
                     <label asp-for="Reps" class="form-label">Reps</label>
                     <input asp-for="Reps" class="form-control" id="repsInput" />
                 </div>
+                
+                <!-- Cardio Fields (Hidden by default) -->
+                <div class="col-md-3" id="durationContainer" style="display: none;">
+                    <label class="form-label">Duration (sec)</label>
+                    <input type="number" class="form-control" id="durationInput" min="0" />
+                </div>
+                <div class="col-md-3" id="intensityContainer" style="display: none;">
+                    <label class="form-label">Intensity (1-10)</label>
+                    <input type="number" class="form-control" id="intensityInput" min="1" max="10" value="5" />
+                </div>
+                
                 <div class="col-md-3">
                     <label asp-for="RestSeconds" class="form-label">Rest (sec)</label>
                     <input asp-for="RestSeconds" class="form-control" id="restInput" />
@@ -258,18 +271,66 @@
         });
     }
 
+    // New function to toggle input fields based on exercise type
+    function updateFieldsForExerciseType() {
+        const selectedExerciseId = parseInt(exerciseSelect.value || "0", 10);
+        const exercise = catalog.find(e => e.ExerciseId === selectedExerciseId);
+        
+        if (!exercise) {
+            // Default to strength
+            document.getElementById("weightContainer").style.display = "block";
+            document.getElementById("repsContainer").style.display = "block";
+            document.getElementById("durationContainer").style.display = "none";
+            document.getElementById("intensityContainer").style.display = "none";
+            return;
+        }
+
+        // Check if exercise is from "Cardio & Functional" group
+        const isCardio = exercise.MuscleGroupName && 
+                        exercise.MuscleGroupName.toLowerCase().includes("cardio");
+
+        if (isCardio) {
+            // Hide strength fields, show cardio fields
+            document.getElementById("weightContainer").style.display = "none";
+            document.getElementById("repsContainer").style.display = "none";
+            document.getElementById("durationContainer").style.display = "block";
+            document.getElementById("intensityContainer").style.display = "block";
+            // Clear strength inputs
+            document.getElementById("weightInput").value = "0";
+            document.getElementById("repsInput").value = "0";
+        } else {
+            // Show strength fields, hide cardio fields
+            document.getElementById("weightContainer").style.display = "block";
+            document.getElementById("repsContainer").style.display = "block";
+            document.getElementById("durationContainer").style.display = "none";
+            document.getElementById("intensityContainer").style.display = "none";
+            // Clear cardio inputs
+            document.getElementById("durationInput").value = "0";
+            document.getElementById("intensityInput").value = "5";
+        }
+    }
+
     function renderDraftTable() {
         const tbody = document.querySelector("#draftSetsTable tbody");
         tbody.innerHTML = "";
 
         draftSets.forEach((item, index) => {
             const row = document.createElement("tr");
+            let typeCell = `<td>${item.setTypeName}</td>`;
+            
+            // Build set details based on type
+            let detailsHtml = "";
+            if (item.isCardio) {
+                detailsHtml = `<td>${item.durationSeconds}s</td><td>Intensity: ${item.intensity}</td>`;
+            } else {
+                detailsHtml = `<td>${item.weightKg}kg</td><td>${item.reps} reps</td>`;
+            }
+            
             row.innerHTML = `
                 <td>${index + 1}</td>
                 <td>${item.exerciseName}</td>
-                <td>${item.setTypeName}</td>
-                <td>${item.weightKg}</td>
-                <td>${item.reps}</td>
+                ${typeCell}
+                ${detailsHtml}
                 <td>${item.restSeconds} sec</td>
                 <td><button type="button" class="btn btn-sm btn-outline-danger" data-index="${index}">Remove</button></td>`;
             tbody.appendChild(row);
@@ -321,16 +382,32 @@
             return;
         }
 
-        draftSets.push({
+        const exercise = catalog.find(e => e.ExerciseId === parseInt(selectedExercise.value, 10));
+        const isCardio = exercise && exercise.MuscleGroupName && 
+                        exercise.MuscleGroupName.toLowerCase().includes("cardio");
+
+        const setData = {
             exerciseId: parseInt(selectedExercise.value, 10),
             exerciseName: selectedExercise.text,
             setTypeId: parseInt(selectedSetType.value, 10),
             setTypeName: selectedSetType.text,
-            weightKg: parseFloat(document.getElementById("weightInput").value || "0"),
-            reps: parseInt(document.getElementById("repsInput").value || "0", 10),
-            restSeconds: parseInt(document.getElementById("restInput").value || "120", 10)
-        });
+            restSeconds: parseInt(document.getElementById("restInput").value || "120", 10),
+            isCardio: isCardio
+        };
 
+        if (isCardio) {
+            setData.durationSeconds = parseInt(document.getElementById("durationInput").value || "0", 10);
+            setData.intensity = parseInt(document.getElementById("intensityInput").value || "5", 10);
+            setData.weightKg = 0;
+            setData.reps = 0;
+        } else {
+            setData.weightKg = parseFloat(document.getElementById("weightInput").value || "0");
+            setData.reps = parseInt(document.getElementById("repsInput").value || "0", 10);
+            setData.durationSeconds = 0;
+            setData.intensity = 0;
+        }
+
+        draftSets.push(setData);
         renderDraftTable();
         startTimer();
     });
@@ -355,11 +432,16 @@
         document.getElementById("timerReadyText").textContent = "You can start the next set";
     });
 
-    groupFilter.addEventListener("change", () => {
+     groupFilter.addEventListener("change", () => {
         renderSubGroupOptions();
         renderExerciseOptions();
+        updateFieldsForExerciseType();
     });
-    subGroupFilter.addEventListener("change", renderExerciseOptions);
+    subGroupFilter.addEventListener("change", () => {
+        renderExerciseOptions();
+        updateFieldsForExerciseType();
+    });
+    exerciseSelect.addEventListener("change", updateFieldsForExerciseType);
 
     resetTimerText();
     renderSubGroupOptions();
