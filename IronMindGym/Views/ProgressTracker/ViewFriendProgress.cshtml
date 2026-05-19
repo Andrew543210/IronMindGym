@@ -8,10 +8,10 @@
     
     <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card">
+            <div class="card border border-light">
                 <div class="card-body">
-                    <h6>Current Strength Coefficient</h6>
-                    <h3>@Model.CurrentStrengthCoefficient.ToString("F2")</h3>
+                    <h6 class="text-muted small mb-2">STRENGTH COEFFICIENT</h6>
+                    <h3 class="mb-0">@Model.CurrentStrengthCoefficient.ToString("F2")</h3>
                 </div>
             </div>
         </div>
@@ -24,57 +24,66 @@
             {
                 <div class="col-md-12 mb-4">
                     <h4>@group.Key</h4>
-                    <div class="row">
+                    <div class="row g-3">
                         @foreach (var exercise in group)
                         {
-                            <div class="col-md-6 mb-3">
-                                <div class="card">
-                                    <div class="card-header">
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card h-100 border border-light" style="min-height: 320px; display: flex; flex-direction: column;">
+                                    <div class="card-header bg-dark text-white">
                                         <strong>@exercise.ExerciseName</strong>
                                         <br />
                                         <small class="text-muted">@exercise.MuscleSubGroup</small>
                                     </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-4 text-center">
-                                                <h6 class="text-muted">INITIAL</h6>
-                                                @if (exercise.ExerciseType == ExerciseType.Cardio)
-                                                {
-                                                    <p>Duration: <strong>@(exercise.InitialDurationSeconds)s</strong></p>
-                                                    <p>Intensity: <strong>@exercise.InitialIntensity/10</strong></p>
-                                                }
-                                                else
-                                                {
-                                                    <p>Weight: <strong>@exercise.InitialWeightKg kg</strong></p>
-                                                    <p>Reps: <strong>@exercise.InitialReps</strong></p>
-                                                }
+                                    <div class="card-body d-flex flex-column flex-grow-1">
+                                        <div class="row g-2 flex-grow-1">
+                                            <!-- INITIAL -->
+                                            <div class="col-4">
+                                                <div class="border-end ps-0 pe-2">
+                                                    <h6 class="text-muted small fw-bold">INITIAL</h6>
+                                                    @if (exercise.ExerciseType == ExerciseType.Cardio)
+                                                    {
+                                                        <p class="small mb-1"><strong>@exercise.InitialDurationSeconds</strong>s</p>
+                                                        <p class="small mb-0"><strong>@exercise.InitialIntensity</strong>/10</p>
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="small mb-1"><strong>@exercise.InitialWeightKg</strong> kg</p>
+                                                        <p class="small mb-0"><strong>@exercise.InitialReps</strong> reps</p>
+                                                    }
+                                                </div>
                                             </div>
 
-                                            <div class="col-md-4 text-center border-start border-end">
-                                                <h6 class="text-success">PROGRESS</h6>
-                                                @if (exercise.ExerciseType == ExerciseType.Cardio)
-                                                {
-                                                    <p><strong>+@exercise.CardioEffortProgressPercent.ToString("F1")%</strong></p>
-                                                }
-                                                else
-                                                {
-                                                    <p><strong>+@exercise.WeightProgressKg.ToString("F1") kg</strong></p>
-                                                    <p class="small">(@exercise.WeightProgressPercent.ToString("F1")%)</p>
-                                                }
+                                            <!-- PROGRESS -->
+                                            <div class="col-4">
+                                                <div class="text-center border-end ps-1 pe-1">
+                                                    <h6 class="text-success small fw-bold">PROGRESS</h6>
+                                                    @if (exercise.ExerciseType == ExerciseType.Cardio)
+                                                    {
+                                                        <p class="small mb-0"><strong class="text-success">+@exercise.CardioEffortProgressPercent.ToString("F1")%</strong></p>
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="small mb-1"><strong class="text-success">+@exercise.WeightProgressKg.ToString("F1")</strong> kg</p>
+                                                        <p class="small mb-0 text-success">@exercise.WeightProgressPercent.ToString("F1")%</p>
+                                                    }
+                                                </div>
                                             </div>
 
-                                            <div class="col-md-4 text-center">
-                                                <h6 class="text-info">CURRENT</h6>
-                                                @if (exercise.ExerciseType == ExerciseType.Cardio)
-                                                {
-                                                    <p>Duration: <strong>@exercise.CurrentDurationSeconds s</strong></p>
-                                                    <p>Intensity: <strong>@exercise.CurrentIntensity/10</strong></p>
-                                                }
-                                                else
-                                                {
-                                                    <p>Weight: <strong>@exercise.CurrentWeightKg kg</strong></p>
-                                                    <p>Reps: <strong>@exercise.CurrentReps</strong></p>
-                                                }
+                                            <!-- CURRENT -->
+                                            <div class="col-4">
+                                                <div class="ps-2 pe-0">
+                                                    <h6 class="text-info small fw-bold">CURRENT</h6>
+                                                    @if (exercise.ExerciseType == ExerciseType.Cardio)
+                                                    {
+                                                        <p class="small mb-1"><strong>@exercise.CurrentDurationSeconds</strong>s</p>
+                                                        <p class="small mb-0"><strong>@exercise.CurrentIntensity</strong>/10</p>
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="small mb-1"><strong>@exercise.CurrentWeightKg</strong> kg</p>
+                                                        <p class="small mb-0"><strong>@exercise.CurrentReps</strong> reps</p>
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

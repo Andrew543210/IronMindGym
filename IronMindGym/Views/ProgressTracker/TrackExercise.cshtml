@@ -57,7 +57,6 @@
                         <label class="form-label fw-bold" id="initialLabel2">Reps</label>
                         <input type="number" class="form-control" id="initialValue2" placeholder="Reps" min="0" />
                     </div>
-                    <button class="btn btn-info w-100" onclick="saveInitialResults()">SET INITIAL</button>
                 </div>
             </div>
         </div>
@@ -70,7 +69,7 @@
                 </div>
                 <div class="card-body text-center">
                     <div id="progressDisplay">
-                        <p class="text-muted">Select initial and current results to see progress</p>
+                        <p class="text-muted">Set initial and current results to see progress</p>
                     </div>
                 </div>
             </div>
@@ -91,7 +90,7 @@
                         <label class="form-label fw-bold" id="currentLabel2">Reps</label>
                         <input type="number" class="form-control" id="currentValue2" placeholder="Reps" min="0" />
                     </div>
-                    <button class="btn btn-warning w-100" onclick="updateCurrentResults()">UPDATE CURRENT</button>
+                    <button class="btn btn-primary w-100" onclick="setResult()">SET RESULT</button>
                 </div>
             </div>
         </div>
@@ -227,16 +226,39 @@
     }
 
     function loadExistingProgress() {
-        // This will be called via AJAX to show existing initial/current results
-        const initialValue1 = document.getElementById('initialValue1');
-        const initialValue2 = document.getElementById('initialValue2');
-        const currentValue1 = document.getElementById('currentValue1');
-        const currentValue2 = document.getElementById('currentValue2');
-        
-        initialValue1.value = '';
-        initialValue2.value = '';
-        currentValue1.value = '';
-        currentValue2.value = '';
+        // Fetch existing progress data from backend
+        fetch(`/ProgressTracker/GetExerciseProgress?exerciseId=${selectedExerciseId}`)
+            .then(r => r.json())
+            .then(data => {
+                const initialValue1 = document.getElementById('initialValue1');
+                const initialValue2 = document.getElementById('initialValue2');
+                const currentValue1 = document.getElementById('currentValue1');
+                const currentValue2 = document.getElementById('currentValue2');
+
+                if (data.hasData) {
+                    initialValue1.value = data.initialValue1 || '';
+                    initialValue2.value = data.initialValue2 || '';
+                    currentValue1.value = data.currentValue1 || '';
+                    currentValue2.value = data.currentValue2 || '';
+                    
+                    if (data.hasInitial) {
+                        initialValue1.disabled = true;
+                        initialValue2.disabled = true;
+                    }
+                    
+                    // If both exist, calculate and display progress
+                    if (data.hasInitial && data.hasCurrent) {
+                        updateProgressDisplay();
+                    }
+                } else {
+                    initialValue1.value = '';
+                    initialValue2.value = '';
+                    currentValue1.value = '';
+                    currentValue2.value = '';
+                    initialValue1.disabled = false;
+                    initialValue2.disabled = false;
+                }
+            });
     }
 
     function saveInitialResults() {
@@ -281,41 +303,25 @@
         });
     }
 
-    function updateCurrentResults() {
-        if (!selectedExerciseId) {
-            alert('Please select an exercise');
-            return;
-        }
-
+    function updateProgressDisplay() {
         const currentValue1 = parseFloat(document.getElementById('currentValue1').value || '0');
         const currentValue2 = parseInt(document.getElementById('currentValue2').value || '0', 10);
         const initialValue1 = parseFloat(document.getElementById('initialValue1').value || '0');
         const initialValue2 = parseInt(document.getElementById('initialValue2').value || '0', 10);
-        
-        if (!initialValue1 || !initialValue2) {
-            alert('Please set initial results first');
-            return;
-        }
-        
-        if (isCardio && (currentValue1 <= 0 || currentValue2 < 1 || currentValue2 > 10)) {
-            alert('Please enter valid duration and intensity');
-            return;
-        }
-        
-        if (!isCardio && (currentValue1 < 0 || currentValue2 <= 0)) {
-            alert('Please enter valid weight and reps');
+
+        if (!initialValue1 || !initialValue2 || !currentValue1 || !currentValue2) {
             return;
         }
 
         // Calculate progress
         let progressText = '';
-        
+
         if (isCardio) {
             // Cardio formula: effort = duration * intensity
             const initialEffort = initialValue1 * initialValue2;
             const currentEffort = currentValue1 * currentValue2;
             const progressPercent = ((currentEffort - initialEffort) / initialEffort * 100).toFixed(1);
-            
+
             progressText = `
                 <div class="text-center">
                     <h4 class="text-success mb-3">+${progressPercent}%</h4>
@@ -333,7 +339,7 @@
             const weightProgress = (currentValue1 - initialValue1).toFixed(1);
             const weightProgressPercent = (((currentValue1 - initialValue1) / initialValue1) * 100).toFixed(1);
             const repsProgress = currentValue2 - initialValue2;
-            
+
             progressText = `
                 <div class="text-center">
                     <h4 class="text-success mb-3">+${weightProgress} kg</h4>
@@ -346,13 +352,89 @@
                 </div>
             `;
         }
-        
+
         document.getElementById('progressDisplay').innerHTML = progressText;
+    }
+
+    function setResult() {
+        if (!selectedExerciseId) {
+            alert('Please select an exercise');
+            return;
+        }
+
+        const initialValue1 = parseFloat(document.getElementById('initialValue1').value || '0');
+        const initialValue2 = parseInt(document.getElementById('initialValue2').value || '0', 10);
+        const currentValue1 = parseFloat(document.getElementById('currentValue1').value || '0');
+        const currentValue2 = parseInt(document.getElementById('currentValue2').value || '0', 10);
+
+        // Check if initial results are set
+        if (!initialValue1 || !initialValue2) {
+            alert('Please set initial results first');
+            return;
+        }
+
+        // Validate initial results if first time
+        if (isCardio && (initialValue1 <= 0 || initialValue2 < 1 || initialValue2 > 10)) {
+            alert('Please enter valid initial duration and intensity');
+            return;
+        }
         
+        if (!isCardio && (initialValue1 < 0 || initialValue2 <= 0)) {
+            alert('Please enter valid initial weight and reps');
+            return;
+        }
+
+        // Save initial results if they haven't been saved yet
+        if (document.getElementById('initialValue1').disabled === false) {
+            const initialData = new FormData();
+            initialData.append('exerciseId', selectedExerciseId);
+            
+            if (isCardio) {
+                initialData.append('durationSeconds', initialValue1);
+                initialData.append('intensity', initialValue2);
+            } else {
+                initialData.append('weightKg', initialValue1);
+                initialData.append('reps', initialValue2);
+            }
+
+            fetch('/ProgressTracker/SetInitialResults', {
+                method: 'POST',
+                body: initialData
+            }).then(r => r.json()).then(result => {
+                if (result.success) {
+                    document.getElementById('initialValue1').disabled = true;
+                    document.getElementById('initialValue2').disabled = true;
+                    // Continue to save current results
+                    saveCurrentResult(currentValue1, currentValue2);
+                } else {
+                    alert('Error saving initial results: ' + result.message);
+                }
+            });
+        } else {
+            // Initial already saved, just save current
+            saveCurrentResult(currentValue1, currentValue2);
+        }
+    }
+
+    function saveCurrentResult(currentValue1, currentValue2) {
+        // Validate current results
+        if (isCardio && (currentValue1 <= 0 || currentValue2 < 1 || currentValue2 > 10)) {
+            alert('Please enter valid duration and intensity');
+            return;
+        }
+
+        if (!isCardio && (currentValue1 < 0 || currentValue2 <= 0)) {
+            alert('Please enter valid weight and reps');
+            return;
+        }
+
+        // Display progress before saving
+        updateProgressDisplay();
+
         // Save to backend
         const data = new FormData();
         data.append('exerciseId', selectedExerciseId);
-        
+
         if (isCardio) {
             data.append('durationSeconds', currentValue1);
             data.append('intensity', currentValue2);
@@ -367,8 +449,143 @@
         }).then(r => r.json()).then(result => {
             if (result.success) {
                 alert('Progress saved! Your achievement is recorded.');
+                // Delay redirect slightly to show the success message
+                setTimeout(() => {
+                    window.location.href = '/ProgressTracker';
+                }, 500);
+            } else {
+                alert('Error: ' + result.message);
             }
         });
     }
+
+    function updateCurrentResults() {
+        if (!selectedExerciseId) {
+            alert('Please select an exercise');
+            return;
+        }
+
+        const currentValue1 = parseFloat(document.getElementById('currentValue1').value || '0');
+        const currentValue2 = parseInt(document.getElementById('currentValue2').value || '0', 10);
+        const initialValue1 = parseFloat(document.getElementById('initialValue1').value || '0');
+        const initialValue2 = parseInt(document.getElementById('initialValue2').value || '0', 10);
+
+        if (!initialValue1 || !initialValue2) {
+            alert('Please set initial results first');
+            return;
+        }
+
+        if (isCardio && (currentValue1 <= 0 || currentValue2 < 1 || currentValue2 > 10)) {
+            alert('Please enter valid duration and intensity');
+            return;
+        }
+
+        if (!isCardio && (currentValue1 < 0 || currentValue2 <= 0)) {
+            alert('Please enter valid weight and reps');
+            return;
+        }
+
+        // Calculate progress
+        let progressText = '';
+
+        if (isCardio) {
+            // Cardio formula: effort = duration * intensity
+            const initialEffort = initialValue1 * initialValue2;
+            const currentEffort = currentValue1 * currentValue2;
+            const progressPercent = ((currentEffort - initialEffort) / initialEffort * 100).toFixed(1);
+
+            progressText = `
+                <div class="text-center">
+                    <h4 class="text-success mb-3">+${progressPercent}%</h4>
+                    <p class="small text-muted">Effort Progress</p>
+                    <hr />
+                    <p class="mb-1"><strong>Initial:</strong> ${initialValue1}s × ${initialValue2} intensity</p>
+                    <p class="mb-1"><strong>Current:</strong> ${currentValue1}s × ${currentValue2} intensity</p>
+                    <hr />
+                    <p class="small mb-0">Initial Effort: ${initialEffort}</p>
+                    <p class="small">Current Effort: ${currentEffort}</p>
+                </div>
+            `;
+        } else {
+            // Strength formula
+            const weightProgress = (currentValue1 - initialValue1).toFixed(1);
+            const weightProgressPercent = (((currentValue1 - initialValue1) / initialValue1) * 100).toFixed(1);
+            const repsProgress = currentValue2 - initialValue2;
+
+            progressText = `
+                <div class="text-center">
+                    <h4 class="text-success mb-3">+${weightProgress} kg</h4>
+                    <p class="small text-success">(${weightProgressPercent}%)</p>
+                    <hr />
+                    <p class="mb-1"><strong>Initial:</strong> ${initialValue1} kg × ${initialValue2} reps</p>
+                    <p class="mb-1"><strong>Current:</strong> ${currentValue1} kg × ${currentValue2} reps</p>
+                    <hr />
+                    <p class="small mb-0">Reps Progress: +${repsProgress}</p>
+                </div>
+            `;
+        }
+
+        document.getElementById('progressDisplay').innerHTML = progressText;
+
+        // Save to backend
+        const data = new FormData();
+        data.append('exerciseId', selectedExerciseId);
+
+        if (isCardio) {
+            data.append('durationSeconds', currentValue1);
+            data.append('intensity', currentValue2);
+        } else {
+            data.append('weightKg', currentValue1);
+            data.append('reps', currentValue2);
+        }
+
+         fetch('/ProgressTracker/SetCurrentResults', {
+             method: 'POST',
+             body: data
+         }).then(r => r.json()).then(result => {
+             if (result.success) {
+                 alert('Progress saved! Your achievement is recorded.');
+             }
+         });
+     }
+
+    function deleteProgress() {
+        if (!selectedExerciseId) {
+            alert('Please select an exercise first');
+            return;
+        }
+        
+        if (!confirm('Are you sure? This will delete all tracked data for this exercise.')) {
+            return;
+        }
+        
+        // Get exerciseProgressId from a hidden field or query
+        const exerciseProgressId = parseInt(new URLSearchParams(window.location.search).get('exerciseProgressId') || '0', 10);
+        if (!exerciseProgressId) {
+            alert('Cannot find progress ID');
+            return;
+        }
+        
+        const data = new FormData();
+        data.append('exerciseProgressId', exerciseProgressId);
+        
+        fetch('/ProgressTracker/DeleteProgress', {
+            method: 'POST',
+            body: data
+        }).then(r => r.json()).then(result => {
+            if (result.success) {
+                alert('Progress tracker deleted');
+                window.location.href = '/ProgressTracker';
+            } else {
+                alert('Error: ' + result.message);
+            }
+        });
+    }
+
+    // Add event listeners for dynamic progress display
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('currentValue1')?.addEventListener('input', updateProgressDisplay);
+        document.getElementById('currentValue2')?.addEventListener('input', updateProgressDisplay);
+    });
 </script>
 

@@ -14,6 +14,7 @@ public class ExerciseProgressEntry
 {
     public int Id { get; set; }
     public int ExerciseProgressId { get; set; }
+    public int ExerciseId { get; set; }
     public string ExerciseName { get; set; } = string.Empty;
     public string MuscleSubGroup { get; set; } = string.Empty;
     public string MuscleGroup { get; set; } = string.Empty;
@@ -52,5 +53,3 @@ public class FriendProgressTrackerViewModel
 
     public List<ExerciseProgressEntry> Exercises { get; set; } = new();
 }
-
-
