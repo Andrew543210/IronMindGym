@@ -110,6 +110,15 @@
                     }
                 </ul>
             }
+
+            <hr />
+            <div class="row g-2">
+                <div class="col-md-12">
+                    <a asp-controller="ProgressTracker" asp-action="ViewFriendProgress" asp-route-friendId="@friend.UserId" class="btn btn-outline-light btn-sm w-100">
+                        VIEW PROGRESS TRACKER
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 }

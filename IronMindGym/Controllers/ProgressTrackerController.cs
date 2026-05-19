@@ -38,6 +38,7 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
                 {
                     Id = progress.Id,
                     ExerciseProgressId = progress.Id,
+                    ExerciseId = progress.ExerciseId,
                     ExerciseName = progress.Exercise.Name,
                     MuscleSubGroup = progress.Exercise.MuscleSubGroup.Name,
                     MuscleGroup = progress.Exercise.MuscleSubGroup.MuscleGroup.Name,
@@ -76,12 +77,13 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
     }
 
     [HttpGet]
-    public IActionResult TrackExercise()
+    public IActionResult TrackExercise(int? exerciseId)
     {
         var userId = HttpContext.Session.GetInt32("UserId");
         if (!userId.HasValue)
             return RedirectToAction("Login", "Auth");
 
+        ViewBag.ExerciseId = exerciseId ?? 0;
         return View();
     }
 
@@ -130,14 +132,10 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
                 {
                     UserId = userId.Value,
                     ExerciseId = exerciseId,
-                    InitialWeightKg = weightKg ?? 0,
-                    InitialReps = reps ?? 0,
-                    InitialDurationSeconds = durationSeconds ?? 0,
-                    InitialIntensity = intensity ?? 0,
-                    CurrentWeightKg = weightKg ?? 0,
-                    CurrentReps = reps ?? 0,
-                    CurrentDurationSeconds = durationSeconds ?? 0,
-                    CurrentIntensity = intensity ?? 0
+                    CurrentWeightKg = 0,
+                    CurrentReps = 0,
+                    CurrentDurationSeconds = 0,
+                    CurrentIntensity = 0
                 };
 
                 if (exercise.Type == ExerciseType.Cardio)
@@ -188,7 +186,7 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
 
         try
         {
-            if (progress.Exercise.Type == ExerciseType.Cardio)
+            if (exercise.Type == ExerciseType.Cardio)
                 progress.SetCurrentCardioResults(durationSeconds ?? 0, intensity ?? 0);
             else
                 progress.SetCurrentStrengthResults(weightKg ?? 0, reps ?? 0);
@@ -196,6 +194,62 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
             _db.ExerciseProgress.Update(progress);
             _db.SaveChanges();
             return Json(new { success = true, message = "Current results updated" });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpGet]
+    public IActionResult GetExerciseProgress(int exerciseId)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+            return Json(new { success = false, message = "Not authorized" });
+
+        var progress = _db.ExerciseProgress
+            .AsNoTracking()
+            .Include(ep => ep.Exercise)
+            .FirstOrDefault(ep => ep.UserId == userId.Value && ep.ExerciseId == exerciseId);
+
+        if (progress == null)
+            return Json(new { success = true, hasData = false });
+
+        var result = new
+        {
+            success = true,
+            hasData = true,
+            exerciseProgressId = progress.Id,
+            hasInitial = progress.InitialWeightKg > 0 || progress.InitialDurationSeconds > 0,
+            hasCurrent = progress.CurrentWeightKg > 0 || progress.CurrentDurationSeconds > 0,
+            initialValue1 = progress.Exercise.Type == ExerciseType.Cardio ? progress.InitialDurationSeconds : progress.InitialWeightKg,
+            initialValue2 = progress.Exercise.Type == ExerciseType.Cardio ? progress.InitialIntensity : progress.InitialReps,
+            currentValue1 = progress.Exercise.Type == ExerciseType.Cardio ? progress.CurrentDurationSeconds : progress.CurrentWeightKg,
+            currentValue2 = progress.Exercise.Type == ExerciseType.Cardio ? progress.CurrentIntensity : progress.CurrentReps
+        };
+
+        return Json(result);
+    }
+
+    [HttpPost]
+    public IActionResult DeleteProgress(int exerciseProgressId)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+            return Json(new { success = false, message = "Not authorized" });
+
+        var progress = _db.ExerciseProgress
+            .FirstOrDefault(ep => ep.Id == exerciseProgressId && ep.UserId == userId.Value);
+
+        if (progress == null)
+            return Json(new { success = false, message = "Progress not found" });
+
+        try
+        {
+            _db.ExerciseProgress.Remove(progress);
+            _db.SaveChanges();
+            return Json(new { success = true, message = "Progress deleted successfully" });
         }
         catch (Exception ex)
         {
@@ -262,6 +316,7 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
                 {
                     Id = progress.Id,
                     ExerciseProgressId = progress.Id,
+                    ExerciseId = progress.ExerciseId,
                     ExerciseName = progress.Exercise.Name,
                     MuscleSubGroup = progress.Exercise.MuscleSubGroup.Name,
                     MuscleGroup = progress.Exercise.MuscleSubGroup.MuscleGroup.Name,
@@ -299,12 +354,5 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
         return View(model);
     }
 }
-
-
-
-
-
-
-
 
 
