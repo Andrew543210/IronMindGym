@@ -7,6 +7,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { SetupPage } from './pages/SetupPage';
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages';
 import { WorkoutLoggerPage } from './pages/workouts/WorkoutLoggerPage';
+import { WorkoutDetailsPage, WorkoutHistoryPage } from './pages/workouts/WorkoutPages';
 
 export const routes: RouteObject[] = [
   {
@@ -21,7 +22,9 @@ export const routes: RouteObject[] = [
           { path: '/setup', element: <SetupPage /> },
           { path: '/feed/:id', element: <FeedNotePage /> },
           { path: '/goals', element: <GoalsPage /> },
+          { path: '/workouts', element: <WorkoutHistoryPage /> },
           { path: '/workouts/new', element: <WorkoutLoggerPage /> },
+          { path: '/workouts/:id', element: <WorkoutDetailsPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
