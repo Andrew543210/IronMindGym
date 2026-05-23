@@ -8,6 +8,7 @@ const navigation: { to: string; label: MessageKey; number: string }[] = [
   { to: '/', label: 'nav.overview', number: '01' },
   { to: '/workouts', label: 'nav.workout', number: '02' },
   { to: '/goals', label: 'nav.goals', number: '03' },
+  { to: '/friends', label: 'nav.friends', number: '04' },
 ];
 
 const quickLinks: { to: string; label: MessageKey; icon: string }[] = [
