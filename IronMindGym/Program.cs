@@ -97,11 +97,20 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// The React client is built into wwwroot. Its hashed bundles never change, while index.html is always revalidated.
+var clientFiles = new StaticFileOptions
+{
+    OnPrepareResponse = file => file.Context.Response.Headers.CacheControl =
+        file.Context.Request.Path.StartsWithSegments("/assets") ? "public, max-age=31536000, immutable" : "no-cache"
+};
+app.UseStaticFiles(clientFiles);
 app.UseRouting();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapFallback("/api/{**path}", () => Results.NotFound()).AllowAnonymous();
+app.MapFallbackToFile("index.html", clientFiles).AllowAnonymous();
 app.Run();
 
 static Task Status(HttpResponse response, int statusCode)
