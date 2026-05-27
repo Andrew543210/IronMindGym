@@ -44,3 +44,11 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm audit --audit-level=high
+
+  image:
+    name: Docker image
+    runs-on: ubuntu-latest
+    needs: [api, client]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --tag ironmind:ci .
