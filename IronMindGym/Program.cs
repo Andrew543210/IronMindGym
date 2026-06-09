@@ -65,6 +65,7 @@ builder.Services.AddScoped<CurrentCalendar>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<StrengthService>();
 builder.Services.AddScoped<GoalService>();
+builder.Services.AddScoped<ExerciseProgressService>();
 builder.Services.AddScoped<WorkoutService>();
 builder.Services.AddScoped<WorkoutSocialService>();
 builder.Services.AddScoped<FriendshipService>();
