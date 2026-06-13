@@ -7,13 +7,15 @@ import { LanguageSwitch } from './LanguageSwitch';
 const navigation: { to: string; label: MessageKey; number: string }[] = [
   { to: '/', label: 'nav.overview', number: '01' },
   { to: '/workouts', label: 'nav.workout', number: '02' },
-  { to: '/goals', label: 'nav.goals', number: '03' },
-  { to: '/friends', label: 'nav.friends', number: '04' },
+  { to: '/progress', label: 'nav.progress', number: '03' },
+  { to: '/goals', label: 'nav.goals', number: '04' },
+  { to: '/friends', label: 'nav.friends', number: '05' },
 ];
 
 const quickLinks: { to: string; label: MessageKey; icon: string }[] = [
   { to: '/', label: 'nav.home', icon: '⌂' },
   { to: '/workouts', label: 'nav.workout', icon: '＋' },
+  { to: '/progress', label: 'nav.progress', icon: '↗' },
 ];
 
 interface FlashState {

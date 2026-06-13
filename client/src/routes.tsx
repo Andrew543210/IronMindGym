@@ -5,6 +5,7 @@ import { DashboardPage, FeedNotePage } from './pages/DashboardPage';
 import { FriendWorkoutPage, FriendsPage } from './pages/FriendsPage';
 import { GoalsPage } from './pages/GoalsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { FriendProgressPage, ProgressPage, TrackExercisePage } from './pages/ProgressPages';
 import { SetupPage } from './pages/SetupPage';
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages';
 import { WorkoutLoggerPage } from './pages/workouts/WorkoutLoggerPage';
@@ -28,6 +29,9 @@ export const routes: RouteObject[] = [
           { path: '/workouts/:id', element: <WorkoutDetailsPage /> },
           { path: '/friends', element: <FriendsPage /> },
           { path: '/friends/:friendId/workouts/:sessionId', element: <FriendWorkoutPage /> },
+          { path: '/friends/:friendId/progress', element: <FriendProgressPage /> },
+          { path: '/progress', element: <ProgressPage /> },
+          { path: '/progress/track', element: <TrackExercisePage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

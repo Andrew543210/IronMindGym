@@ -1,10 +1,11 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Layout } from '../components/Layout';
 import { mockApi, renderPage, renderRoutes } from '../test/harness';
-import { workout } from '../test/fixtures';
+import { progressEntry, workout } from '../test/fixtures';
 import { FriendWorkoutPage, FriendsPage } from './FriendsPage';
+import { FriendProgressPage } from './ProgressPages';
 
 const friend = {
   userId: 9, username: 'partner', isFriend: true, requestSent: false, requestReceived: false, averageKcal: 2250.5,
@@ -110,3 +111,34 @@ describe('a friend’s workout', () => {
   });
 });
 
+describe('a friend’s progress', () => {
+  it('shows the friend’s strength and tracked exercises', async () => {
+    mockApi({
+      'GET /api/friends/9/progress': {
+        friendUsername: 'partner', currentStrengthCoefficient: 3.456,
+        exercises: [progressEntry(), progressEntry({
+          exerciseId: 8, exerciseName: 'Rowing Machine', muscleGroup: 'Cardio', muscleSubGroup: 'Full Body', exerciseType: 'Cardio',
+          initialDurationSeconds: 600, initialIntensity: 5, currentDurationSeconds: 660, currentIntensity: 7,
+          cardioDurationProgressSeconds: 60, cardioIntensityProgressCount: 2,
+        })],
+      },
+    });
+    renderPage('/friends/:friendId/progress', <FriendProgressPage />, '/friends/9/progress');
+
+    expect(await screen.findByText('3.46')).toBeInTheDocument();
+    const bench = screen.getByText('Flat Bench Press').closest('.card') as HTMLElement;
+    expect(within(bench).getByText('+10 kg')).toBeInTheDocument();
+    expect(within(bench).getByText('-2 reps')).toBeInTheDocument();
+    const rowing = screen.getByText('Rowing Machine').closest('.card') as HTMLElement;
+    expect(within(rowing).getByText('+60 sec')).toBeInTheDocument();
+    expect(within(rowing).getByText('+2 effort')).toBeInTheDocument();
+    expect(within(rowing).getByText('7/10')).toBeInTheDocument();
+  });
+
+  it('says when the friend tracks nothing yet', async () => {
+    mockApi({ 'GET /api/friends/9/progress': { friendUsername: 'partner', currentStrengthCoefficient: 0, exercises: [] } });
+    renderPage('/friends/:friendId/progress', <FriendProgressPage />, '/friends/9/progress');
+
+    expect(await screen.findByText("partner hasn't tracked any progress yet.")).toBeInTheDocument();
+  });
+});

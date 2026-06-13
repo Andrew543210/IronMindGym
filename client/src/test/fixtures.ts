@@ -52,3 +52,12 @@ export const workout = {
   comments: [{ authorUsername: 'partner', text: 'Great depth!', date: '2026-11-19T18:00:00Z' }],
 };
 
+export function progressEntry(overrides: object = {}) {
+  return {
+    exerciseId: 7, exerciseName: 'Flat Bench Press', muscleGroup: 'Chest', muscleSubGroup: 'Middle Chest', exerciseType: 'StrengthTraining',
+    hasCurrentResult: true, initialWeightKg: 60, initialReps: 8, initialDurationSeconds: 0, initialIntensity: 0,
+    currentWeightKg: 70, currentReps: 6, currentDurationSeconds: 0, currentIntensity: 0,
+    weightProgressKg: 10, repsProgressCount: -2, cardioDurationProgressSeconds: 0, cardioIntensityProgressCount: 0,
+    ...overrides,
+  };
+}
