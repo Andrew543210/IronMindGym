@@ -59,6 +59,7 @@ public sealed class HostingTests : IDisposable
     [InlineData("/api/workouts")]
     [InlineData("/api/workouts/previous-set?exerciseId=1")]
     [InlineData("/api/progress")]
+    [InlineData("/api/exercises")]
     [InlineData("/api/goals")]
     [InlineData("/api/friends")]
     public async Task PrivateEndpointsAnswerUnauthorizedWithoutASession(string route)
