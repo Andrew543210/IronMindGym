@@ -7,9 +7,10 @@ import { LanguageSwitch } from './LanguageSwitch';
 const navigation: { to: string; label: MessageKey; number: string }[] = [
   { to: '/', label: 'nav.overview', number: '01' },
   { to: '/workouts', label: 'nav.workout', number: '02' },
-  { to: '/progress', label: 'nav.progress', number: '03' },
-  { to: '/goals', label: 'nav.goals', number: '04' },
-  { to: '/friends', label: 'nav.friends', number: '05' },
+  { to: '/exercises', label: 'nav.exercises', number: '03' },
+  { to: '/progress', label: 'nav.progress', number: '04' },
+  { to: '/goals', label: 'nav.goals', number: '05' },
+  { to: '/friends', label: 'nav.friends', number: '06' },
 ];
 
 const quickLinks: { to: string; label: MessageKey; icon: string }[] = [

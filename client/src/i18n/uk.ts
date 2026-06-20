@@ -51,6 +51,7 @@ export const uk: Translation = {
 
   'nav.overview': 'Огляд',
   'nav.workout': 'Тренування',
+  'nav.exercises': 'Вправи',
   'nav.progress': 'Прогрес',
   'nav.goals': 'Цілі',
   'nav.friends': 'Друзі',
@@ -414,5 +415,26 @@ export const uk: Translation = {
   'friendProgress.strength': 'КОЕФІЦІЄНТ СИЛИ',
   'friendProgress.empty': '{name} ще не відстежує прогрес.',
 
+  'exerciseType.StrengthTraining': 'Силова',
+  'exerciseType.Cardio': 'Кардіо',
+  'exerciseType.Timed': 'На час',
+
   'password.changed': 'Пароль змінено. Увійдіть з новим паролем.',
+
+  'exercises.title': 'Бібліотека вправ',
+  'exercises.intro': 'Усі вправи, які можна записати: що вони тренують і як їх виконувати.',
+  'exercises.group': 'Група м’язів',
+  'exercises.allGroups': 'Усі групи м’язів',
+  'exercises.subgroup': 'Підгрупа',
+  'exercises.allSubgroups': 'Усі підгрупи',
+  'exercises.search': 'Пошук вправи чи опису',
+  'exercises.found': {
+    one: 'Знайдено {count} вправу',
+    few: 'Знайдено {count} вправи',
+    many: 'Знайдено {count} вправ',
+    other: 'Знайдено {count} вправи',
+  },
+  'exercises.none': 'Жодна вправа не відповідає цим фільтрам.',
+  'exercises.type': 'Тип',
+  'exercises.description': 'Опис',
 };

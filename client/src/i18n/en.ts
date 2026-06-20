@@ -49,6 +49,7 @@ export const en = {
 
   'nav.overview': 'Overview',
   'nav.workout': 'Workout',
+  'nav.exercises': 'Exercises',
   'nav.progress': 'Progress',
   'nav.goals': 'Goals',
   'nav.friends': 'Friends',
@@ -405,6 +406,22 @@ export const en = {
   'friendProgress.strength': 'STRENGTH COEFFICIENT',
   'friendProgress.empty': "{name} hasn't tracked any progress yet.",
 
+  'exerciseType.StrengthTraining': 'Strength',
+  'exerciseType.Cardio': 'Cardio',
+  'exerciseType.Timed': 'Timed',
+
   'password.changed': 'Password changed. Sign in with your new password.',
+
+  'exercises.title': 'Exercise Library',
+  'exercises.intro': 'Every exercise you can log, with what it trains and how to perform it.',
+  'exercises.group': 'Muscle group',
+  'exercises.allGroups': 'All muscle groups',
+  'exercises.subgroup': 'Subgroup',
+  'exercises.allSubgroups': 'All subgroups',
+  'exercises.search': 'Search exercise or description',
+  'exercises.found': { one: '{count} exercise found', other: '{count} exercises found' },
+  'exercises.none': 'No exercises match these filters.',
+  'exercises.type': 'Type',
+  'exercises.description': 'Description',
 
 } as const;

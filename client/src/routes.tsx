@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router';
 import { Layout } from './components/Layout';
 import { RequireSession } from './components/RequireSession';
 import { DashboardPage, FeedNotePage } from './pages/DashboardPage';
+import { ExercisesPage } from './pages/ExercisesPage';
 import { FriendWorkoutPage, FriendsPage } from './pages/FriendsPage';
 import { GoalsPage } from './pages/GoalsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -32,6 +33,7 @@ export const routes: RouteObject[] = [
           { path: '/friends/:friendId/progress', element: <FriendProgressPage /> },
           { path: '/progress', element: <ProgressPage /> },
           { path: '/progress/track', element: <TrackExercisePage /> },
+          { path: '/exercises', element: <ExercisesPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
