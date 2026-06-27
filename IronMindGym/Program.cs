@@ -77,7 +77,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<IronMindDbContext>();
     DatabaseMigrations.Apply(db);
-    DataSeeder.Seed(db);
+    DataSeeder.Seed(db, app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("Seed:DemoData"));
 }
 
 if (!app.Environment.IsDevelopment())

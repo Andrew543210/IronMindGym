@@ -22,7 +22,7 @@ public static class DataSeeder
         ("Failure", "До відмови")
     ];
 
-    public static void Seed(IronMindDbContext db)
+    public static void Seed(IronMindDbContext db, bool includeDemoData = false)
     {
         using var transaction = db.Database.BeginTransaction();
         WriteLock.ForSeeding(db);
@@ -38,6 +38,8 @@ public static class DataSeeder
         db.SaveChanges();
         EnsureResearchFeed(db);
         AchievementEngine.EnsureCatalog(db);
+        if (includeDemoData)
+            DemoDataSeeder.Seed(db);
         transaction.Commit();
     }
 

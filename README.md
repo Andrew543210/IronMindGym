@@ -45,6 +45,21 @@ npm run dev
 
 Локальна база слухає лише `127.0.0.1:5432` з обліковими даними `ironmind` / `ironmind-local` з `appsettings.Development.json`. Цей пароль призначений лише для бази на вашому комп'ютері.
 
+### Демо
+
+Використовуйте окрему базу, щоб не змішувати приклади зі своїми записами:
+
+```sh
+dotnet run --project IronMindGym --launch-profile http -- --Seed:DemoData=true --ConnectionStrings:DefaultConnection="Host=localhost;Port=5432;Database=ironmind_demo;Username=ironmind;Password=ironmind-local"
+```
+
+| Email | Пароль |
+| --- | --- |
+| demo@ironmind.app | DemoTraining123! |
+| friend@ironmind.app | FriendTraining123! |
+
+Демодані додаються лише в Development, з явним прапорцем і лише в базу без користувачів. У Production вони вимкнені незалежно від прапорця.
+
 ## Перевірка змін
 
 API:

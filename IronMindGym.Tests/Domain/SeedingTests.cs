@@ -30,6 +30,24 @@ public class SeedingTests
     }
 
     [Fact]
+    public void DemoDataAddsTwoConnectedAthletesOnlyToAnEmptyDatabase()
+    {
+        using var app = new TestApplication();
+        app.Query(db =>
+        {
+            DataSeeder.Seed(db, includeDemoData: true);
+            DataSeeder.Seed(db, includeDemoData: true);
+
+            var demo = db.Users.Include(u => u.Profile).Single(u => u.Email == "demo@ironmind.app");
+            Assert.Equal(2, db.Users.Count());
+            Assert.True(PasswordHashUtility.Verify("DemoTraining123!", demo.PasswordHash));
+            Assert.Equal(FriendshipStatus.Accepted, db.Friendships.Single().Status);
+            Assert.NotEmpty(db.WorkoutSessions.Where(s => s.UserId == demo.Id));
+            return true;
+        });
+    }
+
+    [Fact]
     public void ReferenceDataGetsTheTranslationsItIsMissing()
     {
         using var app = new TestApplication();
