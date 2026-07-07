@@ -11,5 +11,6 @@ Verified 2026-11-17. The feed is a small curated reference list. It is not a liv
 
 Each card links to its source directly. Summaries are limited paraphrases and do not turn a study result into a universal prescription. Dates indicate the source publication/update, rather than a fabricated recent news date. For journal items, the UI shows the publication year.
 
+The optional energy estimate uses [Mifflin et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2305711/). Personal targets override estimates; the automatic equation is disabled by default and is not applied to minors. Macro values are configurable tracking targets, not a medical assessment.
 
 When adding a note, verify the actual title, authors/organization, source URL and the claim being summarized. Prefer official guidance, consensus statements and peer-reviewed primary publications. Keep the population and limits of a study in its summary.

@@ -69,7 +69,9 @@ builder.Services.AddScoped<ExerciseProgressService>();
 builder.Services.AddScoped<WorkoutService>();
 builder.Services.AddScoped<WorkoutSocialService>();
 builder.Services.AddScoped<FriendshipService>();
+builder.Services.AddScoped<NutritionJournalService>();
 builder.Services.AddSingleton<AvatarService>();
+builder.Services.AddSingleton<NutritionAdviceService>();
 
 var app = builder.Build();
 
