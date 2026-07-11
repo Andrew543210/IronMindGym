@@ -9,14 +9,16 @@ const navigation: { to: string; label: MessageKey; number: string }[] = [
   { to: '/workouts', label: 'nav.workout', number: '02' },
   { to: '/exercises', label: 'nav.exercises', number: '03' },
   { to: '/progress', label: 'nav.progress', number: '04' },
-  { to: '/goals', label: 'nav.goals', number: '05' },
-  { to: '/friends', label: 'nav.friends', number: '06' },
+  { to: '/nutrition', label: 'nav.nutrition', number: '05' },
+  { to: '/goals', label: 'nav.goals', number: '06' },
+  { to: '/friends', label: 'nav.friends', number: '07' },
 ];
 
 const quickLinks: { to: string; label: MessageKey; icon: string }[] = [
   { to: '/', label: 'nav.home', icon: '⌂' },
   { to: '/workouts', label: 'nav.workout', icon: '＋' },
   { to: '/progress', label: 'nav.progress', icon: '↗' },
+  { to: '/nutrition', label: 'nav.nutrition', icon: '◉' },
 ];
 
 interface FlashState {

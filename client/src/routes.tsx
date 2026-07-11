@@ -6,6 +6,7 @@ import { ExercisesPage } from './pages/ExercisesPage';
 import { FriendWorkoutPage, FriendsPage } from './pages/FriendsPage';
 import { GoalsPage } from './pages/GoalsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { NutritionPage } from './pages/NutritionPage';
 import { FriendProgressPage, ProgressPage, TrackExercisePage } from './pages/ProgressPages';
 import { SetupPage } from './pages/SetupPage';
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages';
@@ -34,6 +35,7 @@ export const routes: RouteObject[] = [
           { path: '/progress', element: <ProgressPage /> },
           { path: '/progress/track', element: <TrackExercisePage /> },
           { path: '/exercises', element: <ExercisesPage /> },
+          { path: '/nutrition', element: <NutritionPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
