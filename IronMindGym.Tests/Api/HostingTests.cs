@@ -60,6 +60,8 @@ public sealed class HostingTests : IDisposable
     [InlineData("/api/workouts/previous-set?exerciseId=1")]
     [InlineData("/api/progress")]
     [InlineData("/api/nutrition")]
+    [InlineData("/api/statistics")]
+    [InlineData("/api/awards")]
     [InlineData("/api/exercises")]
     [InlineData("/api/goals")]
     [InlineData("/api/friends")]

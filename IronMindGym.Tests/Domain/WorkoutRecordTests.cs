@@ -54,6 +54,7 @@ public class WorkoutRecordTests
             Assert.Equal(2, stats.Count);
             Assert.All(stats, s => Assert.Equal(2, s.SetsCount));
             Assert.Equal(2, db.PersonalRecords.Count());
+            Assert.Equal(1, new StatisticsService(db).Build(db.Users.Single().Id).FavoriteExerciseCount);
             return true;
         });
     }
