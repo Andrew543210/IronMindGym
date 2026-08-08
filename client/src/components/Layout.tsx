@@ -10,8 +10,10 @@ const navigation: { to: string; label: MessageKey; number: string }[] = [
   { to: '/exercises', label: 'nav.exercises', number: '03' },
   { to: '/progress', label: 'nav.progress', number: '04' },
   { to: '/nutrition', label: 'nav.nutrition', number: '05' },
-  { to: '/goals', label: 'nav.goals', number: '06' },
-  { to: '/friends', label: 'nav.friends', number: '07' },
+  { to: '/statistics', label: 'nav.statistics', number: '06' },
+  { to: '/goals', label: 'nav.goals', number: '07' },
+  { to: '/awards', label: 'nav.awards', number: '08' },
+  { to: '/friends', label: 'nav.friends', number: '09' },
 ];
 
 const quickLinks: { to: string; label: MessageKey; icon: string }[] = [

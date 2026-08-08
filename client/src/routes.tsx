@@ -9,6 +9,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { NutritionPage } from './pages/NutritionPage';
 import { FriendProgressPage, ProgressPage, TrackExercisePage } from './pages/ProgressPages';
 import { SetupPage } from './pages/SetupPage';
+import { AwardsPage, RecordsPage, StatisticsPage } from './pages/StatisticsPages';
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages';
 import { WorkoutLoggerPage } from './pages/workouts/WorkoutLoggerPage';
 import { WorkoutDetailsPage, WorkoutHistoryPage } from './pages/workouts/WorkoutPages';
@@ -36,6 +37,9 @@ export const routes: RouteObject[] = [
           { path: '/progress/track', element: <TrackExercisePage /> },
           { path: '/exercises', element: <ExercisesPage /> },
           { path: '/nutrition', element: <NutritionPage /> },
+          { path: '/statistics', element: <StatisticsPage /> },
+          { path: '/statistics/records', element: <RecordsPage /> },
+          { path: '/awards', element: <AwardsPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
