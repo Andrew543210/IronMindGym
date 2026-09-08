@@ -65,6 +65,8 @@ public sealed class HostingTests : IDisposable
     [InlineData("/api/exercises")]
     [InlineData("/api/goals")]
     [InlineData("/api/friends")]
+    [InlineData("/api/profile")]
+    [InlineData("/api/profile/export")]
     public async Task PrivateEndpointsAnswerUnauthorizedWithoutASession(string route)
     {
         using var app = new TestApplication();
