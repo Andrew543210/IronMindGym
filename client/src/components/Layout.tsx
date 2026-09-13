@@ -60,6 +60,9 @@ export function Layout() {
           </nav>
           <div className="sidebar-bottom">
             <p>{t('nav.motto1')}<br /><strong>{t('nav.motto2')}</strong></p>
+            <NavLink to="/profile" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+              <span className="nav-number">↗</span>{t('nav.profile')}
+            </NavLink>
           </div>
         </aside>
       )}
@@ -70,9 +73,12 @@ export function Layout() {
             : <Link className="brand" to="/login">IRONMIND</Link>}
           <div className="d-flex align-items-center gap-3">
             <LanguageSwitch />
-            {signedIn
-              ? <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void signOut()}>{t('nav.signOut')}</button>
-              : <span className="text-muted small topbar-motto">{t('topbar.public')}</span>}
+            {signedIn ? (
+              <>
+                <Link className="profile-link" to="/profile">{t('nav.account')}</Link>
+                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void signOut()}>{t('nav.signOut')}</button>
+              </>
+            ) : <span className="text-muted small topbar-motto">{t('topbar.public')}</span>}
           </div>
         </header>
         <main id="main" className="main-content">
@@ -98,6 +104,7 @@ export function Layout() {
             {navigation.filter((item) => !quickLinks.some((quick) => quick.to === item.to)).map((item) => (
               <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)}>{t(item.label)} ↗</Link>
             ))}
+            <Link to="/profile" onClick={() => setMoreOpen(false)}>{t('nav.profile')} ↗</Link>
           </div>
         </>
       )}

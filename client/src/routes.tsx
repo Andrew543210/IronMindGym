@@ -7,6 +7,7 @@ import { FriendWorkoutPage, FriendsPage } from './pages/FriendsPage';
 import { GoalsPage } from './pages/GoalsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { NutritionPage } from './pages/NutritionPage';
+import { ChangePasswordPage, ProfilePage, ProfileSettingsPage } from './pages/ProfilePages';
 import { FriendProgressPage, ProgressPage, TrackExercisePage } from './pages/ProgressPages';
 import { SetupPage } from './pages/SetupPage';
 import { AwardsPage, RecordsPage, StatisticsPage } from './pages/StatisticsPages';
@@ -40,6 +41,9 @@ export const routes: RouteObject[] = [
           { path: '/statistics', element: <StatisticsPage /> },
           { path: '/statistics/records', element: <RecordsPage /> },
           { path: '/awards', element: <AwardsPage /> },
+          { path: '/profile', element: <ProfilePage /> },
+          { path: '/profile/settings', element: <ProfileSettingsPage /> },
+          { path: '/profile/password', element: <ChangePasswordPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
