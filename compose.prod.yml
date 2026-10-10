@@ -1,0 +1,34 @@
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports: !reset []
+
+  app:
+    environment:
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=ironmind;Username=ironmind;Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      ReverseProxy__KnownProxy: 172.28.0.2
+      AllowedHosts: ${DOMAIN:?Set DOMAIN to your hostname in .env}
+    ports: !reset []
+
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN to your hostname in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    networks:
+      gym:
+        ipv4_address: 172.28.0.2
+
+volumes:
+  caddy-data:
+  caddy-config:

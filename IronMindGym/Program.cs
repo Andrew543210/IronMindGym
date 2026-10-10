@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using IronMindGym.Api;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +18,12 @@ var builder = WebApplication.CreateBuilder(args);
 var keyDirectory = builder.Configuration["DataProtection:KeyDirectory"];
 if (!string.IsNullOrWhiteSpace(keyDirectory))
     builder.Services.AddDataProtection().PersistKeysToFileSystem(Directory.CreateDirectory(keyDirectory));
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    if (IPAddress.TryParse(builder.Configuration["ReverseProxy:KnownProxy"], out var proxy))
+        options.KnownProxies.Add(proxy);
+});
 
 builder.Services.AddControllers(options => options.Filters.Add<CsrfProtectionFilter>())
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -84,8 +92,12 @@ using (var scope = app.Services.CreateScope())
     DataSeeder.Seed(db, app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("Seed:DemoData"));
 }
 
+app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
+{
     app.UseExceptionHandler();
+    app.UseHsts();
+}
 // Only the wording follows Accept-Language; numbers and dates are always read in the invariant English form.
 app.UseRequestLocalization(new RequestLocalizationOptions
 {

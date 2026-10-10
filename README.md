@@ -10,7 +10,7 @@
 | База даних | PostgreSQL 18 (`citext`, `jsonb`, advisory locks) |
 | Клієнт | React 19, TypeScript, Vite, React Router, Bootstrap 5 |
 | Тести | xUnit, WebApplicationFactory, Testcontainers; Vitest, Testing Library |
-| Доставка | Docker (багатоетапна збірка), Docker Compose, GitHub Actions |
+| Доставка | Docker (багатоетапна збірка), Docker Compose, Caddy, GitHub Actions |
 
 ## Запуск
 
@@ -43,7 +43,7 @@ npm run dev
 
 Відкрийте [localhost:5173](http://localhost:5173), створіть обліковий запис і заповніть початкові параметри. Vite оновлює сторінку після кожної зміни й передає запити `/api` до API на порту 5270, тому браузер бачить одне джерело, як у продакшні. Міграції створюють схему автоматично під час запуску API.
 
-Локальна база слухає лише `127.0.0.1:5432` з обліковими даними `ironmind` / `ironmind-local` з `appsettings.Development.json`. Цей пароль призначений лише для бази на вашому комп'ютері.
+Локальна база слухає лише `127.0.0.1:5432` з обліковими даними `ironmind` / `ironmind-local` з `appsettings.Development.json`. Цей пароль призначений лише для бази на вашому комп'ютері; продакшн вимагає власного (див. [розгортання](docs/deployment.md)).
 
 ### Демо
 
@@ -97,5 +97,5 @@ CI на кожен push у `master` і pull request збирає обидві ч
 docker compose exec -T db pg_dump -U ironmind -Fc ironmind > ironmind.dump
 ```
 
-Відновлення — у порожню базу через `pg_restore`; спершу перевірте копію на окремому екземплярі.
+Відновлення — у порожню базу через `pg_restore`; спершу перевірте копію на окремому екземплярі. JSON-експорт у профілі зручний для перегляду власних записів, але не є форматом повного відновлення сервера.
 
