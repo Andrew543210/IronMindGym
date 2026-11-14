@@ -736,6 +736,26 @@ namespace IronMindGym.Data.Migrations
                     b.ToTable("WeightLogs");
                 });
 
+            modelBuilder.Entity("IronMindGym.Models.WorkoutDraft", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("WorkoutDrafts");
+                });
+
             modelBuilder.Entity("IronMindGym.Models.WorkoutPlan", b =>
                 {
                     b.Property<int>("Id")
@@ -1099,6 +1119,17 @@ namespace IronMindGym.Data.Migrations
                     b.HasOne("IronMindGym.Models.User", "User")
                         .WithMany("WeightLogs")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("IronMindGym.Models.WorkoutDraft", b =>
+                {
+                    b.HasOne("IronMindGym.Models.User", "User")
+                        .WithOne()
+                        .HasForeignKey("IronMindGym.Models.WorkoutDraft", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

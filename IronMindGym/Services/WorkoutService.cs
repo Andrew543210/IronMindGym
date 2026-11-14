@@ -89,6 +89,7 @@ public class WorkoutService(IronMindDbContext db)
         WriteLock.ForAthletes(db, currentUserId);
         if (workout.DraftId.HasValue)
         {
+            db.WorkoutDrafts.Where(d => d.UserId == currentUserId && d.DraftId == workout.DraftId).ExecuteDelete();
             var savedId = db.WorkoutSessions.Where(s => s.UserId == currentUserId && s.DraftId == workout.DraftId)
                 .Select(s => (int?)s.Id).FirstOrDefault();
             if (savedId.HasValue)

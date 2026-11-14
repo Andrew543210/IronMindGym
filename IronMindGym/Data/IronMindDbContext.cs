@@ -23,6 +23,7 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
     public DbSet<PerformedExercise> PerformedExercises => Set<PerformedExercise>();
     public DbSet<WorkoutSet> Sets => Set<WorkoutSet>();
     public DbSet<WorkoutReview> WorkoutReviews => Set<WorkoutReview>();
+    public DbSet<WorkoutDraft> WorkoutDrafts => Set<WorkoutDraft>();
     public DbSet<PersonalRecord> PersonalRecords => Set<PersonalRecord>();
     public DbSet<ExerciseProgress> ExerciseProgress => Set<ExerciseProgress>();
     public DbSet<DailyNutrition> DailyNutritions => Set<DailyNutrition>();
@@ -76,6 +77,12 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             session.HasIndex(s => new { s.UserId, s.SessionDate });
             session.HasIndex(s => new { s.UserId, s.DraftId }).IsUnique();
             session.HasOne(s => s.Review).WithOne(r => r.WorkoutSession).HasForeignKey<WorkoutReview>(r => r.WorkoutSessionId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<WorkoutDraft>(draft =>
+        {
+            draft.HasKey(d => d.UserId);
+            draft.Property(d => d.Content).HasColumnType("jsonb");
+            draft.HasOne(d => d.User).WithOne().HasForeignKey<WorkoutDraft>(d => d.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<PersonalRecord>().HasIndex(r => new { r.UserId, r.ExerciseId }).IsUnique();
