@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { translate, type MessageKey, type Params } from '../../i18n/i18n';
 import {
   EMPTY_DRAFT_LIFETIME_MS, applyStored, draftStore, elapsedMinutes, finishError, freshDraft, isDraftId, newDraftId,
-  readSet, restoreDraft, setCells, startingFields, validSets, type CatalogExercise, type DraftSet, type DraftSettings,
+  newerDraft, readSet, restoreDraft, setCells, startingFields, validSets, type CatalogExercise, type DraftSet, type DraftSettings,
 } from './draft';
 
 const t = (key: MessageKey, params?: Params) => translate(key, params, 'en');
@@ -138,5 +138,28 @@ describe('showing and finishing', () => {
     expect(english(finishError(draft, 0, false))).toBe('Enter a workout duration of 1–600 minutes in Session settings.');
     expect(english(finishError({ ...draft, settings: { ...defaults, splitDayLabel: '' } }, 45, false))).toBe('Choose a training day in Session settings.');
     expect(finishError(draft, 45, false)).toBeNull();
+  });
+});
+
+describe('choosing between this device and the server', () => {
+  const local = { ...freshDraft(defaults, 1000), savedAt: 2000 };
+
+  it('prefers a copy with sets', () => {
+    const server = { ...freshDraft(defaults, 1000), savedAt: 1500, sets: [set()] };
+    expect(newerDraft(local, server)).toBe(server);
+    expect(newerDraft({ ...local, sets: [set()] }, { ...server, sets: [], savedAt: 9000 })?.sets).toHaveLength(1);
+  });
+
+  it('takes the later change and keeps this device on a tie', () => {
+    const withSets = { ...local, sets: [set()] };
+    const later = { ...withSets, draftId: newDraftId(), savedAt: 3000 };
+    expect(newerDraft(withSets, later)).toBe(later);
+    expect(newerDraft(withSets, { ...later, savedAt: 2000 })).toBe(withSets);
+  });
+
+  it('uses whichever copy exists', () => {
+    expect(newerDraft(null, local)).toBe(local);
+    expect(newerDraft(local, null)).toBe(local);
+    expect(newerDraft(null, null)).toBeNull();
   });
 });

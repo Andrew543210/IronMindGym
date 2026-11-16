@@ -28,6 +28,8 @@ const ukrainianOptions: LoggerOptions = {
 };
 
 const posted: unknown[] = [];
+const requests: { method: string; url: string }[] = [];
+let serverDraft: unknown;
 
 function SavedPage() {
   const location = useLocation();
@@ -44,7 +46,12 @@ function renderLogger() {
 
 beforeEach(() => {
   posted.length = 0;
+  requests.length = 0;
+  serverDraft = undefined;
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+    requests.push({ method: init?.method ?? 'GET', url });
+    if (url === '/api/workouts/draft' && (init?.method ?? 'GET') === 'GET') return serverDraft ? respond(200, serverDraft) : respond(204);
+    if (url.startsWith('/api/workouts/draft')) return respond(204);
     if (url === '/api/workouts/logger') {
       const ukrainian = (init?.headers as Record<string, string> | undefined)?.['Accept-Language'] === 'uk';
       return respond(200, ukrainian ? ukrainianOptions : options);
@@ -117,6 +124,26 @@ describe('workout logger', () => {
       reviewComment: 'Heavy day',
     })]);
     await waitFor(() => expect(localStorage.getItem('ironmind-workout-5')).toBeNull());
+  });
+
+  it('continues a workout started on another device and removes it there when discarded', async () => {
+    const draftId = '0f8fad5b-d9cb-469f-a165-70867728950e';
+    const logged = { exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 60, reps: 5, durationSeconds: 0, intensity: 0, restSeconds: 120 };
+    serverDraft = {
+      draftId,
+      updatedAt: '2026-11-20T10:00:00Z',
+      content: { draftId, sets: [logged, logged], timerEnd: 0, startedAt: Date.now() - 600_000, savedAt: Date.now() - 60_000, autoDuration: true, settings: {} },
+    };
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const user = userEvent.setup();
+    renderLogger();
+
+    expect(await screen.findByText('Unsaved workout restored · 2 sets')).toBeInTheDocument();
+    await waitFor(() => expect(JSON.parse(localStorage.getItem('ironmind-workout-5') ?? '{}').draftId).toBe(draftId));
+    await user.click(screen.getByRole('button', { name: 'Discard workout' }));
+
+    await waitFor(() => expect(requests).toContainEqual({ method: 'DELETE', url: `/api/workouts/draft?draftId=${draftId}` }));
+    expect(screen.getByText('0 sets logged')).toBeInTheDocument();
   });
 
   it('works in Ukrainian, finds an exercise by its English name and follows a change of language', async () => {

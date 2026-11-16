@@ -40,6 +40,7 @@ export interface StoredDraft {
   sets: DraftSet[];
   timerEnd: number;
   startedAt: number;
+  savedAt: number;
   autoDuration: boolean;
   settings: DraftSettings;
 }
@@ -109,7 +110,15 @@ export function isDraftId(value: unknown): value is string {
 }
 
 export function freshDraft(defaults: DraftSettings, now = Date.now()): StoredDraft {
-  return { draftId: newDraftId(), sets: [], timerEnd: 0, startedAt: now, autoDuration: true, settings: { ...defaults } };
+  return { draftId: newDraftId(), sets: [], timerEnd: 0, startedAt: now, savedAt: now, autoDuration: true, settings: { ...defaults } };
+}
+
+/** A draft with sets wins over one without; otherwise the later change wins, and a tie keeps this device's copy. */
+export function newerDraft(local: StoredValue | null, server: StoredValue | null): StoredValue | null {
+  if (!local || !server) return local ?? server;
+  const localHasSets = validSets(local.sets).length > 0;
+  if (localHasSets !== validSets(server.sets).length > 0) return localHasSets ? local : server;
+  return (Number(server.savedAt) || 0) > (Number(local.savedAt) || 0) ? server : local;
 }
 
 /**
@@ -128,6 +137,7 @@ export function applyStored(stored: StoredValue, base: StoredDraft, now = Date.n
     sets: validSets(stored.sets),
     timerEnd: Number(stored.timerEnd) || 0,
     startedAt: Number.isFinite(startedAt) && startedAt <= now ? startedAt : base.startedAt,
+    savedAt: Number(stored.savedAt) || 0,
     autoDuration: stored.autoDuration !== false,
     settings,
   };

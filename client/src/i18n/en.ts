@@ -274,6 +274,7 @@ export const en = {
   'logger.restored': { one: 'Unsaved workout restored · {count} set', other: 'Unsaved workout restored · {count} sets' },
   'logger.draftSaved': 'Draft saved on this device',
   'logger.storageUnavailable': 'Draft storage unavailable — keep this page open',
+  'logger.savedElsewhere': 'This workout was already saved on another device. A new one has started.',
   'logger.updatedElsewhere': 'Draft updated in another tab',
   'logger.setRemoved': 'Set removed · draft saved',
   'logger.setUpdated': 'Set updated · draft saved',

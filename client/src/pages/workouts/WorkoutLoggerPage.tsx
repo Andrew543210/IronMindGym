@@ -7,10 +7,11 @@ import { useAction, useApi } from '../../hooks';
 import { useI18n, type Text } from '../../i18n/i18n';
 import { useAthlete } from '../../session';
 import {
-  MAX_SETS, applyStored, clockText, draftStore, elapsedMinutes, fieldsFrom, finishError, freshDraft, readSet,
+  MAX_SETS, applyStored, clockText, draftStore, elapsedMinutes, fieldsFrom, finishError, freshDraft, isDraftId, newerDraft, readSet,
   restoreDraft, setCells, startingFields,
-  type CatalogExercise, type DraftSettings, type SetFields, type StoredDraft,
+  type CatalogExercise, type DraftSettings, type SetFields, type StoredDraft, type StoredValue,
 } from './draft';
+import { readServerDraft, serverDraftSync } from './serverDraft';
 
 interface Option {
   id: number;
@@ -48,11 +49,24 @@ export function WorkoutLoggerPage() {
   const athlete = useAthlete();
   const { t } = useI18n();
   const { data, error, loading } = useApi<LoggerOptions>('/api/workouts/logger');
+  const [serverCopy, setServerCopy] = useState<{ value: StoredValue | null; known: boolean }>();
+  useEffect(() => {
+    let active = true;
+    readServerDraft().then(
+      (value) => active && setServerCopy({ value, known: true }),
+      () => active && setServerCopy({ value: null, known: false }),
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
   return (
     <>
       <h2>{t('workouts.title')}</h2>
       <p className="mb-3 text-muted">{t('logger.intro')}</p>
-      {data ? <WorkoutLogger options={data} userId={athlete.id} /> : <PageState error={error} loading={loading} />}
+      {data && serverCopy
+        ? <WorkoutLogger options={data} userId={athlete.id} serverCopy={serverCopy.value} syncWithServer={serverCopy.known} />
+        : <PageState error={error} loading={loading || !serverCopy} />}
     </>
   );
 }
@@ -97,7 +111,14 @@ function usePreviousSet(exerciseId: number | undefined) {
   return result?.exerciseId === exerciseId ? result : undefined;
 }
 
-function WorkoutLogger({ options, userId }: { options: LoggerOptions; userId: number }) {
+interface WorkoutLoggerProps {
+  options: LoggerOptions;
+  userId: number;
+  serverCopy: StoredValue | null;
+  syncWithServer: boolean;
+}
+
+function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutLoggerProps) {
   const navigate = useNavigate();
   const { t, show } = useI18n();
   const catalog = options.exercises;
@@ -107,7 +128,7 @@ function WorkoutLogger({ options, userId }: { options: LoggerOptions; userId: nu
     return { splitTypeId: splitTypeId, splitDayLabel: dayValues(options, splitTypeId)[0], durationMinutes: '60', reviewRating: '4', reviewComment: '' };
   }, [options]);
 
-  const [draft, setDraft] = useState(() => withValidSplit(restoreDraft(store.read(), defaults), options));
+  const [draft, setDraft] = useState(() => withValidSplit(restoreDraft(newerDraft(store.read(), serverCopy), defaults), options));
   // Status and errors are kept as text keys, so they follow a change of the interface language.
   const [status, setStatus] = useState<Text>(() => (draft.sets.length
     ? { key: 'logger.restored', params: { count: draft.sets.length } }
@@ -127,6 +148,11 @@ function WorkoutLogger({ options, userId }: { options: LoggerOptions; userId: nu
   const save = useAction();
 
   const saved = useRef(false);
+  const savedElsewhere = useRef<(draftId: string) => void>(undefined);
+  const [sync] = useState(() => serverDraftSync(
+    (draftId) => savedElsewhere.current?.(draftId),
+    isDraftId(serverCopy?.draftId) ? serverCopy.draftId : undefined,
+  ));
   const changedElsewhere = useRef(false);
   const restAlerted = useRef(draft.timerEnd <= now);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -164,7 +190,31 @@ function WorkoutLogger({ options, userId }: { options: LoggerOptions; userId: nu
       return;
     }
     store.write(draft);
-  }, [draft, store]);
+    if (syncWithServer) sync.push(draft);
+  }, [draft, store, sync, syncWithServer]);
+
+  useEffect(() => {
+    const onHidden = () => {
+      if (document.hidden) sync.flush();
+    };
+    document.addEventListener('visibilitychange', onHidden);
+    window.addEventListener('pagehide', sync.flush);
+    return () => {
+      document.removeEventListener('visibilitychange', onHidden);
+      window.removeEventListener('pagehide', sync.flush);
+      sync.flush();
+    };
+  }, [sync]);
+
+  useEffect(() => {
+    savedElsewhere.current = (draftId) => {
+      if (saved.current || draftId !== draft.draftId) return;
+      store.clear();
+      setEditingIndex(null);
+      setError(null);
+      update({ ...freshDraft(draft.settings), autoDuration: draft.autoDuration }, { key: 'logger.savedElsewhere' });
+    };
+  });
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 500);
@@ -217,7 +267,7 @@ function WorkoutLogger({ options, userId }: { options: LoggerOptions; userId: nu
   }, [draft.sets.length]);
 
   function update(next: StoredDraft, message: Text = { key: 'logger.draftSaved' }) {
-    setDraft(next);
+    setDraft({ ...next, savedAt: Date.now() });
     setStatus(message);
   }
 
@@ -329,6 +379,7 @@ function WorkoutLogger({ options, userId }: { options: LoggerOptions; userId: nu
     const count = draft.sets.length;
     if (count && !window.confirm(t('logger.confirmDiscard', { count }))) return;
     store.clear();
+    sync.discard(draft.draftId);
     restAlerted.current = true;
     endEdit();
     setError(null);
@@ -355,17 +406,25 @@ function WorkoutLogger({ options, userId }: { options: LoggerOptions; userId: nu
       errorRef.current?.scrollIntoView?.({ block: 'center' });
       return;
     }
+    sync.cancel();
     void save.run(async () => {
-      const result = await api.post<{ id: number }>('/api/workouts', {
-        splitTypeId: draft.settings.splitTypeId ? Number(draft.settings.splitTypeId) : null,
-        splitDayLabel: draft.settings.splitDayLabel,
-        durationMinutes,
-        draftId: draft.draftId,
-        reviewRating: Number(draft.settings.reviewRating),
-        reviewComment: draft.settings.reviewComment,
-        sets: draft.sets,
-      });
+      let result: { id: number };
+      try {
+        result = await api.post<{ id: number }>('/api/workouts', {
+          splitTypeId: draft.settings.splitTypeId ? Number(draft.settings.splitTypeId) : null,
+          splitDayLabel: draft.settings.splitDayLabel,
+          durationMinutes,
+          draftId: draft.draftId,
+          reviewRating: Number(draft.settings.reviewRating),
+          reviewComment: draft.settings.reviewComment,
+          sets: draft.sets,
+        });
+      } catch (failure) {
+        if (syncWithServer) sync.push(draft);
+        throw failure;
+      }
       saved.current = true;
+      sync.stop();
       store.clear();
       navigate(`/workouts/${result.id}`, { state: { message: t('logger.saved') } });
     });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api } from '../../api';
 import { ErrorAlert, PageState } from '../../components/ui';
@@ -7,7 +7,8 @@ import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n } from '../../i18n/i18n';
 import { useAthlete } from '../../session';
 import type { WorkoutListItem } from '../DashboardPage';
-import { draftStore, validSets } from './draft';
+import { draftStore, newerDraft, validSets, type StoredValue } from './draft';
+import { readServerDraft } from './serverDraft';
 import { WorkoutReactions, WorkoutSessionView, type WorkoutDetails } from './WorkoutView';
 
 interface WorkoutHistory {
@@ -23,7 +24,12 @@ export function WorkoutHistoryPage() {
   const [params] = useSearchParams();
   const page = Math.max(1, Math.floor(Number(params.get('page'))) || 1);
   const { data, error, loading } = useApi<WorkoutHistory>(`/api/workouts?page=${page}`);
-  const [unsavedSets] = useState(() => validSets(draftStore(athlete.id).read()?.sets).length);
+  const [localDraft] = useState(() => draftStore(athlete.id).read());
+  const [serverDraft, setServerDraft] = useState<StoredValue | null>(null);
+  useEffect(() => {
+    readServerDraft().then(setServerDraft, () => undefined);
+  }, []);
+  const unsavedSets = validSets(newerDraft(localDraft, serverDraft)?.sets).length;
 
   return (
     <>

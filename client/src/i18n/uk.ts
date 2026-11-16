@@ -281,6 +281,7 @@ export const uk: Translation = {
   },
   'logger.draftSaved': 'Чернетку збережено на цьому пристрої',
   'logger.storageUnavailable': 'Сховище чернетки недоступне — не закривайте цю сторінку',
+  'logger.savedElsewhere': 'Це тренування вже збережено на іншому пристрої. Почато нове.',
   'logger.updatedElsewhere': 'Чернетку змінено в іншій вкладці',
   'logger.setRemoved': 'Підхід видалено · чернетку збережено',
   'logger.setUpdated': 'Підхід змінено · чернетку збережено',
