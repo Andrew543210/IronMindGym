@@ -1,10 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
 public class User
 {
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
     [Required, MaxLength(50)]
     public string Username { get; set; } = string.Empty;
@@ -15,12 +18,23 @@ public class User
     [Required]
     public string PasswordHash { get; set; } = string.Empty;
 
-    [MaxLength(255)]
-    public string? ProfilePhotoPath { get; set; }
+    public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
 
-    public Profile? Profile { get; set; }
+    [MaxLength(255)]
+    public string? ProfilePhotoPath
+    {
+        get; set;
+    }
+
+    public Profile? Profile
+    {
+        get; set;
+    }
     public ICollection<Anthropometry> AnthropometryLogs { get; set; } = new List<Anthropometry>();
-    public InitialBenchmarks? Benchmarks { get; set; }
+    public InitialBenchmarks? Benchmarks
+    {
+        get; set;
+    }
     public ICollection<WorkoutSession> WorkoutSessions { get; set; } = new List<WorkoutSession>();
     public ICollection<DailyNutrition> DailyNutritionLogs { get; set; } = new List<DailyNutrition>();
     public ICollection<Friendship> FriendshipsAsUser1 { get; set; } = new List<Friendship>();
@@ -48,13 +62,6 @@ public class User
         if (!IsValidEmail(email))
             throw new ArgumentException("Email must be valid and not exceed 120 characters.");
         Email = email.Trim();
-    }
-
-    public void ValidateAndSetPassword(string password)
-    {
-        if (!IsValidPassword(password))
-            throw new ArgumentException("Password cannot be empty.");
-        PasswordHash = password.Trim();
     }
 
     public void ValidateAndSetProfilePhoto(string? photoPath)

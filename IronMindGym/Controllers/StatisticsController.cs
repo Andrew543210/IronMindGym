@@ -1,4 +1,4 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Models;
 using IronMindGym.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +10,7 @@ public class StatisticsController(IronMindDbContext db) : Controller
 {
     public IActionResult Index()
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -226,7 +226,7 @@ public class StatisticsController(IronMindDbContext db) : Controller
     [HttpGet]
     public IActionResult Records()
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");

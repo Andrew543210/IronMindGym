@@ -1,4 +1,4 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Models;
 using IronMindGym.Services;
 using IronMindGym.ViewModels;
@@ -14,7 +14,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
     [HttpGet]
     public IActionResult Index(bool startTraining = false)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -28,7 +28,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
     [HttpPost]
     public IActionResult Finish(WorkoutLoggerViewModel model)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -212,7 +212,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
     [HttpGet]
     public IActionResult Details(int id)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -309,7 +309,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public IActionResult ToggleLike(int id)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -345,7 +345,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public IActionResult AddComment(int id, string? commentText)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -532,4 +532,3 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
     }
 
 }
-

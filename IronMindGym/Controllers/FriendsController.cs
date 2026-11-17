@@ -1,4 +1,4 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Models;
 using IronMindGym.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +10,7 @@ public class FriendsController(IronMindDbContext db) : Controller
 {
     public IActionResult Index(string? searchUsername)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -128,7 +128,7 @@ public class FriendsController(IronMindDbContext db) : Controller
     [HttpGet]
     public IActionResult WorkoutDetails(int friendId, int workoutSessionId)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -220,7 +220,7 @@ public class FriendsController(IronMindDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public IActionResult ToggleLike(int friendId, int workoutSessionId)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -260,7 +260,7 @@ public class FriendsController(IronMindDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public IActionResult AddComment(int friendId, int workoutSessionId, string? commentText)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");

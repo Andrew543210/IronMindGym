@@ -1,4 +1,4 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Models;
 using IronMindGym.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +13,7 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
     [HttpGet]
     public IActionResult Index()
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
             return RedirectToAction("Login", "Auth");
 
@@ -79,7 +79,7 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
     [HttpGet]
     public IActionResult TrackExercise(int? exerciseId)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
             return RedirectToAction("Login", "Auth");
 
@@ -111,7 +111,7 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
     [HttpPost]
     public IActionResult SetInitialResults(int exerciseId, double? weightKg = null, int? reps = null, int? durationSeconds = null, int? intensity = null)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
             return Json(new { success = false, message = "Not authorized" });
 
@@ -169,7 +169,7 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
     [HttpPost]
     public IActionResult SetCurrentResults(int exerciseId, double? weightKg = null, int? reps = null, int? durationSeconds = null, int? intensity = null)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
             return Json(new { success = false, message = "Not authorized" });
 
@@ -206,7 +206,7 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
     [HttpGet]
     public IActionResult GetExerciseProgress(int exerciseId)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
             return Json(new { success = false, message = "Not authorized" });
 
@@ -237,7 +237,7 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
     [HttpPost]
     public IActionResult DeleteProgress(int exerciseProgressId)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
             return Json(new { success = false, message = "Not authorized" });
 
@@ -262,7 +262,7 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
     [HttpGet]
     public IActionResult ViewFriendProgress(int friendId)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
             return RedirectToAction("Login", "Auth");
 
@@ -357,5 +357,3 @@ public class ProgressTrackerController(IronMindDbContext db) : Controller
         return View(model);
     }
 }
-
-

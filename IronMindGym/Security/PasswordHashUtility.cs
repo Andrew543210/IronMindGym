@@ -1,19 +1,23 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+using Microsoft.AspNetCore.Identity;
 
 namespace IronMindGym.Security;
 
 public static class PasswordHashUtility
 {
-    public static string Hash(string password)
-    {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
-        return Convert.ToHexString(bytes);
-    }
+    private static readonly PasswordHasher<object> Hasher = new();
+    private static readonly object HashingContext = new();
+
+    public static string Hash(string password) => Hasher.HashPassword(HashingContext, password);
 
     public static bool Verify(string password, string hash)
     {
-        return string.Equals(Hash(password), hash, StringComparison.OrdinalIgnoreCase);
+        try
+        {
+            return Hasher.VerifyHashedPassword(HashingContext, hash, password) != PasswordVerificationResult.Failed;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 }
-

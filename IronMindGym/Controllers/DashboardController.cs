@@ -1,4 +1,4 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Models;
 using IronMindGym.Services;
 using IronMindGym.ViewModels;
@@ -11,7 +11,7 @@ public class DashboardController(IronMindDbContext db, IAvatarService avatarServ
 {
     public IActionResult Index()
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -25,7 +25,6 @@ public class DashboardController(IronMindDbContext db, IAvatarService avatarServ
 
         if (user == null)
         {
-            HttpContext.Session.Remove("UserId");
             return RedirectToAction("Login", "Auth");
         }
 
@@ -88,7 +87,7 @@ public class DashboardController(IronMindDbContext db, IAvatarService avatarServ
     [HttpGet]
     public IActionResult Details(int id)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");

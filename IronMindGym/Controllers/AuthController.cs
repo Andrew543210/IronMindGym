@@ -1,7 +1,10 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Models;
 using IronMindGym.Security;
 using IronMindGym.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -10,12 +13,14 @@ using System.Security.Claims;
 
 namespace IronMindGym.Controllers;
 
+[AllowAnonymous]
 public class AuthController(IronMindDbContext db) : Controller
 {
     [HttpGet]
     public IActionResult Login() => View(new LoginViewModel());
 
     [HttpPost]
+    [EnableRateLimiting("authentication")]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
         if (!ModelState.IsValid)
@@ -23,9 +28,8 @@ public class AuthController(IronMindDbContext db) : Controller
             return View(model);
         }
 
-        var user = db.Users
-            .AsNoTracking()
-            .FirstOrDefault(u => u.Email == model.Email);
+        var email = model.Email.Trim().ToLowerInvariant();
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
 
         if (user is null || !PasswordHashUtility.Verify(model.Password, user.PasswordHash))
         {
@@ -33,7 +37,7 @@ public class AuthController(IronMindDbContext db) : Controller
             return View(model);
         }
 
-        await SignInUserAsync(user.Id, user.Username, model.RememberMe);
+        await SignInUserAsync(user, model.RememberMe);
         TempData["Message"] = $"Welcome, {user.Username}!";
 
         var hasSetup = db.Users
@@ -49,6 +53,7 @@ public class AuthController(IronMindDbContext db) : Controller
     public IActionResult Register() => View(new RegisterViewModel());
 
     [HttpPost]
+    [EnableRateLimiting("authentication")]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
         if (!ModelState.IsValid)
@@ -56,6 +61,8 @@ public class AuthController(IronMindDbContext db) : Controller
             return View(model);
         }
 
+        model.Email = model.Email.Trim().ToLowerInvariant();
+        model.Username = model.Username.Trim();
         if (db.Users.Any(u => u.Email == model.Email))
         {
             ModelState.AddModelError(nameof(model.Email), "A user with this email already exists.");
@@ -77,29 +84,38 @@ public class AuthController(IronMindDbContext db) : Controller
         };
 
         db.Users.Add(user);
-        db.SaveChanges();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is SqliteException { SqliteErrorCode: 19 })
+        {
+            ModelState.AddModelError(string.Empty, "Email or username is already registered.");
+            return View(model);
+        }
 
-        await SignInUserAsync(user.Id, user.Username, true);
+        await SignInUserAsync(user, false);
         TempData["Message"] = "Registration successful. Complete your initial setup.";
 
         return RedirectToAction("Index", "Setup");
     }
 
     [HttpPost]
+    [EnableRateLimiting("authentication")]
     public async Task<IActionResult> Logout()
     {
-        HttpContext.Session.Remove("UserId");
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         TempData["Message"] = "You have logged out.";
         return RedirectToAction(nameof(Login));
     }
 
-    private async Task SignInUserAsync(int userId, string username, bool rememberMe)
+    private async Task SignInUserAsync(User user, bool rememberMe)
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, userId.ToString()),
-            new(ClaimTypes.Name, username)
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.Username),
+            new("SecurityStamp", user.SecurityStamp)
         };
 
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
@@ -114,6 +130,5 @@ public class AuthController(IronMindDbContext db) : Controller
                 AllowRefresh = true
             });
 
-        HttpContext.Session.SetInt32("UserId", userId);
     }
 }
