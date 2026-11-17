@@ -21,10 +21,36 @@ public class WorkoutLoggerController(IronMindDbContext db, WorkoutService workou
         }
 
         ViewBag.Page = Math.Clamp(page, 1, 10000);
-        var vm = BuildIndexViewModel(userId.Value, startTraining);
-        vm.RecentSessions = BuildRecentSessions(userId.Value, (int)ViewBag.Page);
+        var vm = new WorkoutLoggerViewModel
+        {
+            IsTrainingActive = startTraining,
+            RecentSessions = BuildRecentSessions(userId.Value, (int)ViewBag.Page)
+        };
         FillSelections(vm, userId.Value);
         return View(vm);
+    }
+
+    [HttpGet]
+    public IActionResult PreviousSet(int exerciseId)
+    {
+        var userId = User.GetUserId()!.Value;
+        var previous = db.Sets.AsNoTracking()
+            .Where(s => s.PerformedExercise.ExerciseId == exerciseId && s.PerformedExercise.WorkoutSession.UserId == userId)
+            .OrderByDescending(s => s.PerformedExercise.WorkoutSession.SessionDate)
+            .ThenByDescending(s => s.PerformedExercise.WorkoutSessionId)
+            .ThenByDescending(s => s.PerformedExercise.OrderInWorkout)
+            .ThenByDescending(s => s.SetNumber)
+            .Select(s => new
+            {
+                s.WeightKg,
+                s.Reps,
+                s.DurationSeconds,
+                s.Intensity,
+                s.RestSeconds,
+                s.SetTypeId,
+                Date = s.PerformedExercise.WorkoutSession.SessionDate
+            }).FirstOrDefault();
+        return previous is null ? NoContent() : Json(previous);
     }
 
     [HttpPost]
@@ -93,36 +119,7 @@ public class WorkoutLoggerController(IronMindDbContext db, WorkoutService workou
             return NotFound();
         }
 
-        var stats = session.PerformedExercises
-            .Select(pe =>
-            {
-                var peakWeight = pe.Sets.Max(set => set.WeightKg);
-                var previousRecordWeight = db.PerformedExercises
-                    .AsNoTracking()
-                    .Where(x => x.ExerciseId == pe.ExerciseId && x.WorkoutSession.UserId == currentUserId && x.WorkoutSession.SessionDate < session.SessionDate)
-                    .SelectMany(x => x.Sets)
-                    .Select(x => (double?)x.WeightKg)
-                    .Max();
-
-                var setLoadPercents = (previousRecordWeight.HasValue && previousRecordWeight.Value > 0)
-                    ? pe.Sets.Select(set => set.WeightKg / previousRecordWeight.Value * 100.0).ToList()
-                    : new List<double>();
-
-                var averagePercent = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Average(), 1);
-                var peakPercent = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Max(), 1);
-
-                return new ExerciseWorkoutSummaryViewModel
-                {
-                    ExerciseName = pe.Exercise.Name,
-                    SetsCount = pe.Sets.Count,
-                    AverageLoad = averagePercent,
-                    PeakLoad = peakPercent,
-                    PeakWeightKg = peakWeight,
-                    PercentToPersonalRecord = peakPercent,
-                    IsNewRecord = pe.Exercise.Type == ExerciseType.StrengthTraining && (!previousRecordWeight.HasValue || peakWeight > previousRecordWeight.Value)
-                };
-            })
-            .ToList();
+        var stats = workoutService.BuildExerciseStats(session);
 
         var activePlanTarget = db.WorkoutPlans.Where(w => w.UserId == currentUserId && w.IsActive).Select(w => w.WorkoutsPerWeek).FirstOrDefault();
         var weekStart = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek + (int)DayOfWeek.Monday);
@@ -241,17 +238,6 @@ public class WorkoutLoggerController(IronMindDbContext db, WorkoutService workou
         {
             id
         });
-    }
-
-    private WorkoutLoggerViewModel BuildIndexViewModel(int currentUserId, bool startTraining)
-    {
-        var vm = new WorkoutLoggerViewModel
-        {
-            IsTrainingActive = startTraining,
-            RecentSessions = BuildRecentSessions(currentUserId)
-        };
-
-        return vm;
     }
 
     private List<WorkoutSessionListItemViewModel> BuildRecentSessions(int currentUserId, int page = 1)

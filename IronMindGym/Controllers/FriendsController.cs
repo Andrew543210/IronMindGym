@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Controllers;
 
-public class FriendsController(IronMindDbContext db, FriendshipService friendshipService) : Controller
+public class FriendsController(IronMindDbContext db, FriendshipService friendshipService, IronMindGym.Services.WorkoutService workoutService) : Controller
 {
     [HttpGet]
     public IActionResult Index(string? searchUsername) => View(friendshipService.BuildIndex(User.GetUserId()!.Value, searchUsername));
@@ -69,33 +69,7 @@ public class FriendsController(IronMindDbContext db, FriendshipService friendshi
             return NotFound();
         }
 
-        var stats = session.PerformedExercises
-            .Select(pe =>
-            {
-                var peakWeight = pe.Sets.Max(set => set.WeightKg);
-                var previousRecordWeight = db.PerformedExercises
-                    .AsNoTracking()
-                    .Where(x => x.ExerciseId == pe.ExerciseId && x.WorkoutSession.UserId == friendId && x.WorkoutSession.SessionDate < session.SessionDate)
-                    .SelectMany(x => x.Sets)
-                    .Select(x => (double?)x.WeightKg)
-                    .Max();
-
-                var setLoadPercents = (previousRecordWeight.HasValue && previousRecordWeight.Value > 0)
-                    ? pe.Sets.Select(set => set.WeightKg / previousRecordWeight.Value * 100.0).ToList()
-                    : new List<double>();
-
-                return new ExerciseWorkoutSummaryViewModel
-                {
-                    ExerciseName = pe.Exercise.Name,
-                    SetsCount = pe.Sets.Count,
-                    AverageLoad = setLoadPercents.Count == 0 ? null : Math.Round(setLoadPercents.Average(), 1),
-                    PeakLoad = setLoadPercents.Count == 0 ? null : Math.Round(setLoadPercents.Max(), 1),
-                    PeakWeightKg = peakWeight,
-                    PercentToPersonalRecord = setLoadPercents.Count == 0 ? null : Math.Round(setLoadPercents.Max(), 1),
-                    IsNewRecord = pe.Exercise.Type == IronMindGym.Models.ExerciseType.StrengthTraining && (!previousRecordWeight.HasValue || peakWeight > previousRecordWeight.Value)
-                };
-            })
-            .ToList();
+        var stats = workoutService.BuildExerciseStats(session);
 
         var detailsVm = new FriendWorkoutDetailsViewModel
         {

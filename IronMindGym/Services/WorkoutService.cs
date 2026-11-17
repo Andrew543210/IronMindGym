@@ -9,6 +9,41 @@ namespace IronMindGym.Services;
 
 public class WorkoutService(IronMindDbContext db)
 {
+    public List<ExerciseWorkoutSummaryViewModel> BuildExerciseStats(WorkoutSession session)
+    {
+        var exerciseIds = session.PerformedExercises.Select(p => p.ExerciseId).Distinct().ToList();
+        var previousRecords = db.Sets.AsNoTracking()
+            .Where(s => s.PerformedExercise.WorkoutSession.UserId == session.UserId
+                && exerciseIds.Contains(s.PerformedExercise.ExerciseId)
+                && s.PerformedExercise.Exercise.Type == ExerciseType.StrengthTraining
+                && (s.PerformedExercise.WorkoutSession.SessionDate < session.SessionDate
+                    || (s.PerformedExercise.WorkoutSession.SessionDate == session.SessionDate
+                        && s.PerformedExercise.WorkoutSessionId < session.Id)))
+            .GroupBy(s => s.PerformedExercise.ExerciseId)
+            .Select(g => new { ExerciseId = g.Key, Weight = g.Max(s => s.WeightKg) })
+            .ToDictionary(x => x.ExerciseId, x => x.Weight);
+        return session.PerformedExercises.OrderBy(p => p.OrderInWorkout).GroupBy(p => p.ExerciseId)
+            .Select(group =>
+            {
+                var exercise = group.First().Exercise;
+                var sets = group.SelectMany(p => p.Sets).ToList();
+                var peak = sets.Max(s => s.WeightKg);
+                var strength = exercise.Type == ExerciseType.StrengthTraining;
+                previousRecords.TryGetValue(group.Key, out var previous);
+                var comparable = strength && previous > 0;
+                return new ExerciseWorkoutSummaryViewModel
+                {
+                    ExerciseName = exercise.Name,
+                    SetsCount = sets.Count,
+                    PeakWeightKg = peak,
+                    AverageLoad = comparable ? Math.Round(sets.Average(s => s.WeightKg) / previous * 100, 1) : null,
+                    PeakLoad = comparable ? Math.Round(peak / previous * 100, 1) : null,
+                    PercentToPersonalRecord = comparable ? Math.Round(peak / previous * 100, 1) : null,
+                    IsNewRecord = strength && peak > 0 && peak > previous
+                };
+            }).ToList();
+    }
+
     public int Save(int currentUserId, WorkoutLoggerViewModel model)
     {
         Validator.ValidateObject(model, new ValidationContext(model), validateAllProperties: true);
@@ -58,38 +93,37 @@ public class WorkoutService(IronMindDbContext db)
             SplitTypeId = model.SplitTypeId
         };
 
-        var groupedByExercise = safeDraftSets
-            .GroupBy(x => x.ExerciseId)
-            .ToList();
-
-        var order = 1;
-
-        foreach (var exerciseGroup in groupedByExercise)
+        // Keep contiguous blocks so supersets and circuits retain their logged order.
+        PerformedExercise? performedExercise = null;
+        var setNumbers = new Dictionary<int, int>();
+        foreach (var set in safeDraftSets)
         {
-            var performedExercise = new PerformedExercise
+            if (performedExercise?.ExerciseId != set.ExerciseId)
             {
-                ExerciseId = exerciseGroup.Key,
-                WorkoutSession = session,
-                OrderInWorkout = order++
-            };
-
-            var setNumber = 1;
-            foreach (var set in exerciseGroup)
-            {
-                performedExercise.Sets.Add(new WorkoutSet
+                performedExercise = new PerformedExercise
                 {
-                    SetNumber = setNumber++,
-                    WeightKg = set.WeightKg,
-                    Reps = set.Reps,
-                    SetTypeId = set.SetTypeId,
-                    DurationSeconds = set.DurationSeconds,
-                    Intensity = set.Intensity,
-                    RestSeconds = set.RestSeconds
-                });
+                    ExerciseId = set.ExerciseId,
+                    WorkoutSession = session,
+                    OrderInWorkout = session.PerformedExercises.Count + 1
+                };
+                session.PerformedExercises.Add(performedExercise);
             }
-
-            db.PerformedExercises.Add(performedExercise);
-
+            setNumbers.TryGetValue(set.ExerciseId, out var setNumber);
+            setNumbers[set.ExerciseId] = ++setNumber;
+            performedExercise.Sets.Add(new WorkoutSet
+            {
+                SetNumber = setNumber,
+                WeightKg = set.WeightKg,
+                Reps = set.Reps,
+                SetTypeId = set.SetTypeId,
+                DurationSeconds = set.DurationSeconds,
+                Intensity = set.Intensity,
+                RestSeconds = set.RestSeconds
+            });
+        }
+        db.WorkoutSessions.Add(session);
+        foreach (var exerciseGroup in safeDraftSets.GroupBy(x => x.ExerciseId))
+        {
             var peakWeight = exerciseGroup.Max(x => x.WeightKg);
             var existingRecord = db.PersonalRecords.FirstOrDefault(pr => pr.UserId == currentUserId && pr.ExerciseId == exerciseGroup.Key);
 
@@ -165,7 +199,7 @@ public class WorkoutService(IronMindDbContext db)
                 continue;
             var best = db.Sets.Where(s => s.PerformedExercise.ExerciseId == exerciseId && s.PerformedExercise.WorkoutSession.UserId == userId)
                 .OrderByDescending(s => s.WeightKg).Select(s => new { s.WeightKg, s.PerformedExercise.WorkoutSession.SessionDate }).FirstOrDefault();
-            if (best is null)
+            if (best is null || best.WeightKg <= 0)
                 db.PersonalRecords.Remove(record);
             else
             {

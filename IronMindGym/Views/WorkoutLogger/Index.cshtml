@@ -8,38 +8,12 @@
 <h2>Workout Logger</h2>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="mb-0 text-muted">Latest workouts and quick launch of a new session.</p>
+    <p class="mb-0 text-muted">@(Model.IsTrainingActive ? "One set at a time. Log what you actually completed." : "Your training, session by session.")</p>
     @if (!Model.IsTrainingActive)
     {
         <a class="btn btn-primary" asp-action="Index" asp-route-startTraining="true">Start workout</a>
     }
 </div>
-
-@if (Model.LastSummary != null)
-{
-    <div class="card mb-4 border-success">
-        <div class="card-body">
-            <h5>@Model.LastSummary.SessionName</h5>
-            <p class="mb-1">Average rest: <strong class="metric">@Model.LastSummary.AverageRestSeconds sec</strong></p>
-            <p class="mb-3">Workouts remaining this week: <strong class="metric">@Model.LastSummary.RemainingWorkoutsThisWeek</strong></p>
-            <table class="table table-sm">
-                <thead><tr><th>Exercise</th><th>Avg load (% of PR)</th><th>Peak load (% of PR)</th><th>Status</th></tr></thead>
-                <tbody>
-                @foreach (var stat in Model.LastSummary.ExerciseStats)
-                {
-                    <tr>
-                        <td>@stat.ExerciseName</td>
-                        <td class="metric">@(stat.AverageLoad.HasValue ? $"{stat.AverageLoad}%" : "-")</td>
-                        <td class="metric">@(stat.PeakLoad.HasValue ? $"{stat.PeakLoad}%" : "-")</td>
-                        <td>@(stat.IsNewRecord ? "New record" : "No new record")</td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-            <a class="btn btn-outline-success btn-sm" asp-action="Details" asp-route-id="@Model.LastSummary.WorkoutSessionId">Details</a>
-        </div>
-    </div>
-}
 
 @if (!Model.IsTrainingActive)
 {
@@ -61,8 +35,9 @@
 }
 @if (Model.IsTrainingActive)
 {
-<form method="post" asp-action="Finish" class="row g-3 mb-4" id="finishWorkoutForm" novalidate data-user-id="@User.GetUserId()">
+<form method="post" asp-action="Finish" class="row g-3 mb-4" id="finishWorkoutForm" novalidate data-user-id="@User.GetUserId()" data-previous-url="@Url.Action("PreviousSet")">
     <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="col-12"><div class="workout-toolbar d-flex justify-content-between align-items-center gap-3"><span>Session time <strong class="metric" id="sessionElapsed">00:00</strong></span><span class="small text-muted" id="draftStatus" role="status">Draft saved in this tab</span></div></div>
 
     <div class="col-12">
         <div class="card border-secondary">
@@ -87,7 +62,8 @@
                 </div>
                 <div class="col-md-4">
                     <label asp-for="DurationMinutes" class="form-label">Duration (min)</label>
-                    <input asp-for="DurationMinutes" class="form-control" />
+                    <input asp-for="DurationMinutes" class="form-control" min="1" max="600" inputmode="numeric" />
+                    <label class="small mt-2"><input type="checkbox" id="autoDuration" checked /> Use elapsed time</label>
                 </div>
             </div>
             </details>
@@ -97,33 +73,41 @@
     <div class="col-12">
         <div class="card border-secondary">
             <div class="card-header">Add exercises and sets</div>
-            <div class="card-body row g-3">
-                <div class="col-md-4">
-                    <label for="muscleGroupFilter" class="form-label">1) Muscle group</label>
+            <div class="card-body row g-3" id="setEditor">
+                <div class="col-12">
+                    <label for="exerciseSearch" class="form-label">Find an exercise</label>
+                    <input type="search" id="exerciseSearch" class="form-control" placeholder="Search all exercises, e.g. bench press" autocomplete="off" />
+                    <div id="exerciseSearchResults" class="exercise-search-results" aria-live="polite"></div>
+                </div>
+                <div class="col-12"><details class="exercise-browser"><summary>Browse by muscle group</summary><div class="row g-3 mt-1">
+                <div class="col-md-6">
+                    <label for="muscleGroupFilter" class="form-label">Muscle group</label>
                     <select asp-for="SelectedMuscleGroupId" asp-items="ViewBag.MuscleGroups" class="form-select" id="muscleGroupFilter">
                         <option value="">Select group</option>
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label for="muscleSubGroupFilter" class="form-label">2) Muscle subgroup (optional)</label>
+                <div class="col-md-6">
+                    <label for="muscleSubGroupFilter" class="form-label">Muscle subgroup (optional)</label>
                     <select asp-for="SelectedMuscleSubGroupId" class="form-select" id="muscleSubGroupFilter" disabled>
                         <option value="">Select a group first</option>
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label for="exerciseSelect" class="form-label">3) Exercise</label>
+                </div></details></div>
+                <div class="col-12">
+                    <label for="exerciseSelect" class="form-label">Exercise</label>
                     <select asp-for="ExerciseId" class="form-select" id="exerciseSelect" disabled>
                         <option value="">Select a group first</option>
                     </select>
                 </div>
 
+                <div class="col-12"><div class="previous-set"><span id="previousSetText" class="small text-muted" role="status">Choose an exercise to see your previous set.</span><button type="button" id="usePreviousSet" class="btn btn-outline-secondary btn-sm" hidden>Use these values</button></div></div>
                 <div class="col-md-3">
                     <label for="setTypeSelect" class="form-label">Set type</label>
                     <select asp-for="SetTypeId" asp-items="ViewBag.SetTypes" class="form-select" id="setTypeSelect"></select>
                 </div>
 
                 <div class="col-md-3" id="weightContainer">
-                    <label for="weightInput" class="form-label">Weight (kg)</label>
+                    <label for="weightInput" class="form-label">External load (kg)</label>
                     <input asp-for="WeightKg" class="form-control" id="weightInput" type="number" inputmode="decimal" min="0" max="500" step="0.5" />
                 </div>
                 <div class="col-md-3" id="repsContainer">
@@ -133,10 +117,10 @@
 
                 <div class="col-md-3" id="durationContainer" style="display: none;">
                     <label for="durationInput" class="form-label">Duration (sec)</label>
-                    <input type="number" class="form-control" id="durationInput" min="0" />
+                    <input type="number" class="form-control" id="durationInput" min="1" max="86400" inputmode="numeric" value="60" />
                 </div>
                 <div class="col-md-3" id="intensityContainer" style="display: none;">
-                    <label for="intensityInput" class="form-label">Intensity (1-10)</label>
+                    <label for="intensityInput" class="form-label">Perceived effort (1–10)</label>
                     <input type="number" class="form-control" id="intensityInput" min="1" max="10" value="5" />
                 </div>
 
@@ -145,7 +129,7 @@
                     <input asp-for="RestSeconds" class="form-control" id="restInput" inputmode="numeric" />
                 </div>
 
-                <div class="col-12"><div id="workoutError" class="alert alert-danger" role="alert" hidden></div><div class="d-flex gap-2"><button type="button" class="btn btn-primary flex-grow-1" id="addSetBtn">Add set ＋</button><button type="button" class="btn btn-outline-secondary" id="repeatSetBtn" title="Repeat the selected exercise and values">Repeat ↻</button></div><p class="small text-muted mt-2 mb-0">Draft stays in this tab if you reload. Use 0 kg for bodyweight work.</p></div>
+                <div class="col-12"><div id="workoutError" class="alert alert-danger" role="alert" hidden></div><div class="d-flex gap-2"><button type="button" class="btn btn-primary flex-grow-1" id="addSetBtn">Log completed set ＋</button><button type="button" class="btn btn-outline-secondary" id="cancelEditBtn" hidden>Cancel edit</button></div><details class="small text-muted mt-2"><summary>How to log load and reps</summary><p class="mt-2 mb-0">Use 0 kg for unweighted bodyweight work. For dumbbells, consistently log the load per hand; for barbells, include the bar. For unilateral work, use reps per side. The next set keeps this exercise's values. Effort is your own rating: 1 very easy, 10 maximal.</p></details></div>
 
                 <div class="col-12">
                     <div class="workout-toolbar d-flex flex-wrap gap-3 align-items-center justify-content-between" id="restTimerPanel">
@@ -189,8 +173,6 @@
     </div>
 
     <input asp-for="DraftPayloadJson" type="hidden" id="draftPayloadJson" />
-    <input asp-for="StartedAtUtc" type="hidden" />
-
     <div class="col-12">
         <button type="submit" class="btn btn-success" id="finishWorkoutBtn">Finish workout</button>
     </div>

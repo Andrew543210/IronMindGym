@@ -15,8 +15,6 @@ public class WorkoutLoggerViewModel
     [Range(1, 600)]
     public int DurationMinutes { get; set; } = 60;
 
-    public DateTime StartedAtUtc { get; set; } = DateTime.UtcNow;
-
     public int? SplitTypeId
     {
         get; set;
@@ -31,7 +29,10 @@ public class WorkoutLoggerViewModel
         get; set;
     }
 
-    public double WeightKg { get; set; } = 60;
+    public double WeightKg
+    {
+        get; set;
+    }
 
     public int Reps { get; set; } = 8;
 
@@ -65,11 +66,6 @@ public class WorkoutLoggerViewModel
     }
 
     public List<ExerciseCatalogItemViewModel> ExerciseCatalog { get; set; } = new();
-
-    public WorkoutSummaryViewModel? LastSummary
-    {
-        get; set;
-    }
 
     public List<WorkoutSessionListItemViewModel> RecentSessions { get; set; } = new();
 }

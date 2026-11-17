@@ -63,10 +63,7 @@
 
 @foreach (var performed in Model.Details.Session.PerformedExercises.OrderBy(x => x.OrderInWorkout))
 {
-    var hasSetType = performed.Sets.Any(s =>
-        s.SetType != null &&
-        !string.IsNullOrWhiteSpace(s.SetType.Name) &&
-        !s.SetType.Name.Equals("Failure", StringComparison.OrdinalIgnoreCase));
+    var hasSetType = performed.Sets.Any(s => !string.IsNullOrWhiteSpace(s.SetType?.Name));
 
     <div class="card mb-3">
         <div class="card-body">
@@ -109,7 +106,7 @@
         <h5>Session Statistics</h5>
         <p class="mb-3">Average rest: <strong>@Model.Details.Summary.AverageRestSeconds sec</strong></p>
         <table class="table table-sm">
-            <thead><tr><th>Exercise</th><th>Sets</th><th>Average load (% of PR)</th><th>Peak load (% of PR)</th><th>Record</th></tr></thead>
+            <thead><tr><th>Exercise</th><th>Sets</th><th>Avg load (% of previous max)</th><th>Peak (% of previous max)</th><th>Record</th></tr></thead>
             <tbody>
             @foreach (var stat in Model.Details.Summary.ExerciseStats)
             {
