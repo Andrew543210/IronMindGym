@@ -1,11 +1,11 @@
-﻿@model FriendProgressTrackerViewModel
+@model FriendProgressTrackerViewModel
 @{
     ViewData["Title"] = "Friend Progress Tracker";
 }
 
 <div class="container mt-4">
     <h2>@Model.FriendUsername - PROGRESS TRACKER</h2>
-    
+
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="card border border-light">
@@ -40,10 +40,10 @@
                                             <div class="col-4">
                                                 <div class="border-end ps-0 pe-2">
                                                     <h6 class="text-muted small fw-bold">INITIAL</h6>
-                                                    @if (exercise.ExerciseType == ExerciseType.Cardio)
+                                                    @if (exercise.ExerciseType != ExerciseType.StrengthTraining)
                                                     {
                                                         <p class="small mb-1"><strong>@exercise.InitialDurationSeconds</strong>s</p>
-                                                        <p class="small mb-0"><strong>@exercise.InitialIntensity</strong>/10</p>
+                                                        <p class="small mb-0"><strong>@(exercise.ExerciseType == ExerciseType.Cardio ? $"{exercise.InitialIntensity}/10" : $"{exercise.InitialWeightKg} kg")</strong></p>
                                                     }
                                                     else
                                                     {
@@ -57,13 +57,13 @@
                                             <div class="col-4">
                                                 <div class="text-center border-end ps-1 pe-1">
                                                     <h6 class="text-success small fw-bold">PROGRESS</h6>
-                                                    @if (exercise.ExerciseType == ExerciseType.Cardio)
+                                                    @if (exercise.ExerciseType != ExerciseType.StrengthTraining)
                                                     {
-                                                        <p class="small mb-0"><strong class="text-success">+@exercise.CardioEffortProgressPercent.ToString("F1")%</strong></p>
+                                                        <p class="small mb-0"><strong class="text-success">@exercise.CardioEffortProgressPercent.ToString("F1")%</strong></p>
                                                     }
                                                     else
                                                     {
-                                                        <p class="small mb-1"><strong class="text-success">+@exercise.WeightProgressKg.ToString("F1")</strong> kg</p>
+                                                        <p class="small mb-1"><strong class="text-success">@exercise.WeightProgressKg.ToString("F1")</strong> kg</p>
                                                         <p class="small mb-0 text-success">@exercise.WeightProgressPercent.ToString("F1")%</p>
                                                     }
                                                 </div>
@@ -73,10 +73,10 @@
                                             <div class="col-4">
                                                 <div class="ps-2 pe-0">
                                                     <h6 class="text-info small fw-bold">CURRENT</h6>
-                                                    @if (exercise.ExerciseType == ExerciseType.Cardio)
+                                                    @if (exercise.ExerciseType != ExerciseType.StrengthTraining)
                                                     {
                                                         <p class="small mb-1"><strong>@exercise.CurrentDurationSeconds</strong>s</p>
-                                                        <p class="small mb-0"><strong>@exercise.CurrentIntensity</strong>/10</p>
+                                                        <p class="small mb-0"><strong>@(exercise.ExerciseType == ExerciseType.Cardio ? $"{exercise.CurrentIntensity}/10" : $"{exercise.CurrentWeightKg} kg")</strong></p>
                                                     }
                                                     else
                                                     {

@@ -1,73 +1,287 @@
-﻿@model DashboardViewModel
-@{
-    ViewData["Title"] = "Dashboard";
-}
+@model DashboardViewModel
+@{ ViewData["Title"] = "Overview"; var weeklyPercent = Model.PlannedWorkoutsPerWeek == 0 ? 0 : Math.Min(100, Model.CompletedThisWeek * 100 / Model.PlannedWorkoutsPerWeek); }
 
-<div class="mb-4">
-    <img src="@Model.HeroImagePath" alt="IronMind training" class="hero-image" />
+<div class="dashboard-greeting">
+
+<div>
+<p class="eyebrow">YOUR DAILY CHECK-IN</p>
+<h2>Let's build, @Model.Username.</h2>
+
+</div>
+<span class="date-label">@DateTime.UtcNow.ToString("dddd, MMMM d") · UTC</span>
+
+</div>
+@if (Model.NeedsSetup) {
+<div class="alert alert-info mt-4">Make this space yours. <a asp-controller="Setup" asp-action="Index">Set up your training plan →</a>
+
+</div> }
+
+<section class="dashboard-hero" aria-label="Start your next workout">
+<img src="~/images/photo.jpg" alt="" />
+
+<div class="hero-copy">
+<p class="eyebrow">THE WORK ADDS UP.</p>
+<h1>A little stronger.<br />Every session.</h1>
+<p>Your next personal best starts with showing up today.</p>
+<a class="btn btn-primary mt-2" asp-controller="WorkoutLogger" asp-action="Index" asp-route-startTraining="true">Start a workout <span aria-hidden="true">↗</span>
+</a>
+
 </div>
 
-<h2>Welcome, @Model.Username</h2>
-<div class="row g-3 mb-4">
-    <div class="col-md-4 d-flex">
-        <div class="card h-100 w-100">
-            <div class="card-body">
-                <h5>Avatar</h5>
-                <p class="mb-1">Status: <strong>@Model.AvatarName</strong></p>
-                <p class="mb-0">Strength coefficient: @Model.StrengthCoefficient</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 d-flex">
-        <div class="card h-100 w-100">
-            <div class="card-body">
-                <h5>Weekly Plan</h5>
-                <p>Planned: @Model.PlannedWorkoutsPerWeek</p>
-                <p>Completed: @Model.CompletedThisWeek</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 d-flex align-items-stretch">
-        <a asp-controller="WorkoutLogger" asp-action="Index" class="btn btn-light text-dark w-100 quick-start-btn d-flex align-items-center justify-content-center">Quick Start Workout</a>
-    </div>
+</section>
+
+<div class="row g-3">
+
+<div class="col-6 col-xl-3">
+
+<div class="card stat-card h-100">
+
+<div class="card-body">
+
+<div class="stat-label">This week
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <h5>Avatar World Scale</h5>
-        <div class="avatar-scale mt-3">
-            <div class="avatar-scale-line"></div>
-            @foreach (var point in Model.AvatarScalePoints)
-            {
-                <div class="avatar-scale-point" style="left:@point.PositionPercent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%">
-                    <div class="avatar-scale-dot"></div>
-                    <div class="avatar-scale-label">@point.Name</div>
-                    <div class="avatar-scale-value metric">@point.MinStrengthCoefficient.ToString("0.0")</div>
-                </div>
-            }
-            <div class="avatar-scale-user" style="left:@Model.CurrentAvatarPositionPercent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%">
-                <div class="avatar-scale-user-dot"></div>
-                <div class="avatar-scale-user-label">You: @Model.StrengthCoefficient.ToString("0.00")</div>
-            </div>
-        </div>
-    </div>
+<div class="stat-value">@Model.CompletedThisWeek <small>/ @Model.PlannedWorkoutsPerWeek sessions</small>
+
 </div>
 
-<h4>Science Feed</h4>
-@foreach (var item in Model.FeedItems)
-{
-    <div class="border rounded p-3 mb-2">
-        <div class="small text-muted">@item.PublishedAt.ToLocalTime().ToString("yyyy-MM-dd")</div>
-        <strong>@item.Title</strong>
-        <div>@item.ThesisText</div>
-        <div class="small">Source: @item.Source</div>
-        <div class="mt-2 d-flex gap-2">
-            <a asp-action="Details" asp-route-id="@item.FeedId" class="btn btn-outline-light btn-sm">Details</a>
-            @if (!string.IsNullOrWhiteSpace(item.SourceUrl))
-            {
-                <a href="@item.SourceUrl" target="_blank" rel="noopener noreferrer" class="btn btn-light btn-sm text-dark">Open Study</a>
-            }
-        </div>
-    </div>
-}
+<div class="weekly-meter" aria-label="Weekly completion @weeklyPercent percent">
+<span style="width:@weeklyPercent%">
+</span>
 
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-6 col-xl-3">
+
+<div class="card stat-card h-100">
+
+<div class="card-body">
+
+<div class="stat-label">Strength coefficient
+</div>
+
+<div class="stat-value">@Model.StrengthCoefficient.ToString("0.00")<small> × bodyweight</small>
+
+</div>
+<p class="stat-note">Bench + squat + deadlift</p>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-6 col-xl-3">
+
+<div class="card stat-card h-100">
+
+<div class="card-body">
+
+<div class="stat-label">Bodyweight
+</div>
+
+<div class="stat-value">@(Model.WeightKg?.ToString("0.0") ?? "—") <small>kg</small>
+
+</div>
+<a asp-controller="Profile" asp-action="Index" class="stat-note">Log a weigh-in ↗</a>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-6 col-xl-3">
+
+<div class="card stat-card h-100">
+
+<div class="card-body">
+
+<div class="stat-label">Sessions in the bank
+</div>
+
+<div class="stat-value">@Model.TotalWorkouts
+</div>
+<p class="stat-note">Every one counts.</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="section-heading">
+<h4>Your strength journey</h4>
+<a class="small text-muted" asp-controller="ProgressTracker" asp-action="Index">View progress ↗</a>
+
+</div>
+
+<section class="card">
+
+<div class="card-body">
+
+<div class="d-flex flex-wrap justify-content-between gap-2">
+
+<div>
+<p class="eyebrow">CURRENT RANK</p>
+<h3 class="mb-1">@Model.AvatarName</h3>
+<p class="text-muted small mb-0">Your starting benchmarks and logged records shape your rank.</p>
+
+</div>
+<span class="stat-value">@Model.StrengthCoefficient.ToString("0.00")<small> / 5.0</small>
+</span>
+
+</div>
+
+<div class="rank-meter">
+<span style="width:@Model.CurrentAvatarPositionPercent.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%">
+</span>
+
+</div>
+<details class="mt-3">
+<summary class="small text-muted">Explore all ranks</summary>
+
+<div class="rank-grid">@foreach (var rank in Model.AvatarScalePoints) {
+<div class="rank-item @(rank.IsCurrent ? "current" : "")">@rank.MinStrengthCoefficient.ToString("0.0") × bodyweight<strong>@rank.Name</strong>
+
+</div> }
+</div>
+</details>
+
+</div>
+
+</section>
+
+<div class="row g-4 mt-1">
+
+<div class="col-lg-7">
+
+<div class="section-heading">
+<h4>Recent sessions</h4>
+<a class="small text-muted" asp-controller="WorkoutLogger" asp-action="Index">View history ↗</a>
+
+</div>
+
+<div class="card">
+
+<div class="card-body">
+@if (!Model.RecentWorkouts.Any()) {
+<div class="empty-state">
+<strong>Your journal is ready.</strong>Log your first workout and start building a picture of your progress.
+</div> }
+@foreach (var session in Model.RecentWorkouts) { <a class="session-row" asp-controller="WorkoutLogger" asp-action="Details" asp-route-id="@session.Id">
+<span class="session-date">@session.SessionDate.ToString("dd")<small>@session.SessionDate.ToString("MMM")</small>
+</span>
+<span>
+<strong>@session.Name</strong>
+<small>@session.DurationMinutes minutes · @session.SessionDate.ToString("ddd")</small>
+</span>
+<span class="ms-auto text-muted">↗</span>
+</a> }
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-lg-5">
+
+<div class="section-heading">
+<h4>Today's nutrition</h4>
+<a class="small text-muted" asp-controller="Nutrition" asp-action="Index">Log food ↗</a>
+
+</div>
+
+<div class="card">
+
+<div class="card-body">
+<p class="stat-label">ENERGY LOGGED</p>
+
+<div class="stat-value">@(Model.TodayNutrition?.CaloriesKcal.ToString("0") ?? "—") <small>kcal</small>
+
+</div>
+
+<div class="macro-grid mt-4">
+
+<div>
+<span>@(Model.TodayNutrition?.ProteinG.ToString("0") ?? "—")<small> g</small>
+</span>
+<p>Protein</p>
+
+</div>
+
+<div>
+<span>@(Model.TodayNutrition?.CarbsG.ToString("0") ?? "—")<small> g</small>
+</span>
+<p>Carbs</p>
+
+</div>
+
+<div>
+<span>@(Model.TodayNutrition?.FatG.ToString("0") ?? "—")<small> g</small>
+</span>
+<p>Fat</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="section-heading">
+<h4>Next milestones</h4>
+<a class="small text-muted" asp-controller="Goals" asp-action="Index">Manage goals ↗</a>
+
+</div>
+
+<div class="card">
+
+<div class="card-body">@if (!Model.Goals.Any()) { <p class="text-muted mb-0">Give your next session a direction. <a asp-controller="Goals" asp-action="Index">Set your first goal →</a>
+</p> } @foreach (var goal in Model.Goals) {
+<div class="goal-row">
+<strong>@goal.GoalType</strong>
+<span class="small text-muted">@goal.Deadline.ToString("MMM d")</span>
+
+</div> }
+</div>
+
+</div>
+
+<div class="section-heading">
+<h4>From the research desk</h4>
+<span class="small text-muted">Reading, not personal medical advice</span>
+
+</div>
+
+<div class="feed-grid">@foreach (var item in Model.FeedItems) {
+<article class="feed-card">
+<span class="eyebrow">TRAINING NOTES</span>
+<h5>@item.Title</h5>
+<p>@item.ThesisText</p>
+
+<div class="source-label mb-3">@item.Source
+</div>
+
+<div class="d-flex flex-wrap gap-2">
+<a class="btn btn-outline-secondary btn-sm" href="@item.SourceUrl" target="_blank" rel="noopener noreferrer">Read original source ↗</a>
+<a class="btn btn-outline-secondary btn-sm" asp-action="Details" asp-route-id="@item.FeedId">View note</a>
+
+</div>
+
+</article> }
+</div>

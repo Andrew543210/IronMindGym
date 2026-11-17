@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
@@ -7,7 +7,10 @@ public class Avatar
     private string _name = string.Empty;
     private string _iconPath = string.Empty;
 
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
     [Required, MaxLength(40)]
     public string Name
@@ -17,7 +20,10 @@ public class Avatar
     }
 
     [Range(0, 100)]
-    public double MinStrengthCoefficient { get; set; }
+    public double MinStrengthCoefficient
+    {
+        get; set;
+    }
 
     [MaxLength(255)]
     public string IconPath

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
@@ -6,7 +6,10 @@ public class SplitType
 {
     private string _name = string.Empty;
 
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
     [Required, MaxLength(60)]
     public string Name

@@ -16,7 +16,6 @@ public class AwardsController(IronMindDbContext db) : Controller
             return RedirectToAction("Login", "Auth");
         }
 
-        AchievementEngine.AssignAchievements(db, userId.Value);
         var progress = AchievementEngine.BuildAwardsProgress(db, userId.Value);
 
         var vm = new AwardsViewModel
@@ -37,3 +36,4 @@ public class AwardsController(IronMindDbContext db) : Controller
         return View(vm);
     }
 }
+

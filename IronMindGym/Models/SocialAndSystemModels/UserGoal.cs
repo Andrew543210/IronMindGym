@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
@@ -6,8 +6,14 @@ public class UserGoal
 {
     private string _goalType = string.Empty;
 
-    public int Id { get; set; }
-    public int UserId { get; set; }
+    public int Id
+    {
+        get; set;
+    }
+    public int UserId
+    {
+        get; set;
+    }
     public User User { get; set; } = null!;
 
     [MaxLength(80)]
@@ -17,7 +23,15 @@ public class UserGoal
         set => _goalType = (value ?? string.Empty).Trim();
     }
 
-    public DateTime Deadline { get; set; }
+    public bool IsCompleted
+    {
+        get; set;
+    }
+
+    public DateTime Deadline
+    {
+        get; set;
+    }
 
     public bool IsExpired(DateTime now) => now > Deadline;
 

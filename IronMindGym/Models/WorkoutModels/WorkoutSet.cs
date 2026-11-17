@@ -1,34 +1,55 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
 public class WorkoutSet
 {
-    public int Id { get; set; }
-    public int PerformedExerciseId { get; set; }
+    public int Id
+    {
+        get; set;
+    }
+    public int PerformedExerciseId
+    {
+        get; set;
+    }
     public PerformedExercise PerformedExercise { get; set; } = null!;
 
     // Strength Training Properties
     [Range(0, 1000)]
-    public double WeightKg { get; set; }
+    public double WeightKg
+    {
+        get; set;
+    }
 
     [Range(0, 500)]
-    public int Reps { get; set; }
+    public int Reps
+    {
+        get; set;
+    }
 
     // Cardio Properties
-    [Range(0, 1440)]
-    public int DurationSeconds { get; set; } // Duration in seconds
+    [Range(0, 86400)]
+    public int DurationSeconds
+    {
+        get; set;
+    } // Duration in seconds
 
     [Range(1, 10)]
     public int Intensity { get; set; } = 5; // 1-10 scale
 
     [Range(1, int.MaxValue)]
-    public int SetNumber { get; set; }
+    public int SetNumber
+    {
+        get; set;
+    }
 
     [Range(0, 3600)]
     public int RestSeconds { get; set; } = 120;
 
-    public int SetTypeId { get; set; }
+    public int SetTypeId
+    {
+        get; set;
+    }
     public SetType SetType { get; set; } = null!;
 
     // Validation Methods
@@ -55,8 +76,8 @@ public class WorkoutSet
     public double GetTonnage() => WeightKg * Reps;
     public int GetCardioEffort() => DurationSeconds * Intensity;
 
-    public override string ToString() => 
-        PerformedExercise?.Exercise?.Type == ExerciseType.Cardio 
+    public override string ToString() =>
+        PerformedExercise?.Exercise?.Type == ExerciseType.Cardio
             ? $"Set #{SetNumber}: {DurationSeconds}s @ Intensity {Intensity}"
             : $"Set #{SetNumber}: {WeightKg}kg x {Reps}";
 }

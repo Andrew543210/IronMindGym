@@ -1,4 +1,4 @@
-﻿@model DashboardResearchDetailsViewModel
+@model DashboardResearchDetailsViewModel
 @{
     ViewData["Title"] = "Research Details";
 }
@@ -7,14 +7,14 @@
 
 <div class="card">
     <div class="card-body">
-        <div class="small text-muted mb-2">@Model.Item.PublishedAt.ToLocalTime().ToString("yyyy-MM-dd")</div>
+        <div class="small text-muted mb-2">Source publication year: @Model.Item.PublishedAt.Year</div>
         <h4 class="mb-3">@Model.Item.Title</h4>
         <p>@Model.Item.ThesisText</p>
         <p class="mb-3"><strong>Source:</strong> @Model.Item.Source</p>
 
         @if (!string.IsNullOrWhiteSpace(Model.Item.SourceUrl))
         {
-            <a href="@Model.Item.SourceUrl" target="_blank" rel="noopener noreferrer" class="btn btn-light text-dark">Open Original Study</a>
+            <a href="@Model.Item.SourceUrl" target="_blank" rel="noopener noreferrer" class="btn btn-light text-dark">Read original source</a>
         }
     </div>
 </div>

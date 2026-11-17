@@ -43,6 +43,9 @@ public class SetupController(IronMindDbContext db) : Controller
 
         ViewBag.SplitTypes = new SelectList(db.SplitTypes.AsNoTracking().ToList(), "Id", "Name", model.SplitTypeId);
 
+        if (!db.SplitTypes.Any(s => s.Id == model.SplitTypeId))
+            ModelState.AddModelError(nameof(model.SplitTypeId), "Choose a valid training split.");
+
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -79,6 +82,7 @@ public class SetupController(IronMindDbContext db) : Controller
         });
 
         db.SaveChanges();
+        AchievementEngine.AssignAchievements(db, currentUserId);
         TempData["Message"] = "Initial setup data saved.";
 
         return RedirectToAction("Index", "Dashboard");

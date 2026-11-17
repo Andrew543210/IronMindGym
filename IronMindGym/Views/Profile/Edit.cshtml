@@ -1,0 +1,162 @@
+@model EditProfileViewModel
+@{ ViewData["Title"] = "Edit profile"; }
+<p class="eyebrow">YOUR BASELINE, YOUR PLAN</p>
+<h2>Edit profile</h2>
+
+<form method="post" class="row g-4">
+
+<div asp-validation-summary="All" class="text-danger">
+
+</div>
+
+<div class="col-lg-6">
+
+<div class="card h-100">
+
+<div class="card-body">
+<h4>About you</h4>
+
+<div class="mb-3">
+<label asp-for="Username" class="form-label">
+</label>
+<input asp-for="Username" class="form-control" />
+
+</div>
+
+<div class="mb-3">
+<label asp-for="Age" class="form-label">
+</label>
+<input asp-for="Age" class="form-control" />
+
+</div>
+
+<div class="row g-3">
+
+<div class="col-6">
+<label asp-for="WeightKg" class="form-label">Weight (kg)</label>
+<input asp-for="WeightKg" class="form-control" step="0.1" />
+
+</div>
+
+<div class="col-6">
+<label asp-for="HeightCm" class="form-label">Height (cm)</label>
+<input asp-for="HeightCm" class="form-control" step="0.1" />
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-lg-6">
+
+<div class="card h-100">
+
+<div class="card-body">
+<h4>Your training</h4>
+
+<div class="mb-3">
+<label asp-for="SplitTypeId" class="form-label">Training split</label>
+<select asp-for="SplitTypeId" asp-items="ViewBag.SplitTypes" class="form-select">
+</select>
+
+</div>
+
+<div class="mb-3">
+<label asp-for="WorkoutsPerWeek" class="form-label">Sessions per week</label>
+<input asp-for="WorkoutsPerWeek" class="form-control" />
+
+</div>
+    <p class="text-muted small">Starting strength benchmarks, in kg. Your avatar also reflects your logged personal records.</p>
+
+<div class="row g-3">
+
+<div class="col-4">
+<label asp-for="BenchPressKg" class="form-label">Bench</label>
+<input asp-for="BenchPressKg" class="form-control" step="0.5" />
+
+</div>
+
+<div class="col-4">
+<label asp-for="SquatKg" class="form-label">Squat</label>
+<input asp-for="SquatKg" class="form-control" step="0.5" />
+
+</div>
+
+<div class="col-4">
+<label asp-for="DeadliftKg" class="form-label">Deadlift</label>
+<input asp-for="DeadliftKg" class="form-control" step="0.5" />
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-12">
+
+<div class="card">
+
+<div class="card-body">
+<h4>Nutrition targets</h4>
+<p class="text-muted small">Enter your own targets. Leave fields blank to use optional adult estimates after choosing an equation. These are starting estimates; your actual needs can differ.</p>
+
+<div class="row g-3">
+
+<div class="col-md-4">
+<label asp-for="EnergyEquation" class="form-label">Automatic energy estimate</label>
+<select asp-for="EnergyEquation" class="form-select">
+<option value="None">Off — use my targets</option>
+<option value="Male">Mifflin–St Jeor: male equation (18+)</option>
+<option value="Female">Mifflin–St Jeor: female equation (18+)</option>
+</select>
+
+</div>
+
+<div class="col-6 col-md-2">
+<label asp-for="CalorieTarget" class="form-label">Calories (kcal)</label>
+<input asp-for="CalorieTarget" class="form-control" />
+
+</div>
+
+<div class="col-6 col-md-2">
+<label asp-for="ProteinTarget" class="form-label">Protein (g)</label>
+<input asp-for="ProteinTarget" class="form-control" />
+
+</div>
+
+<div class="col-6 col-md-2">
+<label asp-for="FatTarget" class="form-label">Fat (g)</label>
+<input asp-for="FatTarget" class="form-control" />
+
+</div>
+
+<div class="col-6 col-md-2">
+<label asp-for="CarbsTarget" class="form-label">Carbs (g)</label>
+<input asp-for="CarbsTarget" class="form-control" />
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-12 d-flex gap-2">
+<button class="btn btn-primary" type="submit">Save changes</button>
+<a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+
+</div>
+
+</form>

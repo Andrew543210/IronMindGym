@@ -1,228 +1,29 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Models;
-using IronMindGym.Security;
 using IronMindGym.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Seed;
 
 public static class DataSeeder
 {
-    public static void Seed(IronMindDbContext db)
+    public static void Seed(IronMindDbContext db, bool includeDemoData = false)
     {
-        EnsureSocialTables(db);
-        EnsureSpecificUsersDemographics(db);
-        EnsureEnglishReferenceData(db);
+        using var transaction = db.Database.BeginTransaction();
+        if (!db.SplitTypes.Any())
+            db.SplitTypes.AddRange(new[] { "Full-body", "Upper-Lower", "Legs-Back-Chest" }.Select(name => new SplitType { Name = name }));
+        if (!db.WeekDays.Any())
+            db.WeekDays.AddRange(new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" }.Select(name => new WeekDay { Name = name }));
+        if (!db.SetTypes.Any())
+            db.SetTypes.AddRange(new[] { "Working", "Warm-up", "Failure" }.Select(name => new SetType { Name = name }));
+        if (!db.Exercises.Any())
+            ExerciseCatalogSeeder.Seed(db);
         EnsureAvatarLadder(db);
+        db.SaveChanges();
         EnsureResearchFeed(db);
         AchievementEngine.EnsureCatalog(db);
-
-        if (db.Users.Any())
-        {
-            return;
-        }
-
-        var splitTypes = new[]
-        {
-            new SplitType { Name = "Full-body" },
-            new SplitType { Name = "Upper-Lower" },
-            new SplitType { Name = "Legs-Back-Chest" }
-        };
-        db.SplitTypes.AddRange(splitTypes);
-
-        var weekDays = new[]
-        {
-            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
-        }.Select(name => new WeekDay { Name = name }).ToList();
-        db.WeekDays.AddRange(weekDays);
-
-        var setTypes = new[]
-        {
-            new SetType { Name = "Working" },
-            new SetType { Name = "Warm-up" },
-            new SetType { Name = "Failure" }
-        };
-        db.SetTypes.AddRange(setTypes);
-
-        var avatars = new[]
-        {
-            new Avatar { Name = "Noodle Nomad", MinStrengthCoefficient = 0.0, IconPath = "/images/avatar-novice.png" },
-            new Avatar { Name = "Couch Crusader", MinStrengthCoefficient = 0.5, IconPath = "/images/avatar-novice.png" },
-            new Avatar { Name = "Barbell Intern", MinStrengthCoefficient = 1.0, IconPath = "/images/avatar-novice.png" },
-            new Avatar { Name = "Dumbbell Bard", MinStrengthCoefficient = 1.5, IconPath = "/images/avatar-novice.png" },
-            new Avatar { Name = "Iron Squire", MinStrengthCoefficient = 2.0, IconPath = "/images/avatar-athlete.png" },
-            new Avatar { Name = "Steel Disciple", MinStrengthCoefficient = 2.5, IconPath = "/images/avatar-athlete.png" },
-            new Avatar { Name = "Gym Centurion", MinStrengthCoefficient = 3.0, IconPath = "/images/avatar-athlete.png" },
-            new Avatar { Name = "Berserker Prime", MinStrengthCoefficient = 3.5, IconPath = "/images/avatar-athlete.png" },
-            new Avatar { Name = "Titanium Overlord", MinStrengthCoefficient = 4.0, IconPath = "/images/avatar-titan.png" },
-            new Avatar { Name = "Celestial Colossus", MinStrengthCoefficient = 4.5, IconPath = "/images/avatar-titan.png" },
-            new Avatar { Name = "Omnipotent Origin", MinStrengthCoefficient = 5.0, IconPath = "/images/avatar-titan.png" }
-        };
-        db.Avatars.AddRange(avatars);
-
-        var exercises = ExerciseCatalogSeeder.Seed(db);
-
-        var user = new User
-        {
-            Username = "demo_athlete",
-            Email = "demo@ironmind.app",
-            PasswordHash = PasswordHashUtility.Hash("demo123"),
-            Profile = new Profile { Age = 24, AccountCreatedAt = DateTime.UtcNow.AddDays(-40) },
-            Benchmarks = new InitialBenchmarks { BenchPressKg = 100, SquatKg = 140, DeadliftKg = 170 }
-        };
-
-        var friend = new User
-        {
-            Username = "fit_friend",
-            Email = "friend@ironmind.app",
-            PasswordHash = PasswordHashUtility.Hash("friend123"),
-            Profile = new Profile { Age = 23, AccountCreatedAt = DateTime.UtcNow.AddDays(-20) },
-            Benchmarks = new InitialBenchmarks { BenchPressKg = 65, SquatKg = 95, DeadliftKg = 120 }
-        };
-
-        db.Users.AddRange(user, friend);
-
-        db.AnthropometryLogs.AddRange(
-            new Anthropometry { User = user, WeightKg = 82, HeightCm = 180, RecordedAt = DateTime.UtcNow.Date },
-            new Anthropometry { User = friend, WeightKg = 62, HeightCm = 168, RecordedAt = DateTime.UtcNow.Date });
-
-        var plan = new WorkoutPlan
-        {
-            User = user,
-            WorkoutsPerWeek = 4,
-            IsActive = true,
-            SplitType = splitTypes[1]
-        };
-        db.WorkoutPlans.Add(plan);
-
-        db.ScheduledDays.AddRange(
-            new ScheduledDay { WorkoutPlan = plan, WeekDay = weekDays[0] },
-            new ScheduledDay { WorkoutPlan = plan, WeekDay = weekDays[2] },
-            new ScheduledDay { WorkoutPlan = plan, WeekDay = weekDays[4] },
-            new ScheduledDay { WorkoutPlan = plan, WeekDay = weekDays[5] });
-
-        var session = new WorkoutSession
-        {
-            User = user,
-            Name = "Upper Day",
-            SessionDate = DateTime.UtcNow.AddDays(-1),
-            DurationMinutes = 70,
-            SplitType = splitTypes[1]
-        };
-
-        var performed = new PerformedExercise
-        {
-            WorkoutSession = session,
-            Exercise = FindExerciseByAnyName(exercises, "Bench Press", "Жим лежачи"),
-            OrderInWorkout = 1
-        };
-
-        performed.Sets.Add(new WorkoutSet { SetNumber = 1, SetType = setTypes[0], WeightKg = 80, Reps = 8 });
-        performed.Sets.Add(new WorkoutSet { SetNumber = 2, SetType = setTypes[0], WeightKg = 85, Reps = 6 });
-        db.PerformedExercises.Add(performed);
-
-        db.WorkoutReviews.Add(new WorkoutReview { WorkoutSession = session, Rating = 5, Comment = "Strong training session" });
-
-        db.DailyNutritions.Add(new DailyNutrition
-        {
-            User = user,
-            Date = DateTime.UtcNow.Date,
-            CaloriesKcal = 2550,
-            ProteinG = 165,
-            FatG = 70,
-            CarbsG = 280
-        });
-
-        var seededBenchAchievement = db.Achievements.FirstOrDefault(a => a.Code == "BENCH_100");
-        if (seededBenchAchievement != null)
-        {
-            db.UserAchievements.Add(new UserAchievement { User = user, Achievement = seededBenchAchievement, AchievedAt = DateTime.UtcNow.AddDays(-5) });
-        }
-
-        db.PersonalRecords.AddRange(
-            new PersonalRecord { User = user, Exercise = FindExerciseByAnyName(exercises, "Bench Press", "Жим лежачи"), MaxWeightKg = 105, UpdatedAt = DateTime.UtcNow.AddDays(-10) },
-            new PersonalRecord { User = user, Exercise = FindExerciseByAnyName(exercises, "Barbell Back Squat", "Присідання зі штангою"), MaxWeightKg = 155, UpdatedAt = DateTime.UtcNow.AddDays(-12) });
-
-        db.Friendships.Add(new Friendship { User1 = user, User2 = friend, Status = "Accepted" });
-
-        db.SaveChanges();
-    }
-
-    private static Exercise FindExerciseByAnyName(IReadOnlyDictionary<string, Exercise> exercises, params string[] names)
-    {
-        foreach (var name in names)
-        {
-            if (exercises.TryGetValue(name, out var exercise))
-            {
-                return exercise;
-            }
-        }
-
-        return exercises.Values.First();
-    }
-
-    private static void EnsureSpecificUsersDemographics(IronMindDbContext db)
-    {
-        var targetUsernames = new HashSet<string>(StringComparer.Ordinal)
-        {
-            "AndrewKhrushch19",
-            "PavloKhrushch"
-        };
-
-        var users = db.Users
-            .Include(u => u.Profile)
-            .Where(u => targetUsernames.Contains(u.Username))
-            .ToList();
-
-        if (users.Count == 0)
-        {
-            return;
-        }
-
-        foreach (var user in users)
-        {
-            user.Profile ??= new Profile { UserId = user.Id, AccountCreatedAt = DateTime.UtcNow };
-            user.Profile.Age = 14;
-        }
-
-        db.SaveChanges();
-    }
-
-    private static void EnsureEnglishReferenceData(IronMindDbContext db)
-    {
-        var setTypeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["Робочий"] = "Working",
-            ["Розминка"] = "Warm-up",
-            ["Відмова"] = "Failure"
-        };
-
-        foreach (var setType in db.SetTypes)
-        {
-            if (setTypeMap.TryGetValue(setType.Name, out var mappedName))
-            {
-                setType.Name = mappedName;
-            }
-        }
-
-        var avatarMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["Новачок"] = "Novice",
-            ["Атлет"] = "Athlete",
-            ["Титан"] = "Titan"
-        };
-
-        foreach (var avatar in db.Avatars)
-        {
-            if (avatarMap.TryGetValue(avatar.Name, out var mappedName))
-            {
-                avatar.Name = mappedName;
-            }
-        }
-
-        AchievementEngine.EnsureCatalog(db);
-
-        db.SaveChanges();
+        if (includeDemoData)
+            DemoDataSeeder.Seed(db);
+        transaction.Commit();
     }
 
     private static void EnsureAvatarLadder(IronMindDbContext db)
@@ -242,96 +43,45 @@ public static class DataSeeder
             ("Omnipotent Origin", 5.0, "/images/avatar-titan.png")
         };
 
-        // Force a clean synchronized catalog to remove any historical duplicates.
-        var existingAvatars = db.Avatars.ToList();
-        if (existingAvatars.Count > 0)
-        {
-            db.Avatars.RemoveRange(existingAvatars);
-            db.SaveChanges();
-        }
 
-        db.Avatars.AddRange(targetAvatars.Select(x => new Avatar
+        var existingNames = db.Avatars.Select(a => a.Name).ToHashSet();
+        db.Avatars.AddRange(targetAvatars.Where(x => !existingNames.Contains(x.Item1)).Select(x => new Avatar
         {
             Name = x.Item1,
             MinStrengthCoefficient = x.Item2,
             IconPath = x.Item3
         }));
-
-        db.SaveChanges();
     }
 
     private static void EnsureResearchFeed(IronMindDbContext db)
     {
-        var studies = new (string Title, string Thesis, string Source)[]
+        var articles = new[]
         {
-            ("Resistance Training Volume and Hypertrophy", "Meta-analysis shows that higher weekly set volume generally improves muscle hypertrophy up to an individual recovery limit.", "Sports Medicine (Schoenfeld et al.)|https://pubmed.ncbi.nlm.nih.gov/27433992/"),
-            ("Protein Intake for Strength Athletes", "A practical range of 1.6-2.2 g/kg/day supports recovery and muscle adaptation during resistance training.", "Journal of the International Society of Sports Nutrition|https://pubmed.ncbi.nlm.nih.gov/28698222/"),
-            ("Creatine and Performance", "Creatine monohydrate consistently improves strength, repeated high-intensity effort, and lean mass over time.", "Nutrients Review|https://pubmed.ncbi.nlm.nih.gov/33526090/"),
-            ("Sleep and Athletic Recovery", "Insufficient sleep reduces recovery quality, reaction speed, and can impair strength performance.", "Sports Medicine Review|https://pubmed.ncbi.nlm.nih.gov/27400005/"),
-            ("Training Frequency and Strength", "When weekly volume is equated, frequency can be distributed across days to improve fatigue management.", "Sports Medicine Meta-analysis|https://pubmed.ncbi.nlm.nih.gov/30558493/"),
-            ("Velocity Loss and Fatigue", "Higher velocity loss in sets increases fatigue and can alter adaptation; autoregulation helps maintain quality.", "Scandinavian Journal of Medicine and Science in Sports|https://pubmed.ncbi.nlm.nih.gov/31399902/"),
-            ("Rest Intervals and Hypertrophy", "Longer rest intervals often maintain training quality and can improve hypertrophy outcomes in compound lifts.", "Journal of Strength and Conditioning Research|https://pubmed.ncbi.nlm.nih.gov/26605807/"),
-            ("Energy Availability in Athletes", "Low energy availability can compromise performance, endocrine health, and recovery in both sexes.", "IOC Consensus Statement|https://pubmed.ncbi.nlm.nih.gov/30587314/"),
-            ("Carbohydrates and Strength Training", "Sufficient carbohydrate availability supports training intensity, session quality, and total work output.", "Nutrients|https://pubmed.ncbi.nlm.nih.gov/32899481/"),
-            ("Concurrent Training Interference", "Combining endurance and strength is possible, but scheduling and fatigue management are key to reduce interference.", "Sports Medicine|https://pubmed.ncbi.nlm.nih.gov/22002517/"),
-            ("Deloads and Fatigue Management", "Planned reductions in volume/intensity can restore readiness and support long-term progression.", "Strength and Conditioning Journal|https://pubmed.ncbi.nlm.nih.gov/34567420/"),
-            ("Women and Resistance Training", "Women gain significant strength and hypertrophy from progressive resistance training with sex-specific periodization considerations.", "Sports Medicine|https://pubmed.ncbi.nlm.nih.gov/29423684/")
+            new { Title = "Build movement into your week", Summary = "WHO guidance counts everyday movement as well as structured exercise. Walking, cycling and strength work can all contribute to an active week. Recommendations differ by age and circumstances.", Source = "WHO · Public health guidance|https://www.who.int/news-room/fact-sheets/detail/physical-activity", Published = new DateTime(2026, 11, 4, 0, 0, 0, DateTimeKind.Utc) },
+            new { Title = "Recovery includes consistent sleep", Summary = "CDC guidance emphasizes both sleep duration and quality. A consistent bedtime and wake-up time are practical starting habits; sleep requirements vary with age.", Source = "CDC · Sleep guidance|https://www.cdc.gov/sleep/about/index.html", Published = new DateTime(2024, 5, 15, 0, 0, 0, DateTimeKind.Utc) },
+            new { Title = "Protein and resistance training", Summary = "The ISSN position stand reviews how dietary protein supports adaptations to exercise in healthy, active people. It discusses total daily intake, protein quality and timing, rather than a single rule for everyone.", Source = "Jäger et al. · ISSN position stand, 2017|https://pmc.ncbi.nlm.nih.gov/articles/PMC5477153/", Published = new DateTime(2017, 6, 20, 0, 0, 0, DateTimeKind.Utc) },
+            new { Title = "Weekly training volume and muscle growth", Summary = "This systematic review and meta-analysis found a dose-response relationship between weekly resistance-training sets and muscle growth in the included studies. It does not establish one optimal set count for every lifter.", Source = "Schoenfeld et al. · Journal of Sports Sciences, 2017|https://pubmed.ncbi.nlm.nih.gov/27433992/", Published = new DateTime(2017, 6, 1, 0, 0, 0, DateTimeKind.Utc) }
         };
-
-        foreach (var study in studies)
+        var titles = articles.Select(a => a.Title).ToList();
+        // This catalog is curated by the application; personal training data is independent.
+        db.ActivityFeeds.RemoveRange(db.ActivityFeeds.Where(f => !titles.Contains(f.ResearchItem.Title)));
+        db.ResearchItems.RemoveRange(db.ResearchItems.Where(r => !titles.Contains(r.Title)));
+        foreach (var article in articles)
         {
-            var existing = db.ResearchItems.FirstOrDefault(x => x.Title == study.Title);
-            if (existing == null)
+            var item = db.ResearchItems.FirstOrDefault(r => r.Title == article.Title);
+            if (item is null)
             {
-                existing = new ResearchItem
-                {
-                    Title = study.Title,
-                    ThesisText = study.Thesis,
-                    Source = study.Source
-                };
-                db.ResearchItems.Add(existing);
-                db.SaveChanges();
+                item = new ResearchItem { Title = article.Title };
+                db.ResearchItems.Add(item);
             }
-
-            var existsInFeed = db.ActivityFeeds.Any(f => f.ResearchItemId == existing.Id);
-            if (!existsInFeed)
-            {
-                db.ActivityFeeds.Add(new ActivityFeed
-                {
-                    ResearchItemId = existing.Id,
-                    PublishedAt = DateTime.UtcNow.AddDays(-db.ActivityFeeds.Count())
-                });
-            }
+            item.ThesisText = article.Summary;
+            item.Source = article.Source;
+            var feed = item.Id == 0 ? null : db.ActivityFeeds.FirstOrDefault(f => f.ResearchItemId == item.Id);
+            if (feed is null)
+                db.ActivityFeeds.Add(new ActivityFeed { ResearchItem = item, PublishedAt = article.Published });
+            else
+                feed.PublishedAt = article.Published;
         }
-
         db.SaveChanges();
-    }
-
-    private static void EnsureSocialTables(IronMindDbContext db)
-    {
-        db.Database.ExecuteSqlRaw(@"
-CREATE TABLE IF NOT EXISTS ActivityLikes (
-    Id INTEGER NOT NULL CONSTRAINT PK_ActivityLikes PRIMARY KEY AUTOINCREMENT,
-    UserId INTEGER NOT NULL,
-    WorkoutSessionId INTEGER NOT NULL,
-    CreatedAt TEXT NOT NULL,
-    CONSTRAINT FK_ActivityLikes_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE,
-    CONSTRAINT FK_ActivityLikes_WorkoutSessions_WorkoutSessionId FOREIGN KEY (WorkoutSessionId) REFERENCES WorkoutSessions (Id) ON DELETE CASCADE
-);");
-
-        db.Database.ExecuteSqlRaw(@"
-CREATE TABLE IF NOT EXISTS FriendComments (
-    Id INTEGER NOT NULL CONSTRAINT PK_FriendComments PRIMARY KEY AUTOINCREMENT,
-    Text TEXT NOT NULL,
-    AuthorId INTEGER NOT NULL,
-    WorkoutSessionId INTEGER NOT NULL,
-    Date TEXT NOT NULL,
-    CONSTRAINT FK_FriendComments_Users_AuthorId FOREIGN KEY (AuthorId) REFERENCES Users (Id) ON DELETE CASCADE,
-    CONSTRAINT FK_FriendComments_WorkoutSessions_WorkoutSessionId FOREIGN KEY (WorkoutSessionId) REFERENCES WorkoutSessions (Id) ON DELETE CASCADE
-);");
-
-        db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_ActivityLikes_UserId_WorkoutSessionId ON ActivityLikes (UserId, WorkoutSessionId);");
-        db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ActivityLikes_WorkoutSessionId ON ActivityLikes (WorkoutSessionId);");
-        db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_FriendComments_WorkoutSessionId ON FriendComments (WorkoutSessionId);");
     }
 }
