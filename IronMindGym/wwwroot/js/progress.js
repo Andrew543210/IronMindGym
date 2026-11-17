@@ -1,7 +1,14 @@
 "use strict";
 let progressCatalog = [],
-    progressExercise = null;
+    progressExercise = null,
+    selectionVersion = 0;
 const trackerElement = (id) => document.getElementById(id);
+const resultFields = [
+    "initialValue1",
+    "initialValue2",
+    "currentValue1",
+    "currentValue2",
+];
 
 function trackerMessage(message, error = false) {
     const box = trackerElement("trackerMessage");
@@ -30,7 +37,10 @@ async function progressRequest(url, data) {
     const result = await response.json().catch(() => null);
     if (!response.ok || !result || result.success === false)
         throw new Error(
-            result?.message || "Could not save your results. Please try again.",
+            result?.message ||
+                (data
+                    ? "Could not save your results. Please try again."
+                    : "Could not load your saved results."),
         );
     return result;
 }
@@ -66,17 +76,22 @@ function loadExercises() {
         rows.map((e) => [e.exerciseId, e.exerciseName]),
         "Choose exercise",
     );
-    trackerElement("progressContainer").style.display = "none";
+    selectExercise();
 }
 
 async function selectExercise() {
+    const version = ++selectionVersion;
     progressExercise = progressCatalog.find(
         (e) => e.exerciseId === Number(trackerElement("exerciseSelect").value),
     );
     trackerElement("progressContainer").style.display = progressExercise
         ? ""
         : "none";
+    trackerMessage("");
     if (!progressExercise) return;
+    const button = trackerElement("progressContainer").querySelector("button");
+    button.disabled = true;
+    trackerElement("progressDisplay").textContent = "Loading saved results…";
     const selectedId = progressExercise.exerciseId,
         type = progressExercise.exerciseType;
     ["initial", "current"].forEach((prefix) => {
@@ -92,8 +107,10 @@ async function selectExercise() {
             second = trackerElement(prefix + "Value2");
         first.value = "";
         second.value = "";
-        first.disabled = false;
-        second.disabled = false;
+        first.disabled = true;
+        second.disabled = true;
+        first.placeholder = type === 0 ? "kg" : "Seconds";
+        second.placeholder = type === 0 ? "Reps" : type === 1 ? "1–10" : "kg";
         first.min = type === 0 ? 0 : 1;
         first.max = type === 0 ? 500 : 86400;
         first.step = type === 0 ? ".5" : "1";
@@ -105,38 +122,58 @@ async function selectExercise() {
         const data = await progressRequest(
             `/ProgressTracker/GetExerciseProgress?exerciseId=${selectedId}`,
         );
-        if (progressExercise?.exerciseId !== selectedId) return;
-        if (data.hasData) {
-            [
-                "initialValue1",
-                "initialValue2",
-                "currentValue1",
-                "currentValue2",
-            ].forEach((id) => (trackerElement(id).value = data[id]));
-        }
+        if (version !== selectionVersion) return;
+        resultFields.forEach((id) => {
+            const field = trackerElement(id);
+            if (data.hasData) field.value = data[id];
+            field.disabled = false;
+        });
+        button.disabled = false;
         updateProgressDisplay();
-        trackerMessage("");
     } catch (error) {
+        if (version !== selectionVersion) return;
+        trackerElement("progressDisplay").textContent =
+            "Saved results are unavailable.";
         trackerMessage(error.message, true);
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "btn btn-outline-secondary btn-sm ms-2";
+        retry.textContent = "Retry";
+        retry.addEventListener("click", selectExercise);
+        trackerElement("trackerMessage").append(retry);
     }
 }
 
 function updateProgressDisplay() {
-    const initial = Number(trackerElement("initialValue1").value),
-        current = Number(trackerElement("currentValue1").value);
+    const fields = resultFields.map(trackerElement);
     const display = trackerElement("progressDisplay");
-    if (!initial || !current) {
+    if (fields.some((field) => field.value === "" || !field.checkValidity())) {
         display.textContent =
-            "Save your baseline and latest result to compare them.";
+            "Enter your baseline and latest result to compare them.";
         return;
     }
-    const difference = (((current - initial) / initial) * 100).toFixed(1);
-    display.textContent = `${difference > 0 ? "+" : ""}${difference}% ${progressExercise?.exerciseType === 0 ? "load change" : "duration change"}`;
+    const [initial, initialSecond, current, currentSecond] = fields.map(
+        (field) => Number(field.value),
+    );
+    const signed = (value) =>
+        `${value > 0 ? "+" : ""}${Number(value.toFixed(1))}`;
+    const type = progressExercise?.exerciseType;
+    const firstUnit = type === 0 ? "kg load" : "sec duration";
+    const secondUnit =
+        type === 0 ? "reps" : type === 1 ? "effort points" : "kg load";
+    display.textContent = `${signed(current - initial)} ${firstUnit}; ${signed(currentSecond - initialSecond)} ${secondUnit}. Compare under similar conditions.`;
 }
 
 async function setResult() {
     if (!progressExercise) return;
     const button = trackerElement("progressContainer").querySelector("button");
+    if (button.disabled) return;
+    const controls = [
+        ...document.querySelectorAll(
+            "#progressContainer input, #muscleGroupSelect, #muscleSubgroupSelect, #exerciseSelect",
+        ),
+    ];
+    const disabledStates = controls.map((control) => control.disabled);
     button.disabled = true;
     try {
         for (const prefix of ["initial", "current"]) {
@@ -152,33 +189,20 @@ async function setResult() {
                     "Enter valid baseline and current results in both columns.",
                 );
         }
-        for (const prefix of ["initial", "current"]) {
-            const data = new FormData();
-            data.append("exerciseId", progressExercise.exerciseId);
-            const first = trackerElement(prefix + "Value1").value,
-                second = trackerElement(prefix + "Value2").value;
-            if (progressExercise.exerciseType === 0) {
-                data.append("weightKg", first);
-                data.append("reps", second);
-            } else {
-                data.append("durationSeconds", first);
-                data.append(
-                    progressExercise.exerciseType === 1
-                        ? "intensity"
-                        : "weightKg",
-                    second,
-                );
-            }
-            await progressRequest(
-                `/ProgressTracker/Set${prefix === "initial" ? "Initial" : "Current"}Results`,
-                data,
-            );
-        }
+        const data = new FormData();
+        data.append("exerciseId", progressExercise.exerciseId);
+        for (const id of resultFields)
+            data.append(id, trackerElement(id).value);
+        controls.forEach((control) => (control.disabled = true));
+        await progressRequest("/ProgressTracker/SaveResults", data);
         updateProgressDisplay();
         trackerMessage("Results saved. Your next session starts from here.");
     } catch (error) {
         trackerMessage(error.message, true);
     } finally {
+        controls.forEach(
+            (control, index) => (control.disabled = disabledStates[index]),
+        );
         button.disabled = false;
     }
 }
@@ -210,12 +234,7 @@ async function setResult() {
             trackerElement("exerciseSelect").value = selected.exerciseId;
             await selectExercise();
         }
-        [
-            "initialValue1",
-            "initialValue2",
-            "currentValue1",
-            "currentValue2",
-        ].forEach((id) =>
+        resultFields.forEach((id) =>
             trackerElement(id).addEventListener("input", updateProgressDisplay),
         );
     } catch (error) {

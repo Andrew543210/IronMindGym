@@ -2,6 +2,20 @@ namespace IronMindGym.ViewModels;
 
 using IronMindGym.Models;
 
+public class SaveProgressViewModel
+{
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]
+    public int ExerciseId { get; set; }
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]
+    public double InitialValue1 { get; set; }
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]
+    public double InitialValue2 { get; set; }
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]
+    public double CurrentValue1 { get; set; }
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]
+    public double CurrentValue2 { get; set; }
+}
+
 public class ProgressTrackerViewModel
 {
     public List<ExerciseProgressEntry> Exercises { get; set; } = new();
@@ -18,6 +32,8 @@ public class ProgressTrackerViewModel
 
 public class ExerciseProgressEntry
 {
+    public bool HasCurrentResult => ExerciseType == ExerciseType.StrengthTraining ? CurrentReps > 0 : CurrentDurationSeconds > 0;
+
     public int Id
     {
         get; set;
@@ -101,10 +117,6 @@ public class ExerciseProgressEntry
         get; set;
     }
     public int CardioIntensityProgressCount
-    {
-        get; set;
-    }
-    public double CardioEffortProgressPercent
     {
         get; set;
     }

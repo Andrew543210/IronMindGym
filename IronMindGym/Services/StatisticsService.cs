@@ -22,10 +22,6 @@ public class StatisticsService(IronMindDbContext db)
             .SelectMany(pe => pe.Sets)
             .Sum(set => set.WeightKg * set.Reps);
 
-        var nutrition = db.DailyNutritions
-            .Where(n => n.UserId == currentUserId && n.Date >= DateTime.UtcNow.AddDays(-7))
-            .ToList();
-
         var personalRecords = db.PersonalRecords
             .Include(pr => pr.Exercise)
             .ThenInclude(e => e.MuscleSubGroup)
@@ -75,7 +71,7 @@ public class StatisticsService(IronMindDbContext db)
         var favoriteExercise = sessions
             .SelectMany(s => s.PerformedExercises)
             .GroupBy(pe => pe.ExerciseId)
-            .OrderByDescending(g => g.Count())
+            .OrderByDescending(g => g.Select(p => p.WorkoutSessionId).Distinct().Count())
             .FirstOrDefault();
         var favoriteExerciseName = "N/A";
         var favoriteExerciseCount = 0;
@@ -83,7 +79,7 @@ public class StatisticsService(IronMindDbContext db)
         {
             var ex = db.Exercises.FirstOrDefault(e => e.Id == favoriteExercise.Key);
             favoriteExerciseName = ex?.Name ?? "N/A";
-            favoriteExerciseCount = favoriteExercise.Count();
+            favoriteExerciseCount = favoriteExercise.Select(p => p.WorkoutSessionId).Distinct().Count();
         }
 
         var last7DaysSessions = sessions.Where(s => s.SessionDate >= DateTime.UtcNow.AddDays(-7)).ToList();
@@ -104,10 +100,6 @@ public class StatisticsService(IronMindDbContext db)
         {
             WorkoutsCompleted = sessions.Count,
             MonthlyTotalTonnage = Math.Round(monthlyTonnage, 1),
-            AvgWeeklyCalories = nutrition.Count > 0 ? Math.Round(nutrition.Average(n => n.CaloriesKcal), 1) : 0,
-            ProteinGoalAdherencePercent = nutrition.Count > 0
-                ? Math.Round(nutrition.Count(n => n.ProteinG >= 120) * 100.0 / nutrition.Count, 1)
-                : 0,
             PersonalRecords = personalRecords
                 .Select(pr => (pr.Exercise.Name, pr.MaxWeightKg))
                 .ToList(),
@@ -180,7 +172,7 @@ public class StatisticsService(IronMindDbContext db)
     private (string ExerciseName, double ProgressPercent) CalculateBestProgress(int userId)
     {
         var progress = db.ExerciseProgress
-            .Where(ep => ep.UserId == userId && ep.CurrentWeightKg > 0 && ep.InitialWeightKg > 0)
+            .Where(ep => ep.UserId == userId && ep.Exercise.Type == ExerciseType.StrengthTraining && ep.CurrentWeightKg > 0 && ep.InitialWeightKg > 0 && ep.CurrentReps == ep.InitialReps && ep.InitialReps > 0)
             .Include(ep => ep.Exercise)
             .AsNoTracking()
             .ToList();

@@ -29,6 +29,26 @@ public class ProgressTrackerController(IronMindDbContext db, ExerciseProgressSer
     }).ToList());
 
     [HttpPost]
+    public IActionResult SaveResults(SaveProgressViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(new
+            {
+                success = false,
+                message = "Enter valid baseline and current results."
+            });
+        try
+        {
+            progressService.SaveResults(User.GetUserId()!.Value, model);
+            return Json(new
+            {
+                success = true
+            });
+        }
+        catch (ArgumentException ex) { return BadRequest(new { success = false, message = ex.Message }); }
+    }
+
+    [HttpPost]
     public IActionResult SetInitialResults(int exerciseId, double? weightKg, int? reps, int? durationSeconds, int? intensity)
         => Save(exerciseId, true, weightKg, reps, durationSeconds, intensity);
 

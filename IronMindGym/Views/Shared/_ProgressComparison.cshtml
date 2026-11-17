@@ -1,0 +1,15 @@
+@model ExerciseProgressEntry
+@if (!Model.HasCurrentResult)
+{
+    <p class="small text-muted">Add current result</p>
+}
+else if (Model.ExerciseType == ExerciseType.StrengthTraining)
+{
+    <p class="small mb-1">@Model.WeightProgressKg.ToString("+0.#;-0.#;0") kg</p>
+    <p class="small mb-0">@Model.RepsProgressCount.ToString("+0;-0;0") reps</p>
+}
+else
+{
+    <p class="small mb-1">@Model.CardioDurationProgressSeconds.ToString("+0;-0;0") sec</p>
+    <p class="small mb-0">@(Model.ExerciseType == ExerciseType.Cardio ? $"{Model.CardioIntensityProgressCount:+0;-0;0} effort" : $"{Model.WeightProgressKg:+0.#;-0.#;0} kg")</p>
+}

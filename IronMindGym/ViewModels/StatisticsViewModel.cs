@@ -10,14 +10,6 @@ public class StatisticsViewModel
     {
         get; set;
     }
-    public double AvgWeeklyCalories
-    {
-        get; set;
-    }
-    public double ProteinGoalAdherencePercent
-    {
-        get; set;
-    }
     public List<(string ExerciseName, double MaxWeight)> PersonalRecords { get; set; } = new();
     public List<PersonalRecordListItemViewModel> PersonalRecordItems { get; set; } = new();
 

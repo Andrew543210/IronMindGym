@@ -7,6 +7,32 @@ namespace IronMindGym.Services;
 
 public class ExerciseProgressService(IronMindDbContext db)
 {
+    public void SaveResults(int userId, SaveProgressViewModel model)
+    {
+        var type = db.Exercises.AsNoTracking().Where(e => e.Id == model.ExerciseId)
+            .Select(e => (ExerciseType?)e.Type).FirstOrDefault()
+            ?? throw new ArgumentException("Choose a valid exercise.");
+        static int WholeNumber(double value)
+        {
+            if (!double.IsFinite(value) || value != Math.Truncate(value) || value < 0 || value > 86400)
+                throw new ArgumentException("Repetitions, duration and intensity must be whole numbers within their allowed range.");
+            return (int)value;
+        }
+        void SavePair(bool initial, double first, double second)
+        {
+            if (type == ExerciseType.StrengthTraining)
+                Save(userId, model.ExerciseId, initial, first, WholeNumber(second), null, null);
+            else if (type == ExerciseType.Cardio)
+                Save(userId, model.ExerciseId, initial, null, null, WholeNumber(first), WholeNumber(second));
+            else
+                Save(userId, model.ExerciseId, initial, second, null, WholeNumber(first), null);
+        }
+        using var transaction = db.Database.BeginTransaction();
+        SavePair(true, model.InitialValue1, model.InitialValue2);
+        SavePair(false, model.CurrentValue1, model.CurrentValue2);
+        transaction.Commit();
+    }
+
     public List<ExerciseProgressEntry> List(int userId) => db.ExerciseProgress.AsNoTracking()
         .Include(p => p.Exercise).ThenInclude(e => e.MuscleSubGroup).ThenInclude(s => s.MuscleGroup)
         .Where(p => p.UserId == userId).OrderBy(p => p.Exercise.Name).ToList().Select(Map).ToList();
@@ -98,8 +124,7 @@ public class ExerciseProgressService(IronMindDbContext db)
             RepsProgressCount = progress.CalculateRepsProgressCount(),
             RepsProgressPercent = progress.CalculateRepsProgressPercent(),
             CardioDurationProgressSeconds = progress.CalculateCardioDurationProgress(),
-            CardioIntensityProgressCount = progress.CalculateCardioIntensityProgress(),
-            CardioEffortProgressPercent = progress.CalculateCardioEffortRatio()
+            CardioIntensityProgressCount = progress.CalculateCardioIntensityProgress()
         };
 
 

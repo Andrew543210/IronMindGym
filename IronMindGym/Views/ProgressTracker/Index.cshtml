@@ -5,6 +5,7 @@
 
 <div class="container mt-4">
     <h2 class="mb-4">PROGRESS TRACKER</h2>
+<p class="small text-muted">Compare load with reps, or duration with effort and load. A higher value alone does not measure improved fitness.</p>
 
     @if (!string.IsNullOrEmpty(Model.ErrorMessage))
     {
@@ -66,23 +67,19 @@
 
                                             <div class="col-4">
                                                 <div class="text-center border-end ps-1 pe-1">
-                                                    <h6 class="text-success small fw-bold">PROGRESS</h6>
-                                                    @if (exercise.ExerciseType != ExerciseType.StrengthTraining)
-                                                    {
-                                                        <p class="small mb-0"><strong class="text-success">@exercise.CardioEffortProgressPercent.ToString("F1")%</strong></p>
-                                                    }
-                                                    else
-                                                    {
-                                                        <p class="small mb-1"><strong class="text-success">@exercise.WeightProgressKg.ToString("F1")</strong> kg</p>
-                                                        <p class="small mb-0 text-success">@exercise.WeightProgressPercent.ToString("F1")%</p>
-                                                    }
+                                                    <h6 class="text-muted small fw-bold">CHANGE</h6>
+                                                    <partial name="_ProgressComparison" model="exercise" />
                                                 </div>
                                             </div>
 
                                             <div class="col-4">
                                                 <div class="ps-2 pe-0">
                                                     <h6 class="text-info small fw-bold">CURRENT</h6>
-                                                    @if (exercise.ExerciseType != ExerciseType.StrengthTraining)
+                                                    @if (!exercise.HasCurrentResult)
+                                                    {
+                                                        <p class="small text-muted">Not recorded</p>
+                                                    }
+                                                    else if (exercise.ExerciseType != ExerciseType.StrengthTraining)
                                                     {
                                                         <p class="small mb-1"><strong>@exercise.CurrentDurationSeconds</strong>s</p>
                                                         <p class="small mb-0"><strong>@(exercise.ExerciseType == ExerciseType.Cardio ? $"{exercise.CurrentIntensity}/10" : $"{exercise.CurrentWeightKg} kg")</strong></p>

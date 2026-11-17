@@ -147,19 +147,8 @@ public class ExerciseProgress
 
     public int CalculateCardioIntensityProgress() => CurrentIntensity - InitialIntensity;
 
-    public double CalculateCardioEffortRatio()
-    {
-        int initialEffort = InitialDurationSeconds * InitialIntensity;
-        int currentEffort = CurrentDurationSeconds * CurrentIntensity;
-        if (initialEffort <= 0)
-            return 0;
-        return ((double)currentEffort / initialEffort - 1) * 100;
-    }
-
     public override string ToString() =>
-        Exercise?.Type == ExerciseType.Cardio
-            ? $"Progress: {Exercise?.Name ?? "Unknown"} - {CalculateCardioEffortRatio():F1}% effort"
-            : $"Progress: {Exercise?.Name ?? "Unknown"} - {CurrentWeightKg}kg vs Initial {InitialWeightKg}kg";
+        Exercise?.Type != ExerciseType.StrengthTraining
+            ? $"Results: {Exercise?.Name ?? "Unknown"} - {CurrentDurationSeconds}s vs initial {InitialDurationSeconds}s"
+            : $"Results: {Exercise?.Name ?? "Unknown"} - {CurrentWeightKg}kg × {CurrentReps} vs initial {InitialWeightKg}kg × {InitialReps}";
 }
-
-

@@ -4,6 +4,7 @@
 }
 
 <h2>STATISTICS</h2>
+<p class="small text-muted">Volume is external load × repetitions, including warm-up sets. Bodyweight work, cardio and timed work are not represented by this load metric.</p>
 
 <div class="row g-3 mb-4">
     <div class="col-md-4">
@@ -44,7 +45,7 @@
     <div class="col-md-4">
         <div class="card border border-light h-100">
             <div class="card-body">
-                <h6 class="text-muted small mb-2">TOTAL TONNAGE (30d)</h6>
+                <h6 class="text-muted small mb-2">EXTERNAL LOAD VOLUME (30d)</h6>
                 <h3 class="mb-0">@Model.MonthlyTotalTonnage <span class="small">kg × reps</span></h3>
             </div>
         </div>
@@ -63,7 +64,7 @@
     <div class="col-md-6">
         <div class="card border border-light h-100">
             <div class="card-body">
-                <h6 class="text-muted small mb-2">BEST PROGRESS</h6>
+                <h6 class="text-muted small mb-2">BEST LOAD CHANGE AT EQUAL REPS</h6>
                 <h3 class="mb-1">@Model.BestProgressPercent<span class="small">%</span></h3>
                 <p class="small text-muted mb-0">@Model.BestProgressExercise</p>
             </div>
