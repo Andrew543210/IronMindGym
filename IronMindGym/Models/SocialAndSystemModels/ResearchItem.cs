@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
@@ -8,7 +8,10 @@ public class ResearchItem
     private string _thesisText = string.Empty;
     private string _source = string.Empty;
 
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
     [Required, MaxLength(200)]
     public string Title

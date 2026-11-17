@@ -1,5 +1,4 @@
-﻿@model WorkoutDetailsViewModel
-@using IronMindGym.Controllers
+@model WorkoutDetailsViewModel
 @{
     ViewData["Title"] = "Workout Details";
 }
@@ -7,7 +6,7 @@
 <h2>Workout Details</h2>
 <div class="card mb-3">
     <div class="card-body">
-        <h5>@ExerciseLibraryController.TranslateSessionNameForDisplay(Model.Session.Name)</h5>
+        <h5>@Model.Session.Name</h5>
         <div>Date: @Model.Session.SessionDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
         <div>Duration: @Model.Session.DurationMinutes min</div>
         <div>Rating: @(Model.Session.Review?.Rating ?? 0)/5</div>
@@ -67,7 +66,7 @@
         !s.SetType.Name.Equals("Failure", StringComparison.OrdinalIgnoreCase));
     <div class="card mb-3">
         <div class="card-body">
-            <h6>@ExerciseLibraryController.TranslateExerciseNameForDisplay(performed.Exercise.Name)</h6>
+            <h6>@performed.Exercise.Name</h6>
             <table class="table table-sm">
                 <thead>
                 <tr>
@@ -76,8 +75,8 @@
                     {
                         <th>Type</th>
                     }
-                    <th>Weight</th>
-                    <th>Reps</th>
+                    <th>@(performed.Exercise.Type != ExerciseType.StrengthTraining ? "Duration" : "Weight")</th>
+                    <th>@(performed.Exercise.Type != ExerciseType.StrengthTraining ? (performed.Exercise.Type == ExerciseType.Cardio ? "Intensity" : "Load") : "Reps")</th>
                     <th>Rest</th>
                 </tr>
                 </thead>
@@ -90,8 +89,8 @@
                         {
                             <td>@set.SetType.Name</td>
                         }
-                        <td>@set.WeightKg kg</td>
-                        <td>@set.Reps</td>
+                        <td>@(performed.Exercise.Type != ExerciseType.StrengthTraining ? $"{set.DurationSeconds} sec" : $"{set.WeightKg} kg")</td>
+                        <td>@(performed.Exercise.Type != ExerciseType.StrengthTraining ? (performed.Exercise.Type == ExerciseType.Cardio ? $"{set.Intensity}/10" : $"{set.WeightKg} kg") : set.Reps.ToString())</td>
                         <td>@set.RestSeconds sec</td>
                     </tr>
                 }
@@ -124,3 +123,10 @@
     </div>
 </div>
 
+
+<form method="post" asp-action="Delete" class="mt-4" onsubmit="return confirm('Delete this workout? This cannot be undone.')">
+<input type="hidden" name="id" value="@Model.Session.Id" />
+<button class="btn btn-outline-danger" type="submit">Delete workout</button>
+</form>
+
+@if (TempData["ClearWorkoutDraft"] is true) { <script>try { sessionStorage.removeItem("ironmind-workout-@User.GetUserId()"); } catch {}</script> }

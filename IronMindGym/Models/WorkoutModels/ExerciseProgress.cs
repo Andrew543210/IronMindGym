@@ -1,40 +1,73 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
 public class ExerciseProgress
 {
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
-    public int UserId { get; set; }
+    public int UserId
+    {
+        get; set;
+    }
     public User User { get; set; } = null!;
 
-    public int ExerciseId { get; set; }
+    public int ExerciseId
+    {
+        get; set;
+    }
     public Exercise Exercise { get; set; } = null!;
 
     [Range(0, 500)]
-    public double InitialWeightKg { get; set; }
+    public double InitialWeightKg
+    {
+        get; set;
+    }
 
     [Range(0, 500)]
-    public int InitialReps { get; set; }
+    public int InitialReps
+    {
+        get; set;
+    }
 
-    [Range(0, 1440)]
-    public int InitialDurationSeconds { get; set; }
+    [Range(0, 86400)]
+    public int InitialDurationSeconds
+    {
+        get; set;
+    }
 
     [Range(1, 10)]
-    public int InitialIntensity { get; set; }
+    public int InitialIntensity
+    {
+        get; set;
+    }
 
     [Range(0, 500)]
-    public double CurrentWeightKg { get; set; }
+    public double CurrentWeightKg
+    {
+        get; set;
+    }
 
     [Range(0, 500)]
-    public int CurrentReps { get; set; }
+    public int CurrentReps
+    {
+        get; set;
+    }
 
-    [Range(0, 1440)]
-    public int CurrentDurationSeconds { get; set; }
+    [Range(0, 86400)]
+    public int CurrentDurationSeconds
+    {
+        get; set;
+    }
 
     [Range(1, 10)]
-    public int CurrentIntensity { get; set; }
+    public int CurrentIntensity
+    {
+        get; set;
+    }
 
     public DateTime InitialRecordedAt { get; set; } = DateTime.UtcNow;
     public DateTime CurrentRecordedAt { get; set; } = DateTime.UtcNow;
@@ -46,7 +79,7 @@ public class ExerciseProgress
 
     public void SetInitialStrengthResults(double weight, int reps)
     {
-        if (weight < 0 || weight > 500)
+        if (!double.IsFinite(weight) || weight < 0 || weight > 500)
             throw new ArgumentException("Weight must be between 0 and 500 kg.");
         if (reps <= 0 || reps > 500)
             throw new ArgumentException("Reps must be between 1 and 500.");
@@ -58,8 +91,8 @@ public class ExerciseProgress
 
     public void SetInitialCardioResults(int durationSeconds, int intensity)
     {
-        if (durationSeconds <= 0 || durationSeconds > 1440)
-            throw new ArgumentException("Duration must be between 1 and 1440 seconds.");
+        if (durationSeconds <= 0 || durationSeconds > 86400)
+            throw new ArgumentException("Duration must be between 1 and 86400 seconds.");
         if (intensity < 1 || intensity > 10)
             throw new ArgumentException("Intensity must be between 1 and 10.");
 
@@ -70,7 +103,7 @@ public class ExerciseProgress
 
     public void SetCurrentStrengthResults(double weight, int reps)
     {
-        if (weight < 0 || weight > 500)
+        if (!double.IsFinite(weight) || weight < 0 || weight > 500)
             throw new ArgumentException("Weight must be between 0 and 500 kg.");
         if (reps <= 0 || reps > 500)
             throw new ArgumentException("Reps must be between 1 and 500.");
@@ -82,8 +115,8 @@ public class ExerciseProgress
 
     public void SetCurrentCardioResults(int durationSeconds, int intensity)
     {
-        if (durationSeconds <= 0 || durationSeconds > 1440)
-            throw new ArgumentException("Duration must be between 1 and 1440 seconds.");
+        if (durationSeconds <= 0 || durationSeconds > 86400)
+            throw new ArgumentException("Duration must be between 1 and 86400 seconds.");
         if (intensity < 1 || intensity > 10)
             throw new ArgumentException("Intensity must be between 1 and 10.");
 
@@ -120,10 +153,10 @@ public class ExerciseProgress
         int currentEffort = CurrentDurationSeconds * CurrentIntensity;
         if (initialEffort <= 0)
             return 0;
-        return ((double)currentEffort / initialEffort) * 100;
+        return ((double)currentEffort / initialEffort - 1) * 100;
     }
 
-    public override string ToString() => 
+    public override string ToString() =>
         Exercise?.Type == ExerciseType.Cardio
             ? $"Progress: {Exercise?.Name ?? "Unknown"} - {CalculateCardioEffortRatio():F1}% effort"
             : $"Progress: {Exercise?.Name ?? "Unknown"} - {CurrentWeightKg}kg vs Initial {InitialWeightKg}kg";

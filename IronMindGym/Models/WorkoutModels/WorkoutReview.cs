@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
@@ -6,12 +6,21 @@ public class WorkoutReview
 {
     private string _comment = string.Empty;
 
-    public int Id { get; set; }
-    public int WorkoutSessionId { get; set; }
+    public int Id
+    {
+        get; set;
+    }
+    public int WorkoutSessionId
+    {
+        get; set;
+    }
     public WorkoutSession WorkoutSession { get; set; } = null!;
 
     [Range(1, 5)]
-    public int Rating { get; set; }
+    public int Rating
+    {
+        get; set;
+    }
 
     [MaxLength(800)]
     public string Comment

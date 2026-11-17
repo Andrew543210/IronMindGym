@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
@@ -6,7 +6,10 @@ public class WeekDay
 {
     private string _name = string.Empty;
 
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
     [Required, MaxLength(20)]
     public string Name

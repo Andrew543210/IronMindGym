@@ -1,10 +1,10 @@
-﻿@model NutritionViewModel
+@model NutritionViewModel
 @{
     ViewData["Title"] = "Nutrition";
 }
 
-<h2>Nutrition Log</h2>
-<form method="post" class="row g-3">
+<p class="eyebrow">FUEL THE WORK</p><h2>Nutrition journal</h2><p class="text-muted">Keep a daily record, including previous days you missed. Saving again updates the selected date.</p><div asp-validation-summary="All" class="text-danger"></div>
+<form method="post" class="row g-3"><div class="col-12 col-md-4"><label asp-for="Date" class="form-label">Entry date (UTC)</label><input asp-for="Date" class="form-control" max="@DateTime.UtcNow.ToString("yyyy-MM-dd")" /></div><div class="w-100"></div>
     <div class="col-md-3">
         <label asp-for="CaloriesKcal" class="form-label">Calories</label>
         <input asp-for="CaloriesKcal" class="form-control" />
@@ -28,10 +28,10 @@
 
 <div class="card mt-4">
     <div class="card-body">
-        <h5>Calculated Daily Targets</h5>
-        <p class="small mb-2">Hover each target card to see the exact individual formula.</p>
+        <div class="section-heading mt-0"><h5>Your daily targets</h5><a class="small text-muted" asp-controller="Profile" asp-action="Edit">Edit targets ↗</a></div>
+        <p class="small mb-2">Personal targets take priority over optional estimates.</p>
         <div class="mb-3">
-            <strong>Your KBJU norm:</strong>
+            <strong>Your targets:</strong>
             <span class="metric">@Model.TargetCaloriesKcal</span> kcal /
             <span class="metric">@Model.TargetProteinG</span> P /
             <span class="metric">@Model.TargetFatG</span> F /
@@ -81,9 +81,9 @@
 @if (!string.IsNullOrWhiteSpace(Model.SystemAdvice))
 {
     <div class="alert alert-info mt-4">
-        <div><strong>System Evaluation:</strong> @Model.SystemAdvice</div>
-        <div class="mt-1"><strong>Verdict:</strong> @Model.SystemVerdict</div>
-        <div><strong>Score:</strong> <span class="metric">@Model.SystemScore</span>/100</div>
+        <div><strong>Daily comparison:</strong> @Model.SystemAdvice</div>
+        <div class="mt-1"><strong>Target match:</strong> @Model.SystemVerdict</div>
+        <div><strong>Target match:</strong> <span class="metric">@Model.SystemScore</span>/100</div>
 
         @if (Model.AdviceItems.Any())
         {
@@ -100,7 +100,7 @@
 
 <div class="card mt-4">
     <div class="card-body">
-        <h5>Log (last 10 days)</h5>
+        <h5>Recent entries</h5>
         @if (!Model.RecentLogs.Any())
         {
             <p class="mb-0">No entries yet.</p>
@@ -129,10 +129,8 @@
                         <td class="metric">@day.CarbsG</td>
                         <td class="d-flex gap-2 justify-content-end">
                             <a asp-action="Details" asp-route-id="@day.Id" class="btn btn-outline-light btn-sm">Details</a>
-                            @if (day.IsToday)
-                            {
-                                <a asp-action="EditToday" asp-route-id="@day.Id" class="btn btn-light text-dark btn-sm">Edit today</a>
-                            }
+
+                                <a asp-action="Index" asp-route-date="@day.Date.ToString("yyyy-MM-dd")" class="btn btn-light text-dark btn-sm">Edit</a>
                         </td>
                     </tr>
                 }

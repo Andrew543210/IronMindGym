@@ -1,16 +1,20 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
 public enum ExerciseType
 {
     StrengthTraining = 0,
-    Cardio = 1
+    Cardio = 1,
+    Timed = 2
 }
 
 public class Exercise
 {
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
     [Required, MaxLength(120)]
     public string Name { get; set; } = string.Empty;
@@ -20,7 +24,10 @@ public class Exercise
 
     public ExerciseType Type { get; set; } = ExerciseType.StrengthTraining;
 
-    public int MuscleSubGroupId { get; set; }
+    public int MuscleSubGroupId
+    {
+        get; set;
+    }
     public MuscleSubGroup MuscleSubGroup { get; set; } = null!;
 
     public ICollection<PerformedExercise> PerformedExercises { get; set; } = new List<PerformedExercise>();

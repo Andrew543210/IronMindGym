@@ -9,10 +9,10 @@ using System.Text.Json;
 
 namespace IronMindGym.Controllers;
 
-public class WorkoutLoggerController(IronMindDbContext db) : Controller
+public class WorkoutLoggerController(IronMindDbContext db, WorkoutService workoutService, ILogger<WorkoutLoggerController> logger) : Controller
 {
     [HttpGet]
-    public IActionResult Index(bool startTraining = false)
+    public IActionResult Index(bool startTraining = false, int page = 1)
     {
         var userId = User.GetUserId();
         if (!userId.HasValue)
@@ -20,192 +20,52 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             return RedirectToAction("Login", "Auth");
         }
 
+        ViewBag.Page = Math.Clamp(page, 1, 10000);
         var vm = BuildIndexViewModel(userId.Value, startTraining);
+        vm.RecentSessions = BuildRecentSessions(userId.Value, (int)ViewBag.Page);
         FillSelections(vm, userId.Value);
         return View(vm);
     }
 
     [HttpPost]
-    public IActionResult Finish(WorkoutLoggerViewModel model)
+    [RequestSizeLimit(150000)]
+    public IActionResult Finish([Bind("DurationMinutes,SplitTypeId,SplitDayLabel,DraftPayloadJson,ReviewRating,ReviewComment")] WorkoutLoggerViewModel model)
     {
-        var userId = User.GetUserId();
-        if (!userId.HasValue)
+        var userId = User.GetUserId()!.Value;
+        if (ModelState.IsValid)
         {
-            return RedirectToAction("Login", "Auth");
-        }
-
-        var currentUserId = userId.Value;
-        model.IsTrainingActive = true;
-        FillSelections(model, currentUserId);
-
-        List<DraftSetItemViewModel>? draftSets;
-        try
-        {
-            draftSets = JsonSerializer.Deserialize<List<DraftSetItemViewModel>>(
-                model.DraftPayloadJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        }
-        catch
-        {
-            draftSets = null;
-        }
-
-        if (draftSets == null || draftSets.Count == 0)
-        {
-            ModelState.AddModelError(string.Empty, "Add at least one set before finishing the workout.");
-        }
-
-        if (!ModelState.IsValid)
-        {
-            model.RecentSessions = BuildRecentSessions(currentUserId);
-            return View("Index", model);
-        }
-
-        var safeDraftSets = draftSets!;
-
-        var splitTypeName = db.SplitTypes.AsNoTracking().FirstOrDefault(s => s.Id == model.SplitTypeId)?.Name;
-        var splitDayLabel = string.IsNullOrWhiteSpace(model.SplitDayLabel)
-            ? "Training"
-            : model.SplitDayLabel.Trim();
-        var sessionName = splitDayLabel.StartsWith("Day ", StringComparison.OrdinalIgnoreCase)
-            ? splitDayLabel
-            : $"Day {splitDayLabel}";
-
-        var session = new WorkoutSession
-        {
-            UserId = currentUserId,
-            Name = sessionName,
-            SessionDate = DateTime.UtcNow,
-            DurationMinutes = model.DurationMinutes,
-            SplitTypeId = model.SplitTypeId
-        };
-
-        var groupedByExercise = safeDraftSets
-            .GroupBy(x => x.ExerciseId)
-            .ToList();
-
-        if (groupedByExercise.Any(g => g.Key <= 0) || groupedByExercise.Any(g => !db.Exercises.Any(e => e.Id == g.Key)))
-        {
-            ModelState.AddModelError(string.Empty, "Invalid exercise data in this workout. Please add sets again.");
-            model.RecentSessions = BuildRecentSessions(currentUserId);
-            return View("Index", model);
-        }
-
-        var summaryRows = new List<ExerciseWorkoutSummaryViewModel>();
-        var order = 1;
-
-        foreach (var exerciseGroup in groupedByExercise)
-        {
-            var performedExercise = new PerformedExercise
+            try
             {
-                ExerciseId = exerciseGroup.Key,
-                WorkoutSession = session,
-                OrderInWorkout = order++
-            };
-
-            var setNumber = 1;
-            foreach (var set in exerciseGroup)
-            {
-                performedExercise.Sets.Add(new WorkoutSet
+                var id = workoutService.Save(userId, model);
+                TempData["ClearWorkoutDraft"] = true;
+                TempData["Message"] = "Workout saved. Keep showing up.";
+                return RedirectToAction(nameof(Details), new
                 {
-                    SetNumber = setNumber++,
-                    WeightKg = set.WeightKg,
-                    Reps = set.Reps,
-                    SetTypeId = set.SetTypeId,
-                    RestSeconds = set.RestSeconds
+                    id
                 });
             }
-
-            db.PerformedExercises.Add(performedExercise);
-
-            var rawExerciseName = db.Exercises.AsNoTracking().First(e => e.Id == exerciseGroup.Key).Name;
-            var exerciseName = ExerciseLibraryController.TranslateExerciseNameForDisplay(rawExerciseName);
-            var peakWeight = exerciseGroup.Max(x => x.WeightKg);
-            var existingRecord = db.PersonalRecords.FirstOrDefault(pr => pr.UserId == currentUserId && pr.ExerciseId == exerciseGroup.Key);
-            var baselineRecordWeight = existingRecord?.MaxWeightKg;
-
-            var setLoadPercents = (baselineRecordWeight.HasValue && baselineRecordWeight.Value > 0)
-                ? exerciseGroup.Select(x => x.WeightKg / baselineRecordWeight.Value * 100.0).ToList()
-                : new List<double>();
-
-            var isNewRecord = existingRecord == null || peakWeight > existingRecord.MaxWeightKg;
-            var averagePercent = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Average(), 1);
-            var peakPercent = setLoadPercents.Count == 0 ? (double?)null : Math.Round(setLoadPercents.Max(), 1);
-
-            if (isNewRecord)
+            catch (System.ComponentModel.DataAnnotations.ValidationException ex)
             {
-                if (existingRecord == null)
-                {
-                    db.PersonalRecords.Add(new PersonalRecord
-                    {
-                        UserId = currentUserId,
-                        ExerciseId = exerciseGroup.Key,
-                        MaxWeightKg = peakWeight,
-                        UpdatedAt = DateTime.UtcNow
-                    });
-                }
-                else
-                {
-                    existingRecord.MaxWeightKg = peakWeight;
-                    existingRecord.UpdatedAt = DateTime.UtcNow;
-                }
+                ModelState.AddModelError(string.Empty, ex.Message);
             }
-
-            summaryRows.Add(new ExerciseWorkoutSummaryViewModel
+            catch (DbUpdateException ex)
             {
-                ExerciseName = exerciseName,
-                SetsCount = exerciseGroup.Count(),
-                AverageLoad = averagePercent,
-                PeakLoad = peakPercent,
-                PeakWeightKg = peakWeight,
-                PercentToPersonalRecord = peakPercent,
-                IsNewRecord = isNewRecord
-            });
+                logger.LogError(ex, "Could not save workout for user {UserId}", userId);
+                ModelState.AddModelError(string.Empty, "Could not save this workout. Please try again.");
+            }
         }
+        model.IsTrainingActive = true;
+        FillSelections(model, userId);
+        model.RecentSessions = BuildRecentSessions(userId);
+        return View("Index", model);
+    }
 
-        db.WorkoutReviews.Add(new WorkoutReview
-        {
-            WorkoutSession = session,
-            Rating = model.ReviewRating,
-            Comment = model.ReviewComment
-        });
-
-        try
-        {
-            db.SaveChanges();
-            AchievementEngine.AssignAchievements(db, currentUserId);
-        }
-        catch
-        {
-            ModelState.AddModelError(string.Empty, "Unable to save workout right now. Please try again.");
-            model.RecentSessions = BuildRecentSessions(currentUserId);
-            return View("Index", model);
-        }
-
-        var workoutsPerWeek = db.WorkoutPlans
-            .Where(w => w.UserId == currentUserId && w.IsActive)
-            .Select(w => w.WorkoutsPerWeek)
-            .FirstOrDefault();
-
-        var weekStart = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek + (int)DayOfWeek.Monday);
-        if (DateTime.UtcNow.DayOfWeek == DayOfWeek.Sunday)
-        {
-            weekStart = DateTime.UtcNow.Date.AddDays(-6);
-        }
-
-        var doneThisWeek = db.WorkoutSessions.Count(s => s.UserId == currentUserId && s.SessionDate >= weekStart);
-
-        var summary = new WorkoutSummaryViewModel
-        {
-            WorkoutSessionId = session.Id,
-            SessionName = string.IsNullOrWhiteSpace(splitTypeName) ? session.Name : $"{session.Name} ({splitTypeName})",
-            AverageRestSeconds = Math.Round(safeDraftSets.Average(x => x.RestSeconds), 1),
-            RemainingWorkoutsThisWeek = Math.Max(workoutsPerWeek - doneThisWeek, 0),
-            ExerciseStats = summaryRows
-        };
-
-        TempData["Message"] = "Workout saved.";
-        TempData["WorkoutSummary"] = JsonSerializer.Serialize(summary);
+    [HttpPost]
+    public IActionResult Delete(int id)
+    {
+        if (!workoutService.Delete(User.GetUserId()!.Value, id))
+            return NotFound();
+        TempData["Message"] = "Workout deleted. Personal records were recalculated. Earned awards are kept.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -239,7 +99,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
                 var peakWeight = pe.Sets.Max(set => set.WeightKg);
                 var previousRecordWeight = db.PerformedExercises
                     .AsNoTracking()
-                    .Where(x => x.ExerciseId == pe.ExerciseId && x.WorkoutSession.UserId == currentUserId && x.WorkoutSessionId != session.Id)
+                    .Where(x => x.ExerciseId == pe.ExerciseId && x.WorkoutSession.UserId == currentUserId && x.WorkoutSession.SessionDate < session.SessionDate)
                     .SelectMany(x => x.Sets)
                     .Select(x => (double?)x.WeightKg)
                     .Max();
@@ -253,13 +113,13 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
 
                 return new ExerciseWorkoutSummaryViewModel
                 {
-                    ExerciseName = ExerciseLibraryController.TranslateExerciseNameForDisplay(pe.Exercise.Name),
+                    ExerciseName = pe.Exercise.Name,
                     SetsCount = pe.Sets.Count,
                     AverageLoad = averagePercent,
                     PeakLoad = peakPercent,
                     PeakWeightKg = peakWeight,
                     PercentToPersonalRecord = peakPercent,
-                    IsNewRecord = !previousRecordWeight.HasValue || peakWeight > previousRecordWeight.Value
+                    IsNewRecord = pe.Exercise.Type == ExerciseType.StrengthTraining && (!previousRecordWeight.HasValue || peakWeight > previousRecordWeight.Value)
                 };
             })
             .ToList();
@@ -271,7 +131,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             weekStart = DateTime.UtcNow.Date.AddDays(-6);
         }
 
-        var doneThisWeek = db.WorkoutSessions.Count(s => s.UserId == currentUserId && s.SessionDate >= weekStart);
+        var doneThisWeek = db.WorkoutSessions.Count(s => s.UserId == currentUserId && s.SessionDate >= weekStart && s.SessionDate < weekStart.AddDays(7));
 
         var detailsVm = new WorkoutDetailsViewModel
         {
@@ -338,7 +198,10 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         }
 
         db.SaveChanges();
-        return RedirectToAction(nameof(Details), new { id });
+        return RedirectToAction(nameof(Details), new
+        {
+            id
+        });
     }
 
     [HttpPost]
@@ -359,6 +222,8 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         }
 
         var text = (commentText ?? string.Empty).Trim();
+        if (text.Length > 500)
+            return BadRequest("Comments are limited to 500 characters.");
         if (text.Length > 0)
         {
             db.FriendComments.Add(new FriendComment
@@ -372,7 +237,10 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             db.SaveChanges();
         }
 
-        return RedirectToAction(nameof(Details), new { id });
+        return RedirectToAction(nameof(Details), new
+        {
+            id
+        });
     }
 
     private WorkoutLoggerViewModel BuildIndexViewModel(int currentUserId, bool startTraining)
@@ -383,20 +251,16 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             RecentSessions = BuildRecentSessions(currentUserId)
         };
 
-        if (TempData["WorkoutSummary"] is string summaryJson)
-        {
-            vm.LastSummary = JsonSerializer.Deserialize<WorkoutSummaryViewModel>(summaryJson);
-        }
-
         return vm;
     }
 
-    private List<WorkoutSessionListItemViewModel> BuildRecentSessions(int currentUserId)
+    private List<WorkoutSessionListItemViewModel> BuildRecentSessions(int currentUserId, int page = 1)
     {
         return db.WorkoutSessions
             .Where(s => s.UserId == currentUserId)
             .OrderByDescending(s => s.SessionDate)
-            .Take(5)
+            .Skip((page - 1) * 20)
+            .Take(20)
             .Select(s => new WorkoutSessionListItemViewModel
             {
                 Id = s.Id,
@@ -430,7 +294,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             .ToList();
 
         var groupOptions = groups
-            .Select(g => new { g.Id, Name = ExerciseLibraryController.TranslateMuscleGroupForDisplay(g.Name) })
+            .Select(g => new { g.Id, Name = g.Name })
             .OrderBy(g => g.Name)
             .ToList();
 
@@ -439,7 +303,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             {
                 s.Id,
                 s.MuscleGroupId,
-                Name = ExerciseLibraryController.TranslateMuscleSubGroupForDisplay(s.Name)
+                Name = s.Name
             })
             .OrderBy(s => s.Name)
             .ToList();
@@ -448,7 +312,7 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
             .Select(e => new
             {
                 e.Id,
-                Name = ExerciseLibraryController.TranslateExerciseNameForDisplay(e.Name)
+                Name = e.Name
             })
             .OrderBy(e => e.Name)
             .ToList();
@@ -495,11 +359,12 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
         model.ExerciseCatalog = exercises.Select(e => new ExerciseCatalogItemViewModel
         {
             ExerciseId = e.Id,
-            ExerciseName = ExerciseLibraryController.TranslateExerciseNameForDisplay(e.Name),
+            ExerciseName = e.Name,
+            ExerciseType = e.Type,
             MuscleGroupId = e.MuscleSubGroup.MuscleGroupId,
-            MuscleGroupName = ExerciseLibraryController.TranslateMuscleGroupForDisplay(e.MuscleSubGroup.MuscleGroup.Name),
+            MuscleGroupName = e.MuscleSubGroup.MuscleGroup.Name,
             MuscleSubGroupId = e.MuscleSubGroupId,
-            MuscleSubGroupName = ExerciseLibraryController.TranslateMuscleSubGroupForDisplay(e.MuscleSubGroup.Name)
+            MuscleSubGroupName = e.MuscleSubGroup.Name
         }).ToList();
     }
 
@@ -531,3 +396,4 @@ public class WorkoutLoggerController(IronMindDbContext db) : Controller
     }
 
 }
+

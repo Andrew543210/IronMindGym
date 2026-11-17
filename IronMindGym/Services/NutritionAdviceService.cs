@@ -1,163 +1,55 @@
-﻿using IronMindGym.Models;
+using IronMindGym.Models;
 
 namespace IronMindGym.Services;
 
 public class NutritionAdviceService : INutritionAdviceService
 {
-    public NutritionAdviceResult BuildAdvice(
-        DailyNutrition nutrition,
-        NutritionProfileSnapshot profile,
-        IReadOnlyList<DailyNutrition> recentLogs)
+    public NutritionAdviceResult BuildAdvice(DailyNutrition nutrition, NutritionProfileSnapshot profile, IReadOnlyList<DailyNutrition> recentLogs)
     {
-        var weightKg = Math.Max(profile.WeightKg ?? 72, 35);
-        var heightCm = Math.Max(profile.HeightCm ?? 175, 130);
-        var age = Math.Clamp(profile.Age ?? 25, 12, 90);
-        var pal = ResolvePal(profile.WorkoutsPerWeek);
-        var bmr = CalculateMifflinStJeor(weightKg, heightCm, age);
-
-        var targetCalories = Math.Round(bmr * pal, 0);
-        var targetProtein = Math.Round(weightKg * 1.9, 0);
-        var targetFat = Math.Round(weightKg * 1.0, 0);
-        var targetCarbs = Math.Round(weightKg * 4.0, 0);
-
-        var minProtein = weightKg * 1.5;
-        var maxProtein = weightKg * 2.2;
-        var minFat = weightKg * 0.8;
-        var maxFat = weightKg * 1.2;
-        var minCarbs = weightKg * 3.0;
-        var maxCarbs = weightKg * 5.0;
-
-        var minCalories = targetCalories * 0.92;
-        var maxCalories = targetCalories * 1.08;
-
-        var tips = new List<string>();
-        var score = 100;
-
-        void Penalize(int points) => score = Math.Max(score - points, 0);
-
-        if (nutrition.ProteinG < minProtein)
-        {
-            Penalize(20);
-            tips.Add($"Protein is below your athlete range ({Math.Round(minProtein)}-{Math.Round(maxProtein)} g/day). Add lean meat, eggs, Greek yogurt, cottage cheese, or whey around workouts.");
-        }
-        else if (nutrition.ProteinG > maxProtein)
-        {
-            Penalize(6);
-            tips.Add("Protein is above the useful range for strength progress. Keep protein near target and move excess calories to carbohydrates for better training output.");
-        }
-
-        if (nutrition.FatG < minFat)
-        {
-            Penalize(15);
-            tips.Add($"Fat intake is low (target range: {Math.Round(minFat)}-{Math.Round(maxFat)} g). Add olive oil, nuts, avocado, or fatty fish to support hormones and recovery.");
-        }
-        else if (nutrition.FatG > maxFat)
-        {
-            Penalize(6);
-            tips.Add("Fat is above the recommended range. Reduce hidden fats in snacks/sauces and keep most calories in carbs for high-quality lifting sessions.");
-        }
-
-        if (nutrition.CarbsG < minCarbs)
-        {
-            Penalize(12);
-            tips.Add($"Carbohydrates are below performance range ({Math.Round(minCarbs)}-{Math.Round(maxCarbs)} g). Add rice, oats, potatoes, fruits, and pre/post-workout carbs for power output.");
-        }
-        else if (nutrition.CarbsG > maxCarbs)
-        {
-            Penalize(6);
-            tips.Add("Carbohydrates are above the standard range. Keep portions steady and monitor weekly body-weight trend to avoid excessive fat gain.");
-        }
-
-        if (nutrition.CaloriesKcal < minCalories)
-        {
-            Penalize(20);
-            tips.Add($"Calories are below your calculated maintenance (~{targetCalories} kcal by Mifflin-St Jeor x PAL {pal:F2}). Increase by 200-300 kcal to support progression.");
-        }
-        else if (nutrition.CaloriesKcal > maxCalories)
-        {
-            Penalize(10);
-            tips.Add($"Calories are above target (~{targetCalories} kcal). If weekly weight gain is too fast, reduce daily intake by 150-250 kcal.");
-        }
-
-        var weekLogs = recentLogs
-            .Where(x => x.Date >= DateTime.UtcNow.Date.AddDays(-6))
-            .ToList();
-
-        if (weekLogs.Count >= 3)
-        {
-            var avgWeekCalories = weekLogs.Average(x => x.CaloriesKcal);
-            var drift = Math.Abs(nutrition.CaloriesKcal - avgWeekCalories);
-            if (drift > 350)
-            {
-                Penalize(8);
-                tips.Add("Today differs strongly from your 7-day calorie average. Keep calories and macro timing consistent for more predictable strength and body-composition progress.");
-            }
-        }
-
-        var proteinCalories = nutrition.ProteinG * 4;
-        var fatCalories = nutrition.FatG * 9;
-        var carbsCalories = nutrition.CarbsG * 4;
-        var trackedCalories = proteinCalories + fatCalories + carbsCalories;
-
-        if (Math.Abs(trackedCalories - nutrition.CaloriesKcal) > 150)
-        {
-            Penalize(5);
-            tips.Add("Your logged calories do not match macro-derived calories. Recheck food labels and serving sizes for cleaner tracking.");
-        }
-
-        if (tips.Count == 0)
-        {
-            tips.Add("Great balance across calories, protein, fats, and carbs. Keep the same structure and review body-weight/strength trend every 7 days.");
-        }
-
-        tips.Insert(0,
-            $"Formula baseline: BMR {Math.Round(bmr)} kcal (Mifflin-St Jeor), activity multiplier {pal:F2}, maintenance target ~{targetCalories} kcal. Macro targets: protein {targetProtein} g, fat {targetFat} g, carbs {targetCarbs} g.");
-
-        var verdict = score switch
-        {
-            >= 85 => "Excellent",
-            >= 70 => "Good",
-            >= 50 => "Needs improvement",
-            _ => "Critical"
-        };
-
-        return new NutritionAdviceResult
-        {
-            Verdict = verdict,
-            Summary = $"Nutrition evaluation: {verdict} ({score}/100)",
-            Score = score,
-            Tips = tips.Take(6).ToList(),
-            TargetCaloriesKcal = targetCalories,
-            TargetProteinG = targetProtein,
-            TargetFatG = targetFat,
-            TargetCarbsG = targetCarbs,
-            BasalMetabolicRate = Math.Round(bmr, 0),
-            ActivityMultiplier = pal,
-            BmrFormulaText = $"BMR = 10*{weightKg:F1} + 6.25*{heightCm:F1} - 5*{age} - 78 = {Math.Round(bmr)} kcal (Mifflin-St Jeor average)",
-            CaloriesFormulaText = $"Calories target = BMR ({Math.Round(bmr)}) * PAL ({pal:F2}) = {targetCalories} kcal",
-            ProteinFormulaText = $"Protein target = 1.9 * weight({weightKg:F1}) = {targetProtein} g/day",
-            FatFormulaText = $"Fat target = 1.0 * weight({weightKg:F1}) = {targetFat} g/day",
-            CarbsFormulaText = $"Carbs target = 4.0 * weight({weightKg:F1}) = {targetCarbs} g/day"
-        };
-    }
-
-    private static double ResolvePal(int workoutsPerWeek)
-    {
-        return workoutsPerWeek switch
+        var canEstimate = profile.Age >= 18 && profile.WeightKg > 0 && profile.HeightCm > 0 && profile.EnergyEquation is "Male" or "Female";
+        var bmr = canEstimate ? 10 * profile.WeightKg!.Value + 6.25 * profile.HeightCm!.Value - 5 * profile.Age!.Value + (profile.EnergyEquation == "Male" ? 5 : -161) : 0;
+        var pal = profile.WorkoutsPerWeek switch
         {
             <= 1 => 1.3,
-            2 => 1.4,
-            3 => 1.5,
-            4 => 1.6,
-            5 => 1.7,
-            _ => 1.8
+            <= 3 => 1.5,
+            <= 5 => 1.6,
+            _ => 1.7
+        };
+        var calories = profile.CalorieTarget ?? (canEstimate ? Math.Round(bmr * pal) : 0);
+        var protein = profile.ProteinTarget ?? (canEstimate ? Math.Round(profile.WeightKg!.Value * 1.6) : 0);
+        var fat = profile.FatTarget ?? (canEstimate ? Math.Round(profile.WeightKg!.Value * 0.8) : 0);
+        var carbs = profile.CarbsTarget ?? (calories > 0 ? Math.Max(0, Math.Round((calories - protein * 4 - fat * 9) / 4)) : 0);
+        var targets = new[] { ("Energy", nutrition.CaloriesKcal, calories), ("Protein", nutrition.ProteinG, protein), ("Fat", nutrition.FatG, fat), ("Carbs", nutrition.CarbsG, carbs) };
+        var configured = targets.Where(t => t.Item3 > 0).ToList();
+        var matched = configured.Count(t => Math.Abs(t.Item2 - t.Item3) <= t.Item3 * 0.1);
+        var tips = new List<string>();
+        if (configured.Count == 0)
+            tips.Add("Set your daily targets in Edit profile, or choose an adult energy equation to see an estimate.");
+        foreach (var target in configured)
+            tips.Add($"{target.Item1}: {target.Item2:0} logged / {target.Item3:0} target.");
+        var derived = nutrition.ProteinG * 4 + nutrition.FatG * 9 + nutrition.CarbsG * 4;
+        if (Math.Abs(derived - nutrition.CaloriesKcal) > 150)
+            tips.Add($"Macros add up to about {derived:0} kcal. Check serving sizes if this differs from your energy total.");
+        var logs = recentLogs.Where(l => l.Date >= nutrition.Date.Date.AddDays(-6) && l.Date <= nutrition.Date.Date).ToList();
+        if (logs.Count > 1)
+            tips.Add($"Average across {logs.Count} logged days: {logs.Average(l => l.CaloriesKcal):0} kcal.");
+        return new NutritionAdviceResult
+        {
+            Verdict = configured.Count == 0 ? "Targets not set" : $"{matched} of {configured.Count} targets within 10%",
+            Summary = "A comparison with your chosen targets, not a health assessment.",
+            Score = configured.Count == 0 ? 0 : matched * 100 / configured.Count,
+            Tips = tips,
+            TargetCaloriesKcal = calories,
+            TargetProteinG = protein,
+            TargetFatG = fat,
+            TargetCarbsG = carbs,
+            BasalMetabolicRate = Math.Round(bmr),
+            ActivityMultiplier = canEstimate ? pal : 0,
+            BmrFormulaText = canEstimate ? $"Mifflin–St Jeor ({profile.EnergyEquation}): 10 × weight + 6.25 × height − 5 × age + {(profile.EnergyEquation == "Male" ? "5" : "(−161)")}." : "Automatic estimates are off. Set personal targets in your profile.",
+            CaloriesFormulaText = profile.CalorieTarget.HasValue ? "Your personal energy target." : "Adult estimate: BMR × activity factor. Actual needs vary.",
+            ProteinFormulaText = profile.ProteinTarget.HasValue ? "Your personal protein target." : "Optional estimate: 1.6 × bodyweight (kg).",
+            FatFormulaText = profile.FatTarget.HasValue ? "Your personal fat target." : "Optional estimate: 0.8 × bodyweight (kg).",
+            CarbsFormulaText = profile.CarbsTarget.HasValue ? "Your personal carbohydrate target." : "Remaining energy: (calories − protein × 4 − fat × 9) / 4."
         };
     }
-
-    private static double CalculateMifflinStJeor(double weightKg, double heightCm, int age)
-    {
-        var baseValue = 10 * weightKg + 6.25 * heightCm - 5 * age;
-        return baseValue - 78;
-    }
 }
-

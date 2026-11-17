@@ -1,4 +1,4 @@
-﻿namespace IronMindGym.Services;
+namespace IronMindGym.Services;
 
 public enum AchievementMetricType
 {
@@ -12,21 +12,41 @@ public enum AchievementMetricType
     FriendsCount,
     WorkoutStreakDays,
     LongWorkouts,
+    ProfileCompleted,
+    ReviewsWritten,
     NonNumeric
 }
 
 public sealed class AchievementDefinition
 {
-    public required string Code { get; init; }
-    public required string Name { get; init; }
-    public required string ConditionDescription { get; init; }
-    public required AchievementMetricType MetricType { get; init; }
-    public double? TargetValue { get; init; }
+    public required string Code
+    {
+        get; init;
+    }
+    public required string Name
+    {
+        get; init;
+    }
+    public required string ConditionDescription
+    {
+        get; init;
+    }
+    public required AchievementMetricType MetricType
+    {
+        get; init;
+    }
+    public double? TargetValue
+    {
+        get; init;
+    }
 }
 
 public static class AchievementCatalog
 {
-    public static IReadOnlyList<AchievementDefinition> All { get; } = new List<AchievementDefinition>
+    public static IReadOnlyList<AchievementDefinition> All
+    {
+        get;
+    } = new List<AchievementDefinition>
     {
         new() { Code = "WORKOUT_001", Name = "First Step", ConditionDescription = "Complete 1 workout", MetricType = AchievementMetricType.WorkoutsCompleted, TargetValue = 1 },
         new() { Code = "WORKOUT_005", Name = "Warm Engine", ConditionDescription = "Complete 5 workouts", MetricType = AchievementMetricType.WorkoutsCompleted, TargetValue = 5 },

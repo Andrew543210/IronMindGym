@@ -6,123 +6,39 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Controllers;
 
-public class FriendsController(IronMindDbContext db) : Controller
+public class FriendsController(IronMindDbContext db, FriendshipService friendshipService) : Controller
 {
-    public IActionResult Index(string? searchUsername)
+    [HttpGet]
+    public IActionResult Index(string? searchUsername) => View(friendshipService.BuildIndex(User.GetUserId()!.Value, searchUsername));
+
+    [HttpPost]
+    public IActionResult SendRequest(int userId)
     {
-        var userId = User.GetUserId();
-        if (!userId.HasValue)
+        try
         {
-            return RedirectToAction("Login", "Auth");
+            friendshipService.SendRequest(User.GetUserId()!.Value, userId);
         }
+        catch (System.ComponentModel.DataAnnotations.ValidationException ex) { return BadRequest(ex.Message); }
+        TempData["Message"] = "Friend request sent.";
+        return RedirectToAction(nameof(Index));
+    }
 
-        var currentUserId = userId.Value;
-        var search = (searchUsername ?? string.Empty).Trim();
+    [HttpPost]
+    public IActionResult Accept(int userId)
+    {
+        if (!friendshipService.Accept(User.GetUserId()!.Value, userId))
+            return NotFound();
+        TempData["Message"] = "You're now connected. Your friend can see your workouts, nutrition, records and progress.";
+        return RedirectToAction(nameof(Index));
+    }
 
-        var acceptedFriendIds = db.Friendships
-            .AsNoTracking()
-            .Where(f => (f.User1Id == currentUserId || f.User2Id == currentUserId) && f.Status == "Accepted")
-            .Select(f => f.User1Id == currentUserId ? f.User2Id : f.User1Id)
-            .Distinct()
-            .ToList();
-
-        var usersQuery = db.Users
-            .AsNoTracking()
-            .Where(u => u.Id != currentUserId);
-
-        if (string.IsNullOrWhiteSpace(search))
-        {
-            usersQuery = usersQuery.Where(u => acceptedFriendIds.Contains(u.Id));
-        }
-        else
-        {
-            var normalizedSearch = search.ToLower();
-            usersQuery = usersQuery.Where(u => u.Username.ToLower().Contains(normalizedSearch));
-        }
-
-        var users = usersQuery
-            .OrderBy(u => u.Username)
-            .ToList();
-
-        var vm = new FriendsViewModel
-        {
-            SearchUsername = search,
-            Friends = users
-                .Select(friend =>
-                {
-                    var isAcceptedFriend = acceptedFriendIds.Contains(friend.Id);
-
-                    var workouts = db.WorkoutSessions
-                        .AsNoTracking()
-                        .Where(s => s.UserId == friend.Id)
-                        .OrderByDescending(s => s.SessionDate)
-                        .Take(5)
-                        .Select(s => new FriendWorkoutPreviewViewModel
-                        {
-                            WorkoutSessionId = s.Id,
-                            Name = s.Name,
-                            SessionDate = s.SessionDate,
-                            DurationMinutes = s.DurationMinutes
-                        })
-                        .ToList();
-
-                    var nutritionLogs = db.DailyNutritions
-                        .AsNoTracking()
-                        .Where(n => n.UserId == friend.Id)
-                        .OrderByDescending(n => n.Date)
-                        .Take(10)
-                        .Select(n => new FriendNutritionPreviewViewModel
-                        {
-                            Date = n.Date,
-                            CaloriesKcal = n.CaloriesKcal,
-                            ProteinG = n.ProteinG,
-                            FatG = n.FatG,
-                            CarbsG = n.CarbsG
-                        })
-                        .ToList();
-
-                    var records = db.PersonalRecords
-                        .AsNoTracking()
-                        .Include(pr => pr.Exercise)
-                        .Where(pr => pr.UserId == friend.Id)
-                        .OrderByDescending(pr => pr.MaxWeightKg)
-                        .Select(pr => new FriendRecordPreviewViewModel
-                        {
-                            ExerciseName = pr.Exercise.Name,
-                            MaxWeightKg = pr.MaxWeightKg,
-                            UpdatedAt = pr.UpdatedAt
-                        })
-                        .ToList();
-
-                    var achievements = db.UserAchievements
-                        .AsNoTracking()
-                        .Include(ua => ua.Achievement)
-                        .Where(ua => ua.UserId == friend.Id)
-                        .OrderByDescending(ua => ua.AchievedAt)
-                        .Select(ua => new FriendAchievementPreviewViewModel
-                        {
-                            Name = ua.Achievement.Name,
-                            ConditionDescription = ua.Achievement.ConditionDescription,
-                            AchievedAt = ua.AchievedAt
-                        })
-                        .ToList();
-
-                    return new FriendCardViewModel
-                    {
-                    UserId = friend.Id,
-                    Username = friend.Username,
-                    Status = isAcceptedFriend ? "Friend" : "Found user",
-                    LastFiveWorkoutsCount = workouts.Count,
-                    AverageKcal = nutritionLogs.Select(n => n.CaloriesKcal).DefaultIfEmpty(0).Average(),
-                    LastFiveWorkouts = workouts,
-                    LastNutritionLogs = nutritionLogs,
-                    PersonalRecords = records,
-                    Achievements = achievements
-                };})
-                .ToList()
-        };
-
-        return View(vm);
+    [HttpPost]
+    public IActionResult Remove(int userId)
+    {
+        if (!friendshipService.Remove(User.GetUserId()!.Value, userId))
+            return NotFound();
+        TempData["Message"] = "Connection removed.";
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
@@ -135,6 +51,8 @@ public class FriendsController(IronMindDbContext db) : Controller
         }
 
         var currentUserId = userId.Value;
+        if (!friendshipService.AreFriends(currentUserId, friendId))
+            return NotFound();
 
         var session = db.WorkoutSessions
             .AsNoTracking()
@@ -157,7 +75,7 @@ public class FriendsController(IronMindDbContext db) : Controller
                 var peakWeight = pe.Sets.Max(set => set.WeightKg);
                 var previousRecordWeight = db.PerformedExercises
                     .AsNoTracking()
-                    .Where(x => x.ExerciseId == pe.ExerciseId && x.WorkoutSession.UserId == friendId && x.WorkoutSessionId != session.Id)
+                    .Where(x => x.ExerciseId == pe.ExerciseId && x.WorkoutSession.UserId == friendId && x.WorkoutSession.SessionDate < session.SessionDate)
                     .SelectMany(x => x.Sets)
                     .Select(x => (double?)x.WeightKg)
                     .Max();
@@ -174,7 +92,7 @@ public class FriendsController(IronMindDbContext db) : Controller
                     PeakLoad = setLoadPercents.Count == 0 ? null : Math.Round(setLoadPercents.Max(), 1),
                     PeakWeightKg = peakWeight,
                     PercentToPersonalRecord = setLoadPercents.Count == 0 ? null : Math.Round(setLoadPercents.Max(), 1),
-                    IsNewRecord = !previousRecordWeight.HasValue || peakWeight > previousRecordWeight.Value
+                    IsNewRecord = pe.Exercise.Type == IronMindGym.Models.ExerciseType.StrengthTraining && (!previousRecordWeight.HasValue || peakWeight > previousRecordWeight.Value)
                 };
             })
             .ToList();
@@ -227,6 +145,8 @@ public class FriendsController(IronMindDbContext db) : Controller
         }
 
         var currentUserId = userId.Value;
+        if (!friendshipService.AreFriends(currentUserId, friendId))
+            return NotFound();
 
         var exists = db.WorkoutSessions.AsNoTracking()
             .Any(s => s.Id == workoutSessionId && s.UserId == friendId);
@@ -253,7 +173,11 @@ public class FriendsController(IronMindDbContext db) : Controller
         }
 
         db.SaveChanges();
-        return RedirectToAction(nameof(WorkoutDetails), new { friendId, workoutSessionId });
+        return RedirectToAction(nameof(WorkoutDetails), new
+        {
+            friendId,
+            workoutSessionId
+        });
     }
 
     [HttpPost]
@@ -266,10 +190,18 @@ public class FriendsController(IronMindDbContext db) : Controller
             return RedirectToAction("Login", "Auth");
         }
 
+        if (!friendshipService.AreFriends(userId.Value, friendId))
+            return NotFound();
         var text = (commentText ?? string.Empty).Trim();
+        if (text.Length > 500)
+            return BadRequest("Comments are limited to 500 characters.");
         if (text.Length == 0)
         {
-            return RedirectToAction(nameof(WorkoutDetails), new { friendId, workoutSessionId });
+            return RedirectToAction(nameof(WorkoutDetails), new
+            {
+                friendId,
+                workoutSessionId
+            });
         }
 
         var exists = db.WorkoutSessions.AsNoTracking()
@@ -288,6 +220,10 @@ public class FriendsController(IronMindDbContext db) : Controller
         });
 
         db.SaveChanges();
-        return RedirectToAction(nameof(WorkoutDetails), new { friendId, workoutSessionId });
+        return RedirectToAction(nameof(WorkoutDetails), new
+        {
+            friendId,
+            workoutSessionId
+        });
     }
 }

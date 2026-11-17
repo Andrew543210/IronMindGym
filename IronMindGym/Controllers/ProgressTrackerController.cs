@@ -1,356 +1,109 @@
 using IronMindGym.Data;
-using IronMindGym.Models;
+using IronMindGym.Services;
 using IronMindGym.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Controllers;
 
-public class ProgressTrackerController(IronMindDbContext db) : Controller
+public class ProgressTrackerController(IronMindDbContext db, ExerciseProgressService progressService, FriendshipService friends, StrengthService strengthService, IAvatarService avatarService) : Controller
 {
-    private readonly IronMindDbContext _db = db;
-
     [HttpGet]
-    public IActionResult Index()
-    {
-        var userId = User.GetUserId();
-        if (!userId.HasValue)
-            return RedirectToAction("Login", "Auth");
-
-        var model = new ProgressTrackerViewModel();
-
-        try
-        {
-            var progressList = _db.ExerciseProgress
-                .AsNoTracking()
-                .Include(ep => ep.Exercise)
-                .ThenInclude(e => e.MuscleSubGroup)
-                .ThenInclude(msg => msg.MuscleGroup)
-                .Where(ep => ep.UserId == userId.Value)
-                .OrderBy(ep => ep.Exercise.MuscleSubGroup.MuscleGroup.Name)
-                .ThenBy(ep => ep.Exercise.MuscleSubGroup.Name)
-                .ThenBy(ep => ep.Exercise.Name)
-                .ToList();
-
-            foreach (var progress in progressList)
-            {
-                var entry = new ExerciseProgressEntry
-                {
-                    Id = progress.Id,
-                    ExerciseProgressId = progress.Id,
-                    ExerciseId = progress.ExerciseId,
-                    ExerciseName = progress.Exercise.Name,
-                    MuscleSubGroup = progress.Exercise.MuscleSubGroup.Name,
-                    MuscleGroup = progress.Exercise.MuscleSubGroup.MuscleGroup.Name,
-                    ExerciseType = progress.Exercise.Type,
-
-                    InitialWeightKg = progress.InitialWeightKg,
-                    InitialReps = progress.InitialReps,
-                    InitialDurationSeconds = progress.InitialDurationSeconds,
-                    InitialIntensity = progress.InitialIntensity,
-                    InitialRecordedAt = progress.InitialRecordedAt,
-
-                    CurrentWeightKg = progress.CurrentWeightKg,
-                    CurrentReps = progress.CurrentReps,
-                    CurrentDurationSeconds = progress.CurrentDurationSeconds,
-                    CurrentIntensity = progress.CurrentIntensity,
-                    CurrentRecordedAt = progress.CurrentRecordedAt,
-
-                    WeightProgressKg = progress.CalculateWeightProgressKg(),
-                    WeightProgressPercent = progress.CalculateWeightProgressPercent(),
-                    RepsProgressCount = progress.CalculateRepsProgressCount(),
-                    RepsProgressPercent = progress.CalculateRepsProgressPercent(),
-                    CardioDurationProgressSeconds = progress.CalculateCardioDurationProgress(),
-                    CardioIntensityProgressCount = progress.CalculateCardioIntensityProgress(),
-                    CardioEffortProgressPercent = progress.CalculateCardioEffortRatio()
-                };
-
-                model.Exercises.Add(entry);
-            }
-        }
-        catch (Exception ex)
-        {
-            model.ErrorMessage = $"Error loading progress: {ex.Message}";
-        }
-
-        return View(model);
-    }
+    public IActionResult Index() => View(new ProgressTrackerViewModel { Exercises = progressService.List(User.GetUserId()!.Value) });
 
     [HttpGet]
     public IActionResult TrackExercise(int? exerciseId)
     {
-        var userId = User.GetUserId();
-        if (!userId.HasValue)
-            return RedirectToAction("Login", "Auth");
-
         ViewBag.ExerciseId = exerciseId ?? 0;
         return View();
     }
 
-    [HttpGet("ProgressTracker/GetExerciseCatalog")]
-    public IActionResult GetExerciseCatalog()
+    [HttpGet]
+    public IActionResult GetExerciseCatalog() => Json(db.Exercises.AsNoTracking().Select(e => new
     {
-        var exercises = _db.Exercises
-            .AsNoTracking()
-            .Include(e => e.MuscleSubGroup)
-            .ThenInclude(sg => sg.MuscleGroup)
-            .Select(e => new
-            {
-                exerciseId = e.Id,
-                exerciseName = e.Name,
-                muscleGroupName = e.MuscleSubGroup.MuscleGroup.Name,
-                muscleSubGroupName = e.MuscleSubGroup.Name,
-                exerciseType = (int)e.Type
-            })
-            .ToList();
-
-        return Json(exercises);
-    }
+        exerciseId = e.Id,
+        exerciseName = e.Name,
+        muscleGroupName = e.MuscleSubGroup.MuscleGroup.Name,
+        muscleSubGroupName = e.MuscleSubGroup.Name,
+        exerciseType = (int)e.Type
+    }).ToList());
 
     [HttpPost]
-    public IActionResult SetInitialResults(int exerciseId, double? weightKg = null, int? reps = null, int? durationSeconds = null, int? intensity = null)
-    {
-        var userId = User.GetUserId();
-        if (!userId.HasValue)
-            return Json(new { success = false, message = "Not authorized" });
-
-        var exercise = _db.Exercises
-            .AsNoTracking()
-            .FirstOrDefault(e => e.Id == exerciseId);
-
-        if (exercise == null)
-            return Json(new { success = false, message = "Exercise not found" });
-
-        var existingProgress = _db.ExerciseProgress
-            .FirstOrDefault(ep => ep.UserId == userId.Value && ep.ExerciseId == exerciseId);
-
-        try
-        {
-            if (existingProgress == null)
-            {
-                var progress = new ExerciseProgress
-                {
-                    UserId = userId.Value,
-                    ExerciseId = exerciseId,
-                    CurrentWeightKg = 0,
-                    CurrentReps = 0,
-                    CurrentDurationSeconds = 0,
-                    CurrentIntensity = 0
-                };
-
-                if (exercise.Type == ExerciseType.Cardio)
-                    progress.SetInitialCardioResults(durationSeconds ?? 0, intensity ?? 0);
-                else
-                    progress.SetInitialStrengthResults(weightKg ?? 0, reps ?? 0);
-
-                _db.ExerciseProgress.Add(progress);
-            }
-            else
-            {
-                if (exercise.Type == ExerciseType.Cardio)
-                    existingProgress.SetInitialCardioResults(durationSeconds ?? 0, intensity ?? 0);
-                else
-                    existingProgress.SetInitialStrengthResults(weightKg ?? 0, reps ?? 0);
-
-                _db.ExerciseProgress.Update(existingProgress);
-            }
-
-            _db.SaveChanges();
-            return Json(new { success = true, message = "Initial results saved" });
-        }
-        catch (Exception ex)
-        {
-            return Json(new { success = false, message = ex.Message });
-        }
-    }
+    public IActionResult SetInitialResults(int exerciseId, double? weightKg, int? reps, int? durationSeconds, int? intensity)
+        => Save(exerciseId, true, weightKg, reps, durationSeconds, intensity);
 
     [HttpPost]
-    public IActionResult SetCurrentResults(int exerciseId, double? weightKg = null, int? reps = null, int? durationSeconds = null, int? intensity = null)
+    public IActionResult SetCurrentResults(int exerciseId, double? weightKg, int? reps, int? durationSeconds, int? intensity)
+        => Save(exerciseId, false, weightKg, reps, durationSeconds, intensity);
+
+    private IActionResult Save(int exerciseId, bool initial, double? weight, int? reps, int? duration, int? intensity)
     {
-        var userId = User.GetUserId();
-        if (!userId.HasValue)
-            return Json(new { success = false, message = "Not authorized" });
-
-        var exercise = _db.Exercises
-            .AsNoTracking()
-            .FirstOrDefault(e => e.Id == exerciseId);
-
-        if (exercise == null)
-            return Json(new { success = false, message = "Exercise not found" });
-
-        var progress = _db.ExerciseProgress
-            .FirstOrDefault(ep => ep.UserId == userId.Value && ep.ExerciseId == exerciseId);
-
-        if (progress == null)
-            return Json(new { success = false, message = "Please set initial results first" });
-
+        if (!ModelState.IsValid)
+            return BadRequest(new
+            {
+                success = false,
+                message = "Enter valid numeric results."
+            });
         try
         {
-            if (exercise.Type == ExerciseType.Cardio)
-                progress.SetCurrentCardioResults(durationSeconds ?? 0, intensity ?? 0);
-            else
-                progress.SetCurrentStrengthResults(weightKg ?? 0, reps ?? 0);
-
-            _db.ExerciseProgress.Update(progress);
-            _db.SaveChanges();
-            return Json(new { success = true, message = "Current results updated" });
+            progressService.Save(User.GetUserId()!.Value, exerciseId, initial, weight, reps, duration, intensity);
+            return Json(new
+            {
+                success = true,
+                message = "Results saved."
+            });
         }
-        catch (Exception ex)
-        {
-            return Json(new { success = false, message = ex.Message });
-        }
+        catch (ArgumentException ex) { return BadRequest(new { success = false, message = ex.Message }); }
     }
 
     [HttpGet]
     public IActionResult GetExerciseProgress(int exerciseId)
     {
-        var userId = User.GetUserId();
-        if (!userId.HasValue)
-            return Json(new { success = false, message = "Not authorized" });
-
-        var progress = _db.ExerciseProgress
-            .AsNoTracking()
-            .Include(ep => ep.Exercise)
-            .FirstOrDefault(ep => ep.UserId == userId.Value && ep.ExerciseId == exerciseId);
-
-        if (progress == null)
-            return Json(new { success = true, hasData = false });
-
-        var result = new
+        var userId = User.GetUserId()!.Value;
+        var p = db.ExerciseProgress.AsNoTracking().Include(p => p.Exercise).FirstOrDefault(p => p.UserId == userId && p.ExerciseId == exerciseId);
+        if (p is null)
+            return Json(new
+            {
+                success = true,
+                hasData = false
+            });
+        var cardio = p.Exercise.Type != IronMindGym.Models.ExerciseType.StrengthTraining;
+        var timed = p.Exercise.Type == IronMindGym.Models.ExerciseType.Timed;
+        return Json(new
         {
             success = true,
             hasData = true,
-            exerciseProgressId = progress.Id,
-            hasInitial = progress.InitialWeightKg > 0 || progress.InitialDurationSeconds > 0,
-            hasCurrent = progress.CurrentWeightKg > 0 || progress.CurrentDurationSeconds > 0,
-            initialValue1 = progress.Exercise.Type == ExerciseType.Cardio ? progress.InitialDurationSeconds : progress.InitialWeightKg,
-            initialValue2 = progress.Exercise.Type == ExerciseType.Cardio ? progress.InitialIntensity : progress.InitialReps,
-            currentValue1 = progress.Exercise.Type == ExerciseType.Cardio ? progress.CurrentDurationSeconds : progress.CurrentWeightKg,
-            currentValue2 = progress.Exercise.Type == ExerciseType.Cardio ? progress.CurrentIntensity : progress.CurrentReps
-        };
-
-        return Json(result);
+            initialValue1 = cardio ? p.InitialDurationSeconds : p.InitialWeightKg,
+            initialValue2 = timed ? p.InitialWeightKg : cardio ? p.InitialIntensity : p.InitialReps,
+            currentValue1 = cardio ? p.CurrentDurationSeconds : p.CurrentWeightKg,
+            currentValue2 = timed ? p.CurrentWeightKg : cardio ? p.CurrentIntensity : p.CurrentReps
+        });
     }
 
     [HttpPost]
-    public IActionResult DeleteProgress(int exerciseProgressId)
-    {
-        var userId = User.GetUserId();
-        if (!userId.HasValue)
-            return Json(new { success = false, message = "Not authorized" });
-
-        var progress = _db.ExerciseProgress
-            .FirstOrDefault(ep => ep.Id == exerciseProgressId && ep.UserId == userId.Value);
-
-        if (progress == null)
-            return Json(new { success = false, message = "Progress not found" });
-
-        try
+    public IActionResult DeleteProgress(int exerciseProgressId) => progressService.Delete(User.GetUserId()!.Value, exerciseProgressId)
+        ? Json(new
         {
-            _db.ExerciseProgress.Remove(progress);
-            _db.SaveChanges();
-            return Json(new { success = true, message = "Progress deleted successfully" });
-        }
-        catch (Exception ex)
+            success = true
+        }) : NotFound(new
         {
-            return Json(new { success = false, message = ex.Message });
-        }
-    }
+            success = false,
+            message = "Progress not found."
+        });
 
     [HttpGet]
     public IActionResult ViewFriendProgress(int friendId)
     {
-        var userId = User.GetUserId();
-        if (!userId.HasValue)
-            return RedirectToAction("Login", "Auth");
-
-        var friend = _db.Users
-            .AsNoTracking()
-            .Include(u => u.Benchmarks)
-            .FirstOrDefault(u => u.Id == friendId);
-
-        if (friend == null)
+        if (!friends.AreFriends(User.GetUserId()!.Value, friendId))
             return NotFound();
-
-        var model = new FriendProgressTrackerViewModel
+        var friend = db.Users.AsNoTracking().Include(u => u.Benchmarks).Single(u => u.Id == friendId);
+        var body = db.AnthropometryLogs.AsNoTracking().Where(a => a.UserId == friendId).OrderByDescending(a => a.RecordedAt).FirstOrDefault();
+        return View(new FriendProgressTrackerViewModel
         {
             FriendId = friendId,
-            FriendUsername = friend.Username
-        };
-
-        try
-        {
-            if (friend.Benchmarks != null)
-            {
-                var avgBench = friend.Benchmarks.BenchPressKg;
-                var avgSquat = friend.Benchmarks.SquatKg;
-                var avgDL = friend.Benchmarks.DeadliftKg;
-
-                var latestAnthro = _db.AnthropometryLogs
-                    .AsNoTracking()
-                    .Where(a => a.UserId == friendId)
-                    .OrderByDescending(a => a.RecordedAt)
-                    .FirstOrDefault();
-
-                if (latestAnthro != null && latestAnthro.WeightKg > 0)
-                {
-                    var totalStrength = avgBench + avgSquat + avgDL;
-                    model.CurrentStrengthCoefficient = totalStrength / latestAnthro.WeightKg;
-                }
-            }
-
-            var progressList = _db.ExerciseProgress
-                .AsNoTracking()
-                .Include(ep => ep.Exercise)
-                .ThenInclude(e => e.MuscleSubGroup)
-                .ThenInclude(msg => msg.MuscleGroup)
-                .Where(ep => ep.UserId == friendId)
-                .OrderBy(ep => ep.Exercise.MuscleSubGroup.MuscleGroup.Name)
-                .ThenBy(ep => ep.Exercise.MuscleSubGroup.Name)
-                .ThenBy(ep => ep.Exercise.Name)
-                .ToList();
-
-            foreach (var progress in progressList)
-            {
-                var entry = new ExerciseProgressEntry
-                {
-                    Id = progress.Id,
-                    ExerciseProgressId = progress.Id,
-                    ExerciseId = progress.ExerciseId,
-                    ExerciseName = progress.Exercise.Name,
-                    MuscleSubGroup = progress.Exercise.MuscleSubGroup.Name,
-                    MuscleGroup = progress.Exercise.MuscleSubGroup.MuscleGroup.Name,
-                    ExerciseType = progress.Exercise.Type,
-
-                    InitialWeightKg = progress.InitialWeightKg,
-                    InitialReps = progress.InitialReps,
-                    InitialDurationSeconds = progress.InitialDurationSeconds,
-                    InitialIntensity = progress.InitialIntensity,
-                    InitialRecordedAt = progress.InitialRecordedAt,
-
-                    CurrentWeightKg = progress.CurrentWeightKg,
-                    CurrentReps = progress.CurrentReps,
-                    CurrentDurationSeconds = progress.CurrentDurationSeconds,
-                    CurrentIntensity = progress.CurrentIntensity,
-                    CurrentRecordedAt = progress.CurrentRecordedAt,
-
-                    WeightProgressKg = progress.CalculateWeightProgressKg(),
-                    WeightProgressPercent = progress.CalculateWeightProgressPercent(),
-                    RepsProgressCount = progress.CalculateRepsProgressCount(),
-                    RepsProgressPercent = progress.CalculateRepsProgressPercent(),
-                    CardioDurationProgressSeconds = progress.CalculateCardioDurationProgress(),
-                    CardioIntensityProgressCount = progress.CalculateCardioIntensityProgress(),
-                    CardioEffortProgressPercent = progress.CalculateCardioEffortRatio()
-                };
-
-                model.Exercises.Add(entry);
-            }
-        }
-        catch (Exception ex)
-        {
-            ModelState.AddModelError("", $"Error loading friend progress: {ex.Message}");
-        }
-
-        return View(model);
+            FriendUsername = friend.Username,
+            CurrentStrengthCoefficient = avatarService.CalculateStrengthCoefficient(strengthService.Current(friendId, friend.Benchmarks), body),
+            Exercises = progressService.List(friendId)
+        });
     }
 }

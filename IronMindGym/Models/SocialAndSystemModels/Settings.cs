@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
@@ -6,9 +6,15 @@ public class Settings
 {
     private string _language = "en";
 
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
-    public int UserId { get; set; }
+    public int UserId
+    {
+        get; set;
+    }
     public User User { get; set; } = null!;
 
     [MaxLength(10)]
@@ -18,7 +24,10 @@ public class Settings
         set => _language = string.IsNullOrWhiteSpace(value) ? "en" : value.Trim().ToLowerInvariant();
     }
 
-    public int UIThemeId { get; set; }
+    public int UIThemeId
+    {
+        get; set;
+    }
     public UITheme UITheme { get; set; } = null!;
 
     public void ChangeLanguage(string language) => Language = language;

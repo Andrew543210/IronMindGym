@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
@@ -6,8 +6,14 @@ public class NutritionAssessment
 {
     private string _systemVerdict = string.Empty;
 
-    public int Id { get; set; }
-    public int DailyNutritionId { get; set; }
+    public int Id
+    {
+        get; set;
+    }
+    public int DailyNutritionId
+    {
+        get; set;
+    }
     public DailyNutrition DailyNutrition { get; set; } = null!;
 
     [MaxLength(120)]
@@ -17,8 +23,14 @@ public class NutritionAssessment
         set => _systemVerdict = (value ?? string.Empty).Trim();
     }
 
-    public int? AdviceId { get; set; }
-    public NutritionAdvice? Advice { get; set; }
+    public int? AdviceId
+    {
+        get; set;
+    }
+    public NutritionAdvice? Advice
+    {
+        get; set;
+    }
 
     public void AttachAdvice(int? adviceId) => AdviceId = adviceId;
 

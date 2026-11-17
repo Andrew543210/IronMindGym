@@ -1,4 +1,4 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,14 +6,38 @@ namespace IronMindGym.Services;
 
 public sealed class AwardProgressItem
 {
-    public required string Code { get; init; }
-    public required string Name { get; init; }
-    public required string ConditionDescription { get; init; }
-    public bool IsUnlocked { get; init; }
-    public bool IsNumeric { get; init; }
-    public double CurrentValue { get; init; }
-    public double TargetValue { get; init; }
-    public double ProgressPercent { get; init; }
+    public required string Code
+    {
+        get; init;
+    }
+    public required string Name
+    {
+        get; init;
+    }
+    public required string ConditionDescription
+    {
+        get; init;
+    }
+    public bool IsUnlocked
+    {
+        get; init;
+    }
+    public bool IsNumeric
+    {
+        get; init;
+    }
+    public double CurrentValue
+    {
+        get; init;
+    }
+    public double TargetValue
+    {
+        get; init;
+    }
+    public double ProgressPercent
+    {
+        get; init;
+    }
 }
 
 public static class AchievementEngine
@@ -44,8 +68,6 @@ public static class AchievementEngine
 
     public static void AssignAchievements(IronMindDbContext db, int userId)
     {
-        EnsureCatalog(db);
-
         var unlockedCodes = db.UserAchievements
             .Where(x => x.UserId == userId)
             .Select(x => x.Achievement.Code)
@@ -90,8 +112,6 @@ public static class AchievementEngine
 
     public static List<AwardProgressItem> BuildAwardsProgress(IronMindDbContext db, int userId)
     {
-        EnsureCatalog(db);
-
         var unlockedCodes = db.UserAchievements
             .Where(x => x.UserId == userId)
             .Select(x => x.Achievement.Code)
@@ -171,9 +191,9 @@ public static class AchievementEngine
                 .Select(x => (double?)(x.WeightKg * x.Reps))
                 .Sum() ?? 0;
 
-        var benchPr = GetBestRecordForNameContains(db, userId, "bench");
-        var squatPr = GetBestRecordForNameContains(db, userId, "squat");
-        var deadliftPr = GetBestRecordForNameContains(db, userId, "deadlift");
+        var benchPr = GetBestRecord(db, userId, "Flat Bench Press");
+        var squatPr = GetBestRecord(db, userId, "Barbell Back Squat");
+        var deadliftPr = GetBestRecord(db, userId, "Deadlift");
 
         var nutritionLogs = db.DailyNutritions.Count(x => x.UserId == userId);
 
@@ -185,6 +205,8 @@ public static class AchievementEngine
 
         return new Dictionary<AchievementMetricType, double>
         {
+            [AchievementMetricType.ProfileCompleted] = db.Users.Any(u => u.Id == userId && u.Profile != null && u.Benchmarks != null) && db.AnthropometryLogs.Any(a => a.UserId == userId) ? 1 : 0,
+            [AchievementMetricType.ReviewsWritten] = db.WorkoutReviews.Count(r => r.WorkoutSession.UserId == userId && r.Comment != ""),
             [AchievementMetricType.WorkoutsCompleted] = workouts.Count,
             [AchievementMetricType.TotalSets] = totalSets,
             [AchievementMetricType.MonthlyTonnage] = monthlyTonnage,
@@ -202,16 +224,16 @@ public static class AchievementEngine
     {
         return code switch
         {
-            "REVIEW_FIRST" => metrics[AchievementMetricType.WorkoutsCompleted] >= 1,
-            "PROFILE_SETUP" => metrics[AchievementMetricType.WorkoutsCompleted] >= 1,
+            "REVIEW_FIRST" => metrics[AchievementMetricType.ReviewsWritten] >= 1,
+            "PROFILE_SETUP" => metrics[AchievementMetricType.ProfileCompleted] >= 1,
             _ => false
         };
     }
 
-    private static double GetBestRecordForNameContains(IronMindDbContext db, int userId, string exerciseNamePart)
+    private static double GetBestRecord(IronMindDbContext db, int userId, string exerciseNamePart)
     {
         return db.PersonalRecords
-            .Where(x => x.UserId == userId && EF.Functions.Like(x.Exercise.Name.ToLower(), $"%{exerciseNamePart.ToLower()}%"))
+            .Where(x => x.UserId == userId && x.Exercise.Name == exerciseNamePart)
             .Select(x => (double?)x.MaxWeightKg)
             .Max() ?? 0;
     }

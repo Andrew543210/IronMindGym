@@ -1,9 +1,10 @@
-﻿@model FriendsViewModel
+@model FriendsViewModel
 @{
     ViewData["Title"] = "Friends";
 }
 
-<h2>Friends</h2>
+<h2>Train together</h2>
+<p class="text-muted">Connect with a training partner. Only accepted friends can see each other’s workouts, nutrition and progress.</p>
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-4">
         <input name="searchUsername" value="@Model.SearchUsername" class="form-control" placeholder="Search by username" />
@@ -15,7 +16,7 @@
 
 @if (!Model.Friends.Any())
 {
-    <div class="alert alert-secondary">No users were found by this username.</div>
+    <div class="alert alert-secondary">No connections yet. Search for a username to invite a training partner.</div>
 }
 
 @foreach (var friend in Model.Friends)
@@ -25,9 +26,25 @@
             <div>
                 <strong>@friend.Username</strong>
                 <div class="small text-muted">Status: @friend.Status</div>
-                <div class="small text-muted">Average calories: <span class="metric">@Math.Round(friend.AverageKcal, 1)</span> kcal</div>
+                @if (friend.IsFriend) {<div class="small text-muted">Average calories: <span class="metric">@Math.Round(friend.AverageKcal, 1)</span> kcal</div>}
             </div>
 
+            <div class="d-flex gap-2 mt-3">
+                @if (friend.RequestReceived)
+                {
+                    <form method="post" asp-action="Accept"><input type="hidden" name="userId" value="@friend.UserId" /><button class="btn btn-primary btn-sm">Accept request</button></form>
+                }
+                @if (!friend.IsFriend && !friend.RequestSent && !friend.RequestReceived)
+                {
+                    <form method="post" asp-action="SendRequest"><input type="hidden" name="userId" value="@friend.UserId" /><button class="btn btn-primary btn-sm">Add friend</button></form>
+                }
+                else
+                {
+                    <form method="post" asp-action="Remove"><input type="hidden" name="userId" value="@friend.UserId" /><button class="btn btn-outline-secondary btn-sm">@(friend.IsFriend ? "Remove friend" : friend.RequestSent ? "Cancel request" : "Decline")</button></form>
+                }
+            </div>
+            @if (friend.IsFriend)
+            {
             <hr />
             <h6>Last 5 workouts</h6>
             @if (!friend.LastFiveWorkouts.Any())
@@ -119,6 +136,7 @@
                     </a>
                 </div>
             </div>
+            }
         </div>
     </div>
 }

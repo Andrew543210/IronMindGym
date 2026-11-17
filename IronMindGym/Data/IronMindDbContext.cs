@@ -1,4 +1,4 @@
-﻿using IronMindGym.Models;
+using IronMindGym.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Data;
@@ -42,6 +42,15 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Exercise>().HasIndex(e => e.Name).IsUnique();
+        modelBuilder.Entity<User>().Property(u => u.Email).UseCollation("NOCASE");
+        modelBuilder.Entity<User>().Property(u => u.Username).UseCollation("NOCASE");
+        modelBuilder.Entity<DailyNutrition>().HasIndex(n => new { n.UserId, n.Date }).IsUnique();
+        modelBuilder.Entity<PersonalRecord>().HasIndex(r => new { r.UserId, r.ExerciseId }).IsUnique();
+        modelBuilder.Entity<UserAchievement>().HasIndex(a => new { a.UserId, a.AchievementId }).IsUnique();
+        modelBuilder.Entity<Friendship>().HasIndex(f => new { f.User1Id, f.User2Id }).IsUnique();
+        modelBuilder.Entity<WeightLog>().HasIndex(w => new { w.UserId, w.Date }).IsUnique();
+
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Username)
             .IsUnique();

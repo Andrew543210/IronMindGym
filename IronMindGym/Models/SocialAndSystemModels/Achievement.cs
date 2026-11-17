@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
@@ -8,7 +8,10 @@ public class Achievement
     private string _name = string.Empty;
     private string _conditionDescription = string.Empty;
 
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
     [Required, MaxLength(80)]
     public string Code

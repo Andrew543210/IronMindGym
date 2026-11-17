@@ -68,6 +68,15 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0
         }));
 });
+builder.Services.AddScoped<NutritionJournalService>();
+builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<StatisticsService>();
+builder.Services.AddScoped<StrengthService>();
+builder.Services.AddScoped<GoalService>();
+builder.Services.AddScoped<ExerciseProgressService>();
+builder.Services.AddScoped<ProfileService>();
+builder.Services.AddScoped<WorkoutService>();
+builder.Services.AddScoped<FriendshipService>();
 builder.Services.AddScoped<IAvatarService, AvatarService>();
 builder.Services.AddScoped<INutritionAdviceService, NutritionAdviceService>();
 
@@ -76,8 +85,8 @@ app.UseForwardedHeaders();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<IronMindDbContext>();
-    db.Database.EnsureCreated();
-    DataSeeder.Seed(db);
+    db.Database.Migrate();
+    DataSeeder.Seed(db, app.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>("Seed:DemoData"));
 }
 if (!app.Environment.IsDevelopment())
 {

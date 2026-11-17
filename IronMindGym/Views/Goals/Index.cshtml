@@ -1,0 +1,95 @@
+@model GoalViewModel
+@{ ViewData["Title"] = "Goals"; }
+<p class="eyebrow">GIVE YOUR EFFORT A DIRECTION</p>
+<h2>One goal at a time</h2>
+
+<div class="row g-4">
+
+<div class="col-lg-4">
+
+<div class="card">
+
+<div class="card-body">
+<h4>Your next milestone</h4>
+<p class="text-muted small">Keep it specific: train 3 times a week, reach a new lift, or build a habit.</p>
+
+<form method="post" class="row g-3">
+
+<div asp-validation-summary="All" class="text-danger">
+
+</div>
+
+<div class="col-12">
+<label asp-for="Title" class="form-label">What are you working toward?</label>
+<input asp-for="Title" class="form-control" placeholder="Bench 80 kg for 5 reps" maxlength="80" />
+
+</div>
+
+<div class="col-12">
+<label asp-for="Deadline" class="form-label">Target date</label>
+<input asp-for="Deadline" class="form-control" />
+
+</div>
+
+<div class="col-12">
+<button class="btn btn-primary w-100" type="submit">Add goal ＋</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-lg-8">
+
+<div class="card">
+
+<div class="card-body">
+
+<div class="section-heading mt-0">
+<h4>Your milestones</h4>
+<span class="text-muted small">@Model.Goals.Count(g => g.IsCompleted) / @Model.Goals.Count complete</span>
+
+</div>
+@if (!Model.Goals.Any()) {
+<div class="empty-state">
+<strong>Make your next step clear.</strong>Add a goal and give yourself something to work toward.
+</div> }
+@foreach (var goal in Model.Goals) {
+<div class="goal-row @(goal.IsCompleted ? "completed" : "")">
+
+<div>
+<strong>@goal.GoalType</strong>
+<p class="small text-muted mb-0">@(goal.IsCompleted ? "Completed" : goal.Deadline.Date < DateTime.UtcNow.Date ? "Past target date" : "In progress") · @goal.Deadline.ToString("MMM d, yyyy")</p>
+
+</div>
+
+<div class="d-flex gap-2">
+
+<form asp-action="Toggle" method="post">
+<input type="hidden" name="id" value="@goal.Id" />
+<button class="btn btn-outline-secondary btn-sm">@(goal.IsCompleted ? "Reopen" : "Complete ✓")</button>
+
+</form>
+
+<form asp-action="Delete" method="post">
+<input type="hidden" name="id" value="@goal.Id" />
+<button class="btn btn-outline-danger btn-sm" aria-label="Delete goal @goal.GoalType">×</button>
+
+</form>
+
+</div>
+
+</div> }
+
+</div>
+
+</div>
+
+</div>
+
+</div>

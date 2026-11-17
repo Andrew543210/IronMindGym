@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
@@ -6,7 +6,10 @@ public class UITheme
 {
     private string _type = "Light";
 
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
     [MaxLength(30)]
     public string Type

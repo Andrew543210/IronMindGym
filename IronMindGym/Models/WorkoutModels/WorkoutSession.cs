@@ -1,10 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
 public class WorkoutSession
 {
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
     [Required, MaxLength(120)]
     public string Name { get; set; } = string.Empty;
@@ -12,16 +15,31 @@ public class WorkoutSession
     public DateTime SessionDate { get; set; } = DateTime.UtcNow;
 
     [Range(0, 480)]
-    public int DurationMinutes { get; set; }
+    public int DurationMinutes
+    {
+        get; set;
+    }
 
-    public int UserId { get; set; }
+    public int UserId
+    {
+        get; set;
+    }
     public User User { get; set; } = null!;
 
-    public int? SplitTypeId { get; set; }
-    public SplitType? SplitType { get; set; }
+    public int? SplitTypeId
+    {
+        get; set;
+    }
+    public SplitType? SplitType
+    {
+        get; set;
+    }
 
     public ICollection<PerformedExercise> PerformedExercises { get; set; } = new List<PerformedExercise>();
-    public WorkoutReview? Review { get; set; }
+    public WorkoutReview? Review
+    {
+        get; set;
+    }
     public ICollection<ActivityLike> Likes { get; set; } = new List<ActivityLike>();
     public ICollection<FriendComment> Comments { get; set; } = new List<FriendComment>();
 

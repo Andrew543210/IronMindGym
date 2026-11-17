@@ -1,20 +1,32 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
 public class Anthropometry
 {
-    public int Id { get; set; }
+    public int Id
+    {
+        get; set;
+    }
 
     [Range(0, 500)]
-    public double WeightKg { get; set; }
+    public double WeightKg
+    {
+        get; set;
+    }
 
     [Range(0, 300)]
-    public double HeightCm { get; set; }
+    public double HeightCm
+    {
+        get; set;
+    }
 
     public DateTime RecordedAt { get; set; } = DateTime.UtcNow;
 
-    public int UserId { get; set; }
+    public int UserId
+    {
+        get; set;
+    }
     public User User { get; set; } = null!;
 
     public bool IsValidWeight(double weight) => weight > 0 && weight <= 500;
