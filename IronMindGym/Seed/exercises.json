@@ -1,0 +1,863 @@
+[
+  {
+    "name": "Barbell Bicep Curls",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Basic movement for bicep mass"
+  },
+  {
+    "name": "Concentration Curl",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Isolated bicep work"
+  },
+  {
+    "name": "EZ-Bar Curl",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Reduced wrist strain"
+  },
+  {
+    "name": "Hammer Curls",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Brachialis emphasis"
+  },
+  {
+    "name": "Preacher Curl",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Fixed position for bicep peak"
+  },
+  {
+    "name": "Seated Dumbbell Curl",
+    "group": "Arms",
+    "subgroup": "Biceps",
+    "type": "StrengthTraining",
+    "description": "Range of motion control"
+  },
+  {
+    "name": "Farmer's Walk",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "Timed",
+    "description": "Grip strength and static load Log duration; add external load only when used."
+  },
+  {
+    "name": "Reverse Barbell Curl",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "StrengthTraining",
+    "description": "Reverse Barbell Curl. Track controlled sets and use a comfortable range of motion."
+  },
+  {
+    "name": "Seated Wrist Curls",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "StrengthTraining",
+    "description": "Forearm flexor development"
+  },
+  {
+    "name": "Seated Wrist Extensions",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "StrengthTraining",
+    "description": "Forearm extensor development"
+  },
+  {
+    "name": "Timed Dead Hang",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "Timed",
+    "description": "Grip endurance Log duration; add external load only when used."
+  },
+  {
+    "name": "Wrist Roller",
+    "group": "Arms",
+    "subgroup": "Forearms",
+    "type": "StrengthTraining",
+    "description": "Complex grip load"
+  },
+  {
+    "name": "Close-Grip Bench Press",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Strength exercise for triceps"
+  },
+  {
+    "name": "Close-Grip Push-Ups",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Basic bodyweight exercise"
+  },
+  {
+    "name": "Lying French Press",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Triceps long head development"
+  },
+  {
+    "name": "Overhead Dumbbell Extension",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Single-arm isolation"
+  },
+  {
+    "name": "Overhead Rope Extension",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Long head emphasis"
+  },
+  {
+    "name": "Triceps Pushdown",
+    "group": "Arms",
+    "subgroup": "Triceps",
+    "type": "StrengthTraining",
+    "description": "Classic triceps isolation"
+  },
+  {
+    "name": "Lat Pulldown",
+    "group": "Back",
+    "subgroup": "Lats",
+    "type": "StrengthTraining",
+    "description": "Controlled vertical pulling movement"
+  },
+  {
+    "name": "One-Arm Dumbbell Row",
+    "group": "Back",
+    "subgroup": "Lats",
+    "type": "StrengthTraining",
+    "description": "Unilateral lat load"
+  },
+  {
+    "name": "Straight-Arm Cable Pulldown",
+    "group": "Back",
+    "subgroup": "Lats",
+    "type": "StrengthTraining",
+    "description": "Lat isolation without elbow flexion"
+  },
+  {
+    "name": "Wide-Grip Pull-ups",
+    "group": "Back",
+    "subgroup": "Lats",
+    "type": "StrengthTraining",
+    "description": "Lat width development"
+  },
+  {
+    "name": "Bent-Over Barbell Row",
+    "group": "Back",
+    "subgroup": "Rows & upper back",
+    "type": "StrengthTraining",
+    "description": "Basic movement for back mass"
+  },
+  {
+    "name": "T-Bar Row",
+    "group": "Back",
+    "subgroup": "Rows & upper back",
+    "type": "StrengthTraining",
+    "description": "Strength movement for thickness and width"
+  },
+  {
+    "name": "Hyperextension",
+    "group": "Back",
+    "subgroup": "Spinal erectors",
+    "type": "StrengthTraining",
+    "description": "Strengthening spinal erectors"
+  },
+  {
+    "name": "Tilt control and back stabilization",
+    "group": "Back",
+    "subgroup": "Spinal erectors",
+    "type": "StrengthTraining",
+    "description": "Tilt control and back stabilization. Track controlled sets and use a comfortable range of motion."
+  },
+  {
+    "name": "Barbell Shrugs",
+    "group": "Back",
+    "subgroup": "Upper back & traps",
+    "type": "StrengthTraining",
+    "description": "Upper traps focus"
+  },
+  {
+    "name": "Dumbbell Shrugs",
+    "group": "Back",
+    "subgroup": "Upper back & traps",
+    "type": "StrengthTraining",
+    "description": "Free range of motion variation"
+  },
+  {
+    "name": "Incline Bench Y-Raises",
+    "group": "Back",
+    "subgroup": "Upper back & traps",
+    "type": "StrengthTraining",
+    "description": "Scapular stabilizers"
+  },
+  {
+    "name": "Chest-Level Cable Flyes",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Horizontal isolated movement"
+  },
+  {
+    "name": "Flat Bench Press",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Core exercise for overall chest strength"
+  },
+  {
+    "name": "Flat Dumbbell Press",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Balance of left and right sides"
+  },
+  {
+    "name": "Incline Push-ups (Hands on bench)",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Easier variation for lower chest"
+  },
+  {
+    "name": "Pec Deck Flyes",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Chest isolation without heavy shoulder load"
+  },
+  {
+    "name": "Push-Ups",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Classic movement for chest and triceps"
+  },
+  {
+    "name": "Seated Machine Chest Press",
+    "group": "Chest",
+    "subgroup": "General chest",
+    "type": "StrengthTraining",
+    "description": "Stable work in a safe position"
+  },
+  {
+    "name": "Chest Dips",
+    "group": "Chest",
+    "subgroup": "Lower chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Forward lean for chest emphasis"
+  },
+  {
+    "name": "Decline Barbell Press",
+    "group": "Chest",
+    "subgroup": "Lower chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Focus on lower chest fibers"
+  },
+  {
+    "name": "Decline Dumbbell Press",
+    "group": "Chest",
+    "subgroup": "Lower chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Increased range of motion for lower chest"
+  },
+  {
+    "name": "Decline Smith Machine Press",
+    "group": "Chest",
+    "subgroup": "Lower chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Safe mechanics with fixed path"
+  },
+  {
+    "name": "High Cable Crossover",
+    "group": "Chest",
+    "subgroup": "Lower chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Downward load direction"
+  },
+  {
+    "name": "Decline Push-ups (Feet on elevation)",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Bodyweight with upper chest focus"
+  },
+  {
+    "name": "Incline Barbell Bench Press",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Incline pressing with an emphasis on the clavicular chest; front delts and triceps assist."
+  },
+  {
+    "name": "Incline Dumbbell Bench Press",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Stabilization and greater range of motion"
+  },
+  {
+    "name": "Incline Dumbbell Flyes",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Upper chest isolation"
+  },
+  {
+    "name": "Incline Smith Machine Press",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Controlled trajectory"
+  },
+  {
+    "name": "Low Cable Crossover",
+    "group": "Chest",
+    "subgroup": "Upper chest emphasis",
+    "type": "StrengthTraining",
+    "description": "Upper chest peak contraction"
+  },
+  {
+    "name": "Burpees",
+    "group": "Conditioning",
+    "subgroup": "Bodyweight circuits",
+    "type": "StrengthTraining",
+    "description": "Full-body functional movement"
+  },
+  {
+    "name": "Air Bike Intervals",
+    "group": "Conditioning",
+    "subgroup": "Intervals",
+    "type": "Cardio",
+    "description": "High-intensity workload"
+  },
+  {
+    "name": "Comprehensive full-body mobilization",
+    "group": "Conditioning",
+    "subgroup": "Intervals",
+    "type": "Cardio",
+    "description": "Comprehensive full-body mobilization. Track controlled sets and use a comfortable range of motion."
+  },
+  {
+    "name": "Jump Rope Intervals",
+    "group": "Conditioning",
+    "subgroup": "Intervals",
+    "type": "Cardio",
+    "description": "Coordination and endurance development"
+  },
+  {
+    "name": "Rowing Machine Intervals",
+    "group": "Conditioning",
+    "subgroup": "Intervals",
+    "type": "Cardio",
+    "description": "Cardio with endurance emphasis"
+  },
+  {
+    "name": "Sprints 30/30",
+    "group": "Conditioning",
+    "subgroup": "Intervals",
+    "type": "Cardio",
+    "description": "High-intensity interval cardio"
+  },
+  {
+    "name": "Sled Push",
+    "group": "Conditioning",
+    "subgroup": "Loaded conditioning",
+    "type": "Timed",
+    "description": "Strength endurance Log duration; add external load only when used."
+  },
+  {
+    "name": "Jump Rope",
+    "group": "Conditioning",
+    "subgroup": "Steady cardio",
+    "type": "Cardio",
+    "description": "Dynamic calf work"
+  },
+  {
+    "name": "Weighted Plank",
+    "group": "Core",
+    "subgroup": "Anti-extension",
+    "type": "Timed",
+    "description": "Isometric core stabilization Log duration; add external load only when used."
+  },
+  {
+    "name": "Captain's Chair Knee Raises",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Easier hanging variation"
+  },
+  {
+    "name": "Hanging Leg Raises",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Strong emphasis on lower abs"
+  },
+  {
+    "name": "Lying Leg Raise",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Basic exercise for lower abs"
+  },
+  {
+    "name": "Plank Knee Tucks",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Dynamic stabilization"
+  },
+  {
+    "name": "Reverse Crunch",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Lower abs isolation"
+  },
+  {
+    "name": "Scissor Kicks",
+    "group": "Core",
+    "subgroup": "Hip flexion & trunk control",
+    "type": "StrengthTraining",
+    "description": "Statodynamic lower abs work"
+  },
+  {
+    "name": "Side Plank",
+    "group": "Core",
+    "subgroup": "Lateral stability",
+    "type": "Timed",
+    "description": "Isometric oblique work Log duration; add external load only when used."
+  },
+  {
+    "name": "Cable Woodchopper",
+    "group": "Core",
+    "subgroup": "Rotation & lateral stability",
+    "type": "StrengthTraining",
+    "description": "Diagonal rotational movement"
+  },
+  {
+    "name": "Knee to Elbow Crunches",
+    "group": "Core",
+    "subgroup": "Rotation & lateral stability",
+    "type": "StrengthTraining",
+    "description": "Coordination and rotation"
+  },
+  {
+    "name": "Russian Twists",
+    "group": "Core",
+    "subgroup": "Rotation & lateral stability",
+    "type": "StrengthTraining",
+    "description": "Core rotation and obliques"
+  },
+  {
+    "name": "Side Crunches",
+    "group": "Core",
+    "subgroup": "Rotation & lateral stability",
+    "type": "StrengthTraining",
+    "description": "Emphasis on oblique muscles"
+  },
+  {
+    "name": "Weighted Russian Twists",
+    "group": "Core",
+    "subgroup": "Rotation & lateral stability",
+    "type": "StrengthTraining",
+    "description": "Additional weight for obliques"
+  },
+  {
+    "name": "Cable Crunch",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Constant tension on abs"
+  },
+  {
+    "name": "Fitball Crunches",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Stretch and core control"
+  },
+  {
+    "name": "Floor Crunches",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Classic upper abs movement"
+  },
+  {
+    "name": "Incline Bench Crunches",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Increased range of motion"
+  },
+  {
+    "name": "Machine Crunch",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Controlled isolation"
+  },
+  {
+    "name": "Weighted Crunches",
+    "group": "Core",
+    "subgroup": "Trunk flexion",
+    "type": "StrengthTraining",
+    "description": "Additional resistance"
+  },
+  {
+    "name": "Leg Press Calf Raise",
+    "group": "Legs",
+    "subgroup": "Calves",
+    "type": "StrengthTraining",
+    "description": "Heavy weight for calves"
+  },
+  {
+    "name": "Seated Calf Raise",
+    "group": "Legs",
+    "subgroup": "Calves",
+    "type": "StrengthTraining",
+    "description": "Soleus muscle emphasis"
+  },
+  {
+    "name": "Single-Leg Calf Raise",
+    "group": "Legs",
+    "subgroup": "Calves",
+    "type": "StrengthTraining",
+    "description": "Unilateral control"
+  },
+  {
+    "name": "Standing Calf Raise",
+    "group": "Legs",
+    "subgroup": "Calves",
+    "type": "StrengthTraining",
+    "description": "Main movement for calves"
+  },
+  {
+    "name": "Tip-Toe Farmer's Walk",
+    "group": "Legs",
+    "subgroup": "Calves",
+    "type": "Timed",
+    "description": "Statodynamic load Log duration; add external load only when used."
+  },
+  {
+    "name": "Barbell Glute Bridge",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Hip extension from the floor with a barbell across the hips. Primary focus: glutes."
+  },
+  {
+    "name": "Cable Hip Abduction",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Medius glute isolation"
+  },
+  {
+    "name": "Hip Thrust",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Maximum glute activation"
+  },
+  {
+    "name": "Machine Hip Abduction",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Abductor muscle isolation"
+  },
+  {
+    "name": "Reverse Hyperextension",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Lower back and glutes"
+  },
+  {
+    "name": "Reverse Lunges",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Stabilization and glute emphasis"
+  },
+  {
+    "name": "Step-Ups",
+    "group": "Legs",
+    "subgroup": "Glutes",
+    "type": "StrengthTraining",
+    "description": "Functional single-leg work"
+  },
+  {
+    "name": "Dumbbell Romanian Deadlift",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Hip hinge with dumbbells. Primary focus: hamstrings and glutes; keep the spine controlled."
+  },
+  {
+    "name": "Glute-Ham Raise",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Strength exercise for hamstrings"
+  },
+  {
+    "name": "Lying Leg Curl",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Hamstring isolation"
+  },
+  {
+    "name": "Romanian Deadlift",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Posterior chain and lower back"
+  },
+  {
+    "name": "Seated Leg Curl",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Controlled hamstring isolation"
+  },
+  {
+    "name": "Stiff-Leg Deadlift",
+    "group": "Legs",
+    "subgroup": "Hamstrings",
+    "type": "StrengthTraining",
+    "description": "Tension and strengthening of the posterior chain"
+  },
+  {
+    "name": "Deadlift",
+    "group": "Legs",
+    "subgroup": "Posterior chain",
+    "type": "StrengthTraining",
+    "description": "Complex strength exercise"
+  },
+  {
+    "name": "Barbell Back Squat",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Base for leg strength and mass"
+  },
+  {
+    "name": "Bulgarian Split Squat",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Deep range of motion for quads"
+  },
+  {
+    "name": "Dumbbell Lunges",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Unilateral work and balance"
+  },
+  {
+    "name": "Front Squats",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Greater quad emphasis"
+  },
+  {
+    "name": "Leg Extension",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Quad isolation"
+  },
+  {
+    "name": "Leg Press",
+    "group": "Legs",
+    "subgroup": "Quadriceps",
+    "type": "StrengthTraining",
+    "description": "Strength movement in machine"
+  },
+  {
+    "name": "Hip Mobilization",
+    "group": "Mobility",
+    "subgroup": "Hip mobility",
+    "type": "Timed",
+    "description": "Preparation for squats Log duration; add external load only when used."
+  },
+  {
+    "name": "Hamstring Stretch",
+    "group": "Mobility",
+    "subgroup": "Lower body stretches",
+    "type": "Timed",
+    "description": "Reduced hamstring stiffness Log duration; add external load only when used."
+  },
+  {
+    "name": "Wall Calf Stretch",
+    "group": "Mobility",
+    "subgroup": "Lower body stretches",
+    "type": "Timed",
+    "description": "Ankle mobility improvement Log duration; add external load only when used."
+  },
+  {
+    "name": "Cat-Cow",
+    "group": "Mobility",
+    "subgroup": "Spine mobility",
+    "type": "StrengthTraining",
+    "description": "Spinal mobility"
+  },
+  {
+    "name": "Thoracic Opening",
+    "group": "Mobility",
+    "subgroup": "Spine mobility",
+    "type": "Timed",
+    "description": "Shoulder girdle mobility improvement Log duration; add external load only when used."
+  },
+  {
+    "name": "Arnold Press",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Rotational movement for full shoulder development"
+  },
+  {
+    "name": "Dumbbell Front Raise",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Front delt isolation"
+  },
+  {
+    "name": "Front Plate Raises",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Front delt load"
+  },
+  {
+    "name": "Seated Dumbbell Press",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Stable version for delts"
+  },
+  {
+    "name": "Shoulder Press Machine",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Safe trajectory control"
+  },
+  {
+    "name": "Standing Dumbbell Press",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Strength version for shoulders"
+  },
+  {
+    "name": "Standing Overhead Press",
+    "group": "Shoulders",
+    "subgroup": "Front Delts",
+    "type": "StrengthTraining",
+    "description": "Strength exercise for front delt"
+  },
+  {
+    "name": "Face Pull",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Face Pull. Track controlled sets and use a comfortable range of motion."
+  },
+  {
+    "name": "Face Pull with Pause",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Rear delt peak contraction"
+  },
+  {
+    "name": "Prone Dumbbell Rear Delt Row",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Rear delt work without momentum"
+  },
+  {
+    "name": "Reverse Dumbbell Flyes",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Rear delt isolation"
+  },
+  {
+    "name": "Reverse Pec Deck",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Controlled machine movement"
+  },
+  {
+    "name": "Wide-Grip Barbell Row to Chest",
+    "group": "Shoulders",
+    "subgroup": "Rear Delts",
+    "type": "StrengthTraining",
+    "description": "Rear delts and traps"
+  },
+  {
+    "name": "Cable Lateral Raise",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Constant tension throughout the movement"
+  },
+  {
+    "name": "Dumbbell Lateral Raises",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Classic side delt isolation"
+  },
+  {
+    "name": "Dumbbell Upright Row",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Alternative to upright barbell row"
+  },
+  {
+    "name": "Machine Lateral Raise",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Stabilized isolation"
+  },
+  {
+    "name": "Single-Arm Lateral Raise",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Symmetry focus"
+  },
+  {
+    "name": "Upright Row",
+    "group": "Shoulders",
+    "subgroup": "Side Delts",
+    "type": "StrengthTraining",
+    "description": "Traps and delts"
+  }
+]
