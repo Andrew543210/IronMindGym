@@ -3,3 +3,17 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+.vs/
+.idea/
+*.user
+*.suo
+*.db
+*.db-shm
+*.db-wal
+*.sqlite*
+TestResults/
+coverage/
+artifacts/
+.env
+.env.*
+!.env.example
