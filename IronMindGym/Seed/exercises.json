@@ -18,7 +18,7 @@
     "group": "Arms",
     "subgroup": "Biceps",
     "type": "StrengthTraining",
-    "description": "Reduced wrist strain"
+    "description": "Biceps curl using an angled bar grip."
   },
   {
     "name": "Hammer Curls",
@@ -32,7 +32,7 @@
     "group": "Arms",
     "subgroup": "Biceps",
     "type": "StrengthTraining",
-    "description": "Fixed position for bicep peak"
+    "description": "Elbow flexion with the upper arms supported on a preacher bench."
   },
   {
     "name": "Seated Dumbbell Curl",
@@ -46,7 +46,7 @@
     "group": "Arms",
     "subgroup": "Forearms",
     "type": "Timed",
-    "description": "Grip strength and static load Log duration; add external load only when used."
+    "description": "Loaded walking carry. Log duration and the same load convention each session."
   },
   {
     "name": "Reverse Barbell Curl",
@@ -74,7 +74,7 @@
     "group": "Arms",
     "subgroup": "Forearms",
     "type": "Timed",
-    "description": "Grip endurance Log duration; add external load only when used."
+    "description": "Hang from a bar for a recorded duration. Log added external load only."
   },
   {
     "name": "Wrist Roller",
@@ -109,7 +109,7 @@
     "group": "Arms",
     "subgroup": "Triceps",
     "type": "StrengthTraining",
-    "description": "Single-arm isolation"
+    "description": "Elbow extension with a dumbbell held overhead; keep the same one-arm or two-arm variation between logs."
   },
   {
     "name": "Overhead Rope Extension",
@@ -179,7 +179,7 @@
     "group": "Back",
     "subgroup": "Spinal erectors",
     "type": "StrengthTraining",
-    "description": "Tilt control and back stabilization. Track controlled sets and use a comfortable range of motion."
+    "description": "General back stabilization entry. Record the specific drill in your session notes, or select a named exercise for consistent comparisons."
   },
   {
     "name": "Barbell Shrugs",
@@ -228,14 +228,14 @@
     "group": "Chest",
     "subgroup": "General chest",
     "type": "StrengthTraining",
-    "description": "Easier variation for lower chest"
+    "description": "Push-up with the hands supported above the feet. Keep support height consistent between logs."
   },
   {
     "name": "Pec Deck Flyes",
     "group": "Chest",
     "subgroup": "General chest",
     "type": "StrengthTraining",
-    "description": "Chest isolation without heavy shoulder load"
+    "description": "Seated chest fly using a machine with a guided movement path."
   },
   {
     "name": "Push-Ups",
@@ -249,7 +249,7 @@
     "group": "Chest",
     "subgroup": "General chest",
     "type": "StrengthTraining",
-    "description": "Stable work in a safe position"
+    "description": "Seated pressing movement with a machine-guided path."
   },
   {
     "name": "Chest Dips",
@@ -277,7 +277,7 @@
     "group": "Chest",
     "subgroup": "Lower chest emphasis",
     "type": "StrengthTraining",
-    "description": "Safe mechanics with fixed path"
+    "description": "Decline pressing movement with a guided bar path."
   },
   {
     "name": "High Cable Crossover",
@@ -312,7 +312,7 @@
     "group": "Chest",
     "subgroup": "Upper chest emphasis",
     "type": "StrengthTraining",
-    "description": "Upper chest isolation"
+    "description": "Chest fly performed on an incline bench."
   },
   {
     "name": "Incline Smith Machine Press",
@@ -326,7 +326,7 @@
     "group": "Chest",
     "subgroup": "Upper chest emphasis",
     "type": "StrengthTraining",
-    "description": "Upper chest peak contraction"
+    "description": "Upward cable fly performed from low pulleys."
   },
   {
     "name": "Burpees",
@@ -344,10 +344,10 @@
   },
   {
     "name": "Comprehensive full-body mobilization",
-    "group": "Conditioning",
-    "subgroup": "Intervals",
-    "type": "Cardio",
-    "description": "Comprehensive full-body mobilization. Track controlled sets and use a comfortable range of motion."
+    "group": "Mobility",
+    "subgroup": "General mobility",
+    "type": "Timed",
+    "description": "General mobility sequence. Log duration and note the movements in your session review."
   },
   {
     "name": "Jump Rope Intervals",
@@ -375,21 +375,21 @@
     "group": "Conditioning",
     "subgroup": "Loaded conditioning",
     "type": "Timed",
-    "description": "Strength endurance Log duration; add external load only when used."
+    "description": "Push a loaded sled. Log duration and keep distance and surface comparable between sessions."
   },
   {
     "name": "Jump Rope",
     "group": "Conditioning",
     "subgroup": "Steady cardio",
     "type": "Cardio",
-    "description": "Dynamic calf work"
+    "description": "Repeated rope jumps logged by duration and perceived effort."
   },
   {
     "name": "Weighted Plank",
     "group": "Core",
     "subgroup": "Anti-extension",
     "type": "Timed",
-    "description": "Isometric core stabilization Log duration; add external load only when used."
+    "description": "Isometric core stabilization. Log duration; add external load only when used."
   },
   {
     "name": "Captain's Chair Knee Raises",
@@ -403,14 +403,14 @@
     "group": "Core",
     "subgroup": "Hip flexion & trunk control",
     "type": "StrengthTraining",
-    "description": "Strong emphasis on lower abs"
+    "description": "Hanging leg raise involving hip flexion and trunk control."
   },
   {
     "name": "Lying Leg Raise",
     "group": "Core",
     "subgroup": "Hip flexion & trunk control",
     "type": "StrengthTraining",
-    "description": "Basic exercise for lower abs"
+    "description": "Supine leg raise involving hip flexion and trunk control."
   },
   {
     "name": "Plank Knee Tucks",
@@ -424,21 +424,21 @@
     "group": "Core",
     "subgroup": "Hip flexion & trunk control",
     "type": "StrengthTraining",
-    "description": "Lower abs isolation"
+    "description": "Controlled curl of the pelvis toward the rib cage."
   },
   {
     "name": "Scissor Kicks",
     "group": "Core",
     "subgroup": "Hip flexion & trunk control",
     "type": "StrengthTraining",
-    "description": "Statodynamic lower abs work"
+    "description": "Alternating leg movement while controlling the trunk."
   },
   {
     "name": "Side Plank",
     "group": "Core",
     "subgroup": "Lateral stability",
     "type": "Timed",
-    "description": "Isometric oblique work Log duration; add external load only when used."
+    "description": "Isometric oblique work. Log duration; add external load only when used."
   },
   {
     "name": "Cable Woodchopper",
@@ -494,7 +494,7 @@
     "group": "Core",
     "subgroup": "Trunk flexion",
     "type": "StrengthTraining",
-    "description": "Classic upper abs movement"
+    "description": "Trunk flexion from a supine position."
   },
   {
     "name": "Incline Bench Crunches",
@@ -550,7 +550,7 @@
     "group": "Legs",
     "subgroup": "Calves",
     "type": "Timed",
-    "description": "Statodynamic load Log duration; add external load only when used."
+    "description": "Statodynamic load. Log duration; add external load only when used."
   },
   {
     "name": "Barbell Glute Bridge",
@@ -571,7 +571,7 @@
     "group": "Legs",
     "subgroup": "Glutes",
     "type": "StrengthTraining",
-    "description": "Maximum glute activation"
+    "description": "Hip extension with the upper back supported on a bench."
   },
   {
     "name": "Machine Hip Abduction",
@@ -697,21 +697,21 @@
     "group": "Mobility",
     "subgroup": "Hip mobility",
     "type": "Timed",
-    "description": "Preparation for squats Log duration; add external load only when used."
+    "description": "Preparation for squats. Log duration; add external load only when used."
   },
   {
     "name": "Hamstring Stretch",
     "group": "Mobility",
     "subgroup": "Lower body stretches",
     "type": "Timed",
-    "description": "Reduced hamstring stiffness Log duration; add external load only when used."
+    "description": "Reduced hamstring stiffness. Log duration; add external load only when used."
   },
   {
     "name": "Wall Calf Stretch",
     "group": "Mobility",
     "subgroup": "Lower body stretches",
     "type": "Timed",
-    "description": "Ankle mobility improvement Log duration; add external load only when used."
+    "description": "Ankle mobility improvement. Log duration; add external load only when used."
   },
   {
     "name": "Cat-Cow",
@@ -725,7 +725,7 @@
     "group": "Mobility",
     "subgroup": "Spine mobility",
     "type": "Timed",
-    "description": "Shoulder girdle mobility improvement Log duration; add external load only when used."
+    "description": "Shoulder girdle mobility improvement. Log duration; add external load only when used."
   },
   {
     "name": "Arnold Press",
@@ -760,7 +760,7 @@
     "group": "Shoulders",
     "subgroup": "Front Delts",
     "type": "StrengthTraining",
-    "description": "Safe trajectory control"
+    "description": "Overhead pressing movement with a machine-guided path."
   },
   {
     "name": "Standing Dumbbell Press",
