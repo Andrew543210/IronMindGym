@@ -1,4 +1,4 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Services;
 using IronMindGym.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +10,7 @@ public class AwardsController(IronMindDbContext db) : Controller
     [HttpGet]
     public IActionResult Index()
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -37,4 +37,3 @@ public class AwardsController(IronMindDbContext db) : Controller
         return View(vm);
     }
 }
-

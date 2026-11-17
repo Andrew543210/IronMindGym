@@ -1,4 +1,4 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Models;
 using IronMindGym.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +24,7 @@ public class ExerciseLibraryController(IronMindDbContext db) : Controller
 
     public IActionResult Index(int? muscleGroupId, int? muscleSubGroupId, string? search)
     {
-        if (!HttpContext.Session.GetInt32("UserId").HasValue)
+        if (!User.GetUserId().HasValue)
         {
             return RedirectToAction("Login", "Auth");
         }

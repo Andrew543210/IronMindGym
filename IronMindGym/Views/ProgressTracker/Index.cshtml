@@ -1,4 +1,4 @@
-﻿@model ProgressTrackerViewModel
+@model ProgressTrackerViewModel
 @{
     ViewData["Title"] = "Progress Tracker";
 }
@@ -142,13 +142,14 @@
 
 
 
+@Html.AntiForgeryToken()
 <script>
     async function deleteProgressFromIndex(exerciseProgressId, btn) {
         if (!confirm('Delete this progress tracker?')) return;
         const formData = new FormData();
         formData.append('exerciseProgressId', exerciseProgressId);
         try {
-            const res = await fetch('/ProgressTracker/DeleteProgress', { method: 'POST', body: formData });
+            const res = await fetch('/ProgressTracker/DeleteProgress', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value }, body: formData });
             const json = await res.json();
             if (json.success) {
                 const card = btn.closest('.col-md-6, .col-lg-4');
@@ -181,7 +182,7 @@
         }
 
         try {
-            const res = await fetch('/ProgressTracker/SetCurrentResults', { method: 'POST', body: formData });
+            const res = await fetch('/ProgressTracker/SetCurrentResults', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value }, body: formData });
             const json = await res.json();
             if (json.success) {
                 location.reload();

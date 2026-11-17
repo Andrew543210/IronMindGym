@@ -1,4 +1,4 @@
-﻿@model ProgressTrackerViewModel
+@model ProgressTrackerViewModel
 @{
     ViewData["Title"] = "Track Exercise Progress";
     ViewBag.ExerciseId = ViewBag.ExerciseId ?? 0;
@@ -92,6 +92,7 @@
     </div>
 </div>
 
+@Html.AntiForgeryToken()
 <script>
     let exerciseCatalog = [];
     let selectedExerciseId = 0;
@@ -281,7 +282,7 @@
         }
 
         fetch('/ProgressTracker/SetInitialResults', {
-            method: 'POST',
+            method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value },
             body: data
         }).then(r => r.json()).then(result => {
             if (result.success) {
@@ -381,7 +382,7 @@
             }
 
             fetch('/ProgressTracker/SetInitialResults', {
-                method: 'POST',
+                method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value },
                 body: initialData
             }).then(r => r.json()).then(result => {
                 if (result.success) {
@@ -422,7 +423,7 @@
         }
 
         fetch('/ProgressTracker/SetCurrentResults', {
-            method: 'POST',
+            method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value },
             body: data
         }).then(r => r.json()).then(result => {
             if (result.success) {
@@ -513,7 +514,7 @@
         }
 
          fetch('/ProgressTracker/SetCurrentResults', {
-             method: 'POST',
+             method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value },
              body: data
          }).then(r => r.json()).then(result => {
              if (result.success) {
@@ -542,7 +543,7 @@
         data.append('exerciseProgressId', exerciseProgressId);
         
         fetch('/ProgressTracker/DeleteProgress', {
-            method: 'POST',
+            method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value },
             body: data
         }).then(r => r.json()).then(result => {
             if (result.success) {
@@ -559,4 +560,3 @@
         document.getElementById('currentValue2')?.addEventListener('input', updateProgressDisplay);
     });
 </script>
-

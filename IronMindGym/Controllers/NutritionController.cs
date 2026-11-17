@@ -1,4 +1,4 @@
-﻿using IronMindGym.Data;
+using IronMindGym.Data;
 using IronMindGym.Models;
 using IronMindGym.Services;
 using IronMindGym.ViewModels;
@@ -12,7 +12,7 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
     [HttpGet]
     public IActionResult Index()
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -63,7 +63,7 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
     [HttpPost]
     public IActionResult Index(NutritionViewModel model)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -140,7 +140,7 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
     [HttpGet]
     public IActionResult EditToday(int id)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
@@ -161,7 +161,7 @@ public class NutritionController(IronMindDbContext db, INutritionAdviceService a
     [HttpGet]
     public IActionResult Details(int id)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
+        var userId = User.GetUserId();
         if (!userId.HasValue)
         {
             return RedirectToAction("Login", "Auth");
