@@ -1,0 +1,23 @@
+name: Build and test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet restore --locked-mode
+      - run: dotnet build --configuration Release --no-restore --warnaserror
+      - run: dotnet test --configuration Release --no-build
+      - run: dotnet tool restore
+      - run: dotnet ef migrations has-pending-model-changes --project IronMindGym --configuration Release --no-build

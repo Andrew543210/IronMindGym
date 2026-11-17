@@ -1,0 +1,42 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Data Source=/app/data/ironmind.db
+      DataProtection__KeyDirectory: /app/keys
+      ReverseProxy__KnownProxy: 172.28.0.2
+      AllowedHosts: ${DOMAIN:?Set DOMAIN to your hostname in .env}
+    volumes:
+      - gym-data:/app/data
+      - gym-keys:/app/keys
+    networks:
+      - gym
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN to your hostname in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    networks:
+      gym:
+        ipv4_address: 172.28.0.2
+networks:
+  gym:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+volumes:
+  gym-data:
+  gym-keys:
+  caddy-data:
+  caddy-config:
