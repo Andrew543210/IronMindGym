@@ -6,6 +6,10 @@ Please report security problems privately through the repository's GitHub privat
 
 The current `master` branch is maintained. Use a supported, patched .NET 10 SDK/runtime and rebuild container images when runtime updates are available.
 
+## Legacy database exposure
+
+An older public revision included a database with unsalted password hashes. Those database files have been removed from the rewritten branch history, but existing clones or cached copies cannot be recalled. Treat passwords from that database as exposed and change them anywhere they were reused. The current application starts with a new database and does not import those hashes.
+
 ## Deployment model
 
 - HTTPS terminates at a trusted reverse proxy; production authentication cookies require HTTPS.
