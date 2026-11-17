@@ -21,12 +21,12 @@
     <div class="card-body">
         <h5>Your targets</h5>
         <div class="row g-2">
-            <div class="col-md-4">BMR: <span class="metric">@Model.BasalMetabolicRate</span> kcal</div>
-            <div class="col-md-4">PAL: <span class="metric">@Model.ActivityMultiplier.ToString("F2")</span></div>
-            <div class="col-md-4">Calories target: <span class="metric">@Model.TargetCaloriesKcal</span> kcal</div>
-            <div class="col-md-4">Protein target: <span class="metric">@Model.TargetProteinG</span> g</div>
-            <div class="col-md-4">Fat target: <span class="metric">@Model.TargetFatG</span> g</div>
-            <div class="col-md-4">Carbs target: <span class="metric">@Model.TargetCarbsG</span> g</div>
+            <div class="col-md-4">BMR estimate: <span class="metric">@(Model.BasalMetabolicRate > 0 ? $"{Model.BasalMetabolicRate:0} kcal" : "Off")</span></div>
+            <div class="col-md-4">Activity factor: <span class="metric">@(Model.ActivityMultiplier > 0 ? Model.ActivityMultiplier.ToString("F2") : "Off")</span></div>
+            <div class="col-md-4">Calories target: <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetCaloriesKcal, "kcal")</span></div>
+            <div class="col-md-4">Protein target: <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetProteinG, "g")</span></div>
+            <div class="col-md-4">Fat target: <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetFatG, "g")</span></div>
+            <div class="col-md-4">Carbs target: <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetCarbsG, "g")</span></div>
         </div>
     </div>
 </div>

@@ -4,6 +4,8 @@ namespace IronMindGym.ViewModels;
 
 public class NutritionTargetsViewModel
 {
+    public static string DisplayTarget(double value, string unit) => value > 0 ? $"{value:0.#} {unit}" : "Not set";
+
     public string SystemAdvice { get; set; } = string.Empty;
     public string SystemVerdict { get; set; } = string.Empty;
     public int SystemScore

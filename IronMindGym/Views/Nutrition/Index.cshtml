@@ -32,45 +32,45 @@
         <p class="small mb-2">Personal targets take priority over optional estimates.</p>
         <div class="mb-3">
             <strong>Your targets:</strong>
-            <span class="metric">@Model.TargetCaloriesKcal</span> kcal /
-            <span class="metric">@Model.TargetProteinG</span> P /
-            <span class="metric">@Model.TargetFatG</span> F /
-            <span class="metric">@Model.TargetCarbsG</span> C
+            <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetCaloriesKcal, "kcal")</span> · Protein
+            <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetProteinG, "g")</span> · Fat
+            <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetFatG, "g")</span> · Carbs
+            <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetCarbsG, "g")</span>
         </div>
         <div class="row g-2">
             <div class="col-md-4">
                 <div class="formula-target p-2 h-100">
-                    <div>BMR: <span class="metric">@Model.BasalMetabolicRate</span> kcal</div>
+                    <div>BMR estimate: <span class="metric">@(Model.BasalMetabolicRate > 0 ? $"{Model.BasalMetabolicRate:0} kcal" : "Off")</span></div>
                     <div class="formula-hint">@Model.BmrFormulaText</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="formula-target p-2 h-100">
-                    <div>PAL: <span class="metric">@Model.ActivityMultiplier.ToString("F2")</span></div>
+                    <div>Activity factor: <span class="metric">@(Model.ActivityMultiplier > 0 ? Model.ActivityMultiplier.ToString("F2") : "Off")</span></div>
                     <div class="formula-hint">@Model.CaloriesFormulaText</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="formula-target p-2 h-100">
-                    <div>Calories target: <span class="metric">@Model.TargetCaloriesKcal</span> kcal</div>
+                    <div>Calories target: <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetCaloriesKcal, "kcal")</span></div>
                     <div class="formula-hint">@Model.CaloriesFormulaText</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="formula-target p-2 h-100">
-                    <div>Protein target: <span class="metric">@Model.TargetProteinG</span> g</div>
+                    <div>Protein target: <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetProteinG, "g")</span></div>
                     <div class="formula-hint">@Model.ProteinFormulaText</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="formula-target p-2 h-100">
-                    <div>Fat target: <span class="metric">@Model.TargetFatG</span> g</div>
+                    <div>Fat target: <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetFatG, "g")</span></div>
                     <div class="formula-hint">@Model.FatFormulaText</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="formula-target p-2 h-100">
-                    <div>Carbs target: <span class="metric">@Model.TargetCarbsG</span> g</div>
+                    <div>Carbs target: <span class="metric">@NutritionTargetsViewModel.DisplayTarget(Model.TargetCarbsG, "g")</span></div>
                     <div class="formula-hint">@Model.CarbsFormulaText</div>
                 </div>
             </div>

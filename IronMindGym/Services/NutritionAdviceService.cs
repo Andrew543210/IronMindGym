@@ -18,13 +18,17 @@ public class NutritionAdviceService : INutritionAdviceService
         var calories = profile.CalorieTarget ?? (canEstimate ? Math.Round(bmr * pal) : 0);
         var protein = profile.ProteinTarget ?? (canEstimate ? Math.Round(profile.WeightKg!.Value * 1.6) : 0);
         var fat = profile.FatTarget ?? (canEstimate ? Math.Round(profile.WeightKg!.Value * 0.8) : 0);
-        var carbs = profile.CarbsTarget ?? (calories > 0 ? Math.Max(0, Math.Round((calories - protein * 4 - fat * 9) / 4)) : 0);
+        var canDeriveCarbs = calories > 0 && protein > 0 && fat > 0;
+        var remainingCalories = calories - protein * 4 - fat * 9;
+        var carbs = profile.CarbsTarget ?? (canDeriveCarbs ? Math.Max(0, Math.Round(remainingCalories / 4)) : 0);
         var targets = new[] { ("Energy", nutrition.CaloriesKcal, calories), ("Protein", nutrition.ProteinG, protein), ("Fat", nutrition.FatG, fat), ("Carbs", nutrition.CarbsG, carbs) };
         var configured = targets.Where(t => t.Item3 > 0).ToList();
         var matched = configured.Count(t => Math.Abs(t.Item2 - t.Item3) <= t.Item3 * 0.1);
         var tips = new List<string>();
         if (configured.Count == 0)
             tips.Add("Set your daily targets in Edit profile, or choose an adult energy equation to see an estimate.");
+        if (canDeriveCarbs && remainingCalories < 0 && !profile.CarbsTarget.HasValue)
+            tips.Add("Your protein and fat targets already exceed your energy target. Review those targets before deriving carbohydrates.");
         foreach (var target in configured)
             tips.Add($"{target.Item1}: {target.Item2:0} logged / {target.Item3:0} target.");
         var derived = nutrition.ProteinG * 4 + nutrition.FatG * 9 + nutrition.CarbsG * 4;
@@ -46,10 +50,10 @@ public class NutritionAdviceService : INutritionAdviceService
             BasalMetabolicRate = Math.Round(bmr),
             ActivityMultiplier = canEstimate ? pal : 0,
             BmrFormulaText = canEstimate ? $"Mifflin–St Jeor ({profile.EnergyEquation}): 10 × weight + 6.25 × height − 5 × age + {(profile.EnergyEquation == "Male" ? "5" : "(−161)")}." : "Automatic estimates are off. Set personal targets in your profile.",
-            CaloriesFormulaText = profile.CalorieTarget.HasValue ? "Your personal energy target." : "Adult estimate: BMR × activity factor. Actual needs vary.",
-            ProteinFormulaText = profile.ProteinTarget.HasValue ? "Your personal protein target." : "Optional estimate: 1.6 × bodyweight (kg).",
-            FatFormulaText = profile.FatTarget.HasValue ? "Your personal fat target." : "Optional estimate: 0.8 × bodyweight (kg).",
-            CarbsFormulaText = profile.CarbsTarget.HasValue ? "Your personal carbohydrate target." : "Remaining energy: (calories − protein × 4 − fat × 9) / 4."
+            CaloriesFormulaText = profile.CalorieTarget.HasValue ? "Your personal energy target." : canEstimate ? "Adult estimate: BMR × activity factor. Actual needs vary." : "Energy target not set.",
+            ProteinFormulaText = profile.ProteinTarget.HasValue ? "Your personal protein target." : canEstimate ? "Optional estimate: 1.6 × bodyweight (kg)." : "Protein target not set.",
+            FatFormulaText = profile.FatTarget.HasValue ? "Your personal fat target." : canEstimate ? "Optional estimate: 0.8 × bodyweight (kg)." : "Fat target not set.",
+            CarbsFormulaText = profile.CarbsTarget.HasValue ? "Your personal carbohydrate target." : canDeriveCarbs ? "Remaining energy: (calories − protein × 4 − fat × 9) / 4." : "Set a carbohydrate target, or configure energy, protein and fat targets to calculate the remainder."
         };
     }
 }
