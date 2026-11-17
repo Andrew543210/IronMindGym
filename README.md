@@ -2,6 +2,12 @@
 
 Особистий тренувальний щоденник: силові вправи, кардіо, прогрес, харчування та цілі в одному місці. ASP.NET Core MVC · .NET 10 · EF Core · SQLite.
 
+![Build and test](https://github.com/Andrew543210/IronMindGym/actions/workflows/ci.yml/badge.svg)
+
+![IronMind dashboard](docs/images/desktop.jpg)
+
+[Мобільний вигляд](docs/images/mobile.jpg)
+
 ## Можливості
 
 - Журнал тренувань із силовими, кардіо та часовими підходами, оцінкою сесії й історією.
