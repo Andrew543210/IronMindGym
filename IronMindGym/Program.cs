@@ -31,7 +31,8 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 builder.Services.AddDbContext<IronMindDbContext>(options => options.UseSqlite(
-    builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=ironmind.db"));
+    builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=ironmind.db",
+    sqlite => sqlite.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 builder.Services.AddAuthorization(options => options.FallbackPolicy =
     new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
