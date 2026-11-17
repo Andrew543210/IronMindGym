@@ -1,6 +1,0 @@
-@IronMindGym_HostAddress = http://localhost:5270
-
-GET {{IronMindGym_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
