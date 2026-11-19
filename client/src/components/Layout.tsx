@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useI18n, type MessageKey } from '../i18n/i18n';
 import { useSession } from '../session';
 import { LanguageSwitch } from './LanguageSwitch';
@@ -28,12 +28,38 @@ interface FlashState {
   error?: string;
 }
 
+/**
+ * Shows the message passed with a navigation until the athlete moves to another page. The message is taken out of
+ * the history entry, so reloading the page or coming back to it later does not show it again.
+ */
+function useFlash(): FlashState {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { message, error, ...rest } = (location.state ?? {}) as FlashState & Record<string, unknown>;
+  const incoming = message !== undefined || error !== undefined;
+  const page = location.pathname + location.search;
+  const [flash, setFlash] = useState<FlashState & { page?: string }>({});
+
+  if (incoming && (message !== flash.message || error !== flash.error || page !== flash.page)) {
+    setFlash({ message, error, page });
+  } else if (!incoming && flash.page !== undefined && flash.page !== page) {
+    setFlash({});
+  }
+
+  useEffect(() => {
+    if (!incoming) return;
+    const { pathname, search, hash } = location;
+    void navigate({ pathname, search, hash }, { replace: true, state: Object.keys(rest).length ? rest : null });
+  });
+
+  return flash;
+}
+
 export function Layout() {
   const { session, signOut } = useSession();
   const { t } = useI18n();
   const [moreOpen, setMoreOpen] = useState(false);
-  const location = useLocation();
-  const flash = (location.state ?? {}) as FlashState;
+  const flash = useFlash();
   const signedIn = session !== null;
 
   return (
