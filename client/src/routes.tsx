@@ -1,49 +1,53 @@
+import type { ComponentType } from 'react';
 import type { RouteObject } from 'react-router';
 import { Layout } from './components/Layout';
 import { RequireSession } from './components/RequireSession';
-import { DashboardPage, FeedNotePage } from './pages/DashboardPage';
-import { ExercisesPage } from './pages/ExercisesPage';
-import { FriendWorkoutPage, FriendsPage } from './pages/FriendsPage';
-import { GoalsPage } from './pages/GoalsPage';
-import { NotFoundPage } from './pages/NotFoundPage';
-import { NutritionPage } from './pages/NutritionPage';
-import { ChangePasswordPage, ProfilePage, ProfileSettingsPage } from './pages/ProfilePages';
-import { FriendProgressPage, ProgressPage, TrackExercisePage } from './pages/ProgressPages';
-import { SetupPage } from './pages/SetupPage';
-import { AwardsPage, RecordsPage, StatisticsPage } from './pages/StatisticsPages';
+import { PageLoading } from './components/ui';
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages';
-import { WorkoutLoggerPage } from './pages/workouts/WorkoutLoggerPage';
-import { WorkoutDetailsPage, WorkoutHistoryPage } from './pages/workouts/WorkoutPages';
+import { NotFoundPage } from './pages/NotFoundPage';
+
+/** Each section is its own bundle, loaded the first time the athlete opens it. */
+function page<M>(load: () => Promise<M>, name: keyof M): RouteObject['lazy'] {
+  return async () => ({ Component: (await load())[name] as ComponentType });
+}
+
+const dashboard = () => import('./pages/DashboardPage');
+const friends = () => import('./pages/FriendsPage');
+const profile = () => import('./pages/ProfilePages');
+const progress = () => import('./pages/ProgressPages');
+const statistics = () => import('./pages/StatisticsPages');
+const workouts = () => import('./pages/workouts/WorkoutPages');
 
 export const routes: RouteObject[] = [
   {
     element: <Layout />,
+    hydrateFallbackElement: <PageLoading />,
     children: [
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
       {
         element: <RequireSession />,
         children: [
-          { path: '/', element: <DashboardPage /> },
-          { path: '/setup', element: <SetupPage /> },
-          { path: '/feed/:id', element: <FeedNotePage /> },
-          { path: '/goals', element: <GoalsPage /> },
-          { path: '/workouts', element: <WorkoutHistoryPage /> },
-          { path: '/workouts/new', element: <WorkoutLoggerPage /> },
-          { path: '/workouts/:id', element: <WorkoutDetailsPage /> },
-          { path: '/friends', element: <FriendsPage /> },
-          { path: '/friends/:friendId/workouts/:sessionId', element: <FriendWorkoutPage /> },
-          { path: '/friends/:friendId/progress', element: <FriendProgressPage /> },
-          { path: '/progress', element: <ProgressPage /> },
-          { path: '/progress/track', element: <TrackExercisePage /> },
-          { path: '/exercises', element: <ExercisesPage /> },
-          { path: '/nutrition', element: <NutritionPage /> },
-          { path: '/statistics', element: <StatisticsPage /> },
-          { path: '/statistics/records', element: <RecordsPage /> },
-          { path: '/awards', element: <AwardsPage /> },
-          { path: '/profile', element: <ProfilePage /> },
-          { path: '/profile/settings', element: <ProfileSettingsPage /> },
-          { path: '/profile/password', element: <ChangePasswordPage /> },
+          { path: '/', lazy: page(dashboard, 'DashboardPage') },
+          { path: '/setup', lazy: page(() => import('./pages/SetupPage'), 'SetupPage') },
+          { path: '/feed/:id', lazy: page(dashboard, 'FeedNotePage') },
+          { path: '/goals', lazy: page(() => import('./pages/GoalsPage'), 'GoalsPage') },
+          { path: '/workouts', lazy: page(workouts, 'WorkoutHistoryPage') },
+          { path: '/workouts/new', lazy: page(() => import('./pages/workouts/WorkoutLoggerPage'), 'WorkoutLoggerPage') },
+          { path: '/workouts/:id', lazy: page(workouts, 'WorkoutDetailsPage') },
+          { path: '/friends', lazy: page(friends, 'FriendsPage') },
+          { path: '/friends/:friendId/workouts/:sessionId', lazy: page(friends, 'FriendWorkoutPage') },
+          { path: '/friends/:friendId/progress', lazy: page(progress, 'FriendProgressPage') },
+          { path: '/progress', lazy: page(progress, 'ProgressPage') },
+          { path: '/progress/track', lazy: page(progress, 'TrackExercisePage') },
+          { path: '/exercises', lazy: page(() => import('./pages/ExercisesPage'), 'ExercisesPage') },
+          { path: '/nutrition', lazy: page(() => import('./pages/NutritionPage'), 'NutritionPage') },
+          { path: '/statistics', lazy: page(statistics, 'StatisticsPage') },
+          { path: '/statistics/records', lazy: page(statistics, 'RecordsPage') },
+          { path: '/awards', lazy: page(statistics, 'AwardsPage') },
+          { path: '/profile', lazy: page(profile, 'ProfilePage') },
+          { path: '/profile/settings', lazy: page(profile, 'ProfileSettingsPage') },
+          { path: '/profile/password', lazy: page(profile, 'ChangePasswordPage') },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

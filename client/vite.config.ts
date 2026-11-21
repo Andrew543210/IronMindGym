@@ -14,6 +14,8 @@ export default defineConfig({
   build: {
     outDir: '../IronMindGym/wwwroot',
     emptyOutDir: true,
+    // Libraries change less often than the app, so browsers keep them cached across releases.
+    rolldownOptions: { output: { codeSplitting: { groups: [{ name: 'vendor', test: /node_modules/ }] } } },
   },
   test: {
     environment: 'jsdom',
