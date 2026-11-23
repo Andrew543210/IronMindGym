@@ -20,10 +20,22 @@ jobs:
           global-json-file: global.json
       - run: dotnet restore --locked-mode
       - run: dotnet build --configuration Release --no-restore --warnaserror
-      - run: dotnet test --configuration Release --no-build
+      - run: dotnet test --configuration Release --no-build --collect "XPlat Code Coverage" --results-directory TestResults
+      - name: Require 80% line and branch coverage
+        shell: python
+        run: |
+          import glob, sys, xml.etree.ElementTree as ET
+          report = ET.parse(glob.glob("TestResults/**/coverage.cobertura.xml", recursive=True)[0]).getroot()
+          lines, branches = float(report.get("line-rate")), float(report.get("branch-rate"))
+          print(f"Lines {lines:.1%}, branches {branches:.1%}")
+          sys.exit(lines < 0.8 or branches < 0.8)
       - run: dotnet tool restore
       - run: dotnet ef migrations has-pending-model-changes --project IronMindGym --configuration Release --no-build
       - run: dotnet list package --vulnerable --include-transitive
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage
+          path: TestResults/**/coverage.cobertura.xml
 
   client:
     name: Client
@@ -41,7 +53,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+      - run: npm run coverage
       - run: npm run build
       - run: npm audit --audit-level=high
 
