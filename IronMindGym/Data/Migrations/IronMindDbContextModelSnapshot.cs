@@ -159,7 +159,10 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Avatars");
+                    b.ToTable("Avatars", t =>
+                        {
+                            t.HasCheckConstraint("CK_Avatars_MinStrengthCoefficient", "\"MinStrengthCoefficient\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.DailyNutrition", b =>
@@ -193,7 +196,10 @@ namespace IronMindGym.Data.Migrations
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
 
-                    b.ToTable("DailyNutritions");
+                    b.ToTable("DailyNutritions", t =>
+                        {
+                            t.HasCheckConstraint("CK_DailyNutritions_Intake", "\"CaloriesKcal\" >= 0 AND \"ProteinG\" >= 0 AND \"FatG\" >= 0 AND \"CarbsG\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.Exercise", b =>
@@ -289,7 +295,12 @@ namespace IronMindGym.Data.Migrations
                     b.HasIndex("UserId", "ExerciseId")
                         .IsUnique();
 
-                    b.ToTable("ExerciseProgress");
+                    b.ToTable("ExerciseProgress", t =>
+                        {
+                            t.HasCheckConstraint("CK_ExerciseProgress_Intensity", "\"InitialIntensity\" BETWEEN 0 AND 10 AND \"CurrentIntensity\" BETWEEN 0 AND 10");
+
+                            t.HasCheckConstraint("CK_ExerciseProgress_Values", "\"InitialWeightKg\" >= 0 AND \"InitialReps\" >= 0 AND \"InitialDurationSeconds\" >= 0 AND \"CurrentWeightKg\" >= 0 AND \"CurrentReps\" >= 0 AND \"CurrentDurationSeconds\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.FriendComment", b =>
@@ -389,7 +400,10 @@ namespace IronMindGym.Data.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("InitialBenchmarks");
+                    b.ToTable("InitialBenchmarks", t =>
+                        {
+                            t.HasCheckConstraint("CK_InitialBenchmarks_Loads", "\"BenchPressKg\" >= 0 AND \"SquatKg\" >= 0 AND \"DeadliftKg\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.MuscleGroup", b =>
@@ -494,7 +508,10 @@ namespace IronMindGym.Data.Migrations
                     b.HasIndex("UserId", "ExerciseId")
                         .IsUnique();
 
-                    b.ToTable("PersonalRecords");
+                    b.ToTable("PersonalRecords", t =>
+                        {
+                            t.HasCheckConstraint("CK_PersonalRecords_MaxWeightKg", "\"MaxWeightKg\" > 0");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.Profile", b =>
@@ -544,7 +561,14 @@ namespace IronMindGym.Data.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Profiles");
+                    b.ToTable("Profiles", t =>
+                        {
+                            t.HasCheckConstraint("CK_Profiles_Age", "\"Age\" >= 0");
+
+                            t.HasCheckConstraint("CK_Profiles_EnergyEquation", "\"EnergyEquation\" IN ('None', 'Male', 'Female')");
+
+                            t.HasCheckConstraint("CK_Profiles_Targets", "\"CalorieTarget\" > 0 AND \"ProteinTarget\" > 0 AND \"FatTarget\" > 0 AND \"CarbsTarget\" > 0");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.ResearchItem", b =>
@@ -742,7 +766,10 @@ namespace IronMindGym.Data.Migrations
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
 
-                    b.ToTable("WeightLogs");
+                    b.ToTable("WeightLogs", t =>
+                        {
+                            t.HasCheckConstraint("CK_WeightLogs_ValueKg", "\"ValueKg\" > 0");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.WorkoutDraft", b =>
@@ -791,7 +818,10 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("WorkoutPlans");
+                    b.ToTable("WorkoutPlans", t =>
+                        {
+                            t.HasCheckConstraint("CK_WorkoutPlans_WorkoutsPerWeek", "\"WorkoutsPerWeek\" BETWEEN 1 AND 7");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.WorkoutReview", b =>
@@ -818,7 +848,10 @@ namespace IronMindGym.Data.Migrations
                     b.HasIndex("WorkoutSessionId")
                         .IsUnique();
 
-                    b.ToTable("WorkoutReviews");
+                    b.ToTable("WorkoutReviews", t =>
+                        {
+                            t.HasCheckConstraint("CK_WorkoutReviews_Rating", "\"Rating\" BETWEEN 1 AND 5");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.WorkoutSession", b =>
@@ -858,7 +891,10 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasIndex("UserId", "SessionDate");
 
-                    b.ToTable("WorkoutSessions");
+                    b.ToTable("WorkoutSessions", t =>
+                        {
+                            t.HasCheckConstraint("CK_WorkoutSessions_DurationMinutes", "\"DurationMinutes\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.WorkoutSet", b =>
@@ -899,7 +935,14 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasIndex("SetTypeId");
 
-                    b.ToTable("Sets");
+                    b.ToTable("Sets", t =>
+                        {
+                            t.HasCheckConstraint("CK_Sets_Intensity", "\"Intensity\" BETWEEN 0 AND 10");
+
+                            t.HasCheckConstraint("CK_Sets_SetNumber", "\"SetNumber\" >= 1");
+
+                            t.HasCheckConstraint("CK_Sets_Values", "\"WeightKg\" >= 0 AND \"Reps\" >= 0 AND \"DurationSeconds\" >= 0 AND \"RestSeconds\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.ActivityFeed", b =>

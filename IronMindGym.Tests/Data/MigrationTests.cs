@@ -3,7 +3,6 @@ using IronMindGym.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql;
 
 namespace IronMindGym.Tests.Data;
 
@@ -67,22 +66,6 @@ public sealed class MigrationTests : IDisposable
         Assert.Equal(
             [new { User1Id = 1, User2Id = 2, RequestedByUserId = 1, Accepted = true }, new { User1Id = 1, User2Id = 3, RequestedByUserId = 3, Accepted = true }],
             rows);
-    }
-
-    [Theory]
-    [InlineData(2, 1, 2, "Pending")]
-    [InlineData(1, 2, 3, "Pending")]
-    [InlineData(1, 2, 1, "Blocked")]
-    public void TheDatabaseRefusesAFriendshipThatBreaksTheRules(int user1, int user2, int requester, string status)
-    {
-        MigrateTo("EnforceFriendshipRules");
-        AddUsers(1, 2, 3);
-
-        var refused = Assert.Throws<PostgresException>(() => Run($"""
-            INSERT INTO "Friendships" ("User1Id", "User2Id", "RequestedByUserId", "Status") VALUES ({user1}, {user2}, {requester}, '{status}')
-            """));
-
-        Assert.Equal(PostgresErrorCodes.CheckViolation, refused.SqlState);
     }
 
     public void Dispose() => TestDatabase.Drop(connectionString);

@@ -7,8 +7,6 @@ public class WorkoutReview
     public int Id { get; set; }
     public int WorkoutSessionId { get; set; }
     public WorkoutSession WorkoutSession { get; set; } = null!;
-
-    [Range(1, 5)]
     public int Rating { get; set; }
 
     [MaxLength(800)]

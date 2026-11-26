@@ -15,10 +15,7 @@ public class WorkoutSession
 
     /// <summary>The logger draft the workout was saved from, so a repeated save finds the first one.</summary>
     public Guid? DraftId { get; set; }
-
-    [Range(0, 600)]
     public int DurationMinutes { get; set; }
-
     public int? SplitTypeId { get; set; }
     public SplitType? SplitType { get; set; }
     public WorkoutReview? Review { get; set; }

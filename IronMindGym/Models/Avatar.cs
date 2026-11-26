@@ -12,6 +12,5 @@ public class Avatar
     [MaxLength(40)]
     public string? NameUk { get; set; }
 
-    [Range(0, 100)]
     public double MinStrengthCoefficient { get; set; }
 }

@@ -89,6 +89,31 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         });
         modelBuilder.Entity<UserAchievement>().HasIndex(a => new { a.UserId, a.AchievementId }).IsUnique();
 
+        // Invariants every row keeps, whoever writes it. Request validation, with tighter limits and
+        // messages for the athlete, stays in the contracts and services.
+        Checks<Profile>(modelBuilder, "Profiles",
+            ("Age", "\"Age\" >= 0"),
+            ("EnergyEquation", "\"EnergyEquation\" IN ('None', 'Male', 'Female')"),
+            ("Targets", "\"CalorieTarget\" > 0 AND \"ProteinTarget\" > 0 AND \"FatTarget\" > 0 AND \"CarbsTarget\" > 0"));
+        Checks<InitialBenchmarks>(modelBuilder, "InitialBenchmarks",
+            ("Loads", "\"BenchPressKg\" >= 0 AND \"SquatKg\" >= 0 AND \"DeadliftKg\" >= 0"));
+        Checks<WeightLog>(modelBuilder, "WeightLogs", ("ValueKg", "\"ValueKg\" > 0"));
+        Checks<WorkoutPlan>(modelBuilder, "WorkoutPlans", ("WorkoutsPerWeek", "\"WorkoutsPerWeek\" BETWEEN 1 AND 7"));
+        Checks<WorkoutSession>(modelBuilder, "WorkoutSessions", ("DurationMinutes", "\"DurationMinutes\" >= 0"));
+        Checks<WorkoutReview>(modelBuilder, "WorkoutReviews", ("Rating", "\"Rating\" BETWEEN 1 AND 5"));
+        Checks<WorkoutSet>(modelBuilder, "Sets",
+            ("SetNumber", "\"SetNumber\" >= 1"),
+            ("Values", "\"WeightKg\" >= 0 AND \"Reps\" >= 0 AND \"DurationSeconds\" >= 0 AND \"RestSeconds\" >= 0"),
+            ("Intensity", "\"Intensity\" BETWEEN 0 AND 10"));
+        Checks<PersonalRecord>(modelBuilder, "PersonalRecords", ("MaxWeightKg", "\"MaxWeightKg\" > 0"));
+        Checks<ExerciseProgress>(modelBuilder, "ExerciseProgress",
+            ("Values", "\"InitialWeightKg\" >= 0 AND \"InitialReps\" >= 0 AND \"InitialDurationSeconds\" >= 0 AND " +
+                "\"CurrentWeightKg\" >= 0 AND \"CurrentReps\" >= 0 AND \"CurrentDurationSeconds\" >= 0"),
+            ("Intensity", "\"InitialIntensity\" BETWEEN 0 AND 10 AND \"CurrentIntensity\" BETWEEN 0 AND 10"));
+        Checks<DailyNutrition>(modelBuilder, "DailyNutritions",
+            ("Intake", "\"CaloriesKcal\" >= 0 AND \"ProteinG\" >= 0 AND \"FatG\" >= 0 AND \"CarbsG\" >= 0"));
+        Checks<Avatar>(modelBuilder, "Avatars", ("MinStrengthCoefficient", "\"MinStrengthCoefficient\" >= 0"));
+
         modelBuilder.Entity<Friendship>(friendship =>
         {
             friendship.ToTable(table =>
@@ -115,4 +140,12 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             comment.HasOne(c => c.WorkoutSession).WithMany(s => s.Comments).HasForeignKey(c => c.WorkoutSessionId).OnDelete(DeleteBehavior.Cascade);
         });
     }
+
+    private static void Checks<TEntity>(ModelBuilder modelBuilder, string table, params (string Name, string Sql)[] checks)
+        where TEntity : class =>
+        modelBuilder.Entity<TEntity>().ToTable(builder =>
+        {
+            foreach (var (name, sql) in checks)
+                builder.HasCheckConstraint($"CK_{table}_{name}", sql);
+        });
 }
