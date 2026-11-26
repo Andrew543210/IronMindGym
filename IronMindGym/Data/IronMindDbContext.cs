@@ -72,6 +72,17 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         modelBuilder.Entity<Exercise>().HasIndex(e => e.Name).IsUnique();
         modelBuilder.Entity<Achievement>().HasIndex(a => a.Code).IsUnique();
 
+        // Reference data is shared by every athlete. Deleting a row that is still in use fails
+        // instead of taking the workouts, records and awards that point at it along.
+        modelBuilder.Entity<MuscleSubGroup>().HasOne(s => s.MuscleGroup).WithMany(g => g.SubGroups).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Exercise>().HasOne(e => e.MuscleSubGroup).WithMany(s => s.Exercises).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<PerformedExercise>().HasOne(p => p.Exercise).WithMany(e => e.PerformedExercises).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<PersonalRecord>().HasOne(r => r.Exercise).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<WorkoutSet>().HasOne(s => s.SetType).WithMany(t => t.Sets).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<WorkoutPlan>().HasOne(p => p.SplitType).WithMany(s => s.WorkoutPlans).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<WorkoutSession>().HasOne(s => s.SplitType).WithMany(s => s.WorkoutSessions).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<UserAchievement>().HasOne(a => a.Achievement).WithMany(a => a.UserAchievements).OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<WorkoutSession>(session =>
         {
             session.HasIndex(s => new { s.UserId, s.SessionDate });
@@ -90,7 +101,7 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         {
             progress.HasIndex(p => new { p.UserId, p.ExerciseId }).IsUnique();
             progress.HasOne(p => p.User).WithMany(u => u.ExerciseProgress).HasForeignKey(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
-            progress.HasOne(p => p.Exercise).WithMany().HasForeignKey(p => p.ExerciseId).OnDelete(DeleteBehavior.Cascade);
+            progress.HasOne(p => p.Exercise).WithMany().HasForeignKey(p => p.ExerciseId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<UserAchievement>().HasIndex(a => new { a.UserId, a.AchievementId }).IsUnique();
 

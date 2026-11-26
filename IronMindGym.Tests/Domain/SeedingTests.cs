@@ -2,7 +2,9 @@ using IronMindGym.Models;
 using IronMindGym.Security;
 using IronMindGym.Seed;
 using IronMindGym.Services;
+using IronMindGym.Tests.Api;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace IronMindGym.Tests.Domain;
 
@@ -43,6 +45,28 @@ public class SeedingTests
             Assert.True(PasswordHashUtility.Verify("DemoTraining123!", demo.PasswordHash));
             Assert.Equal(FriendshipStatus.Accepted, db.Friendships.Single().Status);
             Assert.NotEmpty(db.WorkoutSessions.Where(s => s.UserId == demo.Id));
+            return true;
+        });
+    }
+
+    [Fact]
+    public async Task ReferenceDataInUseCannotBeDeleted()
+    {
+        using var app = new TestApplication();
+        using var api = app.Api();
+        await api.RegisterWithSetup();
+        var bench = app.Query(db => db.Exercises.Single(e => e.Name == "Flat Bench Press").Id);
+        await ApiClient.Ok(await api.Post("/api/workouts", Journal.Workout((bench, 60, 8))));
+
+        app.Query(db =>
+        {
+            var groupId = db.Exercises.Where(e => e.Id == bench).Select(e => e.MuscleSubGroup.MuscleGroupId).Single();
+            var refused = Assert.Throws<PostgresException>(() => db.MuscleGroups.Where(g => g.Id == groupId).ExecuteDelete());
+            Assert.Equal(PostgresErrorCodes.RestrictViolation, refused.SqlState);
+            Assert.Throws<PostgresException>(() => db.SetTypes.ExecuteDelete());
+            Assert.Throws<PostgresException>(() => db.SplitTypes.ExecuteDelete());
+            Assert.Throws<PostgresException>(() => db.Achievements.ExecuteDelete());
+            Assert.Equal(1, db.WorkoutSessions.Count());
             return true;
         });
     }

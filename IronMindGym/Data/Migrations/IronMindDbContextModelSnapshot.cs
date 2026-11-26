@@ -950,7 +950,7 @@ namespace IronMindGym.Data.Migrations
                     b.HasOne("IronMindGym.Models.MuscleSubGroup", "MuscleSubGroup")
                         .WithMany("Exercises")
                         .HasForeignKey("MuscleSubGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("MuscleSubGroup");
@@ -961,7 +961,7 @@ namespace IronMindGym.Data.Migrations
                     b.HasOne("IronMindGym.Models.Exercise", "Exercise")
                         .WithMany()
                         .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.User", "User")
@@ -1029,7 +1029,7 @@ namespace IronMindGym.Data.Migrations
                     b.HasOne("IronMindGym.Models.MuscleGroup", "MuscleGroup")
                         .WithMany("SubGroups")
                         .HasForeignKey("MuscleGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("MuscleGroup");
@@ -1040,7 +1040,7 @@ namespace IronMindGym.Data.Migrations
                     b.HasOne("IronMindGym.Models.Exercise", "Exercise")
                         .WithMany("PerformedExercises")
                         .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.WorkoutSession", "WorkoutSession")
@@ -1059,7 +1059,7 @@ namespace IronMindGym.Data.Migrations
                     b.HasOne("IronMindGym.Models.Exercise", "Exercise")
                         .WithMany()
                         .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.User", "User")
@@ -1089,7 +1089,7 @@ namespace IronMindGym.Data.Migrations
                     b.HasOne("IronMindGym.Models.Achievement", "Achievement")
                         .WithMany("UserAchievements")
                         .HasForeignKey("AchievementId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.User", "User")
@@ -1141,7 +1141,7 @@ namespace IronMindGym.Data.Migrations
                     b.HasOne("IronMindGym.Models.SplitType", "SplitType")
                         .WithMany("WorkoutPlans")
                         .HasForeignKey("SplitTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.User", "User")
@@ -1170,7 +1170,8 @@ namespace IronMindGym.Data.Migrations
                 {
                     b.HasOne("IronMindGym.Models.SplitType", "SplitType")
                         .WithMany("WorkoutSessions")
-                        .HasForeignKey("SplitTypeId");
+                        .HasForeignKey("SplitTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("IronMindGym.Models.User", "User")
                         .WithMany("WorkoutSessions")
@@ -1194,7 +1195,7 @@ namespace IronMindGym.Data.Migrations
                     b.HasOne("IronMindGym.Models.SetType", "SetType")
                         .WithMany("Sets")
                         .HasForeignKey("SetTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("PerformedExercise");
