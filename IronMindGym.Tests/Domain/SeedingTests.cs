@@ -99,6 +99,31 @@ public class SeedingTests
     }
 
     [Fact]
+    public void ReferenceRowsAddedToTheCatalogReachAnExistingDatabase()
+    {
+        using var app = new TestApplication();
+        app.Query(db =>
+        {
+            db.Exercises.Where(e => e.MuscleSubGroup.Name == "Calves").ExecuteDelete();
+            db.MuscleSubGroups.Where(s => s.Name == "Calves").ExecuteDelete();
+            db.SplitDays.Where(d => d.Code == "CHEST").ExecuteDelete();
+            db.Avatars.Single(a => a.Name == "Iron Squire").MinStrengthCoefficient = 9;
+            db.SaveChanges();
+
+            DataSeeder.Seed(db);
+
+            var calves = ExerciseCatalogSeeder.Definitions().Where(d => d.Subgroup == "Calves").Select(d => d.Name).Order().ToList();
+            Assert.NotEmpty(calves);
+            Assert.Equal(calves, db.Exercises.Where(e => e.MuscleSubGroup.Name == "Calves" && e.MuscleSubGroup.MuscleGroup.Name == "Legs")
+                .Select(e => e.Name).Order().ToList());
+            Assert.Equal("Литки", db.MuscleSubGroups.Single(s => s.Name == "Calves").NameUk);
+            Assert.Equal(3, db.SplitDays.Single(d => d.Code == "CHEST").Position);
+            Assert.Equal(2, db.Avatars.Single(a => a.Name == "Iron Squire").MinStrengthCoefficient);
+            return true;
+        });
+    }
+
+    [Fact]
     public void ReferenceDataGetsTheTranslationsItIsMissing()
     {
         using var app = new TestApplication();

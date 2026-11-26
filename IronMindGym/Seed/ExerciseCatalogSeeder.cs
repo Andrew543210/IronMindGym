@@ -2,12 +2,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using IronMindGym.Data;
 using IronMindGym.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Seed;
 
 /// <summary>
-/// Fills an empty database with the exercise catalog from exercises.json and keeps the Ukrainian names
-/// of an existing catalog up to date. Rows are matched by their English name, which never changes here,
+/// The exercise catalog from exercises.json. Rows are matched by their English name, which never changes here,
 /// so logged workouts, records and awards keep pointing at the same exercises.
 /// </summary>
 public static class ExerciseCatalogSeeder
@@ -65,55 +65,35 @@ public static class ExerciseCatalogSeeder
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public static void Seed(IronMindDbContext db)
-    {
-        foreach (var group in Definitions().GroupBy(e => e.Group))
-        {
-            var muscleGroup = new MuscleGroup { Name = group.Key, NameUk = MuscleGroupNamesUk[group.Key] };
-            db.MuscleGroups.Add(muscleGroup);
-            foreach (var subgroup in group.GroupBy(e => e.Subgroup))
-            {
-                var muscleSubGroup = new MuscleSubGroup { Name = subgroup.Key, NameUk = MuscleSubGroupNamesUk[subgroup.Key], MuscleGroup = muscleGroup };
-                db.MuscleSubGroups.Add(muscleSubGroup);
-                foreach (var e in subgroup)
-                {
-                    db.Exercises.Add(new Exercise
-                    {
-                        Name = e.Name,
-                        NameUk = e.NameUk,
-                        Description = e.Description,
-                        DescriptionUk = e.DescriptionUk,
-                        Type = e.Type,
-                        KeyLift = e.KeyLift,
-                        MuscleSubGroup = muscleSubGroup
-                    });
-                }
-            }
-        }
-    }
-
     /// <summary>
-    /// Brings the Ukrainian names of existing catalog rows in line with exercises.json. Rows the catalog does not
-    /// know keep their values; a description is only translated while it is still the catalog's English text.
+    /// Applies exercises.json on every start. Rows are matched by their English name: missing groups, subgroups
+    /// and exercises are added, and the Ukrainian names and key-lift markers are refreshed. Nothing is deleted,
+    /// and an existing exercise keeps its type and group, because logged sets point at it.
+    /// A description is only translated while it is still the catalog's English text.
     /// </summary>
-    public static void EnsureTranslations(IronMindDbContext db)
+    public static void Sync(IronMindDbContext db)
     {
-        foreach (var group in db.MuscleGroups)
+        var groups = db.MuscleGroups.ToDictionary(g => g.Name);
+        var subGroups = db.MuscleSubGroups.Include(s => s.MuscleGroup).ToDictionary(s => (Group: s.MuscleGroup.Name, s.Name));
+        var exercises = db.Exercises.ToDictionary(e => e.Name);
+        foreach (var definition in Definitions())
         {
-            if (MuscleGroupNamesUk.TryGetValue(group.Name, out var nameUk))
-                group.NameUk = nameUk;
-        }
-        foreach (var subgroup in db.MuscleSubGroups)
-        {
-            if (MuscleSubGroupNamesUk.TryGetValue(subgroup.Name, out var nameUk))
-                subgroup.NameUk = nameUk;
-        }
+            if (!groups.TryGetValue(definition.Group, out var group))
+                db.MuscleGroups.Add(groups[definition.Group] = group = new MuscleGroup { Name = definition.Group });
+            group.NameUk = MuscleGroupNamesUk[definition.Group];
 
-        var definitions = Definitions().ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
-        foreach (var exercise in db.Exercises)
-        {
-            if (!definitions.TryGetValue(exercise.Name, out var definition))
-                continue;
+            if (!subGroups.TryGetValue((definition.Group, definition.Subgroup), out var subGroup))
+            {
+                subGroup = new MuscleSubGroup { Name = definition.Subgroup, MuscleGroup = group };
+                db.MuscleSubGroups.Add(subGroups[(definition.Group, definition.Subgroup)] = subGroup);
+            }
+            subGroup.NameUk = MuscleSubGroupNamesUk[definition.Subgroup];
+
+            if (!exercises.TryGetValue(definition.Name, out var exercise))
+            {
+                exercise = new Exercise { Name = definition.Name, Description = definition.Description, Type = definition.Type, MuscleSubGroup = subGroup };
+                db.Exercises.Add(exercises[definition.Name] = exercise);
+            }
             exercise.NameUk = definition.NameUk;
             exercise.KeyLift = definition.KeyLift;
             exercise.DescriptionUk = exercise.Description == definition.Description ? definition.DescriptionUk : null;

@@ -40,9 +40,7 @@ public static class DataSeeder
         using var transaction = WriteLock.BeginForSeeding(db);
         EnsureSplitTypes(db);
         EnsureSetTypes(db);
-        if (!db.Exercises.Any())
-            ExerciseCatalogSeeder.Seed(db);
-        ExerciseCatalogSeeder.EnsureTranslations(db);
+        ExerciseCatalogSeeder.Sync(db);
         EnsureAvatarLadder(db);
         db.SaveChanges();
         EnsureResearchFeed(db);
@@ -106,9 +104,8 @@ public static class DataSeeder
         {
             var avatar = existing.FirstOrDefault(a => a.Name == rank.Name);
             if (avatar is null)
-                db.Avatars.Add(new Avatar { Name = rank.Name, NameUk = rank.NameUk, MinStrengthCoefficient = rank.MinStrengthCoefficient });
-            else
-                avatar.NameUk = rank.NameUk;
+                db.Avatars.Add(avatar = new Avatar { Name = rank.Name });
+            (avatar.NameUk, avatar.MinStrengthCoefficient) = (rank.NameUk, rank.MinStrengthCoefficient);
         }
     }
 
