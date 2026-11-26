@@ -53,11 +53,10 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
     private NutritionProfileSnapshot Snapshot(int userId)
     {
         var profile = db.Profiles.AsNoTracking().FirstOrDefault(p => p.UserId == userId);
-        var body = db.AnthropometryLogs.AsNoTracking().Where(a => a.UserId == userId).OrderByDescending(a => a.RecordedAt).FirstOrDefault();
         return new NutritionProfileSnapshot
         {
-            WeightKg = body?.WeightKg,
-            HeightCm = body?.HeightCm,
+            WeightKg = db.WeightLogs.LatestWeighIn(userId)?.ValueKg,
+            HeightCm = profile?.HeightCm,
             Age = profile?.Age,
             CalorieTarget = profile?.CalorieTarget,
             ProteinTarget = profile?.ProteinTarget,

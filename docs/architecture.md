@@ -39,6 +39,7 @@ Forwarded headers (only from the configured proxy) → exception handler and HST
 
 - Migrations run at startup. The schema uses `citext` for email and username, so uniqueness ignores letter case while the entered spelling is kept, and `jsonb` for the unfinished workout.
 - Every moment is stored as UTC `timestamptz`. Calendar days (nutrition entries, weigh-ins, goal deadlines) are `DateOnly` values stored as `date` and sent as `yyyy-MM-dd`. `AthleteCalendar` turns a moment into the athlete's day, Monday-based week and streaks using the time zone from the profile.
+- Bodyweight has one source, the weigh-in log: the weigh-in with the latest date is the current bodyweight for the rank, the nutrition estimates and the profile. The height is kept on the profile.
 - Writes that check existing rows before inserting and recalculate records and awards take a transaction-scoped advisory lock per athlete (`pg_advisory_xact_lock`). A double tap or a retry after a lost response therefore cannot save twice.
 - A saved workout remembers the id of the draft it came from. Repeating the request returns the first workout, and a late draft update for a saved workout is refused with `409`.
 - Personal records are recalculated when a workout is deleted. Earned awards stay earned.

@@ -166,7 +166,7 @@ public static class AchievementEngine
 
         return new Dictionary<AchievementMetricType, double>
         {
-            [AchievementMetricType.ProfileCompleted] = db.Users.Any(u => u.Id == userId && u.Profile != null && u.Benchmarks != null) && db.AnthropometryLogs.Any(a => a.UserId == userId) ? 1 : 0,
+            [AchievementMetricType.ProfileCompleted] = AthleteSetup.IsComplete(db, userId) ? 1 : 0,
             [AchievementMetricType.ReviewsWritten] = db.WorkoutReviews.Count(r => r.WorkoutSession.UserId == userId && r.Comment != ""),
             [AchievementMetricType.WorkoutsCompleted] = workouts.Count,
             [AchievementMetricType.TotalSets] = totalSets,

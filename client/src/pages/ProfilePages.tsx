@@ -15,7 +15,7 @@ interface Profile {
   strengthCoefficient: number;
   weightKg: number | null;
   heightCm: number | null;
-  measuredAt: string | null;
+  weighedOn: string | null;
   benchPressKg: number | null;
   squatKg: number | null;
   deadliftKg: number | null;
@@ -63,7 +63,7 @@ export function ProfilePage() {
   const body: [string, string][] = [
     [t('profile.weight'), kg(data.weightKg)],
     [t('profile.height'), data.heightCm === null ? '—' : t('unit.cm', { value: formatFixed(data.heightCm, 1) })],
-    [t('profile.measured'), data.measuredAt ? formatDay(localDay(data.measuredAt, athlete.timeZone)) : '—'],
+    [t('profile.weighedOn'), data.weighedOn ? formatDay(data.weighedOn) : '—'],
     [t('profile.bench'), kg(data.benchPressKg)],
     [t('profile.squat'), kg(data.squatKg)],
     [t('profile.deadlift'), kg(data.deadliftKg)],

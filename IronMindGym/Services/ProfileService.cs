@@ -12,18 +12,18 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
     public ProfileOverview BuildOverview(int userId)
     {
         var user = db.Users.AsNoTracking().Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
-        var body = LatestBody(userId);
+        var weighIn = db.WeightLogs.LatestWeighIn(userId);
         var current = strength.Current(userId, user.Benchmarks);
-        var avatar = avatars.ResolveAvatar(db.Avatars.AsNoTracking().ToList(), current, body);
+        var avatar = avatars.ResolveAvatar(db.Avatars.AsNoTracking().ToList(), current, weighIn?.ValueKg);
         return new ProfileOverview(
             user.Username,
             user.Email,
             user.Profile?.Age ?? 0,
             Localized.Pick(avatar.Name, avatar.NameUk),
-            avatars.CalculateStrengthCoefficient(current, body),
-            body?.WeightKg,
-            body?.HeightCm,
-            body?.RecordedAt,
+            avatars.CalculateStrengthCoefficient(current, weighIn?.ValueKg),
+            weighIn?.ValueKg,
+            user.Profile?.HeightCm,
+            weighIn?.Date,
             user.Benchmarks?.BenchPressKg,
             user.Benchmarks?.SquatKg,
             user.Benchmarks?.DeadliftKg,
@@ -40,7 +40,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
     public ProfileSettings BuildEdit(int userId)
     {
         var user = db.Users.AsNoTracking().Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
-        var body = LatestBody(userId);
+        var bodyweightKg = db.WeightLogs.LatestWeighIn(userId)?.ValueKg;
         var plan = db.WorkoutPlans.AsNoTracking().FirstOrDefault(p => p.UserId == userId && p.IsActive);
         return new ProfileSettings
         {
@@ -52,8 +52,8 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
             FatTarget = user.Profile?.FatTarget,
             CarbsTarget = user.Profile?.CarbsTarget,
             EnergyEquation = user.Profile?.EnergyEquation ?? "None",
-            WeightKg = body?.WeightKg ?? 70,
-            HeightCm = body?.HeightCm ?? 175,
+            WeightKg = bodyweightKg ?? 70,
+            HeightCm = user.Profile?.HeightCm ?? 175,
             BenchPressKg = user.Benchmarks?.BenchPressKg ?? 0,
             SquatKg = user.Benchmarks?.SquatKg ?? 0,
             DeadliftKg = user.Benchmarks?.DeadliftKg ?? 0,
@@ -83,11 +83,12 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
         user.Profile.FatTarget = settings.FatTarget;
         user.Profile.CarbsTarget = settings.CarbsTarget;
         user.Profile.EnergyEquation = settings.EnergyEquation;
+        user.Profile.HeightCm = settings.HeightCm;
         user.Benchmarks ??= new InitialBenchmarks { UserId = userId };
         user.Benchmarks.BenchPressKg = settings.BenchPressKg;
         user.Benchmarks.SquatKg = settings.SquatKg;
         user.Benchmarks.DeadliftKg = settings.DeadliftKg;
-        RecordBodyIfChanged(userId, settings.WeightKg, settings.HeightCm, AthleteCalendar.FromId(timeZone).Today);
+        RecordWeightIfChanged(userId, settings.WeightKg, AthleteCalendar.FromId(timeZone).Today);
         var plan = db.WorkoutPlans.FirstOrDefault(p => p.UserId == userId && p.IsActive);
         if (plan is null)
             db.WorkoutPlans.Add(plan = new WorkoutPlan { UserId = userId, IsActive = true });
@@ -98,17 +99,16 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
         transaction.Commit();
     }
 
-    /// <summary>A weigh-in for any day in the last five years. Today's also becomes the current bodyweight.</summary>
+    /// <summary>A weigh-in for any day in the last five years. The latest one is the current bodyweight.</summary>
     public void LogWeight(int userId, DateOnly date, double weightKg)
     {
         var today = calendar.Today;
         if (date > today || date < today.AddYears(-5))
             throw new ValidationException("Choose a date within the last five years, up to today.");
         using var transaction = WriteLock.BeginForAthletes(db, userId);
-        var latest = LatestBody(userId) ?? throw new ValidationException("Complete your profile first.");
+        if (!AthleteSetup.IsComplete(db, userId))
+            throw new ValidationException("Complete your profile first.");
         UpsertWeight(userId, weightKg, date);
-        if (date == today)
-            db.AnthropometryLogs.Add(new Anthropometry { UserId = userId, WeightKg = weightKg, HeightCm = latest.HeightCm, RecordedAt = DateTime.UtcNow });
         db.SaveChanges();
         transaction.Commit();
     }
@@ -129,7 +129,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
     {
         ExportedAtUtc = DateTime.UtcNow,
         Account = db.Users.Where(u => u.Id == userId)
-            .Select(u => new { u.Username, u.Email, Age = u.Profile == null ? 0 : u.Profile.Age }).Single(),
+            .Select(u => new { u.Username, u.Email, Age = u.Profile == null ? 0 : u.Profile.Age, HeightCm = u.Profile == null ? null : u.Profile.HeightCm }).Single(),
         Weight = db.WeightLogs.Where(w => w.UserId == userId).OrderBy(w => w.Date).Select(w => new { w.Date, w.ValueKg }).ToList(),
         Nutrition = db.DailyNutritions.Where(n => n.UserId == userId).OrderBy(n => n.Date)
             .Select(n => new { n.Date, n.CaloriesKcal, n.ProteinG, n.FatG, n.CarbsG }).ToList(),
@@ -159,19 +159,11 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
         Goals = db.UserGoals.Where(g => g.UserId == userId).Select(g => new { Title = g.GoalType, g.Deadline, g.IsCompleted }).ToList()
     };
 
-    private Anthropometry? LatestBody(int userId) => db.AnthropometryLogs.AsNoTracking()
-        .Where(a => a.UserId == userId).OrderByDescending(a => a.RecordedAt).FirstOrDefault();
-
-    /// <summary>The settings form always sends the body values; only a real change is a new measurement.</summary>
-    private void RecordBodyIfChanged(int userId, double weightKg, double heightCm, DateOnly today)
+    /// <summary>The settings form always sends the bodyweight; only a real change is today's weigh-in.</summary>
+    private void RecordWeightIfChanged(int userId, double weightKg, DateOnly today)
     {
-        var latest = LatestBody(userId);
-        var weightChanged = latest is null || Math.Abs(latest.WeightKg - weightKg) > 0.001;
-        var heightChanged = latest is null || Math.Abs(latest.HeightCm - heightCm) > 0.001;
-        if (!weightChanged && !heightChanged)
-            return;
-        db.AnthropometryLogs.Add(new Anthropometry { UserId = userId, WeightKg = weightKg, HeightCm = heightCm, RecordedAt = DateTime.UtcNow });
-        if (weightChanged)
+        var latest = db.WeightLogs.LatestWeighIn(userId);
+        if (latest is null || Math.Abs(latest.ValueKg - weightKg) > 0.001)
             UpsertWeight(userId, weightKg, today);
     }
 

@@ -30,7 +30,8 @@ public class ProfileApiTests
         Assert.Equal((60.0, 80.0, 100.0), (profile.BenchPressKg!.Value, profile.SquatKg!.Value, profile.DeadliftKg!.Value));
         Assert.Equal(3, profile.StrengthCoefficient);
         Assert.Equal("Gym Centurion", profile.AvatarName);
-        Assert.Equal(79.5, Assert.Single(profile.WeightHistory).ValueKg);
+        Assert.Equal(today, profile.WeighedOn);
+        Assert.Equal([80, 79.5], profile.WeightHistory.Select(w => w.ValueKg));
         Assert.Contains(profile.Achievements, a => a.Name == "Fully Set");
     }
 
@@ -41,31 +42,31 @@ public class ProfileApiTests
         using var api = app.Api();
         await api.RegisterWithSetup();
         var settings = await Settings(api);
-        var measurements = app.Query(db => db.AnthropometryLogs.Count());
+        var weighIns = app.Query(db => db.WeightLogs.Count());
         settings.CalorieTarget = 2600;
 
         await ApiClient.Ok(await api.Put("/api/profile/settings", settings));
 
         Assert.Equal(2600, app.Query(db => db.Profiles.Single().CalorieTarget));
-        Assert.Equal(measurements, app.Query(db => db.AnthropometryLogs.Count()));
-        Assert.Equal(0, app.Query(db => db.WeightLogs.Count()));
+        Assert.Equal(weighIns, app.Query(db => db.WeightLogs.Count()));
     }
 
     [Fact]
-    public async Task ChangingBodyweightRecordsAMeasurementAndTodaysWeighIn()
+    public async Task ChangingBodyweightAndHeightRecordsTodaysWeighInAndTheHeight()
     {
         using var app = new TestApplication();
         using var api = app.Api();
         await api.RegisterWithSetup();
         var settings = await Settings(api);
         settings.WeightKg = 81.5;
+        settings.HeightCm = 181;
         settings.SplitTypeId = app.Query(db => db.SplitTypes.Single(s => s.Name == "Legs-Back-Chest").Id);
         settings.WorkoutsPerWeek = 5;
 
         await ApiClient.Ok(await api.Put("/api/profile/settings", settings));
 
-        Assert.Equal(81.5, app.Query(db => db.AnthropometryLogs.OrderByDescending(a => a.Id).First().WeightKg));
         Assert.Equal(81.5, app.Query(db => db.WeightLogs.Single().ValueKg));
+        Assert.Equal(181, app.Query(db => db.Profiles.Single().HeightCm));
         var plan = app.Query(db => db.WorkoutPlans.Single(p => p.IsActive));
         Assert.Equal((settings.SplitTypeId, 5), (plan.SplitTypeId, plan.WorkoutsPerWeek));
         Assert.Equal(81.5, (await Settings(api)).WeightKg);
@@ -127,7 +128,7 @@ public class ProfileApiTests
 
         await ApiClient.Ok(await api.Put($"/api/profile/weights/{Day(today.AddDays(-2))}", new { weightKg = 80 }));
         await ApiClient.Ok(await api.Put($"/api/profile/weights/{Day(today.AddDays(-2))}", new { weightKg = 79 }));
-        Assert.Equal(79, app.Query(db => db.WeightLogs.Single()).ValueKg);
+        Assert.Equal(79, app.Query(db => db.WeightLogs.Single(w => w.Date == today.AddDays(-2))).ValueKg);
     }
 
     [Fact]

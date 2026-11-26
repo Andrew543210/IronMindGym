@@ -446,7 +446,7 @@ export const uk: Translation = {
   'profile.strength': 'Коефіцієнт сили',
   'profile.weight': 'Вага',
   'profile.height': 'Зріст',
-  'profile.measured': 'Виміряно',
+  'profile.weighedOn': 'Дата зважування',
   'profile.bench': 'Початковий жим лежачи',
   'profile.squat': 'Початковий присід',
   'profile.deadlift': 'Початкова станова тяга',

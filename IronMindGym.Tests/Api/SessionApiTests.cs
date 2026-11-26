@@ -114,7 +114,7 @@ public class SessionApiTests
         await ApiClient.Ok(await api.Post("/api/setup", setup));
 
         Assert.True((await api.Get<SessionResponse>("/api/session")).SetupComplete);
-        Assert.Equal(1, app.Query(db => db.AnthropometryLogs.Count()));
+        Assert.Equal((80.5, 180.0), app.Query(db => (db.WeightLogs.Single().ValueKg, db.Profiles.Single().HeightCm!.Value)));
         Assert.Equal(1, app.Query(db => db.WorkoutPlans.Count(p => p.IsActive)));
     }
 }

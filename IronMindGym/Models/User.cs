@@ -19,7 +19,6 @@ public class User
 
     public Profile? Profile { get; set; }
     public InitialBenchmarks? Benchmarks { get; set; }
-    public ICollection<Anthropometry> AnthropometryLogs { get; set; } = [];
     public ICollection<WorkoutSession> WorkoutSessions { get; set; } = [];
     public ICollection<DailyNutrition> DailyNutritionLogs { get; set; } = [];
     public ICollection<Friendship> FriendshipsAsUser1 { get; set; } = [];

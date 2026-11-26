@@ -8,6 +8,7 @@ public class Profile
     public int UserId { get; set; }
     public User User { get; set; } = null!;
     public int Age { get; set; }
+    public double? HeightCm { get; set; }
     public DateTime AccountCreatedAt { get; set; } = DateTime.UtcNow;
 
     [MaxLength(64)]

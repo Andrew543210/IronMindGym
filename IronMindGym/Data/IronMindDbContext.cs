@@ -7,7 +7,6 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<Profile> Profiles => Set<Profile>();
-    public DbSet<Anthropometry> AnthropometryLogs => Set<Anthropometry>();
     public DbSet<InitialBenchmarks> InitialBenchmarks => Set<InitialBenchmarks>();
     public DbSet<WeightLog> WeightLogs => Set<WeightLog>();
     public DbSet<UserGoal> UserGoals => Set<UserGoal>();
@@ -93,6 +92,7 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         // messages for the athlete, stays in the contracts and services.
         Checks<Profile>(modelBuilder, "Profiles",
             ("Age", "\"Age\" >= 0"),
+            ("HeightCm", "\"HeightCm\" > 0"),
             ("EnergyEquation", "\"EnergyEquation\" IN ('None', 'Male', 'Female')"),
             ("Targets", "\"CalorieTarget\" > 0 AND \"ProteinTarget\" > 0 AND \"FatTarget\" > 0 AND \"CarbsTarget\" > 0"));
         Checks<InitialBenchmarks>(modelBuilder, "InitialBenchmarks",

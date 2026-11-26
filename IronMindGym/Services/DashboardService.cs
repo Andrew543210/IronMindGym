@@ -16,10 +16,7 @@ public class DashboardService(IronMindDbContext db, AvatarService avatarService,
             .Include(u => u.Benchmarks)
             .Single(u => u.Id == currentUserId);
 
-        var latestAnthropometry = db.AnthropometryLogs
-            .Where(a => a.UserId == currentUserId)
-            .OrderByDescending(a => a.RecordedAt)
-            .FirstOrDefault();
+        var bodyweightKg = db.WeightLogs.LatestWeighIn(currentUserId)?.ValueKg;
 
         var activePlan = db.WorkoutPlans
             .FirstOrDefault(p => p.UserId == currentUserId && p.IsActive);
@@ -37,9 +34,9 @@ public class DashboardService(IronMindDbContext db, AvatarService avatarService,
             .ToList();
 
         var currentStrength = strengthService.Current(currentUserId, user.Benchmarks);
-        var strengthCoefficient = avatarService.CalculateStrengthCoefficient(currentStrength, latestAnthropometry);
+        var strengthCoefficient = avatarService.CalculateStrengthCoefficient(currentStrength, bodyweightKg);
         var avatars = db.Avatars.AsNoTracking().OrderBy(a => a.MinStrengthCoefficient).ToList();
-        var avatar = avatarService.ResolveAvatar(avatars, currentStrength, latestAnthropometry);
+        var avatar = avatarService.ResolveAvatar(avatars, currentStrength, bodyweightKg);
         var avatarScalePoints = BuildAvatarScalePoints(avatars);
         foreach (var point in avatarScalePoints)
         {
@@ -48,8 +45,8 @@ public class DashboardService(IronMindDbContext db, AvatarService avatarService,
 
         var vm = new DashboardSummary
         {
-            NeedsSetup = user.Benchmarks == null || latestAnthropometry == null,
-            WeightKg = latestAnthropometry?.WeightKg,
+            NeedsSetup = !AthleteSetup.IsComplete(db, currentUserId),
+            WeightKg = bodyweightKg,
             TotalWorkouts = db.WorkoutSessions.Count(w => w.UserId == currentUserId),
             TodayNutrition = db.DailyNutritions.AsNoTracking().FirstOrDefault(n => n.UserId == currentUserId && n.Date == today),
             Goals = db.UserGoals.AsNoTracking().Where(g => g.UserId == currentUserId && !g.IsCompleted).OrderBy(g => g.Deadline).Take(3).ToList(),

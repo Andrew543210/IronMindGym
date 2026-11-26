@@ -437,7 +437,7 @@ export const en = {
   'profile.strength': 'Strength coefficient',
   'profile.weight': 'Weight',
   'profile.height': 'Height',
-  'profile.measured': 'Measured',
+  'profile.weighedOn': 'Weighed on',
   'profile.bench': 'Initial bench press',
   'profile.squat': 'Initial squat',
   'profile.deadlift': 'Initial deadlift',

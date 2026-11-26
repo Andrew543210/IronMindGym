@@ -110,33 +110,6 @@ namespace IronMindGym.Data.Migrations
                     b.ToTable("ActivityLikes");
                 });
 
-            modelBuilder.Entity("IronMindGym.Models.Anthropometry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<double>("HeightCm")
-                        .HasColumnType("double precision");
-
-                    b.Property<DateTime>("RecordedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<double>("WeightKg")
-                        .HasColumnType("double precision");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AnthropometryLogs");
-                });
-
             modelBuilder.Entity("IronMindGym.Models.Avatar", b =>
                 {
                     b.Property<int>("Id")
@@ -542,6 +515,9 @@ namespace IronMindGym.Data.Migrations
                     b.Property<int?>("FatTarget")
                         .HasColumnType("integer");
 
+                    b.Property<double?>("HeightCm")
+                        .HasColumnType("double precision");
+
                     b.Property<string>("Language")
                         .HasMaxLength(8)
                         .HasColumnType("character varying(8)");
@@ -566,6 +542,8 @@ namespace IronMindGym.Data.Migrations
                             t.HasCheckConstraint("CK_Profiles_Age", "\"Age\" >= 0");
 
                             t.HasCheckConstraint("CK_Profiles_EnergyEquation", "\"EnergyEquation\" IN ('None', 'Male', 'Female')");
+
+                            t.HasCheckConstraint("CK_Profiles_HeightCm", "\"HeightCm\" > 0");
 
                             t.HasCheckConstraint("CK_Profiles_Targets", "\"CalorieTarget\" > 0 AND \"ProteinTarget\" > 0 AND \"FatTarget\" > 0 AND \"CarbsTarget\" > 0");
                         });
@@ -975,17 +953,6 @@ namespace IronMindGym.Data.Migrations
                     b.Navigation("WorkoutSession");
                 });
 
-            modelBuilder.Entity("IronMindGym.Models.Anthropometry", b =>
-                {
-                    b.HasOne("IronMindGym.Models.User", "User")
-                        .WithMany("AnthropometryLogs")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("IronMindGym.Models.DailyNutrition", b =>
                 {
                     b.HasOne("IronMindGym.Models.User", "User")
@@ -1306,8 +1273,6 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.User", b =>
                 {
                     b.Navigation("ActivityLikes");
-
-                    b.Navigation("AnthropometryLogs");
 
                     b.Navigation("Benchmarks");
 

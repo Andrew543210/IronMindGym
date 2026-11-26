@@ -27,19 +27,20 @@ public class SetupController(IronMindDbContext db) : ApiController
             return NoContent();
 
         var user = db.Users.Include(u => u.Benchmarks).Include(u => u.Profile).Single(u => u.Id == userId);
+        user.Profile ??= new Profile { UserId = userId };
         user.Benchmarks ??= new InitialBenchmarks { UserId = userId };
-        if (user.Profile is { TimeZone: null } && AthleteCalendar.TryFindZone(request.TimeZone, out _))
+        if (user.Profile.TimeZone is null && AthleteCalendar.TryFindZone(request.TimeZone, out _))
             user.Profile.TimeZone = request.TimeZone;
+        user.Profile.HeightCm = request.HeightCm;
         user.Benchmarks.BenchPressKg = request.BenchPressKg;
         user.Benchmarks.SquatKg = request.SquatKg;
         user.Benchmarks.DeadliftKg = request.DeadliftKg;
-        db.AnthropometryLogs.Add(new Anthropometry
-        {
-            UserId = userId,
-            WeightKg = request.WeightKg,
-            HeightCm = request.HeightCm,
-            RecordedAt = DateTime.UtcNow
-        });
+        var today = AthleteCalendar.FromId(user.Profile.TimeZone).Today;
+        var weighIn = db.WeightLogs.FirstOrDefault(w => w.UserId == userId && w.Date == today);
+        if (weighIn is null)
+            db.WeightLogs.Add(new WeightLog { UserId = userId, Date = today, ValueKg = request.WeightKg });
+        else
+            weighIn.ValueKg = request.WeightKg;
         foreach (var plan in db.WorkoutPlans.Where(p => p.UserId == userId && p.IsActive))
             plan.IsActive = false;
         db.WorkoutPlans.Add(new WorkoutPlan

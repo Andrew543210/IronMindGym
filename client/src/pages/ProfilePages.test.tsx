@@ -6,7 +6,7 @@ import { ChangePasswordPage, ProfilePage, ProfileSettingsPage } from './ProfileP
 
 const profile = {
   username: 'athlete', email: 'athlete@example.com', age: 24, avatarName: 'Gym Centurion', strengthCoefficient: 3,
-  weightKg: 80, heightCm: 180, measuredAt: '2026-11-01T08:00:00Z', benchPressKg: 60, squatKg: 80, deadliftKg: 100,
+  weightKg: 80, heightCm: 180, weighedOn: '2026-11-19', benchPressKg: 60, squatKg: 80, deadliftKg: 100,
   weightHistory: [{ date: '2026-11-19', valueKg: 80.5 }, { date: '2026-11-18', valueKg: 81 }],
   achievements: [{ name: 'Fully Set', conditionDescription: 'Complete profile, anthropometry and setup', achievedAt: '2026-11-01T08:00:00Z' }],
 };
@@ -37,7 +37,7 @@ describe('profile', () => {
   });
 
   it('invites a first weigh-in when the history is empty', async () => {
-    mockApi({ 'GET /api/profile': { ...profile, weightKg: null, heightCm: null, measuredAt: null, weightHistory: [], achievements: [] } });
+    mockApi({ 'GET /api/profile': { ...profile, weightKg: null, heightCm: null, weighedOn: null, weightHistory: [], achievements: [] } });
     renderPage('/profile', <ProfilePage />);
 
     expect(await screen.findByText('Your first entry starts the story.')).toBeInTheDocument();

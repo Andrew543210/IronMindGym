@@ -25,7 +25,7 @@ public static class DemoDataSeeder
             Username = "demo_athlete",
             Email = "demo@ironmind.app",
             PasswordHash = PasswordHashUtility.Hash("DemoTraining123!"),
-            Profile = new Profile { Age = 24, AccountCreatedAt = DateTime.UtcNow.AddDays(-40) },
+            Profile = new Profile { Age = 24, HeightCm = 180, AccountCreatedAt = DateTime.UtcNow.AddDays(-40) },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 90, SquatKg = 130, DeadliftKg = 160 }
         };
         var friend = new User
@@ -33,18 +33,20 @@ public static class DemoDataSeeder
             Username = "fit_friend",
             Email = "friend@ironmind.app",
             PasswordHash = PasswordHashUtility.Hash("FriendTraining123!"),
-            Profile = new Profile { Age = 23, AccountCreatedAt = DateTime.UtcNow.AddDays(-20) },
+            Profile = new Profile { Age = 23, HeightCm = 168, AccountCreatedAt = DateTime.UtcNow.AddDays(-20) },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 65, SquatKg = 95, DeadliftKg = 120 }
         };
         db.Users.AddRange(athlete, friend);
-        db.AnthropometryLogs.AddRange(
-            new Anthropometry { User = athlete, WeightKg = 82, HeightCm = 180, RecordedAt = DateTime.UtcNow.AddDays(-40) },
-            new Anthropometry { User = friend, WeightKg = 62, HeightCm = 168, RecordedAt = DateTime.UtcNow.AddDays(-20) });
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        db.WeightLogs.AddRange(
+            new WeightLog { User = athlete, Date = today.AddDays(-40), ValueKg = 83 },
+            new WeightLog { User = athlete, Date = today.AddDays(-10), ValueKg = 82 },
+            new WeightLog { User = friend, Date = today.AddDays(-20), ValueKg = 62 });
         db.WorkoutPlans.Add(new WorkoutPlan { User = athlete, WorkoutsPerWeek = 4, IsActive = true, SplitType = upperLower });
         db.DailyNutritions.Add(new DailyNutrition
         {
             User = athlete,
-            Date = DateOnly.FromDateTime(DateTime.UtcNow),
+            Date = today,
             CaloriesKcal = 2550,
             ProteinG = 165,
             FatG = 70,

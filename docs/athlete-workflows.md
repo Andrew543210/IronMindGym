@@ -31,6 +31,10 @@ The draft holds the logged sets, session start, rest timer deadline, split and t
 
 "Today", the training week (Monday to Sunday) and streaks follow the time zone in the profile. The browser suggests it at registration, and **Edit profile** can change it, for example to `Europe/Kyiv`. An empty value means UTC. A workout logged at 23:30 in Kyiv belongs to that Kyiv day even though it is stored in UTC.
 
+## Bodyweight
+
+Setup records the first weigh-in for today. Weigh-ins can be added for any day in the last five years, one per day, and the latest one is the current bodyweight. Changing the weight in **Edit profile** logs it for today; changing only the height or the targets adds no weigh-in.
+
 ## Nutrition
 
 One entry per calendar day; saving a day again replaces it, so a missed day can be filled in later. Days in the last five years up to today are accepted. Personal targets are used where configured. Without them, adults who opted into the energy equation get estimates: Mifflin–St Jeor BMR times an activity factor from the weekly plan, 1.6 g/kg protein, 0.8 g/kg fat and carbohydrates from the remaining energy. Missing inputs never produce a target; such targets are labelled **Not set**. A target counts as met within 10%.

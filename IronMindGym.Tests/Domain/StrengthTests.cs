@@ -19,10 +19,10 @@ public class StrengthTests
     {
         var lifts = new InitialBenchmarks { BenchPressKg = 100, SquatKg = 140, DeadliftKg = 180 };
 
-        Assert.Equal(5.25, Avatars.CalculateStrengthCoefficient(lifts, new Anthropometry { WeightKg = 80 }));
+        Assert.Equal(5.25, Avatars.CalculateStrengthCoefficient(lifts, 80));
         Assert.Equal(0, Avatars.CalculateStrengthCoefficient(lifts, null));
-        Assert.Equal(0, Avatars.CalculateStrengthCoefficient(null, new Anthropometry { WeightKg = 80 }));
-        Assert.Equal(0, Avatars.CalculateStrengthCoefficient(lifts, new Anthropometry { WeightKg = 0 }));
+        Assert.Equal(0, Avatars.CalculateStrengthCoefficient(null, 80));
+        Assert.Equal(0, Avatars.CalculateStrengthCoefficient(lifts, 0));
     }
 
     [Theory]
@@ -30,7 +30,7 @@ public class StrengthTests
     [InlineData(160, "Iron Squire")]
     [InlineData(320, "Titanium Overlord")]
     public void TheRankIsTheHighestReachedStep(double squatKg, string rank) =>
-        Assert.Equal(rank, Avatars.ResolveAvatar(Ladder, new InitialBenchmarks { SquatKg = squatKg }, new Anthropometry { WeightKg = 80 }).Name);
+        Assert.Equal(rank, Avatars.ResolveAvatar(Ladder, new InitialBenchmarks { SquatKg = squatKg }, 80).Name);
 
     [Fact]
     public void AnEmptyLadderStillGivesTheStartingRank() =>

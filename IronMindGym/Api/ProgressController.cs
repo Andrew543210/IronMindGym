@@ -61,10 +61,9 @@ public class ProgressController(
         if (!friendships.AreFriends(UserId, friendId))
             return NotFound();
         var friend = db.Users.AsNoTracking().Include(u => u.Benchmarks).Single(u => u.Id == friendId);
-        var body = db.AnthropometryLogs.AsNoTracking().Where(a => a.UserId == friendId).OrderByDescending(a => a.RecordedAt).FirstOrDefault();
         return new FriendProgressResponse(
             friend.Username,
-            avatars.CalculateStrengthCoefficient(strength.Current(friendId, friend.Benchmarks), body),
+            avatars.CalculateStrengthCoefficient(strength.Current(friendId, friend.Benchmarks), db.WeightLogs.LatestWeighIn(friendId)?.ValueKg),
             progress.List(friendId));
     }
 }

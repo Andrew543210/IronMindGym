@@ -8,7 +8,7 @@ public sealed record ProfileOverview(
     double StrengthCoefficient,
     double? WeightKg,
     double? HeightCm,
-    DateTime? MeasuredAt,
+    DateOnly? WeighedOn,
     double? BenchPressKg,
     double? SquatKg,
     double? DeadliftKg,

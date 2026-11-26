@@ -68,5 +68,36 @@ public sealed class MigrationTests : IDisposable
             rows);
     }
 
+    [Fact]
+    public void MeasurementsBecomeWeighInsOnTheAthletesDayAndTheLatestHeight()
+    {
+        MigrateTo("AddCheckConstraints");
+        AddUsers(1, 2);
+        Run("""
+            INSERT INTO "Profiles" ("UserId", "Age", "AccountCreatedAt", "EnergyEquation", "TimeZone") VALUES
+                (1, 30, now(), 'None', 'Pacific/Kiritimati'),
+                (2, 30, now(), 'None', 'Not/AZone');
+            INSERT INTO "WeightLogs" ("UserId", "Date", "ValueKg") VALUES (1, '2026-11-02', 79);
+            INSERT INTO "AnthropometryLogs" ("UserId", "WeightKg", "HeightCm", "RecordedAt") VALUES
+                (1, 81, 180, '2026-11-01 08:00+00'),
+                (1, 80, 181, '2026-11-01 20:00+00'),
+                (1, 82, 182, '2026-11-03 09:00+00'),
+                (2, 60, 165, '2026-11-01 20:00+00');
+            """);
+
+        MigrateTo("KeepBodyweightInWeighIns");
+
+        var weighIns = Read(db => db.WeightLogs.OrderBy(w => w.UserId).ThenBy(w => w.Date).Select(w => new { w.UserId, w.Date, w.ValueKg }).ToList());
+        Assert.Equal(
+            [
+                new { UserId = 1, Date = new DateOnly(2026, 11, 1), ValueKg = 81.0 },
+                new { UserId = 1, Date = new DateOnly(2026, 11, 2), ValueKg = 79.0 },
+                new { UserId = 1, Date = new DateOnly(2026, 11, 3), ValueKg = 82.0 },
+                new { UserId = 2, Date = new DateOnly(2026, 11, 1), ValueKg = 60.0 }
+            ],
+            weighIns);
+        Assert.Equal([182.0, 165.0], Read(db => db.Profiles.OrderBy(p => p.UserId).Select(p => p.HeightCm!.Value).ToList()));
+    }
+
     public void Dispose() => TestDatabase.Drop(connectionString);
 }
