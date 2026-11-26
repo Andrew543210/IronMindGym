@@ -63,8 +63,7 @@ public class ProfileController(IronMindDbContext db, ProfileService profiles) : 
     [HttpPut("language")]
     public ActionResult SaveLanguage(LanguageRequest request)
     {
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, UserId);
+        using var transaction = WriteLock.BeginForAthletes(db, UserId);
         var profile = db.Profiles.FirstOrDefault(p => p.UserId == UserId);
         if (profile is null)
             db.Profiles.Add(profile = new Profile { UserId = UserId });

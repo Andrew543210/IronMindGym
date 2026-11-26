@@ -51,8 +51,7 @@ public class ExerciseProgressService(IronMindDbContext db)
     public void SaveResults(int userId, ProgressPair pair)
     {
         var exercise = FindExercise(pair.ExerciseId);
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, userId);
+        using var transaction = WriteLock.BeginForAthletes(db, userId);
         var progress = db.ExerciseProgress.FirstOrDefault(p => p.UserId == userId && p.ExerciseId == exercise.Id);
         if (progress is null)
             db.ExerciseProgress.Add(progress = new ExerciseProgress { UserId = userId, ExerciseId = exercise.Id });
@@ -66,8 +65,7 @@ public class ExerciseProgressService(IronMindDbContext db)
     {
         var exercise = FindExercise(exerciseId);
         var result = Result.Validate(exercise.Type, weight ?? 0, reps ?? 0, duration ?? 0, intensity ?? 0);
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, userId);
+        using var transaction = WriteLock.BeginForAthletes(db, userId);
         var progress = db.ExerciseProgress.FirstOrDefault(p => p.UserId == userId && p.ExerciseId == exerciseId)
             ?? throw new ArgumentException("Save initial results first.");
         Record(progress, initial: false, result);

@@ -23,8 +23,7 @@ public static class DataSeeder
 
     public static void Seed(IronMindDbContext db, bool includeDemoData = false)
     {
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForSeeding(db);
+        using var transaction = WriteLock.BeginForSeeding(db);
         if (!db.SplitTypes.Any())
             db.SplitTypes.AddRange(SplitTypes.Select(x => new SplitType { Name = x.Name, NameUk = x.NameUk }));
         if (!db.SetTypes.Any())

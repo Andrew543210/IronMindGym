@@ -72,8 +72,7 @@ public class FriendshipService(IronMindDbContext db)
     {
         if (userId == otherId || !db.Users.Any(u => u.Id == otherId))
             throw new ValidationException("Choose another registered user.");
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, userId, otherId);
+        using var transaction = WriteLock.BeginForAthletes(db, userId, otherId);
         var relationship = Find(userId, otherId);
         RequestResult result;
         if (relationship is null)
@@ -103,8 +102,7 @@ public class FriendshipService(IronMindDbContext db)
 
     public bool Accept(int userId, int otherId)
     {
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, userId, otherId);
+        using var transaction = WriteLock.BeginForAthletes(db, userId, otherId);
         var relationship = Find(userId, otherId);
         if (relationship?.Status == FriendshipStatus.Accepted)
             return true;

@@ -22,8 +22,7 @@ public class SetupController(IronMindDbContext db) : ApiController
             return Rejected("Choose a valid training split.", nameof(request.SplitTypeId));
 
         var userId = UserId;
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, userId);
+        using var transaction = WriteLock.BeginForAthletes(db, userId);
         if (AthleteSetup.IsComplete(db, userId))
             return NoContent();
 

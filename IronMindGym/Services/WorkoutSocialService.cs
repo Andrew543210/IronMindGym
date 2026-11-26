@@ -12,8 +12,7 @@ public class WorkoutSocialService(IronMindDbContext db, FriendshipService friend
     {
         if (viewerId == ownerId || !friendships.AreFriends(viewerId, ownerId) || !SessionExists(ownerId, sessionId))
             return false;
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, viewerId);
+        using var transaction = WriteLock.BeginForAthletes(db, viewerId);
         var existing = db.ActivityLikes.FirstOrDefault(x => x.WorkoutSessionId == sessionId && x.UserId == viewerId);
         if (like && existing is null)
             db.ActivityLikes.Add(new ActivityLike { WorkoutSessionId = sessionId, UserId = viewerId, CreatedAt = DateTime.UtcNow });

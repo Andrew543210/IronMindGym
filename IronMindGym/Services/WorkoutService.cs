@@ -85,15 +85,14 @@ public class WorkoutService(IronMindDbContext db)
         if (workout.SplitTypeId.HasValue && !db.SplitTypes.Any(s => s.Id == workout.SplitTypeId))
             throw new ValidationException("Choose a valid training split.");
 
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, currentUserId);
+        using var transaction = WriteLock.BeginForAthletes(db, currentUserId);
         if (workout.DraftId.HasValue)
         {
-            db.WorkoutDrafts.Where(d => d.UserId == currentUserId && d.DraftId == workout.DraftId).ExecuteDelete();
             var savedId = db.WorkoutSessions.Where(s => s.UserId == currentUserId && s.DraftId == workout.DraftId)
                 .Select(s => (int?)s.Id).FirstOrDefault();
             if (savedId.HasValue)
                 return savedId.Value;
+            db.WorkoutDrafts.Where(d => d.UserId == currentUserId && d.DraftId == workout.DraftId).ExecuteDelete();
         }
         var splitDayLabel = workout.SplitDayLabel.Trim();
         var sessionName = splitDayLabel.EndsWith("day", StringComparison.OrdinalIgnoreCase)
@@ -271,8 +270,7 @@ public class WorkoutService(IronMindDbContext db)
         if (session is null)
             return false;
         var exerciseIds = session.PerformedExercises.Select(e => e.ExerciseId).Distinct().ToList();
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, userId);
+        using var transaction = WriteLock.BeginForAthletes(db, userId);
         db.WorkoutSessions.Remove(session);
         db.SaveChanges();
         foreach (var exerciseId in exerciseIds)

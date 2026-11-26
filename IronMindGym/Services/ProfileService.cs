@@ -70,8 +70,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
         if (timeZone is not null && !AthleteCalendar.TryFindZone(timeZone, out _))
             throw new ValidationException("Enter a time zone such as Europe/Kyiv, or leave it empty to use UTC.");
         var username = settings.Username.Trim();
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, userId);
+        using var transaction = WriteLock.BeginForAthletes(db, userId);
         if (db.Users.Any(u => u.Id != userId && u.Username == username))
             throw new ValidationException("This username is already taken.");
         var user = db.Users.Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
@@ -105,8 +104,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
         var today = calendar.Today;
         if (date.Date > today || date.Date < today.AddYears(-5))
             throw new ValidationException("Choose a date within the last five years, up to today.");
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, userId);
+        using var transaction = WriteLock.BeginForAthletes(db, userId);
         var latest = LatestBody(userId) ?? throw new ValidationException("Complete your profile first.");
         UpsertWeight(userId, weightKg, date.Date);
         if (date.Date == today)

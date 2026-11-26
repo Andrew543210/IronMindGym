@@ -36,8 +36,7 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
         var day = date.Date;
         if (day > calendar.Today || day < calendar.Today.AddYears(-5))
             throw new ValidationException("Choose a date within the last five years, up to today.");
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, userId);
+        using var transaction = WriteLock.BeginForAthletes(db, userId);
         var log = db.DailyNutritions.FirstOrDefault(n => n.UserId == userId && n.Date == day);
         if (log is null)
             db.DailyNutritions.Add(log = new DailyNutrition { UserId = userId, Date = day });

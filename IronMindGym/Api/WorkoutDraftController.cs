@@ -41,8 +41,7 @@ public class WorkoutDraftController(IronMindDbContext db) : ApiController
             return Rejected("The workout contains a character that cannot be stored.", nameof(request.Content));
         var draftId = request.DraftId!.Value;
 
-        using var transaction = db.Database.BeginTransaction();
-        WriteLock.ForAthletes(db, UserId);
+        using var transaction = WriteLock.BeginForAthletes(db, UserId);
         if (db.WorkoutSessions.Any(s => s.UserId == UserId && s.DraftId == draftId))
             return Problem(statusCode: StatusCodes.Status409Conflict, title: "This workout is already saved.");
         var draft = db.WorkoutDrafts.FirstOrDefault(d => d.UserId == UserId);
