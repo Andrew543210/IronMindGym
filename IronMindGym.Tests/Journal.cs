@@ -1,8 +1,9 @@
 using IronMindGym.Models;
+using IronMindGym.Services;
 
 namespace IronMindGym.Tests;
 
-/// <summary>Builds training history for tests: workouts in the past go straight to the database.</summary>
+/// <summary>Builds training history for tests: workouts in the past go straight to the database, with their records.</summary>
 internal static class Journal
 {
     public static int AddWorkout(TestApplication app, DateTime date, int minutes,
@@ -19,6 +20,8 @@ internal static class Journal
             session.PerformedExercises.Add(performed);
         }
         db.WorkoutSessions.Add(session);
+        db.SaveChanges();
+        new PersonalRecordService(db).Recalculate(session.UserId, sets.Select(s => s.ExerciseId));
         db.SaveChanges();
         return session.Id;
     });

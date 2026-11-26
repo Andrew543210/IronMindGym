@@ -77,6 +77,7 @@ builder.Services.AddScoped<GoalService>();
 builder.Services.AddScoped<ExerciseProgressService>();
 builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<WorkoutService>();
+builder.Services.AddScoped<PersonalRecordService>();
 builder.Services.AddScoped<WorkoutSocialService>();
 builder.Services.AddScoped<FriendshipService>();
 builder.Services.AddScoped<NutritionJournalService>();

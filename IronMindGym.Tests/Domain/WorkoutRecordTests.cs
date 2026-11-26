@@ -8,8 +8,10 @@ namespace IronMindGym.Tests.Domain;
 
 public class WorkoutRecordTests
 {
+    private static WorkoutService Workouts(IronMindDbContext db) => new(db, new PersonalRecordService(db));
+
     private static int Save(TestApplication app, params (int Exercise, double Weight, int Reps, int Duration)[] sets) => app.Query(db =>
-        new WorkoutService(db).Save(db.Users.Single().Id, new SaveWorkoutRequest
+        Workouts(db).Save(db.Users.Single().Id, new SaveWorkoutRequest
         {
             SplitDayLabel = "Full Body",
             DurationMinutes = 45,
@@ -50,7 +52,7 @@ public class WorkoutRecordTests
             var blocks = Load(db, id).PerformedExercises.OrderBy(p => p.OrderInWorkout).ToList();
             Assert.Equal([ids[0], ids[1], ids[0], ids[1]], blocks.Select(p => p.ExerciseId));
             Assert.Equal([1, 1, 2, 2], blocks.SelectMany(p => p.Sets).Select(s => s.SetNumber));
-            var stats = new WorkoutService(db).BuildExerciseStats(Load(db, id));
+            var stats = Workouts(db).BuildExerciseStats(Load(db, id));
             Assert.Equal(2, stats.Count);
             Assert.All(stats, s => Assert.Equal(2, s.SetsCount));
             Assert.Equal(2, db.PersonalRecords.Count());
@@ -69,11 +71,32 @@ public class WorkoutRecordTests
 
         app.Query(db =>
         {
-            var service = new WorkoutService(db);
+            var service = Workouts(db);
             Assert.False(service.BuildExerciseStats(Load(db, bodyweight)).Single().IsNewRecord);
             Assert.True(service.Delete(db.Users.Single().Id, weighted));
             Assert.Empty(db.PersonalRecords);
             Assert.False(service.Delete(db.Users.Single().Id, weighted));
+            return true;
+        });
+    }
+
+    [Fact]
+    public async Task ARecordIsTheHeaviestRemainingSetDatedByTheFirstWorkoutThatReachedIt()
+    {
+        using var app = await WithAthlete();
+        var bench = app.Query(db => db.Exercises.Single(e => e.Name == "Flat Bench Press").Id);
+        var first = Journal.AddWorkout(app, new DateTime(2026, 9, 1, 18, 0, 0, DateTimeKind.Utc), 45, (bench, 70, 5, 90));
+        Journal.AddWorkout(app, new DateTime(2026, 9, 8, 18, 0, 0, DateTimeKind.Utc), 45, (bench, 70, 6, 90));
+        var heaviest = Save(app, (bench, 80, 3, 0));
+
+        app.Query(db =>
+        {
+            Assert.Equal(80, db.PersonalRecords.Single().MaxWeightKg);
+            Assert.True(Workouts(db).Delete(db.Users.Single().Id, heaviest));
+            var record = db.PersonalRecords.AsNoTracking().Single();
+            Assert.Equal((70, new DateTime(2026, 9, 1, 18, 0, 0, DateTimeKind.Utc)), (record.MaxWeightKg, record.UpdatedAt));
+            Assert.True(Workouts(db).Delete(db.Users.Single().Id, first));
+            Assert.Equal(new DateTime(2026, 9, 8, 18, 0, 0, DateTimeKind.Utc), db.PersonalRecords.AsNoTracking().Single().UpdatedAt);
             return true;
         });
     }
@@ -92,7 +115,7 @@ public class WorkoutRecordTests
             foreach (var session in db.WorkoutSessions)
                 session.SessionDate = DateTime.UtcNow.Date;
             db.SaveChanges();
-            var result = new WorkoutService(db).BuildExerciseStats(Load(db, second)).Single();
+            var result = Workouts(db).BuildExerciseStats(Load(db, second)).Single();
             Assert.True(result.IsNewRecord);
             Assert.Equal(125, result.PercentOfPreviousBest);
             return true;
@@ -109,7 +132,7 @@ public class WorkoutRecordTests
 
         app.Query(db =>
         {
-            var result = new WorkoutService(db).BuildExerciseStats(Load(db, id)).Single();
+            var result = Workouts(db).BuildExerciseStats(Load(db, id)).Single();
             Assert.Null(result.PercentOfPreviousBest);
             Assert.False(result.IsNewRecord);
             Assert.False(result.TracksLoad);

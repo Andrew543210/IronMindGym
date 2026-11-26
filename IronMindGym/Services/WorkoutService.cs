@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class WorkoutService(IronMindDbContext db)
+public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
 {
     public WorkoutDetails? BuildDetails(int ownerId, int sessionId, int viewerId)
     {
@@ -73,7 +73,7 @@ public class WorkoutService(IronMindDbContext db)
     }
 
     /// <summary>
-    /// Saves a finished workout, updates personal records and awards.
+    /// Saves a finished workout and recalculates the personal records and awards it affects.
     /// A retry with the same draft id returns the workout saved by the first request.
     /// </summary>
     public int Save(int currentUserId, SaveWorkoutRequest workout)
@@ -138,32 +138,6 @@ public class WorkoutService(IronMindDbContext db)
             });
         }
         db.WorkoutSessions.Add(session);
-        foreach (var exerciseGroup in workout.Sets.GroupBy(x => x.ExerciseId))
-        {
-            var peakWeight = exerciseGroup.Max(x => x.WeightKg);
-            var existingRecord = db.PersonalRecords.FirstOrDefault(pr => pr.UserId == currentUserId && pr.ExerciseId == exerciseGroup.Key);
-
-            var isStrength = exercises[exerciseGroup.Key].Type == ExerciseType.StrengthTraining;
-            var isNewRecord = isStrength && peakWeight > 0 && (existingRecord == null || peakWeight > existingRecord.MaxWeightKg);
-            if (isNewRecord)
-            {
-                if (existingRecord == null)
-                {
-                    db.PersonalRecords.Add(new PersonalRecord
-                    {
-                        UserId = currentUserId,
-                        ExerciseId = exerciseGroup.Key,
-                        MaxWeightKg = peakWeight,
-                        UpdatedAt = DateTime.UtcNow
-                    });
-                }
-                else
-                {
-                    existingRecord.MaxWeightKg = peakWeight;
-                    existingRecord.UpdatedAt = DateTime.UtcNow;
-                }
-            }
-        }
 
         db.WorkoutReviews.Add(new WorkoutReview
         {
@@ -172,6 +146,8 @@ public class WorkoutService(IronMindDbContext db)
             Comment = workout.ReviewComment?.Trim() ?? string.Empty
         });
 
+        db.SaveChanges();
+        records.Recalculate(currentUserId, exercises.Keys);
         db.SaveChanges();
         AchievementEngine.AssignAchievements(db, currentUserId);
         transaction.Commit();
@@ -273,23 +249,7 @@ public class WorkoutService(IronMindDbContext db)
         using var transaction = WriteLock.BeginForAthletes(db, userId);
         db.WorkoutSessions.Remove(session);
         db.SaveChanges();
-        foreach (var exerciseId in exerciseIds)
-        {
-            var record = db.PersonalRecords.FirstOrDefault(r => r.UserId == userId && r.ExerciseId == exerciseId);
-            if (record is null)
-                continue;
-            var best = db.Sets.Where(s => s.PerformedExercise.ExerciseId == exerciseId && s.PerformedExercise.WorkoutSession.UserId == userId)
-                .OrderByDescending(s => s.WeightKg).Select(s => new { s.WeightKg, s.PerformedExercise.WorkoutSession.SessionDate }).FirstOrDefault();
-            if (best is null || best.WeightKg <= 0)
-            {
-                db.PersonalRecords.Remove(record);
-            }
-            else
-            {
-                record.MaxWeightKg = best.WeightKg;
-                record.UpdatedAt = best.SessionDate;
-            }
-        }
+        records.Recalculate(userId, exerciseIds);
         db.SaveChanges();
         transaction.Commit();
         return true;
