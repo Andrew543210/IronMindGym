@@ -11,7 +11,7 @@ import { WorkoutLoggerPage, type LoggerOptions } from './WorkoutLoggerPage';
 const options: LoggerOptions = {
   activeSplitTypeName: 'Upper-Lower',
   activeSplitTypeId: 2,
-  splitTypes: [{ id: 2, name: 'Upper-Lower', days: [{ value: 'Upper', label: 'Upper' }, { value: 'Lower', label: 'Lower' }] }],
+  splitTypes: [{ id: 2, name: 'Upper-Lower', days: [{ id: 3, name: 'Upper' }, { id: 4, name: 'Lower' }] }],
   setTypes: [{ id: 1, name: 'Working' }, { id: 2, name: 'Warm-up' }],
   defaultSetTypeId: 1,
   muscleGroups: [{ id: 1, name: 'Chest' }],
@@ -83,7 +83,7 @@ describe('workout logger', () => {
     expect(screen.getByText(/Rest timer:/).textContent).toMatch(/0[12]:\d\d/);
     const stored = JSON.parse(localStorage.getItem('ironmind-workout-5')!);
     expect(stored.sets).toEqual([{ exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 80, reps: 8, durationSeconds: 0, intensity: 0, restSeconds: 120 }]);
-    expect(stored.settings).toMatchObject({ splitTypeId: '2', splitDayLabel: 'Upper' });
+    expect(stored.settings).toMatchObject({ splitTypeId: '2', splitDayId: '3' });
   });
 
   it('explains an invalid set instead of logging it', async () => {
@@ -106,7 +106,7 @@ describe('workout logger', () => {
       timerEnd: 0,
       startedAt: Date.now() - 600_000,
       autoDuration: false,
-      settings: { splitDayLabel: 'Lower', durationMinutes: '45', reviewRating: '5', reviewComment: 'Heavy day' },
+      settings: { splitDayId: '4', durationMinutes: '45', reviewRating: '5', reviewComment: 'Heavy day' },
     }));
     const user = userEvent.setup();
     renderLogger();
@@ -117,8 +117,7 @@ describe('workout logger', () => {
     expect(await screen.findByText('/workouts/42 Workout saved. Keep showing up.')).toBeInTheDocument();
     expect(posted).toEqual([expect.objectContaining({
       draftId: '0f8fad5b-d9cb-469f-a165-70867728950e',
-      splitTypeId: 2,
-      splitDayLabel: 'Lower',
+      splitDayId: 4,
       durationMinutes: 45,
       reviewRating: 5,
       reviewComment: 'Heavy day',

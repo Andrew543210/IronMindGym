@@ -15,6 +15,7 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
             .Include(s => s.PerformedExercises).ThenInclude(pe => pe.Exercise)
             .Include(s => s.PerformedExercises).ThenInclude(pe => pe.Sets).ThenInclude(set => set.SetType)
             .Include(s => s.Review)
+            .Include(s => s.SplitDay)
             .FirstOrDefault(s => s.Id == sessionId && s.UserId == ownerId);
         if (session is null)
             return null;
@@ -82,8 +83,8 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
         if (workout.Sets is null || workout.Sets.Count is < 1 or > 200 || workout.Sets.Any(s => s is null))
             throw new ValidationException("Add between 1 and 200 sets before saving.");
         var exercises = ValidateSets(workout.Sets);
-        if (workout.SplitTypeId.HasValue && !db.SplitTypes.Any(s => s.Id == workout.SplitTypeId))
-            throw new ValidationException("Choose a valid training split.");
+        if (workout.SplitDayId.HasValue && !db.SplitDays.Any(d => d.Id == workout.SplitDayId))
+            throw new ValidationException("Choose a valid training day.");
 
         using var transaction = WriteLock.BeginForAthletes(db, currentUserId);
         if (workout.DraftId.HasValue)
@@ -94,19 +95,13 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
                 return savedId.Value;
             db.WorkoutDrafts.Where(d => d.UserId == currentUserId && d.DraftId == workout.DraftId).ExecuteDelete();
         }
-        var splitDayLabel = workout.SplitDayLabel.Trim();
-        var sessionName = splitDayLabel.EndsWith("day", StringComparison.OrdinalIgnoreCase)
-            ? splitDayLabel
-            : $"{splitDayLabel} day";
-
         var session = new WorkoutSession
         {
             UserId = currentUserId,
-            Name = sessionName,
             SessionDate = DateTime.UtcNow,
             DraftId = workout.DraftId,
             DurationMinutes = workout.DurationMinutes,
-            SplitTypeId = workout.SplitTypeId
+            SplitDayId = workout.SplitDayId
         };
 
         // Keep contiguous blocks so supersets and circuits retain their logged order.
@@ -198,42 +193,10 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
         set.Reps = 0;
     }
 
-    private static readonly Dictionary<string, string> SplitDayNamesUk = new()
-    {
-        ["Legs"] = "Ноги",
-        ["Back"] = "Спина",
-        ["Chest"] = "Груди",
-        ["Upper"] = "Верх тіла",
-        ["Lower"] = "Низ тіла",
-        ["Full Body"] = "Усе тіло",
-        ["Training Day"] = "Тренувальний день"
-    };
-
-    // Saved workouts keep the English name ("Legs day") and are translated when shown.
-    private static readonly Dictionary<string, string> SessionNamesUk = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["Legs day"] = "День ніг",
-        ["Back day"] = "День спини",
-        ["Chest day"] = "День грудей",
-        ["Upper day"] = "День верху тіла",
-        ["Lower day"] = "День низу тіла",
-        ["Full Body day"] = "День на все тіло",
-        ["Training Day"] = "Тренувальний день"
-    };
-
-    public static string SessionName(string savedName) => Localized.Pick(savedName, SessionNamesUk.GetValueOrDefault(savedName));
-
-    public static List<SplitDayOption> SplitDayOptions(string? splitTypeCode) => SplitDays(splitTypeCode)
-        .Select(day => new SplitDayOption(day, Localized.Pick(day, SplitDayNamesUk.GetValueOrDefault(day))))
-        .ToList();
-
-    public static List<string> SplitDays(string? splitTypeCode) => splitTypeCode switch
-    {
-        SplitTypeCode.LegsBackChest => ["Legs", "Back", "Chest"],
-        SplitTypeCode.UpperLower => ["Upper", "Lower"],
-        SplitTypeCode.FullBody => ["Full Body"],
-        _ => ["Training Day"]
-    };
+    /// <summary>The title of a workout: its split day's, or a general training day's.</summary>
+    public static string SessionName(string? workoutName, string? workoutNameUk) => workoutName is null
+        ? Localized.Pick("Training Day", "Тренувальний день")
+        : Localized.Pick(workoutName, workoutNameUk);
 
     /// <summary>A repeated delete, such as a double tap, finds nothing to delete and reports false.</summary>
     public bool Delete(int userId, int sessionId)

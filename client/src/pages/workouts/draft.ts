@@ -29,7 +29,8 @@ export interface DraftSet {
 /** Form values as typed, so a half-typed number survives a reload. */
 export interface DraftSettings {
   splitTypeId: string;
-  splitDayLabel: string;
+  /** Empty for a general training day, when the split has no days. */
+  splitDayId: string;
   durationMinutes: string;
   reviewRating: string;
   reviewComment: string;
@@ -237,6 +238,5 @@ export function finishError(draft: StoredDraft, durationMinutes: number, editing
   if (editing) return 'draft.editing';
   if (draft.sets.length === 0) return 'draft.noSets';
   if (!Number.isInteger(durationMinutes) || durationMinutes < 1 || durationMinutes > 600) return 'draft.durationMinutes';
-  if (!draft.settings.splitDayLabel) return 'draft.day';
   return null;
 }

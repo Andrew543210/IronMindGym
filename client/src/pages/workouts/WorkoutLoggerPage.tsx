@@ -19,8 +19,8 @@ interface Option {
 }
 
 interface SplitDay {
-  value: string;
-  label: string;
+  id: number;
+  name: string;
 }
 
 export interface LoggerOptions {
@@ -42,8 +42,6 @@ interface PreviousSet {
   setTypeId: number;
   localDate: string;
 }
-
-const TRAINING_DAY = 'Training Day';
 
 export function WorkoutLoggerPage() {
   const athlete = useAthlete();
@@ -71,17 +69,18 @@ export function WorkoutLoggerPage() {
   );
 }
 
-function dayValues(options: LoggerOptions, splitTypeId: string): string[] {
+/** The day ids of a split; a split without days logs a general training day, kept as an empty id. */
+function dayIds(options: LoggerOptions, splitTypeId: string): string[] {
   const days = options.splitTypes.find((s) => String(s.id) === splitTypeId)?.days ?? [];
-  return days.length > 0 ? days.map((day) => day.value) : [TRAINING_DAY];
+  return days.length > 0 ? days.map((day) => String(day.id)) : [''];
 }
 
 function withValidSplit(draft: StoredDraft, options: LoggerOptions): StoredDraft {
   const split = options.splitTypes.find((s) => String(s.id) === draft.settings.splitTypeId) ?? options.splitTypes[0];
   const splitTypeId = split ? String(split.id) : '';
-  const days = dayValues(options, splitTypeId);
-  const day = days.includes(draft.settings.splitDayLabel) ? draft.settings.splitDayLabel : days[0];
-  return { ...draft, settings: { ...draft.settings, splitTypeId: splitTypeId, splitDayLabel: day } };
+  const days = dayIds(options, splitTypeId);
+  const day = days.includes(draft.settings.splitDayId) ? draft.settings.splitDayId : days[0];
+  return { ...draft, settings: { ...draft.settings, splitTypeId: splitTypeId, splitDayId: day } };
 }
 
 function storageWorks(): boolean {
@@ -125,7 +124,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
   const store = useMemo(() => draftStore(userId), [userId]);
   const defaults = useMemo<DraftSettings>(() => {
     const splitTypeId = String(options.activeSplitTypeId ?? options.splitTypes[0]?.id ?? '');
-    return { splitTypeId: splitTypeId, splitDayLabel: dayValues(options, splitTypeId)[0], durationMinutes: '60', reviewRating: '4', reviewComment: '' };
+    return { splitTypeId: splitTypeId, splitDayId: dayIds(options, splitTypeId)[0], durationMinutes: '60', reviewRating: '4', reviewComment: '' };
   }, [options]);
 
   const [draft, setDraft] = useState(() => withValidSplit(restoreDraft(newerDraft(store.read(), serverCopy), defaults), options));
@@ -174,7 +173,9 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
     : [];
   const setTypeName = (id: number | string) => options.setTypes.find((s) => String(s.id) === String(id))?.name;
   const splitDays = options.splitTypes.find((s) => String(s.id) === draft.settings.splitTypeId)?.days ?? [];
-  const dayOptions = splitDays.length > 0 ? splitDays : [{ value: TRAINING_DAY, label: t('logger.trainingDay') }];
+  const dayOptions = splitDays.length > 0
+    ? splitDays.map((day) => ({ value: String(day.id), label: day.name }))
+    : [{ value: '', label: t('logger.trainingDay') }];
 
   // Both clocks are derived from timestamps, so a throttled background tab shows the right values when it returns.
   const remaining = Math.max(0, Math.ceil((draft.timerEnd - now) / 1000));
@@ -389,7 +390,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
 
   function setSetting(name: keyof DraftSettings, value: string) {
     const settings = { ...draft.settings, [name]: value };
-    if (name === 'splitTypeId') settings.splitDayLabel = dayValues(options, value)[0];
+    if (name === 'splitTypeId') settings.splitDayId = dayIds(options, value)[0];
     update({ ...draft, settings, autoDuration: name === 'durationMinutes' ? false : draft.autoDuration });
   }
 
@@ -411,8 +412,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
       let result: { id: number };
       try {
         result = await api.post<{ id: number }>('/api/workouts', {
-          splitTypeId: draft.settings.splitTypeId ? Number(draft.settings.splitTypeId) : null,
-          splitDayLabel: draft.settings.splitDayLabel,
+          splitDayId: draft.settings.splitDayId ? Number(draft.settings.splitDayId) : null,
           durationMinutes,
           draftId: draft.draftId,
           reviewRating: Number(draft.settings.reviewRating),
@@ -468,8 +468,8 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
               </div>
               <div className="col-md-4">
                 <label htmlFor="splitDay" className="form-label">{t('logger.splitDay')}</label>
-                <select id="splitDay" className="form-select" value={draft.settings.splitDayLabel}
-                  onChange={(e) => setSetting('splitDayLabel', e.target.value)}>
+                <select id="splitDay" className="form-select" value={draft.settings.splitDayId}
+                  onChange={(e) => setSetting('splitDayId', e.target.value)}>
                   {dayOptions.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}
                 </select>
               </div>

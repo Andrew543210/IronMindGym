@@ -120,5 +120,25 @@ public sealed class MigrationTests : IDisposable
         Assert.Equal(1, Read(db => db.Exercises.Count(e => e.KeyLift != null)));
     }
 
+    [Fact]
+    public void SavedWorkoutTitlesBecomeSplitDays()
+    {
+        MigrateTo("IdentifyReferenceDataByCode");
+        AddUsers(1);
+        Run("""
+            INSERT INTO "SplitTypes" ("Code", "Name") VALUES ('FULL_BODY', 'Full-body'), ('LEGS_BACK_CHEST', 'Legs-Back-Chest');
+            INSERT INTO "WorkoutSessions" ("UserId", "Name", "SessionDate", "DurationMinutes", "SplitTypeId") VALUES
+                (1, 'Legs day', now(), 40, (SELECT "Id" FROM "SplitTypes" WHERE "Code" = 'LEGS_BACK_CHEST')),
+                (1, 'full body DAY', now(), 40, NULL),
+                (1, 'Training Day', now(), 40, NULL),
+                (1, 'Upper day', now(), 40, NULL);
+            """);
+
+        MigrateTo("StoreSplitDaysAsReferenceData");
+
+        Assert.Equal(["FULL_BODY", "LEGS", "BACK", "CHEST"], Read(db => db.SplitDays.OrderBy(d => d.Id).Select(d => d.Code).ToList()));
+        Assert.Equal(["LEGS", "FULL_BODY", null, null], Read(db => db.WorkoutSessions.OrderBy(s => s.Id).Select(s => s.SplitDay == null ? null : s.SplitDay.Code).ToList()));
+    }
+
     public void Dispose() => TestDatabase.Drop(connectionString);
 }

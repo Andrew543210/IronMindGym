@@ -13,7 +13,6 @@ public class WorkoutRecordTests
     private static int Save(TestApplication app, params (int Exercise, double Weight, int Reps, int Duration)[] sets) => app.Query(db =>
         Workouts(db).Save(db.Users.Single().Id, new SaveWorkoutRequest
         {
-            SplitDayLabel = "Full Body",
             DurationMinutes = 45,
             Sets = sets.Select(s => new WorkoutSetInput
             {
@@ -139,12 +138,4 @@ public class WorkoutRecordTests
             return true;
         });
     }
-
-    [Theory]
-    [InlineData(SplitTypeCode.LegsBackChest, new[] { "Legs", "Back", "Chest" })]
-    [InlineData(SplitTypeCode.UpperLower, new[] { "Upper", "Lower" })]
-    [InlineData(SplitTypeCode.FullBody, new[] { "Full Body" })]
-    [InlineData(null, new[] { "Training Day" })]
-    public void EverySplitHasItsTrainingDays(string? split, string[] days) =>
-        Assert.Equal(days, WorkoutService.SplitDays(split));
 }

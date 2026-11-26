@@ -8,10 +8,8 @@ public class SaveWorkoutRequest
     [Range(1, 600)]
     public int DurationMinutes { get; set; } = 60;
 
-    public int? SplitTypeId { get; set; }
-
-    [Required, MaxLength(80)]
-    public string SplitDayLabel { get; set; } = string.Empty;
+    /// <summary>The split day trained; empty for a general training day.</summary>
+    public int? SplitDayId { get; set; }
 
     public Guid? DraftId { get; set; }
 
@@ -24,7 +22,7 @@ public class SaveWorkoutRequest
     public List<WorkoutSetInput> Sets { get; set; } = [];
 }
 
-public sealed record SplitDayOption(string Value, string Label);
+public sealed record SplitDayOption(int Id, string Name);
 
 public class ExerciseCatalogItem
 {

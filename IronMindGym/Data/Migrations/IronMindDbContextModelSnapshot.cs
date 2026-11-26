@@ -635,6 +635,54 @@ namespace IronMindGym.Data.Migrations
                     b.ToTable("SetTypes");
                 });
 
+            modelBuilder.Entity("IronMindGym.Models.SplitDay", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("NameUk")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SplitTypeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("WorkoutName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("WorkoutNameUk")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("SplitTypeId", "Position")
+                        .IsUnique();
+
+                    b.ToTable("SplitDays");
+                });
+
             modelBuilder.Entity("IronMindGym.Models.SplitType", b =>
                 {
                     b.Property<int>("Id")
@@ -885,15 +933,10 @@ namespace IronMindGym.Data.Migrations
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
-
                     b.Property<DateTime>("SessionDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("SplitTypeId")
+                    b.Property<int?>("SplitDayId")
                         .HasColumnType("integer");
 
                     b.Property<int>("UserId")
@@ -901,7 +944,7 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SplitTypeId");
+                    b.HasIndex("SplitDayId");
 
                     b.HasIndex("UserId", "DraftId")
                         .IsUnique();
@@ -1148,6 +1191,17 @@ namespace IronMindGym.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("IronMindGym.Models.SplitDay", b =>
+                {
+                    b.HasOne("IronMindGym.Models.SplitType", "SplitType")
+                        .WithMany("Days")
+                        .HasForeignKey("SplitTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SplitType");
+                });
+
             modelBuilder.Entity("IronMindGym.Models.UserAchievement", b =>
                 {
                     b.HasOne("IronMindGym.Models.Achievement", "Achievement")
@@ -1232,9 +1286,9 @@ namespace IronMindGym.Data.Migrations
 
             modelBuilder.Entity("IronMindGym.Models.WorkoutSession", b =>
                 {
-                    b.HasOne("IronMindGym.Models.SplitType", "SplitType")
+                    b.HasOne("IronMindGym.Models.SplitDay", "SplitDay")
                         .WithMany("WorkoutSessions")
-                        .HasForeignKey("SplitTypeId")
+                        .HasForeignKey("SplitDayId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("IronMindGym.Models.User", "User")
@@ -1243,7 +1297,7 @@ namespace IronMindGym.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("SplitType");
+                    b.Navigation("SplitDay");
 
                     b.Navigation("User");
                 });
@@ -1302,11 +1356,16 @@ namespace IronMindGym.Data.Migrations
                     b.Navigation("Sets");
                 });
 
+            modelBuilder.Entity("IronMindGym.Models.SplitDay", b =>
+                {
+                    b.Navigation("WorkoutSessions");
+                });
+
             modelBuilder.Entity("IronMindGym.Models.SplitType", b =>
                 {
-                    b.Navigation("WorkoutPlans");
+                    b.Navigation("Days");
 
-                    b.Navigation("WorkoutSessions");
+                    b.Navigation("WorkoutPlans");
                 });
 
             modelBuilder.Entity("IronMindGym.Models.User", b =>

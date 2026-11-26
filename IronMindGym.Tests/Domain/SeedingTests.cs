@@ -87,6 +87,17 @@ public class SeedingTests
         });
     }
 
+    [Theory]
+    [InlineData(SplitTypeCode.LegsBackChest, new[] { "Legs", "Back", "Chest" })]
+    [InlineData(SplitTypeCode.UpperLower, new[] { "Upper", "Lower" })]
+    [InlineData(SplitTypeCode.FullBody, new[] { "Full Body" })]
+    public void EverySplitHasItsTrainingDaysInOrder(string split, string[] days)
+    {
+        using var app = new TestApplication();
+
+        Assert.Equal(days, app.Query(db => db.SplitDays.Where(d => d.SplitType.Code == split).OrderBy(d => d.Position).Select(d => d.Name).ToList()));
+    }
+
     [Fact]
     public void ReferenceDataGetsTheTranslationsItIsMissing()
     {

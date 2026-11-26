@@ -14,6 +14,7 @@ public static class DemoDataSeeder
         if (db.Users.Any())
             return;
         var upperLower = db.SplitTypes.Single(s => s.Code == SplitTypeCode.UpperLower);
+        var (upper, lower) = (db.SplitDays.Single(d => d.Code == "UPPER"), db.SplitDays.Single(d => d.Code == "LOWER"));
         var working = db.SetTypes.Single(s => s.Code == SetTypeCode.Working);
         var exercises = db.Exercises.ToDictionary(e => e.Name);
         Exercise Find(string name) => exercises.TryGetValue(name, out var exercise)
@@ -53,13 +54,13 @@ public static class DemoDataSeeder
             CarbsG = 280
         });
 
-        Workout(athlete, "Upper day", daysAgo: 8, minutes: 65, upperLower, working,
+        Workout(athlete, upper, daysAgo: 8, minutes: 65, working,
             (Find("Flat Bench Press"), [(80, 8), (90, 5), (95, 3)]),
             (Find("Bent-Over Barbell Row"), [(60, 10), (70, 8)]));
-        Workout(athlete, "Lower day", daysAgo: 6, minutes: 70, upperLower, working,
+        Workout(athlete, lower, daysAgo: 6, minutes: 70, working,
             (Find("Barbell Back Squat"), [(120, 6), (140, 3), (150, 1)]),
             (Find("Romanian Deadlift"), [(100, 8), (110, 6)]));
-        Workout(athlete, "Upper day", daysAgo: 1, minutes: 70, upperLower, working,
+        Workout(athlete, upper, daysAgo: 1, minutes: 70, working,
             (Find("Flat Bench Press"), [(85, 6), (100, 2)]),
             (Find("Bent-Over Barbell Row"), [(72.5, 8)]));
         db.SaveChanges();
@@ -78,16 +79,15 @@ public static class DemoDataSeeder
         AchievementEngine.AssignAchievements(db, athlete.Id);
         AchievementEngine.AssignAchievements(db, friend.Id);
 
-        void Workout(User user, string name, int daysAgo, int minutes, SplitType split, SetType setType,
+        void Workout(User user, SplitDay day, int daysAgo, int minutes, SetType setType,
             params (Exercise Exercise, (double Kg, int Reps)[] Sets)[] blocks)
         {
             var session = new WorkoutSession
             {
                 User = user,
-                Name = name,
+                SplitDay = day,
                 SessionDate = DateTime.UtcNow.AddDays(-daysAgo),
                 DurationMinutes = minutes,
-                SplitType = split,
                 Review = new WorkoutReview { Rating = 5, Comment = daysAgo == 1 ? "Strong training session" : string.Empty }
             };
             foreach (var (exercise, sets) in blocks)

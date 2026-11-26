@@ -8,7 +8,7 @@ import {
 const t = (key: MessageKey, params?: Params) => translate(key, params, 'en');
 const english = (key: MessageKey | null | undefined) => (key ? t(key) : '');
 
-const defaults: DraftSettings = { splitTypeId: '2', splitDayLabel: 'Upper', durationMinutes: '60', reviewRating: '4', reviewComment: '' };
+const defaults: DraftSettings = { splitTypeId: '2', splitDayId: '3', durationMinutes: '60', reviewRating: '4', reviewComment: '' };
 
 const bench: CatalogExercise = {
   exerciseId: 7, exerciseName: 'Flat Bench Press', englishName: 'Flat Bench Press', exerciseType: 'StrengthTraining',
@@ -50,7 +50,7 @@ describe('restoring a draft', () => {
   it('continues stored sets with the stored settings, even without a split id', () => {
     const stored = {
       draftId: '0f8fad5b-d9cb-469f-a165-70867728950e', sets: [set()], timerEnd: now + 30_000, startedAt: now - 600_000,
-      autoDuration: false, settings: { splitDayLabel: 'Lower', durationMinutes: '45', reviewRating: '5', reviewComment: 'Heavy' },
+      autoDuration: false, settings: { splitDayId: '4', durationMinutes: '45', reviewRating: '5', reviewComment: 'Heavy' },
     };
 
     const draft = restoreDraft(stored, defaults, now);
@@ -59,7 +59,7 @@ describe('restoring a draft', () => {
     expect(draft.sets).toHaveLength(1);
     expect(draft.timerEnd).toBe(now + 30_000);
     expect(draft.autoDuration).toBe(false);
-    expect(draft.settings).toEqual({ splitTypeId: '2', splitDayLabel: 'Lower', durationMinutes: '45', reviewRating: '5', reviewComment: 'Heavy' });
+    expect(draft.settings).toEqual({ splitTypeId: '2', splitDayId: '4', durationMinutes: '45', reviewRating: '5', reviewComment: 'Heavy' });
   });
 
   it('keeps the clock of an empty draft for two hours, then starts fresh', () => {
@@ -136,7 +136,6 @@ describe('showing and finishing', () => {
     expect(english(finishError(draft, 45, true))).toBe('Save or cancel your set edits before finishing.');
     expect(english(finishError({ ...draft, sets: [] }, 45, false))).toBe('Add a set before finishing your workout.');
     expect(english(finishError(draft, 0, false))).toBe('Enter a workout duration of 1–600 minutes in Session settings.');
-    expect(english(finishError({ ...draft, settings: { ...defaults, splitDayLabel: '' } }, 45, false))).toBe('Choose a training day in Session settings.');
     expect(finishError(draft, 45, false)).toBeNull();
   });
 });

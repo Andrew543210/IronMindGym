@@ -24,6 +24,6 @@ public class SplitType
     [MaxLength(60)]
     public string? NameUk { get; set; }
 
+    public ICollection<SplitDay> Days { get; set; } = [];
     public ICollection<WorkoutPlan> WorkoutPlans { get; set; } = [];
-    public ICollection<WorkoutSession> WorkoutSessions { get; set; } = [];
 }

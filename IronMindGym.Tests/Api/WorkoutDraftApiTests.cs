@@ -13,7 +13,7 @@ public class WorkoutDraftApiTests
         var set = """{"exerciseId":7,"setTypeId":1,"setTypeName":"Робочий","weightKg":60,"reps":5}""";
         var content = $$$"""
             {"draftId":"{{{draftId}}}","startedAt":1700000000000,"sets":[{{{string.Join(",", Enumerable.Repeat(set, sets))}}}],
-             "settings":{"splitDayLabel":"Upper","reviewComment":"Важкий день"}}
+             "settings":{"splitDayId":"4","reviewComment":"Важкий день"}}
             """;
         return new { draftId, content = JsonDocument.Parse(content).RootElement };
     }
@@ -63,7 +63,6 @@ public class WorkoutDraftApiTests
 
         await ApiClient.Ok(await api.Post("/api/workouts", new
         {
-            splitDayLabel = "Full Body",
             durationMinutes = 45,
             reviewRating = 4,
             draftId,

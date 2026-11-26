@@ -23,7 +23,7 @@ public class DashboardController(IronMindDbContext db, DashboardService dashboar
             summary.RecentWorkouts.Select(w => new WorkoutSessionListItem
             {
                 Id = w.Id,
-                Name = WorkoutService.SessionName(w.Name),
+                Name = WorkoutService.SessionName(w.SplitDay?.WorkoutName, w.SplitDay?.WorkoutNameUk),
                 SessionDate = w.SessionDate,
                 DurationMinutes = w.DurationMinutes
             }).ToList(),

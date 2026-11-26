@@ -5,13 +5,27 @@ namespace IronMindGym.Seed;
 
 public static class DataSeeder
 {
+    public sealed record SplitDayDefinition(string Code, string Name, string NameUk, string WorkoutName, string WorkoutNameUk);
+
+    public sealed record SplitTypeDefinition(string Code, string Name, string NameUk, SplitDayDefinition[] Days);
+
     // Rows are matched by code and their names are refreshed on every start.
     // The order is the order of the ids in a new database.
-    public static readonly (string Code, string Name, string NameUk)[] SplitTypes =
+    public static readonly SplitTypeDefinition[] SplitTypes =
     [
-        (SplitTypeCode.FullBody, "Full-body", "Усе тіло"),
-        (SplitTypeCode.UpperLower, "Upper-Lower", "Верх / низ"),
-        (SplitTypeCode.LegsBackChest, "Legs-Back-Chest", "Ноги / спина / груди")
+        new(SplitTypeCode.FullBody, "Full-body", "Усе тіло",
+            [new("FULL_BODY", "Full Body", "Усе тіло", "Full Body day", "День на все тіло")]),
+        new(SplitTypeCode.UpperLower, "Upper-Lower", "Верх / низ",
+        [
+            new("UPPER", "Upper", "Верх тіла", "Upper day", "День верху тіла"),
+            new("LOWER", "Lower", "Низ тіла", "Lower day", "День низу тіла")
+        ]),
+        new(SplitTypeCode.LegsBackChest, "Legs-Back-Chest", "Ноги / спина / груди",
+        [
+            new("LEGS", "Legs", "Ноги", "Legs day", "День ніг"),
+            new("BACK", "Back", "Спина", "Back day", "День спини"),
+            new("CHEST", "Chest", "Груди", "Chest day", "День грудей")
+        ])
     ];
 
     public static readonly (string Code, string Name, string NameUk)[] SetTypes =
@@ -41,11 +55,21 @@ public static class DataSeeder
     private static void EnsureSplitTypes(IronMindDbContext db)
     {
         var existing = db.SplitTypes.ToDictionary(s => s.Code);
-        foreach (var (code, name, nameUk) in SplitTypes)
+        var existingDays = db.SplitDays.ToDictionary(d => d.Code);
+        foreach (var definition in SplitTypes)
         {
-            if (!existing.TryGetValue(code, out var split))
-                db.SplitTypes.Add(split = new SplitType { Code = code });
-            (split.Name, split.NameUk) = (name, nameUk);
+            if (!existing.TryGetValue(definition.Code, out var split))
+                db.SplitTypes.Add(split = new SplitType { Code = definition.Code });
+            (split.Name, split.NameUk) = (definition.Name, definition.NameUk);
+            foreach (var (day, position) in definition.Days.Select((day, index) => (day, index + 1)))
+            {
+                if (!existingDays.TryGetValue(day.Code, out var splitDay))
+                    db.SplitDays.Add(splitDay = new SplitDay { Code = day.Code });
+                splitDay.SplitType = split;
+                splitDay.Position = position;
+                (splitDay.Name, splitDay.NameUk) = (day.Name, day.NameUk);
+                (splitDay.WorkoutName, splitDay.WorkoutNameUk) = (day.WorkoutName, day.WorkoutNameUk);
+            }
         }
     }
 

@@ -19,7 +19,7 @@ ASP.NET Core ── controllers ── services ── EF Core ── PostgreSQL
 | `Models/` | Entities with small domain rules, for example the weight change of a tracked exercise. |
 | `Contracts/` | Request and response records of the API. |
 | `Localization/` | Picks the English or Ukrainian text of reference data for the current request. |
-| `Seed/` | Reference data (set types, splits, ranks, awards, research notes), the exercise catalog from `exercises.json` and the opt-in demo data. |
+| `Seed/` | Reference data (set types, splits with their training days, ranks, awards, research notes), the exercise catalog from `exercises.json` and the opt-in demo data. |
 
 Services use `DbContext` directly. A repository layer would only repeat EF Core's own abstractions.
 
@@ -46,7 +46,7 @@ Forwarded headers (only from the configured proxy) → exception handler and HST
 
 ### Localization
 
-The client sends `Accept-Language: en` or `uk`. The server switches only the wording: names of exercises, groups, ranks, awards and validation messages. Numbers and dates are always parsed in the invariant form. Reference tables store both names, and neither is a key the code matches on: split and set types have a code, the bench press, squat and deadlift used for the rank are marked as key lifts, and the remaining rows are found by their unique English name.
+The client sends `Accept-Language: en` or `uk`. The server switches only the wording: names of exercises, groups, ranks, awards and validation messages. Numbers and dates are always parsed in the invariant form. Reference tables store both names, and neither is a key the code matches on: split types, their training days and set types have a code, the bench press, squat and deadlift used for the rank are marked as key lifts, and the remaining rows are found by their unique English name.
 
 ## Client
 

@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using IronMindGym.Api;
-using IronMindGym.Contracts;
 using IronMindGym.Models;
 
 namespace IronMindGym.Tests.Api;
@@ -31,6 +30,8 @@ public partial class LocalizationApiTests
         AllTranslated(app.Query(db => db.MuscleSubGroups.ToList()), e => e.Name, e => e.NameUk, "Muscle subgroups");
         AllTranslated(app.Query(db => db.SetTypes.ToList()), e => e.Name, e => e.NameUk, "Set types");
         AllTranslated(app.Query(db => db.SplitTypes.ToList()), e => e.Name, e => e.NameUk, "Split types");
+        AllTranslated(app.Query(db => db.SplitDays.ToList()), e => e.Name, e => e.NameUk, "Split days");
+        AllTranslated(app.Query(db => db.SplitDays.ToList()), e => e.WorkoutName, e => e.WorkoutNameUk, "Workout titles");
         AllTranslated(app.Query(db => db.Avatars.ToList()), e => e.Name, e => e.NameUk, "Ranks");
         var awards = app.Query(db => db.Achievements.ToList());
         AllTranslated(awards, e => e.Name, e => e.NameUk, "Awards");
@@ -60,7 +61,7 @@ public partial class LocalizationApiTests
         Assert.Equal("Робочий", logger.SetTypes[0].Name);
         var split = Assert.Single(logger.SplitTypes);
         Assert.Equal("Верх / низ", split.Name);
-        Assert.Equal([new SplitDayOption("Upper", "Верх тіла"), new SplitDayOption("Lower", "Низ тіла")], split.Days);
+        Assert.Equal(["Верх тіла", "Низ тіла"], split.Days.Select(day => day.Name));
         var names = logger.Exercises.Select(e => e.ExerciseName).ToList();
         Assert.Equal(names.Order(StringComparer.Create(new CultureInfo("uk"), ignoreCase: true)), names);
     }
@@ -77,7 +78,7 @@ public partial class LocalizationApiTests
 
         var response = await api.Post("/api/workouts", new
         {
-            splitDayLabel = "Legs",
+            splitDayId = app.Query(db => db.SplitDays.Single(d => d.Code == "LEGS").Id),
             durationMinutes = 45,
             reviewRating = 4,
             sets = new[] { new { exerciseId = bench, setTypeId = working, weightKg = 60, reps = 5 } }
@@ -85,7 +86,7 @@ public partial class LocalizationApiTests
         await ApiClient.Ok(response);
         var id = (await response.Content.ReadFromJsonAsync<SavedWorkoutResponse>(ApiClient.Json))!.Id;
 
-        Assert.Equal("Legs day", app.Query(db => db.WorkoutSessions.Single().Name));
+        Assert.Equal("LEGS", app.Query(db => db.WorkoutSessions.Select(s => s.SplitDay!.Code).Single()));
         var details = await api.Get<WorkoutDetailsResponse>($"/api/workouts/{id}");
         Assert.Equal("День ніг", details.Name);
         Assert.Equal("Жим штанги лежачи", Assert.Single(details.Exercises).ExerciseName);

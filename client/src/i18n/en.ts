@@ -351,7 +351,6 @@ export const en = {
   'draft.editing': 'Save or cancel your set edits before finishing.',
   'draft.noSets': 'Add a set before finishing your workout.',
   'draft.durationMinutes': 'Enter a workout duration of 1–600 minutes in Session settings.',
-  'draft.day': 'Choose a training day in Session settings.',
   'draft.effortCell': '{effort}/10 effort',
 
   'progress.title': 'Progress Tracker',

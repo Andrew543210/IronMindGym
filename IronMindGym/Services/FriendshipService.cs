@@ -36,7 +36,7 @@ public class FriendshipService(IronMindDbContext db)
         {
             card.LastFiveWorkouts = db.WorkoutSessions.AsNoTracking().Where(s => s.UserId == card.UserId)
                 .OrderByDescending(s => s.SessionDate).ThenByDescending(s => s.Id).Take(PreviewSize)
-                .Select(s => new FriendWorkoutPreview { WorkoutSessionId = s.Id, Name = WorkoutService.SessionName(s.Name), SessionDate = s.SessionDate, DurationMinutes = s.DurationMinutes })
+                .Select(s => new FriendWorkoutPreview { WorkoutSessionId = s.Id, Name = WorkoutService.SessionName(s.SplitDay!.WorkoutName, s.SplitDay.WorkoutNameUk), SessionDate = s.SessionDate, DurationMinutes = s.DurationMinutes })
                 .ToList();
             card.LastFiveWorkoutsCount = card.LastFiveWorkouts.Count;
             card.LastNutritionLogs = db.DailyNutritions.AsNoTracking().Where(n => n.UserId == card.UserId && n.Date >= firstNutritionDay)

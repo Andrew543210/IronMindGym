@@ -135,7 +135,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
             .Select(n => new { n.Date, n.CaloriesKcal, n.ProteinG, n.FatG, n.CarbsG }).ToList(),
         Workouts = db.WorkoutSessions.Where(w => w.UserId == userId).OrderBy(w => w.SessionDate).Select(w => new
         {
-            w.Name,
+            Name = w.SplitDay == null ? "Training Day" : w.SplitDay.WorkoutName,
             w.SessionDate,
             w.DurationMinutes,
             Exercises = w.PerformedExercises.OrderBy(e => e.OrderInWorkout).Select(e => new

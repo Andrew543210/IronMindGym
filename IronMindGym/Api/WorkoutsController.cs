@@ -29,7 +29,7 @@ public class WorkoutsController(
             {
                 Id = s.Id,
                 SessionDate = s.SessionDate,
-                Name = WorkoutService.SessionName(s.Name),
+                Name = WorkoutService.SessionName(s.SplitDay!.WorkoutName, s.SplitDay.WorkoutNameUk),
                 DurationMinutes = s.DurationMinutes
             })
             .ToList();
@@ -45,9 +45,10 @@ public class WorkoutsController(
             .FirstOrDefault();
         var splitTypes = db.SplitTypes.AsNoTracking()
             .Where(s => activePlan == null || s.Id == activePlan.SplitTypeId)
-            .Select(s => new { s.Id, s.Code, s.Name, s.NameUk })
+            .Select(s => new { s.Id, s.Name, s.NameUk, Days = s.Days.OrderBy(d => d.Position).Select(d => new { d.Id, d.Name, d.NameUk }).ToList() })
             .AsEnumerable()
-            .Select(s => new SplitTypeOption(s.Id, Localized.Pick(s.Name, s.NameUk), WorkoutService.SplitDayOptions(s.Code)))
+            .Select(s => new SplitTypeOption(s.Id, Localized.Pick(s.Name, s.NameUk),
+                s.Days.Select(d => new SplitDayOption(d.Id, Localized.Pick(d.Name, d.NameUk))).ToList()))
             .OrderBy(s => s.Name, Localized.Order)
             .ToList();
 
@@ -153,7 +154,7 @@ public sealed record WorkoutDetailsResponse(
         var session = details.Session;
         return new WorkoutDetailsResponse(
             session.Id,
-            WorkoutService.SessionName(session.Name),
+            WorkoutService.SessionName(session.SplitDay?.WorkoutName, session.SplitDay?.WorkoutNameUk),
             session.SessionDate,
             session.DurationMinutes,
             session.Review?.Rating,

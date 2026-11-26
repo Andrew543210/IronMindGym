@@ -18,7 +18,7 @@ public class FriendsApiTests
         await owner.Register("owner");
         await partner.Register("partner");
         var (ownerId, partnerId) = (UserId(app, "owner"), UserId(app, "partner"));
-        var sessionId = AddWorkout(app, ownerId, "Legs day");
+        var sessionId = AddWorkout(app, ownerId);
         var route = $"/api/friends/{ownerId}/workouts/{sessionId}";
 
         Assert.Equal(HttpStatusCode.NotFound, (await partner.Http.GetAsync(route)).StatusCode);
@@ -53,13 +53,12 @@ public class FriendsApiTests
         await partner.Register("partner");
         await Connect(app, owner, partner);
         var ownerId = UserId(app, "owner");
-        for (var day = 1; day <= 7; day++)
-            AddWorkout(app, ownerId, $"Session {day}", DateTime.UtcNow.AddDays(-day));
+        var newestFirst = Enumerable.Range(1, 7).Select(day => AddWorkout(app, ownerId, DateTime.UtcNow.AddDays(-day))).ToList();
 
         var card = (await partner.Get<FriendsOverview>("/api/friends")).Friends.Single();
 
         Assert.True(card.IsFriend);
-        Assert.Equal(["Session 1", "Session 2", "Session 3", "Session 4", "Session 5"], card.LastFiveWorkouts.Select(w => w.Name));
+        Assert.Equal(newestFirst.Take(5), card.LastFiveWorkouts.Select(w => w.WorkoutSessionId));
     }
 
     [Fact]
@@ -92,7 +91,7 @@ public class FriendsApiTests
         await partner.Register("partner");
         await Connect(app, owner, partner);
         var ownerId = UserId(app, "owner");
-        var sessionId = AddWorkout(app, ownerId, "Legs day");
+        var sessionId = AddWorkout(app, ownerId);
         var route = $"/api/friends/{ownerId}/workouts/{sessionId}";
 
         await ApiClient.Ok(await partner.Put($"{route}/like", new { liked = true }));
@@ -128,9 +127,10 @@ public class FriendsApiTests
     private static int UserId(TestApplication app, string username) =>
         app.Query(db => db.Users.Single(u => u.Username == username).Id);
 
-    private static int AddWorkout(TestApplication app, int userId, string name, DateTime? date = null) => app.Query(db =>
+    private static int AddWorkout(TestApplication app, int userId, DateTime? date = null) => app.Query(db =>
     {
-        var session = new WorkoutSession { UserId = userId, Name = name, SessionDate = date ?? DateTime.UtcNow.AddHours(-1), DurationMinutes = 40 };
+        var legs = db.SplitDays.Single(d => d.Code == "LEGS").Id;
+        var session = new WorkoutSession { UserId = userId, SplitDayId = legs, SessionDate = date ?? DateTime.UtcNow.AddHours(-1), DurationMinutes = 40 };
         db.WorkoutSessions.Add(session);
         db.SaveChanges();
         return session.Id;

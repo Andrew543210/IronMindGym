@@ -65,7 +65,7 @@ public class WorkoutsApiTests
         using var api = app.Api();
         await api.Register();
         var exercise = app.Query(db => db.Exercises.First(e => e.Type == ExerciseType.StrengthTraining).Id);
-        var body = JsonDocument.Parse($$"""{"splitDayLabel":"Full Body","durationMinutes":45,"reviewRating":4,"sets":{{sets.Replace("\"exerciseId\":1,", $"\"exerciseId\":{exercise},")}}}""");
+        var body = JsonDocument.Parse($$"""{"durationMinutes":45,"reviewRating":4,"sets":{{sets.Replace("\"exerciseId\":1,", $"\"exerciseId\":{exercise},")}}}""");
 
         var response = await api.Post("/api/workouts", body.RootElement);
 
@@ -95,19 +95,37 @@ public class WorkoutsApiTests
     }
 
     [Theory]
-    [InlineData("Legs", "Legs day")]
-    [InlineData("Full Body", "Full Body day")]
-    [InlineData("Training Day", "Training Day")]
-    public async Task SessionNameAddsDayOnlyWhenMissing(string label, string expected)
+    [InlineData("LEGS", "Legs day")]
+    [InlineData("FULL_BODY", "Full Body day")]
+    [InlineData(null, "Training Day")]
+    public async Task AWorkoutIsTitledAfterItsSplitDay(string? day, string expected)
     {
         using var app = new TestApplication();
         using var api = app.Api();
         await api.Register();
         var exercise = app.Query(db => db.Exercises.First(e => e.Type == ExerciseType.StrengthTraining).Id);
 
-        await Save(app, api, [new { exerciseId = exercise, setTypeId = SetType(app), weightKg = 60, reps = 5 }], label);
+        var id = await Save(app, api, [new { exerciseId = exercise, setTypeId = SetType(app), weightKg = 60, reps = 5 }], day);
 
-        Assert.Equal(expected, app.Query(db => db.WorkoutSessions.Single().Name));
+        Assert.Equal(expected, (await api.Get<WorkoutDetailsResponse>($"/api/workouts/{id}")).Name);
+    }
+
+    [Fact]
+    public async Task AnUnknownSplitDayIsRefused()
+    {
+        using var app = new TestApplication();
+        using var api = app.Api();
+        await api.Register();
+        var exercise = app.Query(db => db.Exercises.First(e => e.Type == ExerciseType.StrengthTraining).Id);
+
+        var response = await api.Post("/api/workouts", new
+        {
+            splitDayId = 999999,
+            durationMinutes = 45,
+            sets = new[] { new { exerciseId = exercise, setTypeId = SetType(app), weightKg = 60, reps = 5 } }
+        });
+
+        Assert.Contains("Choose a valid training day.", await ApiClient.Errors(response));
     }
 
     [Fact]
@@ -187,7 +205,7 @@ public class WorkoutsApiTests
 
         var split = Assert.Single(logger.SplitTypes);
         Assert.Equal(upperLower, logger.ActiveSplitTypeId);
-        Assert.Equal(["Upper", "Lower"], split.Days.Select(day => day.Value));
+        Assert.Equal(["Upper", "Lower"], split.Days.Select(day => day.Name));
         Assert.Equal("Working", logger.SetTypes[0].Name);
         Assert.Equal(logger.SetTypes[0].Id, logger.DefaultSetTypeId);
         Assert.Equal(app.Query(db => db.Exercises.Count()), logger.Exercises.Count);
@@ -215,12 +233,11 @@ public class WorkoutsApiTests
 
     private static int SetType(TestApplication app) => app.Query(db => db.SetTypes.First().Id);
 
-    private static async Task<int> Save(TestApplication app, ApiClient api, object[] sets, string label = "Full Body", Guid? draftId = null, string comment = "Training log")
+    private static async Task<int> Save(TestApplication app, ApiClient api, object[] sets, string? day = "FULL_BODY", Guid? draftId = null, string comment = "Training log")
     {
         var response = await api.Post("/api/workouts", new
         {
-            splitTypeId = app.Query(db => db.SplitTypes.First().Id),
-            splitDayLabel = label,
+            splitDayId = day is null ? (int?)null : app.Query(db => db.SplitDays.Single(d => d.Code == day).Id),
             durationMinutes = 45,
             reviewRating = 4,
             reviewComment = comment,
@@ -234,7 +251,7 @@ public class WorkoutsApiTests
     private static void AddSessions(TestApplication app, int userId, int count) => app.Query(db =>
     {
         for (var i = 0; i < count; i++)
-            db.WorkoutSessions.Add(new WorkoutSession { UserId = userId, Name = "Logged", SessionDate = DateTime.UtcNow.AddDays(-i - 1), DurationMinutes = 40 });
+            db.WorkoutSessions.Add(new WorkoutSession { UserId = userId, SessionDate = DateTime.UtcNow.AddDays(-i - 1), DurationMinutes = 40 });
         return db.SaveChanges();
     });
 }

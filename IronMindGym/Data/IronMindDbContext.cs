@@ -12,6 +12,7 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
     public DbSet<UserGoal> UserGoals => Set<UserGoal>();
     public DbSet<WorkoutPlan> WorkoutPlans => Set<WorkoutPlan>();
     public DbSet<SplitType> SplitTypes => Set<SplitType>();
+    public DbSet<SplitDay> SplitDays => Set<SplitDay>();
     public DbSet<Avatar> Avatars => Set<Avatar>();
     public DbSet<MuscleGroup> MuscleGroups => Set<MuscleGroup>();
     public DbSet<MuscleSubGroup> MuscleSubGroups => Set<MuscleSubGroup>();
@@ -59,6 +60,12 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             split.HasIndex(s => s.Code).IsUnique();
             split.HasIndex(s => s.Name).IsUnique();
         });
+        modelBuilder.Entity<SplitDay>(day =>
+        {
+            day.HasIndex(d => d.Code).IsUnique();
+            day.HasIndex(d => new { d.SplitTypeId, d.Position }).IsUnique();
+            day.HasOne(d => d.SplitType).WithMany(s => s.Days).OnDelete(DeleteBehavior.Restrict);
+        });
         modelBuilder.Entity<SetType>(setType =>
         {
             setType.HasIndex(s => s.Code).IsUnique();
@@ -84,7 +91,7 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         modelBuilder.Entity<PersonalRecord>().HasOne(r => r.Exercise).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<WorkoutSet>().HasOne(s => s.SetType).WithMany(t => t.Sets).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<WorkoutPlan>().HasOne(p => p.SplitType).WithMany(s => s.WorkoutPlans).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<WorkoutSession>().HasOne(s => s.SplitType).WithMany(s => s.WorkoutSessions).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<WorkoutSession>().HasOne(s => s.SplitDay).WithMany(d => d.WorkoutSessions).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<UserAchievement>().HasOne(a => a.Achievement).WithMany(a => a.UserAchievements).OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<WorkoutSession>(session =>

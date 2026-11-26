@@ -10,7 +10,7 @@ internal static class Journal
         params (int ExerciseId, double Kg, int Reps, int RestSeconds)[] sets) => app.Query(db =>
     {
         var setType = db.SetTypes.Single(t => t.Code == SetTypeCode.Working).Id;
-        var session = new WorkoutSession { UserId = db.Users.OrderBy(u => u.Id).First().Id, Name = "Full Body day", SessionDate = date, DurationMinutes = minutes };
+        var session = new WorkoutSession { UserId = db.Users.OrderBy(u => u.Id).First().Id, SessionDate = date, DurationMinutes = minutes };
         foreach (var group in sets.GroupBy(s => s.ExerciseId))
         {
             var performed = new PerformedExercise { ExerciseId = group.Key, OrderInWorkout = session.PerformedExercises.Count + 1 };
@@ -29,7 +29,6 @@ internal static class Journal
     /// <summary>A request for POST /api/workouts with working sets of strength exercises.</summary>
     public static object Workout(params (int ExerciseId, double Kg, int Reps)[] sets) => new
     {
-        splitDayLabel = "Full Body",
         durationMinutes = 45,
         reviewRating = 4,
         sets = sets.Select(s => new { exerciseId = s.ExerciseId, setTypeId = 1, weightKg = s.Kg, reps = s.Reps, restSeconds = 90 })

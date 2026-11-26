@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { freshDraft, type DraftSettings, type StoredDraft } from './draft';
 import { serverDraftSync } from './serverDraft';
 
-const settings: DraftSettings = { splitTypeId: '2', splitDayLabel: 'Upper', durationMinutes: '60', reviewRating: '4', reviewComment: '' };
+const settings: DraftSettings = { splitTypeId: '2', splitDayId: '3', durationMinutes: '60', reviewRating: '4', reviewComment: '' };
 const set = { exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 60, reps: 5, durationSeconds: 0, intensity: 0, restSeconds: 90 };
 
 function respond(status: number, body?: unknown) {
