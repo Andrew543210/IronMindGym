@@ -129,12 +129,12 @@ public class DashboardService(IronMindDbContext db, AvatarService avatarService,
         var start = avatars[index].MinStrengthCoefficient;
         if (index == avatars.Count - 1)
         {
-            return string.Format(CultureInfo.CurrentUICulture, "{0:0.0}–5.0", start);
+            return string.Format(CultureInfo.InvariantCulture, "{0:0.0}–5.0", start);
         }
 
         var nextStart = avatars[index + 1].MinStrengthCoefficient;
         var end = Math.Round(nextStart - 0.1, 1);
-        return string.Format(CultureInfo.CurrentUICulture, "{0:0.0}–{1:0.0}", start, end);
+        return string.Format(CultureInfo.InvariantCulture, "{0:0.0}–{1:0.0}", start, end);
     }
 
     private static double CalculateEqualScalePosition(double coefficient, List<Avatar> avatars)

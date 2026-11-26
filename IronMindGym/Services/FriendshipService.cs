@@ -20,7 +20,7 @@ public class FriendshipService(IronMindDbContext db)
             .Where(f => f.User1Id == userId || f.User2Id == userId).ToList();
         var relatedIds = relationships.Select(f => f.User1Id == userId ? f.User2Id : f.User1Id).ToList();
         var users = db.Users.AsNoTracking().Where(u => u.Id != userId);
-        users = search.Length == 0 ? users.Where(u => relatedIds.Contains(u.Id)) : users.Where(u => u.Username.ToLower().Contains(search.ToLower()));
+        users = search.Length == 0 ? users.Where(u => relatedIds.Contains(u.Id)) : users.Where(u => EF.Functions.ILike(u.Username, $"%{EscapeLike(search)}%"));
         var cards = users.OrderBy(u => u.Username).Take(20).Select(u => new FriendCard { UserId = u.Id, Username = u.Username }).ToList();
         foreach (var card in cards)
         {
@@ -82,9 +82,13 @@ public class FriendshipService(IronMindDbContext db)
             result = RequestResult.Sent;
         }
         else if (relationship.Status == FriendshipStatus.Accepted)
+        {
             result = RequestResult.AlreadyConnected;
+        }
         else if (relationship.RequestedByUserId == userId)
+        {
             result = RequestResult.AlreadyRequested;
+        }
         else
         {
             relationship.Status = FriendshipStatus.Accepted;
@@ -128,6 +132,12 @@ public class FriendshipService(IronMindDbContext db)
         db.SaveChanges();
         return true;
     }
+
+    /// <summary>Usernames may contain "_", which LIKE would otherwise treat as a wildcard.</summary>
+    private static string EscapeLike(string text) => text
+        .Replace(@"\", @"\\", StringComparison.Ordinal)
+        .Replace("%", @"\%", StringComparison.Ordinal)
+        .Replace("_", @"\_", StringComparison.Ordinal);
 
     private Friendship? Find(int userId, int otherId) => db.Friendships.FirstOrDefault(f =>
         f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId));

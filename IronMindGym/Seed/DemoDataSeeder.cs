@@ -1,7 +1,5 @@
 using IronMindGym.Data;
 using IronMindGym.Models;
-using IronMindGym.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Seed;
 

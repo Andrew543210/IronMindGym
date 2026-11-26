@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using IronMindGym.Api;
 using IronMindGym.Models;
@@ -6,7 +7,7 @@ namespace IronMindGym.Tests.Api;
 
 public class GoalsApiTests
 {
-    private static string InTwoMonths() => DateTime.UtcNow.AddMonths(2).ToString("yyyy-MM-dd");
+    private static string InTwoMonths() => DateTime.UtcNow.AddMonths(2).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     [Fact]
     public async Task GoalsCanBeCompletedReopenedAndDeleted()

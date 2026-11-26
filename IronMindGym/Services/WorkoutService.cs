@@ -283,7 +283,9 @@ public class WorkoutService(IronMindDbContext db)
             var best = db.Sets.Where(s => s.PerformedExercise.ExerciseId == exerciseId && s.PerformedExercise.WorkoutSession.UserId == userId)
                 .OrderByDescending(s => s.WeightKg).Select(s => new { s.WeightKg, s.PerformedExercise.WorkoutSession.SessionDate }).FirstOrDefault();
             if (best is null || best.WeightKg <= 0)
+            {
                 db.PersonalRecords.Remove(record);
+            }
             else
             {
                 record.MaxWeightKg = best.WeightKg;

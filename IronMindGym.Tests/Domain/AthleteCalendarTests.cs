@@ -48,10 +48,12 @@ public class AthleteCalendarTests
         Assert.Equal(new DateTime(2027, 3, 1, 0, 0, 0), new AthleteCalendar(zone).StartOfDayUtc(new DateTime(2027, 3, 1)));
     }
 
+    private static readonly int[] StreakDays = [1, 2, 2, 3, 5, 6];
+
     [Fact]
     public void TheLongestStreakCountsConsecutiveCalendarDays()
     {
-        Assert.Equal(3, AthleteCalendar.LongestStreak(new[] { 1, 2, 2, 3, 5, 6 }.Select(d => new DateTime(2026, 11, d, 18, 0, 0))));
+        Assert.Equal(3, AthleteCalendar.LongestStreak(StreakDays.Select(d => new DateTime(2026, 11, d, 18, 0, 0))));
         Assert.Equal(1, AthleteCalendar.LongestStreak([new DateTime(2026, 11, 1)]));
         Assert.Equal(0, AthleteCalendar.LongestStreak([]));
     }

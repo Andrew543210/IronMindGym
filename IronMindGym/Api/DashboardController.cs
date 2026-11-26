@@ -1,7 +1,6 @@
 using IronMindGym.Contracts;
 using IronMindGym.Data;
 using IronMindGym.Localization;
-using IronMindGym.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

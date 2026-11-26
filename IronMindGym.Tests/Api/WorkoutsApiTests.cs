@@ -178,7 +178,7 @@ public class WorkoutsApiTests
     {
         using var app = new TestApplication();
         using var api = app.Api();
-        var upperLower = app.Query(db => db.SplitTypes.Single(s => s.Name.ToLower().Contains("upper-lower")).Id);
+        var upperLower = app.Query(db => db.SplitTypes.Single(s => s.Name == "Upper-Lower").Id);
         await api.RegisterWithSetup(splitTypeId: upperLower);
 
         var logger = await api.Get<WorkoutLoggerResponse>("/api/workouts/logger");

@@ -1,5 +1,3 @@
-using IronMindGym.Services;
-
 namespace IronMindGym.Contracts;
 
 public sealed record NutritionDay(

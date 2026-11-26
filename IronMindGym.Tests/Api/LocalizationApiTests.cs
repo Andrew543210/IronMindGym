@@ -4,7 +4,6 @@ using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using IronMindGym.Api;
 using IronMindGym.Contracts;
-using IronMindGym.Seed;
 
 namespace IronMindGym.Tests.Api;
 

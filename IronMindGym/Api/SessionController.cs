@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using IronMindGym.Contracts;
 using IronMindGym.Data;
@@ -90,14 +91,14 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
             .Select(u => new { u.Username, u.Email, Language = u.Profile == null ? null : u.Profile.Language }).Single();
         var calendar = AthleteCalendar.For(db, userId);
         return new SessionResponse(userId, user.Username, user.Email, calendar.IanaZoneId,
-            calendar.Today.ToString("yyyy-MM-dd"), AthleteSetup.IsComplete(db, userId), user.Language);
+            calendar.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), AthleteSetup.IsComplete(db, userId), user.Language);
     }
 
     private async Task SignIn(User user, bool rememberMe)
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString(CultureInfo.InvariantCulture)),
             new(ClaimTypes.Name, user.Username),
             // Changing the password changes the stamp, which signs out every other session.
             new("SecurityStamp", user.SecurityStamp)

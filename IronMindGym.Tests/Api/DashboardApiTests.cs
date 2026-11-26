@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using IronMindGym.Api;
@@ -27,7 +28,7 @@ public class DashboardApiTests
         using var api = app.Api();
         await api.RegisterWithSetup();
         var deadline = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(2));
-        await ApiClient.Ok(await api.Post("/api/goals", new { title = "Squat 120 kg", deadline = deadline.ToString("yyyy-MM-dd") }));
+        await ApiClient.Ok(await api.Post("/api/goals", new { title = "Squat 120 kg", deadline = deadline.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) }));
 
         var response = await api.Http.GetAsync("/api/dashboard");
         var json = await response.Content.ReadAsStringAsync();

@@ -1,6 +1,5 @@
 using IronMindGym.Data;
 using IronMindGym.Models;
-using IronMindGym.Services;
 
 namespace IronMindGym.Seed;
 
@@ -46,11 +45,15 @@ public static class DataSeeder
     private static void EnsureTranslations(IronMindDbContext db)
     {
         foreach (var splitType in db.SplitTypes)
+        {
             foreach (var known in SplitTypes.Where(x => x.Name == splitType.Name))
                 splitType.NameUk = known.NameUk;
+        }
         foreach (var setType in db.SetTypes)
+        {
             foreach (var known in SetTypes.Where(x => x.Name == setType.Name))
                 setType.NameUk = known.NameUk;
+        }
     }
 
     public static readonly (string Name, string NameUk, double MinStrengthCoefficient)[] AvatarLadder =

@@ -59,6 +59,12 @@ public static class ExerciseCatalogSeeder
         ["Side Delts"] = "Середні дельти"
     };
 
+    private static readonly JsonSerializerOptions DefinitionJson = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
     public static void Seed(IronMindDbContext db)
     {
         foreach (var group in Definitions().GroupBy(e => e.Group))
@@ -92,11 +98,15 @@ public static class ExerciseCatalogSeeder
     public static void EnsureTranslations(IronMindDbContext db)
     {
         foreach (var group in db.MuscleGroups)
+        {
             if (MuscleGroupNamesUk.TryGetValue(group.Name, out var nameUk))
                 group.NameUk = nameUk;
+        }
         foreach (var subgroup in db.MuscleSubGroups)
+        {
             if (MuscleSubGroupNamesUk.TryGetValue(subgroup.Name, out var nameUk))
                 subgroup.NameUk = nameUk;
+        }
 
         var definitions = Definitions().ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
         foreach (var exercise in db.Exercises)
@@ -111,9 +121,7 @@ public static class ExerciseCatalogSeeder
     public static List<ExerciseDefinition> Definitions()
     {
         using var source = typeof(ExerciseCatalogSeeder).Assembly.GetManifestResourceStream("IronMindGym.Seed.exercises.json")!;
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        options.Converters.Add(new JsonStringEnumConverter());
-        return JsonSerializer.Deserialize<List<ExerciseDefinition>>(source, options)!;
+        return JsonSerializer.Deserialize<List<ExerciseDefinition>>(source, DefinitionJson)!;
     }
 
     public sealed record ExerciseDefinition(
