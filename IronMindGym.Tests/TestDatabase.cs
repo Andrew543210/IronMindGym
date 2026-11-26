@@ -27,6 +27,14 @@ internal static class TestDatabase
         return WithDatabase(Server.Value, name);
     }
 
+    /// <summary>A database without any migration, for tests that migrate it step by step.</summary>
+    public static string CreateEmpty()
+    {
+        var name = $"ironmind_test_{Guid.NewGuid():N}";
+        Execute(Server.Value, $"CREATE DATABASE \"{name}\"");
+        return WithDatabase(Server.Value, name);
+    }
+
     public static void Drop(string connectionString) =>
         Execute(Server.Value, $"DROP DATABASE IF EXISTS \"{new NpgsqlConnectionStringBuilder(connectionString).Database}\" WITH (FORCE)");
 

@@ -91,9 +91,17 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
 
         modelBuilder.Entity<Friendship>(friendship =>
         {
+            friendship.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_Friendships_OrderedPair", "\"User1Id\" < \"User2Id\"");
+                table.HasCheckConstraint("CK_Friendships_RequesterInPair", "\"RequestedByUserId\" IN (\"User1Id\", \"User2Id\")");
+                table.HasCheckConstraint("CK_Friendships_Status", "\"Status\" IN ('Pending', 'Accepted')");
+            });
+            friendship.Property(f => f.Status).HasConversion<string>().HasMaxLength(30);
             friendship.HasIndex(f => new { f.User1Id, f.User2Id }).IsUnique();
-            friendship.HasOne(f => f.User1).WithMany(u => u.FriendshipsAsUser1).HasForeignKey(f => f.User1Id).OnDelete(DeleteBehavior.Restrict);
-            friendship.HasOne(f => f.User2).WithMany(u => u.FriendshipsAsUser2).HasForeignKey(f => f.User2Id).OnDelete(DeleteBehavior.Restrict);
+            friendship.HasOne(f => f.User1).WithMany(u => u.FriendshipsAsUser1).HasForeignKey(f => f.User1Id).OnDelete(DeleteBehavior.Cascade);
+            friendship.HasOne(f => f.User2).WithMany(u => u.FriendshipsAsUser2).HasForeignKey(f => f.User2Id).OnDelete(DeleteBehavior.Cascade);
+            friendship.HasOne<User>().WithMany().HasForeignKey(f => f.RequestedByUserId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<ActivityLike>(like =>
         {

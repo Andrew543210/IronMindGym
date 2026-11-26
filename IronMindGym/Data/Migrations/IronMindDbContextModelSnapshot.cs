@@ -176,7 +176,7 @@ namespace IronMindGym.Data.Migrations
                     b.Property<double>("CarbsG")
                         .HasColumnType("double precision");
 
-                    b.Property<DateTime>("Date")
+                    b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
                     b.Property<double>("FatG")
@@ -347,12 +347,21 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RequestedByUserId");
+
                     b.HasIndex("User2Id");
 
                     b.HasIndex("User1Id", "User2Id")
                         .IsUnique();
 
-                    b.ToTable("Friendships");
+                    b.ToTable("Friendships", t =>
+                        {
+                            t.HasCheckConstraint("CK_Friendships_OrderedPair", "\"User1Id\" < \"User2Id\"");
+
+                            t.HasCheckConstraint("CK_Friendships_RequesterInPair", "\"RequestedByUserId\" IN (\"User1Id\", \"User2Id\")");
+
+                            t.HasCheckConstraint("CK_Friendships_Status", "\"Status\" IN ('Pending', 'Accepted')");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.InitialBenchmarks", b =>
@@ -690,7 +699,7 @@ namespace IronMindGym.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("Deadline")
+                    b.Property<DateOnly>("Deadline")
                         .HasColumnType("date");
 
                     b.Property<string>("GoalType")
@@ -719,7 +728,7 @@ namespace IronMindGym.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("Date")
+                    b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
                     b.Property<int>("UserId")
@@ -996,16 +1005,22 @@ namespace IronMindGym.Data.Migrations
 
             modelBuilder.Entity("IronMindGym.Models.Friendship", b =>
                 {
+                    b.HasOne("IronMindGym.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("IronMindGym.Models.User", "User1")
                         .WithMany("FriendshipsAsUser1")
                         .HasForeignKey("User1Id")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.User", "User2")
                         .WithMany("FriendshipsAsUser2")
                         .HasForeignKey("User2Id")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User1");

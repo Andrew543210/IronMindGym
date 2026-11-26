@@ -77,7 +77,7 @@ public class FriendsApiTests
         Assert.Equal(FriendshipService.RequestResult.Connected, await Request(second, UserId(app, "first")));
         Assert.Equal(FriendshipService.RequestResult.AlreadyConnected, await Request(second, UserId(app, "first")));
 
-        Assert.Equal("Accepted", app.Query(db => db.Friendships.Single().Status));
+        Assert.Equal(FriendshipStatus.Accepted, app.Query(db => db.Friendships.Single().Status));
         var self = await first.Post($"/api/friends/{UserId(app, "first")}/request", new { });
         Assert.Contains("Choose another registered user.", await ApiClient.Errors(self));
     }

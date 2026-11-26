@@ -10,8 +10,7 @@ namespace IronMindGym.Services;
 public class FriendshipService(IronMindDbContext db)
 {
     public bool AreFriends(int userId, int otherId) => db.Friendships.AsNoTracking().Any(f =>
-        f.Status == FriendshipStatus.Accepted &&
-        ((f.User1Id == userId && f.User2Id == otherId) || (f.User2Id == userId && f.User1Id == otherId)));
+        f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId) && f.Status == FriendshipStatus.Accepted);
 
     public FriendsOverview BuildIndex(int userId, string? searchUsername)
     {

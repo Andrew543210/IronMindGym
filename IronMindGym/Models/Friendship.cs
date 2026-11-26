@@ -1,14 +1,15 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace IronMindGym.Models;
 
-public static class FriendshipStatus
+public enum FriendshipStatus
 {
-    public const string Pending = "Pending";
-    public const string Accepted = "Accepted";
+    Pending,
+    Accepted
 }
 
-/// <summary>One row per pair of athletes, stored with the smaller id first.</summary>
+/// <summary>
+/// One row per pair of athletes, stored with the smaller id first; the requester is one of the two.
+/// Check constraints in the database hold both rules.
+/// </summary>
 public class Friendship
 {
     public int Id { get; set; }
@@ -17,7 +18,5 @@ public class Friendship
     public int User2Id { get; set; }
     public User User2 { get; set; } = null!;
     public int RequestedByUserId { get; set; }
-
-    [MaxLength(30)]
-    public string Status { get; set; } = FriendshipStatus.Pending;
+    public FriendshipStatus Status { get; set; } = FriendshipStatus.Pending;
 }
