@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IronMindGym.Services;
 
 /// <summary>One entry per calendar day. Saving a day again replaces it, so a missed day can be filled in later.</summary>
-public class NutritionJournalService(IronMindDbContext db, NutritionAdviceService advice, CurrentCalendar calendar)
+public class NutritionJournalService(IronMindDbContext db, NutritionAdviceService advice, CurrentCalendar calendar, AchievementService achievements)
 {
     private const int RecentDays = 30;
 
@@ -42,7 +42,7 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
         log.FatG = fatG;
         log.CarbsG = carbsG;
         db.SaveChanges();
-        AchievementEngine.AssignAchievements(db, userId);
+        achievements.AwardEarned(userId);
         transaction.Commit();
     }
 

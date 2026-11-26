@@ -78,8 +78,9 @@ public static class DemoDataSeeder
         foreach (var user in new[] { athlete, friend })
             records.Recalculate(user.Id, exercises.Values.Select(e => e.Id));
         db.SaveChanges();
-        AchievementEngine.AssignAchievements(db, athlete.Id);
-        AchievementEngine.AssignAchievements(db, friend.Id);
+        var achievements = new AchievementService(db);
+        achievements.AwardEarned(athlete.Id);
+        achievements.AwardEarned(friend.Id);
 
         void Workout(User user, SplitDay day, int daysAgo, int minutes, SetType setType,
             params (Exercise Exercise, (double Kg, int Reps)[] Sets)[] blocks)

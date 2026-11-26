@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class FriendshipService(IronMindDbContext db)
+public class FriendshipService(IronMindDbContext db, AchievementService achievements)
 {
     public bool AreFriends(int userId, int otherId) => db.Friendships.AsNoTracking().Any(f =>
         f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId) && f.Status == FriendshipStatus.Accepted);
@@ -115,8 +115,8 @@ public class FriendshipService(IronMindDbContext db)
 
     private void AssignFriendAwards(int userId, int otherId)
     {
-        AchievementEngine.AssignAchievements(db, userId);
-        AchievementEngine.AssignAchievements(db, otherId);
+        achievements.AwardEarned(userId);
+        achievements.AwardEarned(otherId);
     }
 
     public bool Remove(int userId, int otherId) => db.Friendships

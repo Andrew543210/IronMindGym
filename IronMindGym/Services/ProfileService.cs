@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, StrengthService strength, AvatarService avatars)
+public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, StrengthService strength, AvatarService avatars, AchievementService achievements)
 {
     public ProfileOverview BuildOverview(int userId)
     {
@@ -102,7 +102,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
             // Another account took the username between the check above and the update.
             throw new DomainValidationException("This username is already taken.", "Username");
         }
-        AchievementEngine.AssignAchievements(db, userId);
+        achievements.AwardEarned(userId);
         transaction.Commit();
     }
 

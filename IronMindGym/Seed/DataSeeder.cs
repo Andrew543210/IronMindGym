@@ -45,10 +45,25 @@ public static class DataSeeder
         EnsureAvatarLadder(db);
         db.SaveChanges();
         EnsureResearchFeed(db);
-        AchievementEngine.EnsureCatalog(db);
+        EnsureAchievements(db);
         if (includeDemoData)
             DemoDataSeeder.Seed(db);
         transaction.Commit();
+    }
+
+    private static void EnsureAchievements(IronMindDbContext db)
+    {
+        var existing = db.Achievements.ToDictionary(a => a.Code);
+        foreach (var award in AchievementCatalog.All)
+        {
+            if (!existing.TryGetValue(award.Code, out var achievement))
+                db.Achievements.Add(achievement = new Achievement { Code = award.Code });
+            achievement.Name = award.Name;
+            achievement.NameUk = award.NameUk;
+            achievement.ConditionDescription = award.ConditionDescription;
+            achievement.ConditionDescriptionUk = award.ConditionDescriptionUk;
+        }
+        db.SaveChanges();
     }
 
     private static void EnsureSplitTypes(IronMindDbContext db)

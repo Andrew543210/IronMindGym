@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IronMindGym.Api;
 
 [Route("api/setup")]
-public class SetupController(IronMindDbContext db) : ApiController
+public class SetupController(IronMindDbContext db, AchievementService achievements) : ApiController
 {
     [HttpGet]
     public SetupFormResponse Form() => new(
@@ -47,7 +47,7 @@ public class SetupController(IronMindDbContext db) : ApiController
         plan.WorkoutsPerWeek = request.WorkoutsPerWeek;
         plan.SplitTypeId = request.SplitTypeId;
         db.SaveChanges();
-        AchievementEngine.AssignAchievements(db, userId);
+        achievements.AwardEarned(userId);
         transaction.Commit();
         return NoContent();
     }

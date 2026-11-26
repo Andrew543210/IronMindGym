@@ -13,8 +13,7 @@ public enum AchievementMetricType
     WorkoutStreakDays,
     LongWorkouts,
     ProfileCompleted,
-    ReviewsWritten,
-    NonNumeric
+    ReviewsWritten
 }
 
 public sealed class AchievementDefinition
@@ -25,11 +24,17 @@ public sealed class AchievementDefinition
     public required string NameUk { get; init; }
     public required string ConditionDescriptionUk { get; init; }
     public required AchievementMetricType MetricType { get; init; }
-    public double? TargetValue { get; init; }
+    public required double TargetValue { get; init; }
+
+    /// <summary>False for a yes-or-no award, which shows no count towards its target.</summary>
+    public bool ShowsProgress { get; init; } = true;
 }
 
 public static class AchievementCatalog
 {
+    /// <summary>A workout of at least this many minutes counts towards the endurance awards.</summary>
+    public const int LongWorkoutMinutes = 60;
+
     public static IReadOnlyList<AchievementDefinition> All
     {
         get;
@@ -86,10 +91,10 @@ public static class AchievementCatalog
         new() { Code = "STREAK_014", Name = "Two-Week Engine", NameUk = "Двотижневий мотор", ConditionDescription = "Train 14 days in a row", ConditionDescriptionUk = "Тренуйтеся 14 днів поспіль", MetricType = AchievementMetricType.WorkoutStreakDays, TargetValue = 14 },
         new() { Code = "STREAK_030", Name = "Unbreakable", NameUk = "Незламність", ConditionDescription = "Train 30 days in a row", ConditionDescriptionUk = "Тренуйтеся 30 днів поспіль", MetricType = AchievementMetricType.WorkoutStreakDays, TargetValue = 30 },
 
-        new() { Code = "LONG_005", Name = "Endurance Session I", NameUk = "Довге тренування I", ConditionDescription = "Complete 5 workouts longer than 60 min", ConditionDescriptionUk = "Завершіть 5 тренувань, довших за 60 хв", MetricType = AchievementMetricType.LongWorkouts, TargetValue = 5 },
-        new() { Code = "LONG_020", Name = "Endurance Session II", NameUk = "Довге тренування II", ConditionDescription = "Complete 20 workouts longer than 60 min", ConditionDescriptionUk = "Завершіть 20 тренувань, довших за 60 хв", MetricType = AchievementMetricType.LongWorkouts, TargetValue = 20 },
+        new() { Code = "LONG_005", Name = "Endurance Session I", NameUk = "Довге тренування I", ConditionDescription = "Complete 5 workouts of 60 min or more", ConditionDescriptionUk = "Завершіть 5 тренувань від 60 хв", MetricType = AchievementMetricType.LongWorkouts, TargetValue = 5 },
+        new() { Code = "LONG_020", Name = "Endurance Session II", NameUk = "Довге тренування II", ConditionDescription = "Complete 20 workouts of 60 min or more", ConditionDescriptionUk = "Завершіть 20 тренувань від 60 хв", MetricType = AchievementMetricType.LongWorkouts, TargetValue = 20 },
 
-        new() { Code = "REVIEW_FIRST", Name = "Mindful Athlete", NameUk = "Усвідомлений підхід", ConditionDescription = "Leave your first workout review", ConditionDescriptionUk = "Залиште перший відгук про тренування", MetricType = AchievementMetricType.NonNumeric },
-        new() { Code = "PROFILE_SETUP", Name = "Fully Set", NameUk = "Повна готовність", ConditionDescription = "Complete profile, anthropometry and setup", ConditionDescriptionUk = "Заповніть профіль, антропометрію та початкове налаштування", MetricType = AchievementMetricType.NonNumeric }
+        new() { Code = "REVIEW_FIRST", Name = "Mindful Athlete", NameUk = "Усвідомлений підхід", ConditionDescription = "Leave your first workout review", ConditionDescriptionUk = "Залиште перший відгук про тренування", MetricType = AchievementMetricType.ReviewsWritten, TargetValue = 1, ShowsProgress = false },
+        new() { Code = "PROFILE_SETUP", Name = "Fully Set", NameUk = "Повна готовність", ConditionDescription = "Complete profile, anthropometry and setup", ConditionDescriptionUk = "Заповніть профіль, антропометрію та початкове налаштування", MetricType = AchievementMetricType.ProfileCompleted, TargetValue = 1, ShowsProgress = false }
     };
 }

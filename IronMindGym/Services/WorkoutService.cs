@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
+public class WorkoutService(IronMindDbContext db, PersonalRecordService records, AchievementService achievements)
 {
     public WorkoutDetails? BuildDetails(int ownerId, int sessionId, int viewerId)
     {
@@ -136,7 +136,7 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
         db.SaveChanges();
         records.Recalculate(currentUserId, exercises.Keys);
         db.SaveChanges();
-        AchievementEngine.AssignAchievements(db, currentUserId);
+        achievements.AwardEarned(currentUserId);
         transaction.Commit();
         return session.Id;
     }
