@@ -517,6 +517,8 @@ namespace IronMindGym.Data.Migrations
 
                             t.HasCheckConstraint("CK_Profiles_HeightCm", "\"HeightCm\" > 0");
 
+                            t.HasCheckConstraint("CK_Profiles_Language", "\"Language\" IN ('en', 'uk')");
+
                             t.HasCheckConstraint("CK_Profiles_Targets", "\"CalorieTarget\" > 0 AND \"ProteinTarget\" > 0 AND \"FatTarget\" > 0 AND \"CarbsTarget\" > 0");
                         });
                 });

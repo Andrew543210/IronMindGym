@@ -54,7 +54,14 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             user.HasOne(u => u.Plan).WithOne(p => p.User).HasForeignKey<WorkoutPlan>(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
         });
         // A user has at most one of each: the user id is the key.
-        modelBuilder.Entity<Profile>().HasKey(p => p.UserId);
+        modelBuilder.Entity<Profile>(profile =>
+        {
+            profile.HasKey(p => p.UserId);
+            profile.Property(p => p.EnergyEquation).HasConversion<string>().HasMaxLength(8);
+            profile.Property(p => p.Language).HasMaxLength(8).HasConversion(
+                language => language == Language.Ukrainian ? "uk" : "en",
+                code => code == "uk" ? Language.Ukrainian : Language.English);
+        });
         modelBuilder.Entity<InitialBenchmarks>().HasKey(b => b.UserId);
         modelBuilder.Entity<WorkoutPlan>().HasKey(p => p.UserId);
 
@@ -132,6 +139,7 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             ("Age", "\"Age\" >= 0"),
             ("HeightCm", "\"HeightCm\" > 0"),
             ("EnergyEquation", "\"EnergyEquation\" IN ('None', 'Male', 'Female')"),
+            ("Language", "\"Language\" IN ('en', 'uk')"),
             ("Targets", "\"CalorieTarget\" > 0 AND \"ProteinTarget\" > 0 AND \"FatTarget\" > 0 AND \"CarbsTarget\" > 0"));
         Checks<InitialBenchmarks>(modelBuilder, "InitialBenchmarks",
             ("Loads", "\"BenchPressKg\" >= 0 AND \"SquatKg\" >= 0 AND \"DeadliftKg\" >= 0"));

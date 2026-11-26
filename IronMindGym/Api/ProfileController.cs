@@ -49,7 +49,7 @@ public class ProfileController(ProfileService profiles) : ApiController
     [HttpPut("language")]
     public ActionResult SaveLanguage(LanguageRequest request)
     {
-        profiles.SaveLanguage(UserId, request.Language);
+        profiles.SaveLanguage(UserId, request.Language!.Value);
         return NoContent();
     }
 }

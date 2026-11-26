@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using IronMindGym.Models;
 
 namespace IronMindGym.Contracts;
 
@@ -26,4 +27,4 @@ public sealed record ProfileSettingsResponse(ProfileSettings Settings, List<Opti
 public sealed record WeightRequest([Range(30, 250, ErrorMessage = "Enter a weight between 30 and 250 kg.")] double WeightKg);
 
 public sealed record LanguageRequest(
-    [Required, RegularExpression("^(en|uk)$", ErrorMessage = "Choose English or Ukrainian.")] string Language);
+    [Required(ErrorMessage = "Choose English or Ukrainian.")] Language? Language);

@@ -36,6 +36,7 @@ public class SchemaRulesTests
     [InlineData("""INSERT INTO "WeightLogs" ("UserId", "Date", "ValueKg") VALUES (1, '2026-11-01', 0)""")]
     [InlineData("""INSERT INTO "DailyNutritions" ("UserId", "Date", "CaloriesKcal", "ProteinG", "FatG", "CarbsG") VALUES (1, '2026-11-01', -1, 0, 0, 0)""")]
     [InlineData("""INSERT INTO "Profiles" ("UserId", "Age", "EnergyEquation") VALUES (1, 30, 'Other')""")]
+    [InlineData("""INSERT INTO "Profiles" ("UserId", "Age", "EnergyEquation", "Language") VALUES (1, 30, 'None', 'de')""")]
     [InlineData("""INSERT INTO "Profiles" ("UserId", "Age", "EnergyEquation", "CalorieTarget") VALUES (1, 30, 'None', 0)""")]
     [InlineData("""INSERT INTO "WorkoutPlans" ("UserId", "WorkoutsPerWeek", "SplitTypeId") VALUES (1, 0, 1)""")]
     [InlineData("""INSERT INTO "Users" ("Username", "Email", "PasswordHash", "SecurityStamp", "CreatedAt") VALUES (repeat('a', 51), 'long@example.com', 'hash', 'stamp', now())""")]

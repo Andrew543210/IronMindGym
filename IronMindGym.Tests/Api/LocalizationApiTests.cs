@@ -106,15 +106,15 @@ public partial class LocalizationApiTests
         using var api = app.Api();
         api.Http.DefaultRequestHeaders.AcceptLanguage.ParseAdd("uk");
         await api.Register();
-        Assert.Equal("uk", (await api.Get<SessionResponse>("/api/session")).Language);
+        Assert.Equal(Language.Ukrainian, (await api.Get<SessionResponse>("/api/session")).Language);
 
         await ApiClient.Ok(await api.Put("/api/profile/language", new { language = "en" }));
-        Assert.Equal("en", (await api.Get<SessionResponse>("/api/session")).Language);
+        Assert.Equal(Language.English, (await api.Get<SessionResponse>("/api/session")).Language);
         Assert.NotEmpty(await ApiClient.Errors(await api.Put("/api/profile/language", new { language = "de" })));
 
         using var phone = app.Api();
         await phone.SignIn("athlete@example.com");
-        Assert.Equal("en", (await phone.Get<SessionResponse>("/api/session")).Language);
+        Assert.Equal(Language.English, (await phone.Get<SessionResponse>("/api/session")).Language);
     }
 
     [Fact]

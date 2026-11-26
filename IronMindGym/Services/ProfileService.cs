@@ -38,7 +38,7 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
     public ProfileSettingsResponse Settings(int userId) => new(BuildEdit(userId), setup.SplitTypes());
 
     /// <summary>The interface language, kept so the athlete sees it again on another device.</summary>
-    public void SaveLanguage(int userId, string language)
+    public void SaveLanguage(int userId, Language language)
     {
         using var transaction = WriteLock.BeginForAthletes(db, userId);
         var profile = db.Profiles.FirstOrDefault(p => p.UserId == userId);
@@ -63,7 +63,7 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
             ProteinTarget = user.Profile?.ProteinTarget,
             FatTarget = user.Profile?.FatTarget,
             CarbsTarget = user.Profile?.CarbsTarget,
-            EnergyEquation = user.Profile?.EnergyEquation ?? "None",
+            EnergyEquation = user.Profile?.EnergyEquation ?? EnergyEquation.None,
             WeightKg = bodyweightKg ?? 70,
             HeightCm = user.Profile?.HeightCm ?? 175,
             BenchPressKg = user.Benchmarks?.BenchPressKg ?? 0,

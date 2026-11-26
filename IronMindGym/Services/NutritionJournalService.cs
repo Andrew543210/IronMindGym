@@ -62,7 +62,7 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
             ProteinTarget = profile?.ProteinTarget,
             FatTarget = profile?.FatTarget,
             CarbsTarget = profile?.CarbsTarget,
-            EnergyEquation = profile?.EnergyEquation ?? "None",
+            EnergyEquation = profile?.EnergyEquation ?? EnergyEquation.None,
             WorkoutsPerWeek = db.WorkoutPlans.WorkoutsPerWeek(userId)
         };
     }

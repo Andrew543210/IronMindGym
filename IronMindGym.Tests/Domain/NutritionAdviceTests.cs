@@ -13,11 +13,11 @@ public class NutritionAdviceTests
     [Fact]
     public void AdultEstimatesFollowMifflinStJeorAndFitTheEnergyBudget()
     {
-        var advice = For(new NutritionProfileSnapshot { Age = 24, WeightKg = 80, HeightCm = 180, EnergyEquation = "Male", WorkoutsPerWeek = 3 });
+        var advice = For(new NutritionProfileSnapshot { Age = 24, WeightKg = 80, HeightCm = 180, EnergyEquation = EnergyEquation.Male, WorkoutsPerWeek = 3 });
 
         Assert.Equal(1810, advice.BasalMetabolicRate);
         Assert.Equal(1.5, advice.ActivityMultiplier);
-        Assert.Equal("Male", advice.EnergyEquation);
+        Assert.Equal(EnergyEquation.Male, advice.EnergyEquation);
         Assert.Equal(new NutritionTarget(2715, TargetSource.Estimate), advice.Calories);
         Assert.Equal(new NutritionTarget(128, TargetSource.Estimate), advice.Protein);
         Assert.Equal(new NutritionTarget(64, TargetSource.Estimate), advice.Fat);
@@ -31,14 +31,14 @@ public class NutritionAdviceTests
     [InlineData(5, 1.6)]
     [InlineData(7, 1.7)]
     public void TheActivityFactorFollowsThePlan(int workoutsPerWeek, double factor) =>
-        Assert.Equal(factor, For(new NutritionProfileSnapshot { Age = 30, WeightKg = 60, HeightCm = 165, EnergyEquation = "Female", WorkoutsPerWeek = workoutsPerWeek }).ActivityMultiplier);
+        Assert.Equal(factor, For(new NutritionProfileSnapshot { Age = 30, WeightKg = 60, HeightCm = 165, EnergyEquation = EnergyEquation.Female, WorkoutsPerWeek = workoutsPerWeek }).ActivityMultiplier);
 
     [Fact]
     public void PersonalTargetsWinOverEstimates()
     {
         var advice = For(new NutritionProfileSnapshot
         {
-            Age = 24, WeightKg = 80, HeightCm = 180, EnergyEquation = "Male",
+            Age = 24, WeightKg = 80, HeightCm = 180, EnergyEquation = EnergyEquation.Male,
             CalorieTarget = 2400, ProteinTarget = 140, FatTarget = 70, CarbsTarget = 280
         });
 
@@ -47,13 +47,13 @@ public class NutritionAdviceTests
     }
 
     [Theory]
-    [InlineData(15, "Male")]
-    [InlineData(30, "None")]
-    public void MinorsAndAthletesWithoutAnEquationGetNoEstimates(int age, string equation)
+    [InlineData(15, EnergyEquation.Male)]
+    [InlineData(30, EnergyEquation.None)]
+    public void MinorsAndAthletesWithoutAnEquationGetNoEstimates(int age, EnergyEquation equation)
     {
         var advice = For(new NutritionProfileSnapshot { Age = age, WeightKg = 65, HeightCm = 170, EnergyEquation = equation });
 
-        Assert.Equal((0.0, 0.0, null), (advice.BasalMetabolicRate, advice.ActivityMultiplier, advice.EnergyEquation));
+        Assert.Equal((0.0, 0.0, (EnergyEquation?)null), (advice.BasalMetabolicRate, advice.ActivityMultiplier, advice.EnergyEquation));
         Assert.All(new[] { advice.Calories, advice.Protein, advice.Fat, advice.Carbs }, t => Assert.Equal(TargetSource.NotSet, t.Source));
         Assert.Equal((0, 0), (advice.TargetsSet, advice.Score));
     }

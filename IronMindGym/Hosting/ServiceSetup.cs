@@ -18,7 +18,8 @@ public static class ServiceSetup
                 options.Filters.Add<CsrfProtectionFilter>();
                 options.Filters.Add<DomainExceptionFilter>();
             })
-            .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+            // Choices travel as their names; a number is refused instead of becoming an undefined value.
+            .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
         services.AddProblemDetails();
         services.AddDbContext<IronMindDbContext>(options => options.UseNpgsql(
             configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException(

@@ -51,7 +51,7 @@ public sealed class AccountService(IronMindDbContext db, AthleteCalendars calend
             {
                 Age = request.Age,
                 TimeZone = AthleteCalendar.TryFindZone(request.TimeZone, out _) ? request.TimeZone : null,
-                Language = Localized.IsUkrainian ? "uk" : "en"
+                Language = Localized.IsUkrainian ? Language.Ukrainian : Language.English
             }
         };
         db.Users.Add(user);

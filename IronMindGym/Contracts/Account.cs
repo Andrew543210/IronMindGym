@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using IronMindGym.Models;
 
 namespace IronMindGym.Contracts;
 
@@ -23,8 +24,8 @@ public sealed record ProfileSettings : SetupRequest
     [Range(1, 2000)]
     public int? CarbsTarget { get; init; }
 
-    [RegularExpression("^(None|Male|Female)$", ErrorMessage = "Choose an energy equation: none, male or female.")]
-    public string EnergyEquation { get; init; } = "None";
+    [EnumDataType(typeof(EnergyEquation), ErrorMessage = "Choose an energy equation: none, male or female.")]
+    public EnergyEquation EnergyEquation { get; init; } = EnergyEquation.None;
 }
 
 public sealed record ChangePasswordRequest

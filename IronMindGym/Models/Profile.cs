@@ -13,14 +13,13 @@ public class Profile
     [MaxLength(64)]
     public string? TimeZone { get; set; }
 
-    [MaxLength(8)]
-    public string? Language { get; set; }
+    /// <summary>Empty until the athlete picks one; the client then follows the browser.</summary>
+    public Language? Language { get; set; }
 
     public int? CalorieTarget { get; set; }
     public int? ProteinTarget { get; set; }
     public int? FatTarget { get; set; }
     public int? CarbsTarget { get; set; }
 
-    [MaxLength(8)]
-    public string EnergyEquation { get; set; } = "None";
+    public EnergyEquation EnergyEquation { get; set; } = EnergyEquation.None;
 }

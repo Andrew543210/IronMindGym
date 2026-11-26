@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using IronMindGym.Models;
 
 namespace IronMindGym.Contracts;
 
@@ -37,4 +38,4 @@ public sealed record RegisterRequest
 
 public sealed record CsrfTokenResponse(string Token);
 
-public sealed record SessionResponse(int Id, string Username, string Email, string TimeZone, DateOnly Today, bool SetupComplete, string? Language);
+public sealed record SessionResponse(int Id, string Username, string Email, string TimeZone, DateOnly Today, bool SetupComplete, Language? Language);

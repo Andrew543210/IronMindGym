@@ -18,7 +18,7 @@ public sealed class NutritionProfileSnapshot
     public int? ProteinTarget { get; init; }
     public int? FatTarget { get; init; }
     public int? CarbsTarget { get; init; }
-    public string EnergyEquation { get; init; } = "None";
+    public EnergyEquation EnergyEquation { get; init; } = EnergyEquation.None;
     public double? WeightKg { get; init; }
     public double? HeightCm { get; init; }
     public int? Age { get; init; }
@@ -31,7 +31,7 @@ public sealed record NutritionAdvice(
     NutritionTarget Protein,
     NutritionTarget Fat,
     NutritionTarget Carbs,
-    string? EnergyEquation,
+    EnergyEquation? EnergyEquation,
     double BasalMetabolicRate,
     double ActivityMultiplier,
     int TargetsSet,
@@ -55,9 +55,9 @@ public class NutritionAdviceService
 
     public NutritionAdvice BuildAdvice(DailyNutrition day, NutritionProfileSnapshot profile, IReadOnlyList<DailyNutrition> recentLogs)
     {
-        var canEstimate = profile is { Age: >= 18, WeightKg: > 0, HeightCm: > 0, EnergyEquation: "Male" or "Female" };
+        var canEstimate = profile is { Age: >= 18, WeightKg: > 0, HeightCm: > 0, EnergyEquation: EnergyEquation.Male or EnergyEquation.Female };
         var bmr = canEstimate
-            ? 10 * profile.WeightKg!.Value + 6.25 * profile.HeightCm!.Value - 5 * profile.Age!.Value + (profile.EnergyEquation == "Male" ? 5 : -161)
+            ? 10 * profile.WeightKg!.Value + 6.25 * profile.HeightCm!.Value - 5 * profile.Age!.Value + (profile.EnergyEquation == EnergyEquation.Male ? 5 : -161)
             : 0;
         var activity = canEstimate ? ActivityFactor(profile.WorkoutsPerWeek) : 0;
 
