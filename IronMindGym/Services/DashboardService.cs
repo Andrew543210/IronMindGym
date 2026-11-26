@@ -50,8 +50,10 @@ public class DashboardService(IronMindDbContext db, AthleteCalendars calendars, 
             ResearchNotes(db.ResearchItems.OrderByDescending(r => r.PublishedAt).ThenBy(r => r.Id).Take(4)));
     }
 
+    public DashboardResearchItem? ResearchNote(int id) => ResearchNotes(db.ResearchItems.Where(r => r.Id == id)).SingleOrDefault();
+
     /// <summary>Research notes in the request language.</summary>
-    public static List<DashboardResearchItem> ResearchNotes(IQueryable<ResearchItem> items) => items.AsNoTracking()
+    private static List<DashboardResearchItem> ResearchNotes(IQueryable<ResearchItem> items) => items.AsNoTracking()
         .Select(r => new DashboardResearchItem
         {
             Id = r.Id,

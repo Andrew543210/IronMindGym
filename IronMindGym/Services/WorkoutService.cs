@@ -6,8 +6,75 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCalendars calendars, PersonalRecordService records, AchievementService achievements)
+public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCalendars calendars, ExerciseCatalog catalog, PersonalRecordService records, AchievementService achievements)
 {
+    private const int HistoryPageSize = 20;
+
+    /// <summary>The athlete's workouts, newest first, one page at a time.</summary>
+    public WorkoutHistoryResponse History(int userId, int page)
+    {
+        page = Math.Clamp(page, 1, 10000);
+        var rows = db.WorkoutSessions.AsNoTracking()
+            .Where(s => s.UserId == userId)
+            .OrderByDescending(s => s.SessionDate).ThenByDescending(s => s.Id)
+            .Skip((page - 1) * HistoryPageSize)
+            .Take(HistoryPageSize + 1)
+            .Select(s => new WorkoutSessionListItem
+            {
+                Id = s.Id,
+                SessionDate = s.SessionDate,
+                Name = SessionName(s.SplitDay!.WorkoutName, s.SplitDay.WorkoutNameUk),
+                DurationMinutes = s.DurationMinutes
+            })
+            .ToList();
+        return new WorkoutHistoryResponse(rows.Take(HistoryPageSize).ToList(), page, rows.Count > HistoryPageSize);
+    }
+
+    /// <summary>What the logger offers: the athlete's split with its days, the set types and the exercise catalog.</summary>
+    public WorkoutLoggerResponse LoggerOptions(int userId)
+    {
+        var activePlan = db.WorkoutPlans.AsNoTracking()
+            .Where(p => p.UserId == userId)
+            .Select(p => new { p.SplitTypeId, Name = Localized.Pick(p.SplitType.Name, p.SplitType.NameUk) })
+            .FirstOrDefault();
+        var splitTypes = db.SplitTypes.AsNoTracking()
+            .Where(s => activePlan == null || s.Id == activePlan.SplitTypeId)
+            .Select(s => new { s.Id, s.Name, s.NameUk, Days = s.Days.OrderBy(d => d.Position).Select(d => new { d.Id, d.Name, d.NameUk }).ToList() })
+            .AsEnumerable()
+            .Select(s => new SplitTypeOption(s.Id, Localized.Pick(s.Name, s.NameUk),
+                s.Days.Select(d => new SplitDayOption(d.Id, Localized.Pick(d.Name, d.NameUk))).ToList()))
+            .OrderBy(s => s.Name, Localized.Order)
+            .ToList();
+        var setTypes = db.SetTypes.AsNoTracking().Select(s => new { s.Id, s.Code, s.Name, s.NameUk }).ToList();
+        var defaultSetTypeId = setTypes.FirstOrDefault(s => s.Code == SetTypeCode.Working)?.Id ?? setTypes.FirstOrDefault()?.Id ?? 0;
+        return new WorkoutLoggerResponse(
+            activePlan?.Name,
+            activePlan?.SplitTypeId,
+            splitTypes,
+            setTypes.Select(s => new OptionResponse(s.Id, Localized.Pick(s.Name, s.NameUk)))
+                .OrderBy(s => s.Id == defaultSetTypeId ? 0 : 1).ThenBy(s => s.Name, Localized.Order).ToList(),
+            defaultSetTypeId,
+            catalog.MuscleGroups(),
+            catalog.Items());
+    }
+
+    /// <summary>The last set the athlete logged for an exercise, to start the next one from.</summary>
+    public PreviousSetResponse? PreviousSet(int userId, int exerciseId)
+    {
+        var previous = db.Sets.AsNoTracking()
+            .Where(s => s.PerformedExercise.ExerciseId == exerciseId && s.PerformedExercise.WorkoutSession.UserId == userId)
+            .OrderByDescending(s => s.PerformedExercise.WorkoutSession.SessionDate)
+            .ThenByDescending(s => s.PerformedExercise.WorkoutSessionId)
+            .ThenByDescending(s => s.PerformedExercise.OrderInWorkout)
+            .ThenByDescending(s => s.SetNumber)
+            .Select(s => new { s.WeightKg, s.Reps, s.DurationSeconds, s.Intensity, s.RestSeconds, s.SetTypeId, Date = s.PerformedExercise.WorkoutSession.SessionDate })
+            .FirstOrDefault();
+        return previous is null
+            ? null
+            : new PreviousSetResponse(previous.WeightKg, previous.Reps, previous.DurationSeconds, previous.Intensity,
+                previous.RestSeconds, previous.SetTypeId, calendars.For(userId).DayOf(previous.Date));
+    }
+
     /// <summary>
     /// A saved workout as its owner or a friend sees it. The owner also sees how many planned workouts are
     /// left this week.

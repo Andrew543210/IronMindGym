@@ -1,13 +1,17 @@
 using IronMindGym.Contracts;
+using IronMindGym.Data;
 using IronMindGym.Localization;
-using IronMindGym.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public static class ExerciseCatalog
+/// <summary>
+/// The whole exercise catalog in the request language. It is small, so the client filters and searches it locally.
+/// Names are sorted here rather than in SQL: the database collation does not know the request language.
+/// </summary>
+public sealed class ExerciseCatalog(IronMindDbContext db)
 {
-    public static List<ExerciseCatalogItem> Items(IQueryable<Exercise> exercises) => exercises.AsNoTracking()
+    public List<ExerciseCatalogItem> Items() => db.Exercises.AsNoTracking()
         .Select(e => new ExerciseCatalogItem
         {
             ExerciseId = e.Id,
@@ -20,8 +24,13 @@ public static class ExerciseCatalog
             MuscleSubGroupId = e.MuscleSubGroupId,
             MuscleSubGroupName = Localized.Pick(e.MuscleSubGroup.Name, e.MuscleSubGroup.NameUk)
         })
-        // Sorted here rather than in SQL: the database collation does not know the request language.
         .AsEnumerable()
         .OrderBy(e => e.ExerciseName, Localized.Order)
         .ToList();
+
+    public List<OptionResponse> MuscleGroups() => db.MuscleGroups.AsNoTracking()
+        .Select(g => new OptionResponse(g.Id, Localized.Pick(g.Name, g.NameUk)))
+        .AsEnumerable().OrderBy(g => g.Name, Localized.Order).ToList();
+
+    public ExerciseLibraryResponse Library() => new(MuscleGroups(), Items());
 }

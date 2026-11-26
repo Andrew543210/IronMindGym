@@ -10,7 +10,7 @@ namespace IronMindGym.Services;
 /// Keeps a starting and a latest result per exercise. What the two numbers of a result mean depends on the
 /// exercise: weight and repetitions for strength, duration and effort for cardio, duration and load for timed holds.
 /// </summary>
-public class ExerciseProgressService(IronMindDbContext db, TimeProvider clock)
+public class ExerciseProgressService(IronMindDbContext db, TimeProvider clock, FriendshipService friendships, StrengthService strength)
 {
     public List<ExerciseProgressEntry> List(int userId) => db.ExerciseProgress.AsNoTracking()
         .Where(p => p.UserId == userId)
@@ -72,6 +72,14 @@ public class ExerciseProgressService(IronMindDbContext db, TimeProvider clock)
         db.SaveChanges();
         transaction.Commit();
     }
+
+    /// <summary>A friend's results and strength coefficient; null when the two are not friends.</summary>
+    public FriendProgressResponse? OfFriend(int viewerId, int friendId) => friendships.AreFriends(viewerId, friendId)
+        ? new FriendProgressResponse(
+            db.Users.Where(u => u.Id == friendId).Select(u => u.Username).Single(),
+            strength.Rank(friendId).Coefficient,
+            List(friendId))
+        : null;
 
     public bool Delete(int userId, int exerciseId) =>
         db.ExerciseProgress.Where(p => p.UserId == userId && p.ExerciseId == exerciseId).ExecuteDelete() > 0;

@@ -1,16 +1,10 @@
 using IronMindGym.Contracts;
-using IronMindGym.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Api;
 
 [Route("api/friends")]
-public class FriendsController(
-    IronMindDbContext db,
-    FriendshipService friendships,
-    WorkoutService workouts,
-    WorkoutSocialService social) : ApiController
+public class FriendsController(FriendshipService friendships, WorkoutSocialService social) : ApiController
 {
     [HttpGet]
     public FriendsOverview Index(string? search) => friendships.BuildIndex(UserId, search);
@@ -25,16 +19,8 @@ public class FriendsController(
     public ActionResult Remove(int userId) => friendships.Remove(UserId, userId) ? NoContent() : NotFound();
 
     [HttpGet("{friendId:int}/workouts/{sessionId:int}")]
-    public ActionResult<FriendWorkoutResponse> Workout(int friendId, int sessionId)
-    {
-        if (!friendships.AreFriends(UserId, friendId))
-            return NotFound();
-        var details = workouts.Details(friendId, sessionId, UserId);
-        if (details is null)
-            return NotFound();
-        var username = db.Users.AsNoTracking().Where(u => u.Id == friendId).Select(u => u.Username).First();
-        return new FriendWorkoutResponse(username, details);
-    }
+    public ActionResult<FriendWorkoutResponse> Workout(int friendId, int sessionId) =>
+        social.FriendWorkout(UserId, friendId, sessionId) is { } workout ? workout : NotFound();
 
     [HttpPut("{friendId:int}/workouts/{sessionId:int}/like")]
     public ActionResult SetLike(int friendId, int sessionId, LikeRequest request) =>

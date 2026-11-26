@@ -1,11 +1,21 @@
+using IronMindGym.Contracts;
 using IronMindGym.Data;
 using IronMindGym.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class WorkoutSocialService(IronMindDbContext db, TimeProvider clock, FriendshipService friendships)
+public class WorkoutSocialService(IronMindDbContext db, TimeProvider clock, FriendshipService friendships, WorkoutService workouts)
 {
     public const int MaxCommentLength = 500;
+
+    /// <summary>A friend's workout with its likes and comments; null unless the two are friends and the workout is the friend's.</summary>
+    public FriendWorkoutResponse? FriendWorkout(int viewerId, int friendId, int sessionId)
+    {
+        if (!friendships.AreFriends(viewerId, friendId) || workouts.Details(friendId, sessionId, viewerId) is not { } details)
+            return null;
+        return new FriendWorkoutResponse(db.Users.AsNoTracking().Where(u => u.Id == friendId).Select(u => u.Username).First(), details);
+    }
 
     public bool SetLike(int viewerId, int ownerId, int sessionId, bool like)
     {

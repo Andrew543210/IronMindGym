@@ -1,18 +1,14 @@
 using System.Text.Json;
 using IronMindGym.Contracts;
-using IronMindGym.Data;
-using IronMindGym.Localization;
-using IronMindGym.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Api;
 
 [Route("api/profile")]
-public class ProfileController(IronMindDbContext db, ProfileService profiles) : ApiController
+public class ProfileController(ProfileService profiles) : ApiController
 {
     private static readonly JsonSerializerOptions ExportJson = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
@@ -20,9 +16,7 @@ public class ProfileController(IronMindDbContext db, ProfileService profiles) : 
     public ProfileOverview Overview() => profiles.BuildOverview(UserId);
 
     [HttpGet("settings")]
-    public ProfileSettingsResponse Settings() => new(
-        profiles.BuildEdit(UserId),
-        db.SplitTypes.AsNoTracking().OrderBy(s => s.Id).Select(s => new OptionResponse(s.Id, Localized.Pick(s.Name, s.NameUk))).ToList());
+    public ProfileSettingsResponse Settings() => profiles.Settings(UserId);
 
     [HttpPut("settings")]
     public ActionResult SaveSettings(ProfileSettings request)
@@ -55,13 +49,7 @@ public class ProfileController(IronMindDbContext db, ProfileService profiles) : 
     [HttpPut("language")]
     public ActionResult SaveLanguage(LanguageRequest request)
     {
-        using var transaction = WriteLock.BeginForAthletes(db, UserId);
-        var profile = db.Profiles.FirstOrDefault(p => p.UserId == UserId);
-        if (profile is null)
-            db.Profiles.Add(profile = new Profile { UserId = UserId });
-        profile.Language = request.Language;
-        db.SaveChanges();
-        transaction.Commit();
+        profiles.SaveLanguage(UserId, request.Language);
         return NoContent();
     }
 }

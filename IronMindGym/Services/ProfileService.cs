@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, StrengthService strength, AchievementService achievements)
+public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, StrengthService strength, SetupService setup, AchievementService achievements)
 {
     public ProfileOverview BuildOverview(int userId)
     {
@@ -35,7 +35,21 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
                 .ToList());
     }
 
-    public ProfileSettings BuildEdit(int userId)
+    public ProfileSettingsResponse Settings(int userId) => new(BuildEdit(userId), setup.SplitTypes());
+
+    /// <summary>The interface language, kept so the athlete sees it again on another device.</summary>
+    public void SaveLanguage(int userId, string language)
+    {
+        using var transaction = WriteLock.BeginForAthletes(db, userId);
+        var profile = db.Profiles.FirstOrDefault(p => p.UserId == userId);
+        if (profile is null)
+            db.Profiles.Add(profile = new Profile { UserId = userId });
+        profile.Language = language;
+        db.SaveChanges();
+        transaction.Commit();
+    }
+
+    private ProfileSettings BuildEdit(int userId)
     {
         var user = db.Users.AsNoTracking().Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
         var bodyweightKg = db.WeightLogs.LatestWeighIn(userId)?.ValueKg;

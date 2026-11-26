@@ -1,21 +1,16 @@
 using IronMindGym.Contracts;
-using IronMindGym.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IronMindGym.Api;
 
 [Route("api/progress")]
-public class ProgressController(
-    IronMindDbContext db,
-    ExerciseProgressService progress,
-    FriendshipService friendships,
-    StrengthService strength) : ApiController
+public class ProgressController(ExerciseProgressService progress, ExerciseCatalog catalog) : ApiController
 {
     [HttpGet]
     public List<ExerciseProgressEntry> List() => progress.List(UserId);
 
     [HttpGet("catalog")]
-    public List<ExerciseCatalogItem> Catalog() => ExerciseCatalog.Items(db.Exercises);
+    public List<ExerciseCatalogItem> Catalog() => catalog.Items();
 
     [HttpGet("{exerciseId:int}")]
     public ActionResult<ProgressPair> Results(int exerciseId) => progress.Results(UserId, exerciseId) is { } pair ? pair : NoContent();
@@ -39,13 +34,6 @@ public class ProgressController(
     public ActionResult Delete(int exerciseId) => progress.Delete(UserId, exerciseId) ? NoContent() : NotFound();
 
     [HttpGet("/api/friends/{friendId:int}/progress")]
-    public ActionResult<FriendProgressResponse> Friend(int friendId)
-    {
-        if (!friendships.AreFriends(UserId, friendId))
-            return NotFound();
-        return new FriendProgressResponse(
-            db.Users.Where(u => u.Id == friendId).Select(u => u.Username).Single(),
-            strength.Rank(friendId).Coefficient,
-            progress.List(friendId));
-    }
+    public ActionResult<FriendProgressResponse> Friend(int friendId) =>
+        progress.OfFriend(UserId, friendId) is { } friend ? friend : NotFound();
 }

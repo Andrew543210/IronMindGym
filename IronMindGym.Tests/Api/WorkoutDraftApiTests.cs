@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
-using IronMindGym.Api;
 using IronMindGym.Contracts;
+using IronMindGym.Services;
 
 namespace IronMindGym.Tests.Api;
 
@@ -147,7 +147,7 @@ public class WorkoutDraftApiTests
         var response = await api.Put(Route, new
         {
             draftId = Guid.NewGuid(),
-            content = new { note = new string('x', WorkoutDraftController.MaxContentLength) }
+            content = new { note = new string('x', WorkoutDraftService.MaxContentLength) }
         });
 
         Assert.NotEmpty(await ApiClient.Errors(response));

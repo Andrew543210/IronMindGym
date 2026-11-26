@@ -11,7 +11,7 @@ public class WorkoutRecordTests
     private static WorkoutService Workouts(IronMindDbContext db)
     {
         var calendars = new AthleteCalendars(db, TimeProvider.System);
-        return new(db, TimeProvider.System, calendars, new PersonalRecordService(db), new AchievementService(db, calendars));
+        return new(db, TimeProvider.System, calendars, new ExerciseCatalog(db), new PersonalRecordService(db), new AchievementService(db, calendars));
     }
 
     private static int Save(TestApplication app, params (int Exercise, double Weight, int Reps, int Duration)[] sets) => app.Query(db =>

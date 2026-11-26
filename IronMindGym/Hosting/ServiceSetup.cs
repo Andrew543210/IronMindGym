@@ -40,6 +40,10 @@ public static class ServiceSetup
         services.AddScoped<FriendshipService>();
         services.AddScoped<NutritionJournalService>();
         services.AddScoped<AchievementService>();
+        services.AddScoped<AccountService>();
+        services.AddScoped<SetupService>();
+        services.AddScoped<WorkoutDraftService>();
+        services.AddScoped<ExerciseCatalog>();
         services.AddSingleton<NutritionAdviceService>();
         return services;
     }
