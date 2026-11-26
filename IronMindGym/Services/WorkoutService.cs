@@ -160,26 +160,47 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
     /// Saves a finished workout and recalculates the personal records and awards it affects.
     /// A retry with the same draft id returns the workout saved by the first request.
     /// </summary>
-    public int Save(int currentUserId, SaveWorkoutRequest workout)
+    public int Save(int userId, SaveWorkoutRequest workout)
+    {
+        var sets = CheckWorkout(workout);
+        using var transaction = WriteLock.BeginForAthletes(db, userId);
+        if (workout.DraftId is { } draftId)
+        {
+            // A retried save returns the workout it already made; otherwise the draft is replaced by the workout.
+            var savedId = db.WorkoutSessions.Where(s => s.UserId == userId && s.DraftId == draftId).Select(s => (int?)s.Id).FirstOrDefault();
+            if (savedId.HasValue)
+                return savedId.Value;
+            db.WorkoutDrafts.Where(d => d.UserId == userId && d.DraftId == draftId).ExecuteDelete();
+        }
+        var session = NewSession(userId, workout, sets);
+        db.WorkoutSessions.Add(session);
+        db.SaveChanges();
+        records.Recalculate(userId, session.PerformedExercises.Select(p => p.ExerciseId).Distinct());
+        db.SaveChanges();
+        achievements.AwardEarned(userId);
+        transaction.Commit();
+        return session.Id;
+    }
+
+    private List<(WorkoutSetInput Input, TrackedResult Result)> CheckWorkout(SaveWorkoutRequest workout)
     {
         if (workout.Sets is null || workout.Sets.Count is < 1 or > 200 || workout.Sets.Any(s => s is null))
             throw new DomainValidationException("Add between 1 and 200 sets before saving.", "Sets");
-        var checkedSets = CheckSets(workout.Sets);
+        var sets = CheckSets(workout.Sets);
         if (workout.SplitDayId.HasValue && !db.SplitDays.Any(d => d.Id == workout.SplitDayId))
             throw new DomainValidationException("Choose a valid training day.", "SplitDayId");
+        return sets;
+    }
 
-        using var transaction = WriteLock.BeginForAthletes(db, currentUserId);
-        if (workout.DraftId.HasValue)
-        {
-            var savedId = db.WorkoutSessions.Where(s => s.UserId == currentUserId && s.DraftId == workout.DraftId)
-                .Select(s => (int?)s.Id).FirstOrDefault();
-            if (savedId.HasValue)
-                return savedId.Value;
-            db.WorkoutDrafts.Where(d => d.UserId == currentUserId && d.DraftId == workout.DraftId).ExecuteDelete();
-        }
+    /// <summary>
+    /// Consecutive sets of one exercise form one block, so supersets and circuits keep their logged order.
+    /// Set numbers count per exercise across its blocks.
+    /// </summary>
+    private WorkoutSession NewSession(int userId, SaveWorkoutRequest workout, List<(WorkoutSetInput Input, TrackedResult Result)> sets)
+    {
         var session = new WorkoutSession
         {
-            UserId = currentUserId,
+            UserId = userId,
             SessionDate = clock.UtcNow(),
             DraftId = workout.DraftId,
             DurationMinutes = workout.DurationMinutes,
@@ -187,43 +208,28 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
             Rating = workout.ReviewRating,
             Notes = string.IsNullOrWhiteSpace(workout.ReviewComment) ? null : workout.ReviewComment.Trim()
         };
-
-        // Keep contiguous blocks so supersets and circuits retain their logged order.
-        PerformedExercise? performedExercise = null;
+        PerformedExercise? block = null;
         var setNumbers = new Dictionary<int, int>();
-        foreach (var (set, result) in checkedSets)
+        foreach (var (set, result) in sets)
         {
-            if (performedExercise?.ExerciseId != set.ExerciseId)
+            if (block?.ExerciseId != set.ExerciseId)
             {
-                performedExercise = new PerformedExercise
-                {
-                    ExerciseId = set.ExerciseId,
-                    WorkoutSession = session,
-                    OrderInWorkout = session.PerformedExercises.Count + 1
-                };
-                session.PerformedExercises.Add(performedExercise);
+                block = new PerformedExercise { ExerciseId = set.ExerciseId, WorkoutSession = session, OrderInWorkout = session.PerformedExercises.Count + 1 };
+                session.PerformedExercises.Add(block);
             }
-            setNumbers.TryGetValue(set.ExerciseId, out var setNumber);
-            setNumbers[set.ExerciseId] = ++setNumber;
-            performedExercise.Sets.Add(new WorkoutSet
+            setNumbers[set.ExerciseId] = setNumbers.GetValueOrDefault(set.ExerciseId) + 1;
+            block.Sets.Add(new WorkoutSet
             {
-                SetNumber = setNumber,
+                SetNumber = setNumbers[set.ExerciseId],
+                SetTypeId = set.SetTypeId,
                 WeightKg = result.WeightKg,
                 Reps = result.Reps,
-                SetTypeId = set.SetTypeId,
                 DurationSeconds = result.DurationSeconds,
                 Intensity = result.Intensity,
                 RestSeconds = set.RestSeconds
             });
         }
-        db.WorkoutSessions.Add(session);
-
-        db.SaveChanges();
-        records.Recalculate(currentUserId, checkedSets.Select(s => s.Input.ExerciseId).Distinct());
-        db.SaveChanges();
-        achievements.AwardEarned(currentUserId);
-        transaction.Commit();
-        return session.Id;
+        return session;
     }
 
     /// <summary>Checks every set against its exercise and returns the values each one keeps.</summary>

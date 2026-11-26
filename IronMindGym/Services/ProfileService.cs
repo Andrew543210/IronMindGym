@@ -146,39 +146,28 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
     }
 
     /// <summary>Everything the athlete recorded, without credentials, for keeping a personal copy.</summary>
-    public object Export(int userId) => new
-    {
-        ExportedAtUtc = calendars.For(userId).UtcNow,
-        Account = db.Users.Where(u => u.Id == userId)
-            .Select(u => new { u.Username, u.Email, Age = u.Profile == null ? 0 : u.Profile.Age, HeightCm = u.Profile == null ? null : u.Profile.HeightCm }).Single(),
-        Weight = db.WeightLogs.Where(w => w.UserId == userId).OrderBy(w => w.Date).Select(w => new { w.Date, w.ValueKg }).ToList(),
-        Nutrition = db.DailyNutritions.Where(n => n.UserId == userId).OrderBy(n => n.Date)
-            .Select(n => new { n.Date, n.CaloriesKcal, n.ProteinG, n.FatG, n.CarbsG }).ToList(),
-        Workouts = db.WorkoutSessions.Where(w => w.UserId == userId).OrderBy(w => w.SessionDate).Select(w => new
-        {
-            Name = w.SplitDay == null ? "Training Day" : w.SplitDay.WorkoutName,
+    public DataExport Export(int userId) => new(
+        calendars.For(userId).UtcNow,
+        db.Users.Where(u => u.Id == userId)
+            .Select(u => new ExportedAccount(u.Username, u.Email, u.Profile == null ? 0 : u.Profile.Age, u.Profile == null ? null : u.Profile.HeightCm)).Single(),
+        db.WeightLogs.Where(w => w.UserId == userId).OrderBy(w => w.Date).Select(w => new ExportedWeighIn(w.Date, w.ValueKg)).ToList(),
+        db.DailyNutritions.Where(n => n.UserId == userId).OrderBy(n => n.Date)
+            .Select(n => new ExportedNutritionDay(n.Date, n.CaloriesKcal, n.ProteinG, n.FatG, n.CarbsG)).ToList(),
+        db.WorkoutSessions.Where(w => w.UserId == userId).OrderBy(w => w.SessionDate).Select(w => new ExportedWorkout(
+            w.SplitDay == null ? "Training Day" : w.SplitDay.WorkoutName,
             w.SessionDate,
             w.DurationMinutes,
-            Exercises = w.PerformedExercises.OrderBy(e => e.OrderInWorkout).Select(e => new
-            {
+            w.Rating,
+            w.Notes,
+            w.PerformedExercises.OrderBy(e => e.OrderInWorkout).Select(e => new ExportedExercise(
                 e.Exercise.Name,
-                Sets = e.Sets.OrderBy(s => s.SetNumber).Select(s => new { s.SetNumber, s.WeightKg, s.Reps, s.DurationSeconds, s.Intensity, s.RestSeconds })
-            })
-        }).ToList(),
-        Progress = db.ExerciseProgress.Where(p => p.UserId == userId).Select(p => new
-        {
-            p.Exercise.Name,
-            p.InitialWeightKg,
-            p.CurrentWeightKg,
-            p.InitialReps,
-            p.CurrentReps,
-            p.InitialDurationSeconds,
-            p.CurrentDurationSeconds,
-            p.InitialIntensity,
-            p.CurrentIntensity
-        }).ToList(),
-        Goals = db.UserGoals.Where(g => g.UserId == userId).Select(g => new { g.Title, g.Deadline, g.IsCompleted }).ToList()
-    };
+                e.Sets.OrderBy(s => s.SetNumber)
+                    .Select(s => new ExportedSet(s.SetNumber, s.SetType.Name, s.WeightKg, s.Reps, s.DurationSeconds, s.Intensity, s.RestSeconds))
+                    .ToList())).ToList())).ToList(),
+        db.ExerciseProgress.Where(p => p.UserId == userId).OrderBy(p => p.Exercise.Name).Select(p => new ExportedProgress(
+            p.Exercise.Name, p.InitialWeightKg, p.CurrentWeightKg, p.InitialReps, p.CurrentReps,
+            p.InitialDurationSeconds, p.CurrentDurationSeconds, p.InitialIntensity, p.CurrentIntensity)).ToList(),
+        db.UserGoals.Where(g => g.UserId == userId).OrderBy(g => g.Deadline).Select(g => new ExportedGoal(g.Title, g.Deadline, g.IsCompleted)).ToList());
 
     /// <summary>The settings form always sends the bodyweight; only a real change is today's weigh-in.</summary>
     private void RecordWeightIfChanged(int userId, double weightKg, DateOnly today)

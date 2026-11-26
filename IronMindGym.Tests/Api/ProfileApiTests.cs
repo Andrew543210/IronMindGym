@@ -180,6 +180,8 @@ public class ProfileApiTests
         await ApiClient.Ok(await owner.Put($"/api/nutrition/days/{Day(today)}", new { caloriesKcal = 2100, proteinG = 120, fatG = 60, carbsG = 250 }));
         await ApiClient.Ok(await other.Put($"/api/nutrition/days/{Day(today)}", new { caloriesKcal = 1500, proteinG = 90, fatG = 50, carbsG = 150 }));
         await ApiClient.Ok(await owner.Post("/api/goals", new { title = "Squat 120 kg", deadline = today.AddMonths(2) }));
+        var bench = app.Query(db => db.Exercises.Single(e => e.Name == "Flat Bench Press").Id);
+        await ApiClient.Ok(await owner.Post("/api/workouts", Journal.Workout((bench, 100, 5))));
 
         var response = await owner.Http.GetAsync("/api/profile/export");
         await ApiClient.Ok(response);
@@ -191,6 +193,8 @@ public class ProfileApiTests
         Assert.Equal("athlete@example.com", export.GetProperty("account").GetProperty("email").GetString());
         Assert.Equal(2100, Assert.Single(export.GetProperty("nutrition").EnumerateArray()).GetProperty("caloriesKcal").GetDouble());
         Assert.Equal("Squat 120 kg", Assert.Single(export.GetProperty("goals").EnumerateArray()).GetProperty("title").GetString());
+        var set = Assert.Single(Assert.Single(Assert.Single(export.GetProperty("workouts").EnumerateArray()).GetProperty("exercises").EnumerateArray()).GetProperty("sets").EnumerateArray());
+        Assert.Equal((100, 5, app.Query(db => db.SetTypes.Find(1)!.Name)), (set.GetProperty("weightKg").GetDouble(), set.GetProperty("reps").GetInt32(), set.GetProperty("setType").GetString()));
         Assert.DoesNotContain("other@example.com", text);
         Assert.DoesNotContain("passwordHash", text, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("securityStamp", text, StringComparison.OrdinalIgnoreCase);
