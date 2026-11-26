@@ -121,15 +121,9 @@ public class FriendshipService(IronMindDbContext db)
         AchievementEngine.AssignAchievements(db, otherId);
     }
 
-    public bool Remove(int userId, int otherId)
-    {
-        var relationship = Find(userId, otherId);
-        if (relationship is null)
-            return false;
-        db.Friendships.Remove(relationship);
-        db.SaveChanges();
-        return true;
-    }
+    public bool Remove(int userId, int otherId) => db.Friendships
+        .Where(f => f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId))
+        .ExecuteDelete() > 0;
 
     /// <summary>Usernames may contain "_", which LIKE would otherwise treat as a wildcard.</summary>
     private static string EscapeLike(string text) => text

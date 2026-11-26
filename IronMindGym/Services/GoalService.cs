@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using IronMindGym.Data;
 using IronMindGym.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
@@ -20,23 +21,10 @@ public class GoalService(IronMindDbContext db)
         db.SaveChanges();
     }
 
-    public bool SetCompleted(int userId, int id, bool completed)
-    {
-        var goal = db.UserGoals.FirstOrDefault(g => g.Id == id && g.UserId == userId);
-        if (goal is null)
-            return false;
-        goal.IsCompleted = completed;
-        db.SaveChanges();
-        return true;
-    }
+    public bool SetCompleted(int userId, int id, bool completed) =>
+        db.UserGoals.Where(g => g.Id == id && g.UserId == userId)
+            .ExecuteUpdate(goal => goal.SetProperty(g => g.IsCompleted, completed)) > 0;
 
-    public bool Delete(int userId, int id)
-    {
-        var goal = db.UserGoals.FirstOrDefault(g => g.Id == id && g.UserId == userId);
-        if (goal is null)
-            return false;
-        db.UserGoals.Remove(goal);
-        db.SaveChanges();
-        return true;
-    }
+    public bool Delete(int userId, int id) =>
+        db.UserGoals.Where(g => g.Id == id && g.UserId == userId).ExecuteDelete() > 0;
 }

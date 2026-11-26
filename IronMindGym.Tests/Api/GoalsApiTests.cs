@@ -30,6 +30,21 @@ public class GoalsApiTests
     }
 
     [Fact]
+    public async Task ADoubleTapOnDeleteRemovesTheGoalOnceAndFindsNothingTheSecondTime()
+    {
+        using var app = new TestApplication();
+        using var api = app.Api();
+        await api.Register();
+        await ApiClient.Ok(await api.Post("/api/goals", new { title = "Run 10 km", deadline = InTwoMonths() }));
+        var goal = Assert.Single(await api.Get<List<GoalResponse>>("/api/goals"));
+
+        var responses = await Task.WhenAll(api.Delete($"/api/goals/{goal.Id}"), api.Delete($"/api/goals/{goal.Id}"));
+
+        Assert.Equal([HttpStatusCode.NoContent, HttpStatusCode.NotFound], responses.Select(r => r.StatusCode).Order());
+        Assert.Equal(HttpStatusCode.NotFound, (await api.Put($"/api/goals/{goal.Id}/completed", new { completed = true })).StatusCode);
+    }
+
+    [Fact]
     public async Task GoalsNeedATitleAndADeadlineWithinFiveYears()
     {
         using var app = new TestApplication();

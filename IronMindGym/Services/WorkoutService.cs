@@ -239,16 +239,15 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
         return ["Training Day"];
     }
 
+    /// <summary>A repeated delete, such as a double tap, finds nothing to delete and reports false.</summary>
     public bool Delete(int userId, int sessionId)
     {
-        var session = db.WorkoutSessions.Include(s => s.PerformedExercises)
-            .FirstOrDefault(s => s.Id == sessionId && s.UserId == userId);
-        if (session is null)
-            return false;
-        var exerciseIds = session.PerformedExercises.Select(e => e.ExerciseId).Distinct().ToList();
         using var transaction = WriteLock.BeginForAthletes(db, userId);
-        db.WorkoutSessions.Remove(session);
-        db.SaveChanges();
+        var exerciseIds = db.PerformedExercises
+            .Where(p => p.WorkoutSessionId == sessionId && p.WorkoutSession.UserId == userId)
+            .Select(p => p.ExerciseId).Distinct().ToList();
+        if (db.WorkoutSessions.Where(s => s.Id == sessionId && s.UserId == userId).ExecuteDelete() == 0)
+            return false;
         records.Recalculate(userId, exerciseIds);
         db.SaveChanges();
         transaction.Commit();

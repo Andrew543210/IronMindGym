@@ -123,8 +123,9 @@ public class WorkoutsApiTests
 
         Assert.Equal(HttpStatusCode.NotFound, (await stranger.Delete($"/api/workouts/{heavier}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await stranger.Http.GetAsync($"/api/workouts/{heavier}")).StatusCode);
-        await ApiClient.Ok(await owner.Delete($"/api/workouts/{heavier}"));
+        var responses = await Task.WhenAll(owner.Delete($"/api/workouts/{heavier}"), owner.Delete($"/api/workouts/{heavier}"));
 
+        Assert.Equal([HttpStatusCode.NoContent, HttpStatusCode.NotFound], responses.Select(r => r.StatusCode).Order());
         Assert.Equal(60, app.Query(db => db.PersonalRecords.Single().MaxWeightKg));
     }
 
