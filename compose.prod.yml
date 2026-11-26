@@ -24,7 +24,8 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     networks:
       gym:
         ipv4_address: 172.28.0.2

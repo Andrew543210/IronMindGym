@@ -32,6 +32,13 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=ironmind;Username=ironmind;Password=${POSTGRES_PASSWORD:-ironmind-local}
       DataProtection__KeyDirectory: /app/keys
+    healthcheck:
+      # The runtime image has no curl, so the application asks its own /healthz endpoint.
+      test: ['CMD', 'dotnet', 'IronMindGym.dll', '--check-health']
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
     ports:
       - '127.0.0.1:${APP_PORT:-8080}:8080'
     volumes:

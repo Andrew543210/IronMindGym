@@ -48,6 +48,18 @@ public sealed class HostingTests : IDisposable
     }
 
     [Fact]
+    public async Task TheHealthEndpointReportsTheDatabaseWithoutASession()
+    {
+        using var app = new TestApplication(webRoot);
+        using var browser = app.Browser();
+
+        var response = await browser.GetAsync("/healthz");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("Healthy", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task UnknownApiRoutesAreNotFoundInsteadOfThePage()
     {
         using var app = new TestApplication(webRoot);

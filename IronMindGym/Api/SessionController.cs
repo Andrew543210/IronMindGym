@@ -29,7 +29,7 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
     public ActionResult<SessionResponse> Current() => User.GetUserId() is int userId ? Describe(userId) : NoContent();
 
     [HttpPost("login")]
-    [EnableRateLimiting("authentication")]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     public async Task<ActionResult<SessionResponse>> Login(LoginRequest request)
     {
         var email = request.Email.Trim();
@@ -54,7 +54,7 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
     }
 
     [HttpPost("register")]
-    [EnableRateLimiting("authentication")]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     public async Task<ActionResult<SessionResponse>> Register(RegisterRequest request)
     {
         var email = request.Email.Trim();
@@ -113,7 +113,7 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
             new(ClaimTypes.NameIdentifier, user.Id.ToString(CultureInfo.InvariantCulture)),
             new(ClaimTypes.Name, user.Username),
             // Changing the password changes the stamp, which signs out every other session.
-            new("SecurityStamp", user.SecurityStamp)
+            new(SessionClaims.SecurityStamp, user.SecurityStamp)
         };
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties

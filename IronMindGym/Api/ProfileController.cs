@@ -33,7 +33,7 @@ public class ProfileController(IronMindDbContext db, ProfileService profiles) : 
     }
 
     [HttpPut("password")]
-    [EnableRateLimiting("authentication")]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     public async Task<ActionResult> ChangePassword(ChangePasswordRequest request)
     {
         profiles.ChangePassword(UserId, request);

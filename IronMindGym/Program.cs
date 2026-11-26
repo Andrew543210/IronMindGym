@@ -1,17 +1,14 @@
 using System.Globalization;
 using System.Net;
-using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
-using IronMindGym.Api;
 using IronMindGym.Data;
+using IronMindGym.Hosting;
 using IronMindGym.Seed;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.EntityFrameworkCore;
+
+if (args is [HealthProbe.Argument])
+    return await HealthProbe.Run();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,69 +21,8 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     if (IPAddress.TryParse(builder.Configuration["ReverseProxy:KnownProxy"], out var proxy))
         options.KnownProxies.Add(proxy);
 });
-
-builder.Services.AddControllers(options =>
-    {
-        options.Filters.Add<CsrfProtectionFilter>();
-        options.Filters.Add<DomainExceptionFilter>();
-    })
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddProblemDetails();
-builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
-builder.Services.AddDbContext<IronMindDbContext>(options => options.UseNpgsql(
-    builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException(
-        "Set ConnectionStrings:DefaultConnection to a PostgreSQL database. See README for the local Docker database."),
-    npgsql => npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
-
-builder.Services.AddAuthorization(options => options.FallbackPolicy =
-    new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.ExpireTimeSpan = TimeSpan.FromDays(30);
-        options.SlidingExpiration = true;
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
-            ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
-        options.Events.OnRedirectToLogin = context => Status(context.Response, StatusCodes.Status401Unauthorized);
-        options.Events.OnRedirectToAccessDenied = context => Status(context.Response, StatusCodes.Status403Forbidden);
-        // A changed password changes the security stamp, which ends every other session of the account.
-        options.Events.OnValidatePrincipal = async context =>
-        {
-            var userId = context.Principal?.GetUserId();
-            var db = context.HttpContext.RequestServices.GetRequiredService<IronMindDbContext>();
-            var stamp = userId is null ? null : await db.Users.Where(u => u.Id == userId).Select(u => u.SecurityStamp).FirstOrDefaultAsync();
-            if (stamp is null || context.Principal?.FindFirst("SecurityStamp")?.Value != stamp)
-            {
-                context.RejectPrincipal();
-                await context.HttpContext.SignOutAsync();
-            }
-        };
-    });
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddPolicy("authentication", context => RateLimitPartition.GetFixedWindowLimiter(
-        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
-});
-
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<CurrentCalendar>();
-builder.Services.AddScoped<DashboardService>();
-builder.Services.AddScoped<StatisticsService>();
-builder.Services.AddScoped<StrengthService>();
-builder.Services.AddScoped<GoalService>();
-builder.Services.AddScoped<ExerciseProgressService>();
-builder.Services.AddScoped<ProfileService>();
-builder.Services.AddScoped<WorkoutService>();
-builder.Services.AddScoped<PersonalRecordService>();
-builder.Services.AddScoped<WorkoutSocialService>();
-builder.Services.AddScoped<FriendshipService>();
-builder.Services.AddScoped<NutritionJournalService>();
-builder.Services.AddSingleton<AvatarService>();
-builder.Services.AddSingleton<NutritionAdviceService>();
+builder.Services.AddIronMindServices(builder.Configuration);
+builder.Services.AddSessionSecurity(builder.Environment);
 
 var app = builder.Build();
 
@@ -111,15 +47,7 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = [new CultureInfo("en"), new CultureInfo("uk")],
     RequestCultureProviders = [new AcceptLanguageHeaderRequestCultureProvider()]
 });
-app.Use(async (context, next) =>
-{
-    context.Response.Headers.XContentTypeOptions = "nosniff";
-    context.Response.Headers.XFrameOptions = "DENY";
-    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    // The client is one bundle from this origin; Bootstrap's icons are data: images.
-    context.Response.Headers.ContentSecurityPolicy = ContentSecurityPolicy;
-    await next();
-});
+app.UseSecurityHeaders();
 
 // The React client is built into wwwroot. Its hashed bundles never change, while index.html is always revalidated.
 var clientFiles = new StaticFileOptions
@@ -133,19 +61,10 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks(HealthProbe.Path).AllowAnonymous();
 app.MapFallback("/api/{**path}", () => Results.NotFound()).AllowAnonymous();
 app.MapFallbackToFile("index.html", clientFiles).AllowAnonymous();
-app.Run();
+await app.RunAsync();
+return 0;
 
-public partial class Program
-{
-    private const string ContentSecurityPolicy =
-        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; " +
-        "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
-
-    private static Task Status(HttpResponse response, int statusCode)
-    {
-        response.StatusCode = statusCode;
-        return Task.CompletedTask;
-    }
-}
+public partial class Program;

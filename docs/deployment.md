@@ -12,6 +12,8 @@ Requirements: a Linux server with Docker Engine and Compose, a hostname whose DN
 
 `compose.prod.yml` adds Caddy, requires both values from `.env` and removes the local ports, so only 80 and 443 are reachable from outside. PostgreSQL is reachable only from the application container. Caddy obtains the certificate, terminates HTTPS, compresses responses and forwards to the internal application port. The application trusts forwarded headers only from the configured proxy address; if you change the Compose network, update `ReverseProxy__KnownProxy` to the proxy's new address.
 
+The application reports its state at `/healthz`, which answers `Healthy` when the database is reachable. Compose checks it every 30 seconds with `dotnet IronMindGym.dll --check-health`, since the runtime image has no curl, and Caddy starts only once the application is healthy. `docker compose ps` shows the result.
+
 The application container runs as a non-root user. `db-data` stores the database and `gym-keys` stores data protection keys. Keep both volumes across upgrades; Caddy's volumes keep its certificates. Do not run `docker compose down --volumes` when you want to keep data.
 
 Demo accounts are disabled in Production. The connection string and key path come from environment variables; no secret is committed.
