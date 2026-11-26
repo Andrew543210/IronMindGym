@@ -26,30 +26,16 @@ public class ProgressController(
     [HttpPut("{exerciseId:int}")]
     public ActionResult SaveResults(int exerciseId, ProgressResultsRequest request)
     {
-        try
-        {
-            progress.SaveResults(UserId, new ProgressPair(exerciseId,
-                request.InitialValue1!.Value, request.InitialValue2!.Value, request.CurrentValue1!.Value, request.CurrentValue2!.Value));
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return Rejected(ex.Message);
-        }
+        progress.SaveResults(UserId, new ProgressPair(exerciseId,
+            request.InitialValue1!.Value, request.InitialValue2!.Value, request.CurrentValue1!.Value, request.CurrentValue2!.Value));
+        return NoContent();
     }
 
     [HttpPut("{exerciseId:int}/current")]
     public ActionResult SaveCurrent(int exerciseId, CurrentResultRequest request)
     {
-        try
-        {
-            progress.SaveCurrent(UserId, exerciseId, request.WeightKg, request.Reps, request.DurationSeconds, request.Intensity);
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return Rejected(ex.Message);
-        }
+        progress.SaveCurrent(UserId, exerciseId, request.WeightKg, request.Reps, request.DurationSeconds, request.Intensity);
+        return NoContent();
     }
 
     [HttpDelete("{exerciseId:int}")]

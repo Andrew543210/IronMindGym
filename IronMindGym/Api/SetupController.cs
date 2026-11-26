@@ -19,7 +19,7 @@ public class SetupController(IronMindDbContext db) : ApiController
     public ActionResult Save(SetupRequest request)
     {
         if (!db.SplitTypes.Any(s => s.Id == request.SplitTypeId))
-            return Rejected("Choose a valid training split.", nameof(request.SplitTypeId));
+            throw new DomainValidationException("Choose a valid training split.", nameof(request.SplitTypeId));
 
         var userId = UserId;
         using var transaction = WriteLock.BeginForAthletes(db, userId);

@@ -32,8 +32,12 @@ Forwarded headers (only from the configured proxy) → exception handler and HST
 - Sign-in issues an HttpOnly, `SameSite=Lax` cookie (Secure outside Development) that lasts 30 days with sliding expiration. Passwords are hashed with ASP.NET Core's salted `PasswordHasher` and need at least 10 characters.
 - The cookie carries a security stamp. Each request compares it with the stored one, so changing the password ends every other session.
 - Every API endpoint requires a signed-in user except the session endpoints. The client files and the `index.html` fallback are public. An unauthenticated API call gets `401` instead of a redirect.
-- Every request that changes data must send the antiforgery token in `X-CSRF-TOKEN`. The client gets it from `GET /api/session/csrf` after signing in or out. A refused token returns an empty `400`; the client then fetches a new token and retries once.
+- Every request that changes data must send the antiforgery token in `X-CSRF-TOKEN`. The client gets it from `GET /api/session/csrf` after signing in or out. A refused token returns `400` with the problem type `urn:ironmind:problem:csrf-token`; the client then fetches a new token and retries once. Any other `400` is a refused value and is never retried.
 - Login, registration and password changes share a fixed-window limit of 10 requests per minute per IP address, which also stops guessing the current password from a stolen session.
+
+### Errors
+
+Services and controllers report a refusal by throwing `DomainValidationException` (answered `400` with validation problem details, the message listed under its field) or `DomainConflictException` (answered `409` with the message as the title). `DomainExceptionFilter` is the only place that turns them into responses, so a refused value and a failed model validation look the same to the client. Any other exception is a server error and reaches the exception handler.
 
 ### Data and concurrency
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, api } from './api';
+import { ApiError, CSRF_PROBLEM, api } from './api';
 
 function json(status: number, body: unknown, contentType = 'application/json') {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': contentType } });
@@ -16,6 +16,8 @@ describe('api', () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).messages).toEqual(['Choose a valid training split.']);
+    // A refused value is not a token problem, so the request is not sent again.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     const [, init] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect((init.headers as Record<string, string>)['X-CSRF-TOKEN']).toBe('token-1');
   });
@@ -23,7 +25,7 @@ describe('api', () => {
   it('retries once with a new token when the old one was refused', async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(json(200, { token: 'old' }))
-      .mockResolvedValueOnce(new Response(null, { status: 400 }))
+      .mockResolvedValueOnce(json(400, { type: CSRF_PROBLEM, title: 'The request could not be verified.' }, 'application/problem+json'))
       .mockResolvedValueOnce(json(200, { token: 'new' }))
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
     vi.stubGlobal('fetch', fetchMock);

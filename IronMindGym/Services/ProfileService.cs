@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using IronMindGym.Contracts;
 using IronMindGym.Data;
 using IronMindGym.Localization;
@@ -65,14 +64,14 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
     public void Update(int userId, ProfileSettings settings)
     {
         if (!db.SplitTypes.Any(s => s.Id == settings.SplitTypeId))
-            throw new ValidationException("Choose a valid training split.");
+            throw new DomainValidationException("Choose a valid training split.", "SplitTypeId");
         var timeZone = string.IsNullOrWhiteSpace(settings.TimeZone) ? null : settings.TimeZone.Trim();
         if (timeZone is not null && !AthleteCalendar.TryFindZone(timeZone, out _))
-            throw new ValidationException("Enter a time zone such as Europe/Kyiv, or leave it empty to use UTC.");
+            throw new DomainValidationException("Enter a time zone such as Europe/Kyiv, or leave it empty to use UTC.", "TimeZone");
         var username = settings.Username.Trim();
         using var transaction = WriteLock.BeginForAthletes(db, userId);
         if (db.Users.Any(u => u.Id != userId && u.Username == username))
-            throw new ValidationException("This username is already taken.");
+            throw new DomainValidationException("This username is already taken.", "Username");
         var user = db.Users.Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
         user.Username = username;
         user.Profile ??= new Profile { UserId = userId };
@@ -94,7 +93,15 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
             db.WorkoutPlans.Add(plan = new WorkoutPlan { UserId = userId });
         plan.SplitTypeId = settings.SplitTypeId;
         plan.WorkoutsPerWeek = settings.WorkoutsPerWeek;
-        db.SaveChanges();
+        try
+        {
+            db.SaveChanges();
+        }
+        catch (DbUpdateException ex) when (DbErrors.IsUniqueViolation(ex))
+        {
+            // Another account took the username between the check above and the update.
+            throw new DomainValidationException("This username is already taken.", "Username");
+        }
         AchievementEngine.AssignAchievements(db, userId);
         transaction.Commit();
     }
@@ -104,10 +111,10 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
     {
         var today = calendar.Today;
         if (date > today || date < today.AddYears(-5))
-            throw new ValidationException("Choose a date within the last five years, up to today.");
+            throw new DomainValidationException("Choose a date within the last five years, up to today.", "Date");
         using var transaction = WriteLock.BeginForAthletes(db, userId);
         if (!AthleteSetup.IsComplete(db, userId))
-            throw new ValidationException("Complete your profile first.");
+            throw new DomainValidationException("Complete your profile first.");
         UpsertWeight(userId, weightKg, date);
         db.SaveChanges();
         transaction.Commit();
@@ -118,7 +125,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
     {
         var user = db.Users.Single(u => u.Id == userId);
         if (!PasswordHashUtility.Verify(request.CurrentPassword, user.PasswordHash))
-            throw new ValidationException("Current password is incorrect.");
+            throw new DomainValidationException("Current password is incorrect.", "CurrentPassword");
         user.PasswordHash = PasswordHashUtility.Hash(request.NewPassword);
         user.SecurityStamp = Guid.NewGuid().ToString("N");
         db.SaveChanges();

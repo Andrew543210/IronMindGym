@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using IronMindGym.Contracts;
 using IronMindGym.Data;
 using IronMindGym.Models;
@@ -33,7 +32,7 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
     public void Save(int userId, DateOnly day, double caloriesKcal, double proteinG, double fatG, double carbsG)
     {
         if (day > calendar.Today || day < calendar.Today.AddYears(-5))
-            throw new ValidationException("Choose a date within the last five years, up to today.");
+            throw new DomainValidationException("Choose a date within the last five years, up to today.", "Date");
         using var transaction = WriteLock.BeginForAthletes(db, userId);
         var log = db.DailyNutritions.FirstOrDefault(n => n.UserId == userId && n.Date == day);
         if (log is null)

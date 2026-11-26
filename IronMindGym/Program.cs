@@ -25,7 +25,11 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         options.KnownProxies.Add(proxy);
 });
 
-builder.Services.AddControllers(options => options.Filters.Add<CsrfProtectionFilter>())
+builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<CsrfProtectionFilter>();
+        options.Filters.Add<DomainExceptionFilter>();
+    })
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");

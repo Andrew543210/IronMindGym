@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using IronMindGym.Api;
 using IronMindGym.Services;
 
@@ -42,6 +43,8 @@ public class SessionApiTests
         await api.Register();
         var signedIn = await api.Http.PostAsync("/api/session/logout", null);
         Assert.Equal(HttpStatusCode.BadRequest, signedIn.StatusCode);
+        var problem = await signedIn.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(CsrfProtectionFilter.ProblemType, problem.GetProperty("type").GetString());
         Assert.Equal("athlete", (await api.Get<SessionResponse>("/api/session")).Username);
     }
 

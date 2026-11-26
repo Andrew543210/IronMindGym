@@ -35,7 +35,7 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
         var email = request.Email.Trim();
         var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
         if (user is null || !PasswordHashUtility.Verify(request.Password, user.PasswordHash))
-            return Rejected("Invalid email or password.");
+            throw new DomainValidationException("Invalid email or password.");
         await SignIn(user, request.RememberMe);
         return Describe(user.Id);
     }
@@ -47,9 +47,9 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
         var email = request.Email.Trim();
         var username = request.Username.Trim();
         if (db.Users.Any(u => u.Email == email))
-            return Rejected("A user with this email already exists.", nameof(request.Email));
+            throw new DomainValidationException("A user with this email already exists.", nameof(request.Email));
         if (db.Users.Any(u => u.Username == username))
-            return Rejected("This username is already taken.", nameof(request.Username));
+            throw new DomainValidationException("This username is already taken.", nameof(request.Username));
 
         var user = new User
         {
@@ -71,7 +71,7 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
         catch (DbUpdateException ex) when (DbErrors.IsUniqueViolation(ex))
         {
             // A parallel registration took the email or username between the checks above and the insert.
-            return Rejected("Email or username is already registered.");
+            throw new DomainValidationException("Email or username is already registered.");
         }
         await SignIn(user, rememberMe: false);
         return Describe(user.Id);

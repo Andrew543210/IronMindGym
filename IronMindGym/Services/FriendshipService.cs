@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using IronMindGym.Contracts;
 using IronMindGym.Data;
 using IronMindGym.Localization;
@@ -70,7 +69,7 @@ public class FriendshipService(IronMindDbContext db)
     public RequestResult SendRequest(int userId, int otherId)
     {
         if (userId == otherId || !db.Users.Any(u => u.Id == otherId))
-            throw new ValidationException("Choose another registered user.");
+            throw new DomainValidationException("Choose another registered user.");
         using var transaction = WriteLock.BeginForAthletes(db, userId, otherId);
         var relationship = Find(userId, otherId);
         RequestResult result;

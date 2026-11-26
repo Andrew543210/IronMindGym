@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using IronMindGym.Data;
 using IronMindGym.Models;
 
@@ -29,7 +28,7 @@ public class WorkoutSocialService(IronMindDbContext db, FriendshipService friend
             return false;
         var comment = (text ?? string.Empty).Trim();
         if (comment.Length > MaxCommentLength)
-            throw new ValidationException($"Comments are limited to {MaxCommentLength} characters.");
+            throw new DomainValidationException($"Comments are limited to {MaxCommentLength} characters.");
         if (comment.Length == 0)
             return true;
         db.FriendComments.Add(new FriendComment { WorkoutSessionId = sessionId, AuthorId = viewerId, Text = comment, CreatedAt = DateTime.UtcNow });

@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using IronMindGym.Contracts;
 using IronMindGym.Data;
 using IronMindGym.Localization;
@@ -78,12 +77,11 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
     /// </summary>
     public int Save(int currentUserId, SaveWorkoutRequest workout)
     {
-        Validator.ValidateObject(workout, new ValidationContext(workout), validateAllProperties: true);
         if (workout.Sets is null || workout.Sets.Count is < 1 or > 200 || workout.Sets.Any(s => s is null))
-            throw new ValidationException("Add between 1 and 200 sets before saving.");
+            throw new DomainValidationException("Add between 1 and 200 sets before saving.", "Sets");
         var exercises = ValidateSets(workout.Sets);
         if (workout.SplitDayId.HasValue && !db.SplitDays.Any(d => d.Id == workout.SplitDayId))
-            throw new ValidationException("Choose a valid training day.");
+            throw new DomainValidationException("Choose a valid training day.", "SplitDayId");
 
         using var transaction = WriteLock.BeginForAthletes(db, currentUserId);
         if (workout.DraftId.HasValue)
@@ -151,9 +149,9 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
         foreach (var set in sets)
         {
             if (!exercises.TryGetValue(set.ExerciseId, out var exercise) || !setTypeIds.Contains(set.SetTypeId))
-                throw new ValidationException("Choose valid exercises and set types.");
+                throw new DomainValidationException("Choose valid exercises and set types.");
             if (set.RestSeconds is < 0 or > 3600)
-                throw new ValidationException("Rest must be between 0 and 3600 seconds.");
+                throw new DomainValidationException("Rest must be between 0 and 3600 seconds.");
             NormalizeForTrackingMode(set, exercise.Type);
         }
         return exercises;
@@ -165,23 +163,23 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
         if (type == ExerciseType.StrengthTraining)
         {
             if (!validLoad || set.Reps is < 1 or > 500)
-                throw new ValidationException("Strength sets require 0–500 kg and 1–500 reps.");
+                throw new DomainValidationException("Strength sets require 0–500 kg and 1–500 reps.");
             set.DurationSeconds = 0;
             set.Intensity = 0;
             return;
         }
         if (set.DurationSeconds is < 1 or > 86400)
-            throw new ValidationException("Duration must be between 1 and 86400 seconds.");
+            throw new DomainValidationException("Duration must be between 1 and 86400 seconds.");
         if (type == ExerciseType.Cardio)
         {
             if (set.Intensity is < 1 or > 10)
-                throw new ValidationException("Cardio effort must be between 1 and 10.");
+                throw new DomainValidationException("Cardio effort must be between 1 and 10.");
             set.WeightKg = 0;
         }
         else
         {
             if (!validLoad)
-                throw new ValidationException("Timed sets accept 0–500 kg of external load.");
+                throw new DomainValidationException("Timed sets accept 0–500 kg of external load.");
             set.Intensity = 0;
         }
         set.Reps = 0;

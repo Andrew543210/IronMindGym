@@ -67,7 +67,7 @@ public class ExerciseProgressService(IronMindDbContext db)
         var result = Result.Validate(exercise.Type, weight ?? 0, reps ?? 0, duration ?? 0, intensity ?? 0);
         using var transaction = WriteLock.BeginForAthletes(db, userId);
         var progress = db.ExerciseProgress.FirstOrDefault(p => p.UserId == userId && p.ExerciseId == exerciseId)
-            ?? throw new ArgumentException("Save initial results first.");
+            ?? throw new DomainValidationException("Save initial results first.");
         Record(progress, initial: false, result);
         db.SaveChanges();
         transaction.Commit();
@@ -77,7 +77,7 @@ public class ExerciseProgressService(IronMindDbContext db)
         db.ExerciseProgress.Where(p => p.UserId == userId && p.ExerciseId == exerciseId).ExecuteDelete() > 0;
 
     private Exercise FindExercise(int exerciseId) =>
-        db.Exercises.AsNoTracking().FirstOrDefault(e => e.Id == exerciseId) ?? throw new ArgumentException("Choose a valid exercise.");
+        db.Exercises.AsNoTracking().FirstOrDefault(e => e.Id == exerciseId) ?? throw new DomainValidationException("Choose a valid exercise.", "ExerciseId");
 
     private static void Record(ExerciseProgress progress, bool initial, Result result)
     {
@@ -115,19 +115,19 @@ public class ExerciseProgressService(IronMindDbContext db)
             {
                 case ExerciseType.StrengthTraining:
                     if (!validLoad)
-                        throw new ArgumentException("Weight must be between 0 and 500 kg.");
+                        throw new DomainValidationException("Weight must be between 0 and 500 kg.");
                     if (reps is < 1 or > 500)
-                        throw new ArgumentException("Reps must be between 1 and 500.");
+                        throw new DomainValidationException("Reps must be between 1 and 500.");
                     return new(weight, reps, 0, 0);
                 case ExerciseType.Cardio:
                     if (duration is < 1 or > 86400)
-                        throw new ArgumentException("Duration must be between 1 and 86400 seconds.");
+                        throw new DomainValidationException("Duration must be between 1 and 86400 seconds.");
                     if (intensity is < 1 or > 10)
-                        throw new ArgumentException("Intensity must be between 1 and 10.");
+                        throw new DomainValidationException("Intensity must be between 1 and 10.");
                     return new(0, 0, duration, intensity);
                 default:
                     if (!validLoad || duration is < 1 or > 86400)
-                        throw new ArgumentException("Timed exercises require a duration of 1–86400 seconds and 0–500 kg of external load.");
+                        throw new DomainValidationException("Timed exercises require a duration of 1–86400 seconds and 0–500 kg of external load.");
                     return new(weight, 0, duration, 0);
             }
         }
@@ -135,7 +135,7 @@ public class ExerciseProgressService(IronMindDbContext db)
         private static int WholeNumber(double value)
         {
             if (!double.IsFinite(value) || value != Math.Truncate(value) || value < 0 || value > 86400)
-                throw new ArgumentException("Repetitions, duration and intensity must be whole numbers within their allowed range.");
+                throw new DomainValidationException("Repetitions, duration and intensity must be whole numbers within their allowed range.");
             return (int)value;
         }
     }

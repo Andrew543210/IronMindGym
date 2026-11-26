@@ -22,7 +22,11 @@ export class FormError extends Error {}
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
+/** The problem type of a change refused for a missing or expired antiforgery token. */
+export const CSRF_PROBLEM = 'urn:ironmind:problem:csrf-token';
+
 interface ProblemDetails {
+  type?: string;
   title?: string;
   errors?: Record<string, string[]>;
 }
@@ -45,9 +49,9 @@ export async function request<T>(method: Method, url: string, body?: unknown): P
   } else {
     csrfToken ??= await fetchCsrfToken();
     response = await send(method, url, body, csrfToken);
-    // A token that expired, for example after the server's keys changed, is refused with an empty 400
-    // before the request does anything, so one retry with a fresh token is safe.
-    if (response.status === 400 && !isJson(response)) {
+    // A token that expired, for example after the server's keys changed, is refused before the request
+    // does anything, so one retry with a fresh token is safe.
+    if (response.status === 400 && (await problemType(response)) === CSRF_PROBLEM) {
       csrfToken = await fetchCsrfToken();
       response = await send(method, url, body, csrfToken);
     }
@@ -98,6 +102,16 @@ async function send(method: Method, url: string, body?: unknown, token?: string)
 
 function isJson(response: Response) {
   return response.headers.get('Content-Type')?.includes('json') ?? false;
+}
+
+/** Reads the problem type from a copy, so the body stays readable for the error message. */
+async function problemType(response: Response): Promise<string | undefined> {
+  if (!isJson(response)) return undefined;
+  try {
+    return ((await response.clone().json()) as ProblemDetails).type;
+  } catch {
+    return undefined;
+  }
 }
 
 async function toApiError(response: Response): Promise<ApiError> {

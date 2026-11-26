@@ -1,16 +1,20 @@
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace IronMindGym.Api;
 
 /// <summary>
 /// Requires the antiforgery token in the X-CSRF-TOKEN header for every change. The session is a cookie the
 /// browser attaches by itself, so without the token another site could send changes on the athlete's behalf.
-/// A refused request gets an empty 400, which tells the client to fetch a fresh token and retry once.
+/// A refused request gets a 400 with the <see cref="ProblemType"/> problem type, which tells the client to fetch
+/// a fresh token and retry once.
 /// </summary>
-public sealed class CsrfProtectionFilter(IAntiforgery antiforgery) : IAsyncAuthorizationFilter
+public sealed class CsrfProtectionFilter(IAntiforgery antiforgery, ProblemDetailsFactory problems) : IAsyncAuthorizationFilter
 {
+    public const string ProblemType = "urn:ironmind:problem:csrf-token";
+
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         var method = context.HttpContext.Request.Method;
@@ -22,7 +26,9 @@ public sealed class CsrfProtectionFilter(IAntiforgery antiforgery) : IAsyncAutho
         }
         catch (AntiforgeryValidationException)
         {
-            context.Result = new ContentResult { StatusCode = StatusCodes.Status400BadRequest };
+            var problem = problems.CreateProblemDetails(context.HttpContext, StatusCodes.Status400BadRequest,
+                title: "The request could not be verified. Reload the page and try again.", type: ProblemType);
+            context.Result = new BadRequestObjectResult(problem);
         }
     }
 }

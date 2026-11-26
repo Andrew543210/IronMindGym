@@ -28,14 +28,7 @@ public class ProfileController(IronMindDbContext db, ProfileService profiles) : 
     [HttpPut("settings")]
     public ActionResult SaveSettings(ProfileSettings request)
     {
-        try
-        {
-            profiles.Update(UserId, request);
-        }
-        catch (DbUpdateException ex) when (DbErrors.IsUniqueViolation(ex))
-        {
-            return Rejected("This username is already taken.", nameof(request.Username));
-        }
+        profiles.Update(UserId, request);
         return NoContent();
     }
 

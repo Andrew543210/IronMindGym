@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using IronMindGym.Data;
 using IronMindGym.Models;
 using Microsoft.EntityFrameworkCore;
@@ -14,9 +13,9 @@ public class GoalService(IronMindDbContext db)
     {
         var today = AthleteCalendar.For(db, userId).Today;
         if (deadline < today || deadline > today.AddYears(5))
-            throw new ValidationException("Choose a deadline between today and five years from now.");
+            throw new DomainValidationException("Choose a deadline between today and five years from now.", "Deadline");
         if (db.UserGoals.Count(g => g.UserId == userId && !g.IsCompleted) >= 20)
-            throw new ValidationException("Finish or remove an existing goal before adding more. You can have 20 active goals.");
+            throw new DomainValidationException("Finish or remove an existing goal before adding more. You can have 20 active goals.");
         db.UserGoals.Add(new UserGoal { UserId = userId, Title = title.Trim(), Deadline = deadline });
         db.SaveChanges();
     }

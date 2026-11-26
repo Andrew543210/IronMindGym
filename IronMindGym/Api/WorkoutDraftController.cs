@@ -32,18 +32,18 @@ public class WorkoutDraftController(IronMindDbContext db) : ApiController
     {
         var content = request.Content!.Value;
         if (content.ValueKind != JsonValueKind.Object)
-            return Rejected("Send the unfinished workout as a JSON object.", nameof(request.Content));
+            throw new DomainValidationException("Send the unfinished workout as a JSON object.", nameof(request.Content));
         var json = content.GetRawText();
         if (json.Length > MaxContentLength)
-            return Rejected("This workout is too large to keep on the server.", nameof(request.Content));
+            throw new DomainValidationException("This workout is too large to keep on the server.", nameof(request.Content));
         // PostgreSQL jsonb rejects the NUL character.
         if (json.Contains("\\u0000", StringComparison.Ordinal))
-            return Rejected("The workout contains a character that cannot be stored.", nameof(request.Content));
+            throw new DomainValidationException("The workout contains a character that cannot be stored.", nameof(request.Content));
         var draftId = request.DraftId!.Value;
 
         using var transaction = WriteLock.BeginForAthletes(db, UserId);
         if (db.WorkoutSessions.Any(s => s.UserId == UserId && s.DraftId == draftId))
-            return Problem(statusCode: StatusCodes.Status409Conflict, title: "This workout is already saved.");
+            throw new DomainConflictException("This workout is already saved.");
         var draft = db.WorkoutDrafts.FirstOrDefault(d => d.UserId == UserId);
         if (draft is null)
             db.WorkoutDrafts.Add(draft = new WorkoutDraft { UserId = UserId });
