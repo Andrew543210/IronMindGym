@@ -43,7 +43,7 @@ public class FriendRecordPreview
 {
     public string ExerciseName { get; set; } = string.Empty;
     public double MaxWeightKg { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime AchievedAt { get; set; }
 }
 
 public class FriendsOverview

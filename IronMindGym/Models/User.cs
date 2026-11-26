@@ -17,16 +17,10 @@ public class User
 
     public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
 
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     public Profile? Profile { get; set; }
     public InitialBenchmarks? Benchmarks { get; set; }
     public WorkoutPlan? Plan { get; set; }
-    public ICollection<WorkoutSession> WorkoutSessions { get; set; } = [];
-    public ICollection<DailyNutrition> DailyNutritionLogs { get; set; } = [];
-    public ICollection<Friendship> FriendshipsAsUser1 { get; set; } = [];
-    public ICollection<Friendship> FriendshipsAsUser2 { get; set; } = [];
-    public ICollection<UserAchievement> UserAchievements { get; set; } = [];
     public ICollection<WeightLog> WeightLogs { get; set; } = [];
-    public ICollection<ActivityLike> ActivityLikes { get; set; } = [];
-    public ICollection<FriendComment> FriendComments { get; set; } = [];
-    public ICollection<ExerciseProgress> ExerciseProgress { get; set; } = [];
 }

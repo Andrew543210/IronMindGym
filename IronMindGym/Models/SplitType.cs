@@ -25,5 +25,4 @@ public class SplitType
     public string? NameUk { get; set; }
 
     public ICollection<SplitDay> Days { get; set; } = [];
-    public ICollection<WorkoutPlan> WorkoutPlans { get; set; } = [];
 }

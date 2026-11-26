@@ -17,7 +17,7 @@ interface FriendCard {
   averageKcal: number;
   lastFiveWorkouts: { workoutSessionId: number; name: string; sessionDate: string; durationMinutes: number }[];
   lastNutritionLogs: { date: string; caloriesKcal: number; proteinG: number; fatG: number; carbsG: number }[];
-  personalRecords: { exerciseName: string; maxWeightKg: number; updatedAt: string }[];
+  personalRecords: { exerciseName: string; maxWeightKg: number; achievedAt: string }[];
   achievements: { name: string; conditionDescription: string; achievedAt: string }[];
 }
 
@@ -172,7 +172,7 @@ export function FriendsPage() {
                 <ul className="mb-0 mt-1">
                   {friend.personalRecords.map((record) => (
                     <li key={record.exerciseName}>
-                      {record.exerciseName}: <span className="metric">{t('unit.kg', { value: record.maxWeightKg })}</span> (<span className="metric">{localDay(record.updatedAt, athlete.timeZone)}</span>)
+                      {record.exerciseName}: <span className="metric">{t('unit.kg', { value: record.maxWeightKg })}</span> (<span className="metric">{localDay(record.achievedAt, athlete.timeZone)}</span>)
                     </li>
                   ))}
                 </ul>

@@ -45,8 +45,8 @@ public class FriendshipService(IronMindDbContext db)
                 .ToList();
             card.AverageKcal = card.LastNutritionLogs.Select(n => n.CaloriesKcal).DefaultIfEmpty(0).Average();
             card.PersonalRecords = db.PersonalRecords.AsNoTracking().Where(r => r.UserId == card.UserId)
-                .OrderByDescending(r => r.UpdatedAt).Take(PreviewSize)
-                .Select(r => new FriendRecordPreview { ExerciseName = Localized.Pick(r.Exercise.Name, r.Exercise.NameUk), MaxWeightKg = r.MaxWeightKg, UpdatedAt = r.UpdatedAt })
+                .OrderByDescending(r => r.AchievedAt).Take(PreviewSize)
+                .Select(r => new FriendRecordPreview { ExerciseName = Localized.Pick(r.Exercise.Name, r.Exercise.NameUk), MaxWeightKg = r.MaxWeightKg, AchievedAt = r.AchievedAt })
                 .ToList();
             card.Achievements = db.UserAchievements.AsNoTracking().Where(a => a.UserId == card.UserId)
                 .OrderByDescending(a => a.AchievedAt).Take(PreviewSize)

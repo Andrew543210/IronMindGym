@@ -32,7 +32,7 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
     [EnableRateLimiting("authentication")]
     public async Task<ActionResult<SessionResponse>> Login(LoginRequest request)
     {
-        var email = request.Email.Trim().ToLowerInvariant();
+        var email = request.Email.Trim();
         var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
         if (user is null || !PasswordHashUtility.Verify(request.Password, user.PasswordHash))
             return Rejected("Invalid email or password.");
@@ -44,7 +44,7 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
     [EnableRateLimiting("authentication")]
     public async Task<ActionResult<SessionResponse>> Register(RegisterRequest request)
     {
-        var email = request.Email.Trim().ToLowerInvariant();
+        var email = request.Email.Trim();
         var username = request.Username.Trim();
         if (db.Users.Any(u => u.Email == email))
             return Rejected("A user with this email already exists.", nameof(request.Email));
@@ -59,7 +59,6 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
             Profile = new Profile
             {
                 Age = request.Age,
-                AccountCreatedAt = DateTime.UtcNow,
                 TimeZone = AthleteCalendar.TryFindZone(request.TimeZone, out _) ? request.TimeZone : null,
                 Language = Localized.IsUkrainian ? "uk" : "en"
             }

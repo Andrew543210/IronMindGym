@@ -11,7 +11,7 @@ interface PersonalRecord {
   muscleSubGroupName: string;
   exerciseName: string;
   maxWeightKg: number;
-  updatedAt: string;
+  achievedAt: string;
 }
 
 interface Statistics {
@@ -81,7 +81,7 @@ function RecordsTable({ records, grouped }: { records: PersonalRecord[]; grouped
             {grouped && <><td>{record.muscleGroupName}</td><td>{record.muscleSubGroupName}</td></>}
             <td>{record.exerciseName}</td>
             <td className="metric">{t('unit.kg', { value: formatNumber(record.maxWeightKg) })}</td>
-            <td className="metric">{localDay(record.updatedAt, athlete.timeZone)}</td>
+            <td className="metric">{localDay(record.achievedAt, athlete.timeZone)}</td>
           </tr>
         ))}
       </tbody>

@@ -8,5 +8,7 @@ public class PersonalRecord
     public int ExerciseId { get; set; }
     public Exercise Exercise { get; set; } = null!;
     public double MaxWeightKg { get; set; }
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>When the record was first reached: the date of the earliest workout with this load.</summary>
+    public DateTime AchievedAt { get; set; }
 }

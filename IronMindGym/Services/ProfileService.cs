@@ -156,7 +156,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
             p.InitialIntensity,
             p.CurrentIntensity
         }).ToList(),
-        Goals = db.UserGoals.Where(g => g.UserId == userId).Select(g => new { Title = g.GoalType, g.Deadline, g.IsCompleted }).ToList()
+        Goals = db.UserGoals.Where(g => g.UserId == userId).Select(g => new { g.Title, g.Deadline, g.IsCompleted }).ToList()
     };
 
     /// <summary>The settings form always sends the bodyweight; only a real change is today's weigh-in.</summary>

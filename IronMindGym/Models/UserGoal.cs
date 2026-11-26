@@ -9,7 +9,7 @@ public class UserGoal
     public User User { get; set; } = null!;
 
     [MaxLength(80)]
-    public string GoalType { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
 
     public DateOnly Deadline { get; set; }
     public bool IsCompleted { get; set; }

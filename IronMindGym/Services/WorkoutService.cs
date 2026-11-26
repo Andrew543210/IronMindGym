@@ -27,8 +27,8 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
             IsLikedByCurrentUser = db.ActivityLikes.Any(x => x.WorkoutSessionId == sessionId && x.UserId == viewerId),
             Comments = db.FriendComments.AsNoTracking()
                 .Where(x => x.WorkoutSessionId == sessionId)
-                .OrderByDescending(x => x.Date)
-                .Select(x => new WorkoutComment { AuthorUsername = x.Author.Username, Text = x.Text, Date = x.Date })
+                .OrderByDescending(x => x.CreatedAt)
+                .Select(x => new WorkoutComment { AuthorUsername = x.Author.Username, Text = x.Text, CreatedAt = x.CreatedAt })
                 .ToList(),
             AverageRestSeconds = sets.Count > 0 ? Math.Round(sets.Average(s => s.RestSeconds), 1) : 0,
             ExerciseStats = BuildExerciseStats(session)

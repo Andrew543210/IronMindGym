@@ -20,6 +20,4 @@ public class Achievement
 
     [MaxLength(500)]
     public string? ConditionDescriptionUk { get; set; }
-
-    public ICollection<UserAchievement> UserAchievements { get; set; } = [];
 }

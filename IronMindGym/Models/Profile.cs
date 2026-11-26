@@ -9,7 +9,6 @@ public class Profile
     public User User { get; set; } = null!;
     public int Age { get; set; }
     public double? HeightCm { get; set; }
-    public DateTime AccountCreatedAt { get; set; } = DateTime.UtcNow;
 
     [MaxLength(64)]
     public string? TimeZone { get; set; }

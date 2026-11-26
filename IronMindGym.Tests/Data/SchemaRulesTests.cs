@@ -10,10 +10,10 @@ public class SchemaRulesTests
         app.Query(db => Assert.Throws<PostgresException>(() => db.Database.ExecuteSqlRaw(sql)));
 
     private static int AddUsers(TestApplication app) => app.Query(db => db.Database.ExecuteSqlRaw("""
-        INSERT INTO "Users" ("Id", "Username", "Email", "PasswordHash", "SecurityStamp") VALUES
-            (1, 'one', 'one@example.com', 'hash', 'stamp'),
-            (2, 'two', 'two@example.com', 'hash', 'stamp'),
-            (3, 'three', 'three@example.com', 'hash', 'stamp')
+        INSERT INTO "Users" ("Id", "Username", "Email", "PasswordHash", "SecurityStamp", "CreatedAt") VALUES
+            (1, 'one', 'one@example.com', 'hash', 'stamp', now()),
+            (2, 'two', 'two@example.com', 'hash', 'stamp', now()),
+            (3, 'three', 'three@example.com', 'hash', 'stamp', now())
         """));
 
     [Theory]
@@ -35,9 +35,11 @@ public class SchemaRulesTests
     [Theory]
     [InlineData("""INSERT INTO "WeightLogs" ("UserId", "Date", "ValueKg") VALUES (1, '2026-11-01', 0)""")]
     [InlineData("""INSERT INTO "DailyNutritions" ("UserId", "Date", "CaloriesKcal", "ProteinG", "FatG", "CarbsG") VALUES (1, '2026-11-01', -1, 0, 0, 0)""")]
-    [InlineData("""INSERT INTO "Profiles" ("UserId", "Age", "AccountCreatedAt", "EnergyEquation") VALUES (1, 30, now(), 'Other')""")]
-    [InlineData("""INSERT INTO "Profiles" ("UserId", "Age", "AccountCreatedAt", "EnergyEquation", "CalorieTarget") VALUES (1, 30, now(), 'None', 0)""")]
+    [InlineData("""INSERT INTO "Profiles" ("UserId", "Age", "EnergyEquation") VALUES (1, 30, 'Other')""")]
+    [InlineData("""INSERT INTO "Profiles" ("UserId", "Age", "EnergyEquation", "CalorieTarget") VALUES (1, 30, 'None', 0)""")]
     [InlineData("""INSERT INTO "WorkoutPlans" ("UserId", "WorkoutsPerWeek", "SplitTypeId") VALUES (1, 0, 1)""")]
+    [InlineData("""INSERT INTO "Users" ("Username", "Email", "PasswordHash", "SecurityStamp", "CreatedAt") VALUES (repeat('a', 51), 'long@example.com', 'hash', 'stamp', now())""")]
+    [InlineData("""INSERT INTO "Users" ("Username", "Email", "PasswordHash", "SecurityStamp", "CreatedAt") VALUES ('long', repeat('a', 110) || '@example.com', 'hash', 'stamp', now())""")]
     [InlineData("""INSERT INTO "WorkoutSessions" ("UserId", "SessionDate", "DurationMinutes", "Rating") VALUES (1, now(), 40, 6)""")]
     public void AthleteValuesStayWithinTheirDomain(string sql)
     {

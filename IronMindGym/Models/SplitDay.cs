@@ -29,6 +29,4 @@ public class SplitDay
 
     [MaxLength(80)]
     public string? WorkoutNameUk { get; set; }
-
-    public ICollection<WorkoutSession> WorkoutSessions { get; set; } = [];
 }

@@ -24,6 +24,4 @@ public class WorkoutSession
     public string? Notes { get; set; }
 
     public ICollection<PerformedExercise> PerformedExercises { get; set; } = [];
-    public ICollection<ActivityLike> Likes { get; set; } = [];
-    public ICollection<FriendComment> Comments { get; set; } = [];
 }

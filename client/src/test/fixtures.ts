@@ -49,7 +49,7 @@ export const workout = {
   isOwner: true,
   likesCount: 1,
   isLikedByCurrentUser: false,
-  comments: [{ authorUsername: 'partner', text: 'Great depth!', date: '2026-11-19T18:00:00Z' }],
+  comments: [{ authorUsername: 'partner', text: 'Great depth!', createdAt: '2026-11-19T18:00:00Z' }],
 };
 
 export function progressEntry(overrides: object = {}) {

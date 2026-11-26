@@ -70,7 +70,7 @@ public class StatisticsService(IronMindDbContext db)
             BestProgressExercise = bestProgress.ExerciseName,
             BestProgressPercent = Math.Round(bestProgress.ProgressPercent, 1),
             TotalAwardsCount = db.UserAchievements.Count(ua => ua.UserId == userId),
-            RecentRecords = Records(userId).OrderByDescending(r => r.UpdatedAt).Take(10).ToList()
+            RecentRecords = Records(userId).OrderByDescending(r => r.AchievedAt).Take(10).ToList()
         };
     }
 
@@ -82,7 +82,7 @@ public class StatisticsService(IronMindDbContext db)
             MuscleSubGroupName = Localized.Pick(pr.Exercise.MuscleSubGroup.Name, pr.Exercise.MuscleSubGroup.NameUk),
             ExerciseName = Localized.Pick(pr.Exercise.Name, pr.Exercise.NameUk),
             MaxWeightKg = pr.MaxWeightKg,
-            UpdatedAt = pr.UpdatedAt
+            AchievedAt = pr.AchievedAt
         })
         .AsEnumerable()
         .OrderBy(pr => pr.MuscleGroupName, Localized.Order)

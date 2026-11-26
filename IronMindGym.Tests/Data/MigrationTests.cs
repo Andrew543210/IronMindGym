@@ -185,6 +185,20 @@ public sealed class MigrationTests : IDisposable
     }
 
     [Fact]
+    public void TheAccountCreationTimeMovesToTheUser()
+    {
+        MigrateTo("FoldTheFeedIntoResearchNotes");
+        AddUsers(1, 2);
+        Run("""INSERT INTO "Profiles" ("UserId", "Age", "AccountCreatedAt", "EnergyEquation") VALUES (1, 30, '2026-04-01 09:00+00', 'None')""");
+
+        MigrateTo("NameColumnsAfterWhatTheyHold");
+
+        var created = Read(db => db.Users.OrderBy(u => u.Id).Select(u => u.CreatedAt).ToList());
+        Assert.Equal(new DateTime(2026, 4, 1, 9, 0, 0, DateTimeKind.Utc), created[0]);
+        Assert.True(created[1] > DateTime.UtcNow.AddMinutes(-5));
+    }
+
+    [Fact]
     public void EveryMigrationCanBeRevertedOnAnEmptyDatabase()
     {
         using var db = Open();

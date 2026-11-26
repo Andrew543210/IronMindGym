@@ -23,6 +23,4 @@ public class SetType
 
     [MaxLength(40)]
     public string? NameUk { get; set; }
-
-    public ICollection<WorkoutSet> Sets { get; set; } = [];
 }

@@ -93,9 +93,9 @@ public class WorkoutRecordTests
             Assert.Equal(80, db.PersonalRecords.Single().MaxWeightKg);
             Assert.True(Workouts(db).Delete(db.Users.Single().Id, heaviest));
             var record = db.PersonalRecords.AsNoTracking().Single();
-            Assert.Equal((70, new DateTime(2026, 9, 1, 18, 0, 0, DateTimeKind.Utc)), (record.MaxWeightKg, record.UpdatedAt));
+            Assert.Equal((70, new DateTime(2026, 9, 1, 18, 0, 0, DateTimeKind.Utc)), (record.MaxWeightKg, record.AchievedAt));
             Assert.True(Workouts(db).Delete(db.Users.Single().Id, first));
-            Assert.Equal(new DateTime(2026, 9, 8, 18, 0, 0, DateTimeKind.Utc), db.PersonalRecords.AsNoTracking().Single().UpdatedAt);
+            Assert.Equal(new DateTime(2026, 9, 8, 18, 0, 0, DateTimeKind.Utc), db.PersonalRecords.AsNoTracking().Single().AchievedAt);
             return true;
         });
     }

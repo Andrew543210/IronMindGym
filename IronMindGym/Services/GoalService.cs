@@ -17,7 +17,7 @@ public class GoalService(IronMindDbContext db)
             throw new ValidationException("Choose a deadline between today and five years from now.");
         if (db.UserGoals.Count(g => g.UserId == userId && !g.IsCompleted) >= 20)
             throw new ValidationException("Finish or remove an existing goal before adding more. You can have 20 active goals.");
-        db.UserGoals.Add(new UserGoal { UserId = userId, GoalType = title.Trim(), Deadline = deadline });
+        db.UserGoals.Add(new UserGoal { UserId = userId, Title = title.Trim(), Deadline = deadline });
         db.SaveChanges();
     }
 

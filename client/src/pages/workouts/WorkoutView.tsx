@@ -27,7 +27,7 @@ interface ExerciseStat {
 interface WorkoutComment {
   authorUsername: string;
   text: string;
-  date: string;
+  createdAt: string;
 }
 
 export interface WorkoutDetails {
@@ -191,7 +191,7 @@ export function WorkoutReactions({ workout, timeZone, onComment, onLike }: React
       {workout.comments.length === 0 && <div className="small text-muted">{t('workout.noComments')}</div>}
       {workout.comments.map((item, index) => (
         <div className="mb-2" key={index}>
-          <div><strong>{item.authorUsername}</strong> <span className="small text-muted">{localDateTime(item.date, timeZone)}</span></div>
+          <div><strong>{item.authorUsername}</strong> <span className="small text-muted">{localDateTime(item.createdAt, timeZone)}</span></div>
           <div className="text-break">{item.text}</div>
         </div>
       ))}

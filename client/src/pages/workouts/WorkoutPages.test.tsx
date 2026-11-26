@@ -64,7 +64,7 @@ describe('workout details', () => {
     const calls = mockApi({
       'GET /api/workouts/4': () => ({ ...workout, comments }),
       'POST /api/workouts/4/comments': () => {
-        comments = [...comments, { authorUsername: 'athlete', text: 'Next time 105', date: '2026-11-20T08:00:00Z' }];
+        comments = [...comments, { authorUsername: 'athlete', text: 'Next time 105', createdAt: '2026-11-20T08:00:00Z' }];
         return null;
       },
       'DELETE /api/workouts/4': null,

@@ -63,7 +63,7 @@ public class SessionApiTests
         });
 
         Assert.Contains("A user with this email already exists.", await ApiClient.Errors(response));
-        Assert.Equal(1, app.Query(db => db.Users.Count()));
+        Assert.Equal("athlete@example.com", app.Query(db => db.Users.Single().Email));
     }
 
     [Fact]

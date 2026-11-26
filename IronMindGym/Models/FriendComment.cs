@@ -13,5 +13,5 @@ public class FriendComment
     [Required, MaxLength(500)]
     public string Text { get; set; } = string.Empty;
 
-    public DateTime Date { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

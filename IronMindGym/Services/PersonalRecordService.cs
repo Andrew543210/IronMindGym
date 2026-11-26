@@ -38,7 +38,7 @@ public sealed class PersonalRecordService(IronMindDbContext db)
             if (record is null)
                 db.PersonalRecords.Add(record = new PersonalRecord { UserId = userId, ExerciseId = exerciseId });
             record.MaxWeightKg = set.WeightKg;
-            record.UpdatedAt = set.AchievedAt;
+            record.AchievedAt = set.AchievedAt;
         }
     }
 }

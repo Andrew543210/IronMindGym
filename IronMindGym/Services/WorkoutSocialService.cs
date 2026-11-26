@@ -32,7 +32,7 @@ public class WorkoutSocialService(IronMindDbContext db, FriendshipService friend
             throw new ValidationException($"Comments are limited to {MaxCommentLength} characters.");
         if (comment.Length == 0)
             return true;
-        db.FriendComments.Add(new FriendComment { WorkoutSessionId = sessionId, AuthorId = viewerId, Text = comment, Date = DateTime.UtcNow });
+        db.FriendComments.Add(new FriendComment { WorkoutSessionId = sessionId, AuthorId = viewerId, Text = comment, CreatedAt = DateTime.UtcNow });
         db.SaveChanges();
         return true;
     }

@@ -276,7 +276,7 @@ namespace IronMindGym.Data.Migrations
                     b.Property<int>("AuthorId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("Date")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Text")
@@ -431,9 +431,9 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExerciseId");
-
                     b.HasIndex("WorkoutSessionId");
+
+                    b.HasIndex("ExerciseId", "WorkoutSessionId");
 
                     b.ToTable("PerformedExercises");
                 });
@@ -446,14 +446,14 @@ namespace IronMindGym.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("AchievedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("ExerciseId")
                         .HasColumnType("integer");
 
                     b.Property<double>("MaxWeightKg")
                         .HasColumnType("double precision");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -475,9 +475,6 @@ namespace IronMindGym.Data.Migrations
                 {
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
-
-                    b.Property<DateTime>("AccountCreatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Age")
                         .HasColumnType("integer");
@@ -696,6 +693,9 @@ namespace IronMindGym.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(120)
@@ -722,7 +722,12 @@ namespace IronMindGym.Data.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", t =>
+                        {
+                            t.HasCheckConstraint("CK_Users_EmailLength", "char_length(\"Email\") <= 120");
+
+                            t.HasCheckConstraint("CK_Users_UsernameLength", "char_length(\"Username\") <= 50");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.UserAchievement", b =>
@@ -763,13 +768,13 @@ namespace IronMindGym.Data.Migrations
                     b.Property<DateOnly>("Deadline")
                         .HasColumnType("date");
 
-                    b.Property<string>("GoalType")
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("boolean");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -948,13 +953,13 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.ActivityLike", b =>
                 {
                     b.HasOne("IronMindGym.Models.User", "User")
-                        .WithMany("ActivityLikes")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.WorkoutSession", "WorkoutSession")
-                        .WithMany("Likes")
+                        .WithMany()
                         .HasForeignKey("WorkoutSessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -967,7 +972,7 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.DailyNutrition", b =>
                 {
                     b.HasOne("IronMindGym.Models.User", "User")
-                        .WithMany("DailyNutritionLogs")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -978,7 +983,7 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.Exercise", b =>
                 {
                     b.HasOne("IronMindGym.Models.MuscleSubGroup", "MuscleSubGroup")
-                        .WithMany("Exercises")
+                        .WithMany()
                         .HasForeignKey("MuscleSubGroupId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -995,7 +1000,7 @@ namespace IronMindGym.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.User", "User")
-                        .WithMany("ExerciseProgress")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1008,13 +1013,13 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.FriendComment", b =>
                 {
                     b.HasOne("IronMindGym.Models.User", "Author")
-                        .WithMany("FriendComments")
+                        .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.WorkoutSession", "WorkoutSession")
-                        .WithMany("Comments")
+                        .WithMany()
                         .HasForeignKey("WorkoutSessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1033,13 +1038,13 @@ namespace IronMindGym.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.User", "User1")
-                        .WithMany("FriendshipsAsUser1")
+                        .WithMany()
                         .HasForeignKey("User1Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.User", "User2")
-                        .WithMany("FriendshipsAsUser2")
+                        .WithMany()
                         .HasForeignKey("User2Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1063,7 +1068,7 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.MuscleSubGroup", b =>
                 {
                     b.HasOne("IronMindGym.Models.MuscleGroup", "MuscleGroup")
-                        .WithMany("SubGroups")
+                        .WithMany()
                         .HasForeignKey("MuscleGroupId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1074,7 +1079,7 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.PerformedExercise", b =>
                 {
                     b.HasOne("IronMindGym.Models.Exercise", "Exercise")
-                        .WithMany("PerformedExercises")
+                        .WithMany()
                         .HasForeignKey("ExerciseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1134,13 +1139,13 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.UserAchievement", b =>
                 {
                     b.HasOne("IronMindGym.Models.Achievement", "Achievement")
-                        .WithMany("UserAchievements")
+                        .WithMany()
                         .HasForeignKey("AchievementId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.User", "User")
-                        .WithMany("UserAchievements")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1186,7 +1191,7 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.WorkoutPlan", b =>
                 {
                     b.HasOne("IronMindGym.Models.SplitType", "SplitType")
-                        .WithMany("WorkoutPlans")
+                        .WithMany()
                         .HasForeignKey("SplitTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1205,12 +1210,12 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.WorkoutSession", b =>
                 {
                     b.HasOne("IronMindGym.Models.SplitDay", "SplitDay")
-                        .WithMany("WorkoutSessions")
+                        .WithMany()
                         .HasForeignKey("SplitDayId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("IronMindGym.Models.User", "User")
-                        .WithMany("WorkoutSessions")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1229,7 +1234,7 @@ namespace IronMindGym.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.SetType", "SetType")
-                        .WithMany("Sets")
+                        .WithMany()
                         .HasForeignKey("SetTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1239,81 +1244,29 @@ namespace IronMindGym.Data.Migrations
                     b.Navigation("SetType");
                 });
 
-            modelBuilder.Entity("IronMindGym.Models.Achievement", b =>
-                {
-                    b.Navigation("UserAchievements");
-                });
-
-            modelBuilder.Entity("IronMindGym.Models.Exercise", b =>
-                {
-                    b.Navigation("PerformedExercises");
-                });
-
-            modelBuilder.Entity("IronMindGym.Models.MuscleGroup", b =>
-                {
-                    b.Navigation("SubGroups");
-                });
-
-            modelBuilder.Entity("IronMindGym.Models.MuscleSubGroup", b =>
-                {
-                    b.Navigation("Exercises");
-                });
-
             modelBuilder.Entity("IronMindGym.Models.PerformedExercise", b =>
                 {
                     b.Navigation("Sets");
                 });
 
-            modelBuilder.Entity("IronMindGym.Models.SetType", b =>
-                {
-                    b.Navigation("Sets");
-                });
-
-            modelBuilder.Entity("IronMindGym.Models.SplitDay", b =>
-                {
-                    b.Navigation("WorkoutSessions");
-                });
-
             modelBuilder.Entity("IronMindGym.Models.SplitType", b =>
                 {
                     b.Navigation("Days");
-
-                    b.Navigation("WorkoutPlans");
                 });
 
             modelBuilder.Entity("IronMindGym.Models.User", b =>
                 {
-                    b.Navigation("ActivityLikes");
-
                     b.Navigation("Benchmarks");
-
-                    b.Navigation("DailyNutritionLogs");
-
-                    b.Navigation("ExerciseProgress");
-
-                    b.Navigation("FriendComments");
-
-                    b.Navigation("FriendshipsAsUser1");
-
-                    b.Navigation("FriendshipsAsUser2");
 
                     b.Navigation("Plan");
 
                     b.Navigation("Profile");
 
-                    b.Navigation("UserAchievements");
-
                     b.Navigation("WeightLogs");
-
-                    b.Navigation("WorkoutSessions");
                 });
 
             modelBuilder.Entity("IronMindGym.Models.WorkoutSession", b =>
                 {
-                    b.Navigation("Comments");
-
-                    b.Navigation("Likes");
-
                     b.Navigation("PerformedExercises");
                 });
 #pragma warning restore 612, 618

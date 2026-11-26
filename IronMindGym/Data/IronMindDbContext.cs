@@ -39,8 +39,14 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
 
         modelBuilder.Entity<User>(user =>
         {
+            // citext has no length of its own, so check constraints hold the limits.
             user.Property(u => u.Email).HasColumnType("citext");
             user.Property(u => u.Username).HasColumnType("citext");
+            user.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_Users_EmailLength", "char_length(\"Email\") <= 120");
+                table.HasCheckConstraint("CK_Users_UsernameLength", "char_length(\"Username\") <= 50");
+            });
             user.HasIndex(u => u.Email).IsUnique();
             user.HasIndex(u => u.Username).IsUnique();
             user.HasOne(u => u.Profile).WithOne(p => p.User).HasForeignKey<Profile>(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
@@ -88,14 +94,14 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
 
         // Reference data is shared by every athlete. Deleting a row that is still in use fails
         // instead of taking the workouts, records and awards that point at it along.
-        modelBuilder.Entity<MuscleSubGroup>().HasOne(s => s.MuscleGroup).WithMany(g => g.SubGroups).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<Exercise>().HasOne(e => e.MuscleSubGroup).WithMany(s => s.Exercises).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<PerformedExercise>().HasOne(p => p.Exercise).WithMany(e => e.PerformedExercises).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<MuscleSubGroup>().HasOne(s => s.MuscleGroup).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Exercise>().HasOne(e => e.MuscleSubGroup).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<PerformedExercise>().HasOne(p => p.Exercise).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<PersonalRecord>().HasOne(r => r.Exercise).WithMany().OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<WorkoutSet>().HasOne(s => s.SetType).WithMany(t => t.Sets).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<WorkoutPlan>().HasOne(p => p.SplitType).WithMany(s => s.WorkoutPlans).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<WorkoutSession>().HasOne(s => s.SplitDay).WithMany(d => d.WorkoutSessions).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<UserAchievement>().HasOne(a => a.Achievement).WithMany(a => a.UserAchievements).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<WorkoutSet>().HasOne(s => s.SetType).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<WorkoutPlan>().HasOne(p => p.SplitType).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<WorkoutSession>().HasOne(s => s.SplitDay).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<UserAchievement>().HasOne(a => a.Achievement).WithMany().OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<WorkoutSession>(session =>
         {
@@ -110,10 +116,12 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         });
 
         modelBuilder.Entity<PersonalRecord>().HasIndex(r => new { r.UserId, r.ExerciseId }).IsUnique();
+        // Exercise history and statistics look up the workouts of an exercise.
+        modelBuilder.Entity<PerformedExercise>().HasIndex(p => new { p.ExerciseId, p.WorkoutSessionId });
         modelBuilder.Entity<ExerciseProgress>(progress =>
         {
             progress.HasIndex(p => new { p.UserId, p.ExerciseId }).IsUnique();
-            progress.HasOne(p => p.User).WithMany(u => u.ExerciseProgress).HasForeignKey(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
+            progress.HasOne(p => p.User).WithMany().HasForeignKey(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
             progress.HasOne(p => p.Exercise).WithMany().HasForeignKey(p => p.ExerciseId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<UserAchievement>().HasIndex(a => new { a.UserId, a.AchievementId }).IsUnique();
@@ -156,20 +164,20 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             });
             friendship.Property(f => f.Status).HasConversion<string>().HasMaxLength(30);
             friendship.HasIndex(f => new { f.User1Id, f.User2Id }).IsUnique();
-            friendship.HasOne(f => f.User1).WithMany(u => u.FriendshipsAsUser1).HasForeignKey(f => f.User1Id).OnDelete(DeleteBehavior.Cascade);
-            friendship.HasOne(f => f.User2).WithMany(u => u.FriendshipsAsUser2).HasForeignKey(f => f.User2Id).OnDelete(DeleteBehavior.Cascade);
+            friendship.HasOne(f => f.User1).WithMany().HasForeignKey(f => f.User1Id).OnDelete(DeleteBehavior.Cascade);
+            friendship.HasOne(f => f.User2).WithMany().HasForeignKey(f => f.User2Id).OnDelete(DeleteBehavior.Cascade);
             friendship.HasOne<User>().WithMany().HasForeignKey(f => f.RequestedByUserId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<ActivityLike>(like =>
         {
             like.HasIndex(l => new { l.UserId, l.WorkoutSessionId }).IsUnique();
-            like.HasOne(l => l.User).WithMany(u => u.ActivityLikes).HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
-            like.HasOne(l => l.WorkoutSession).WithMany(s => s.Likes).HasForeignKey(l => l.WorkoutSessionId).OnDelete(DeleteBehavior.Cascade);
+            like.HasOne(l => l.User).WithMany().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
+            like.HasOne(l => l.WorkoutSession).WithMany().HasForeignKey(l => l.WorkoutSessionId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<FriendComment>(comment =>
         {
-            comment.HasOne(c => c.Author).WithMany(u => u.FriendComments).HasForeignKey(c => c.AuthorId).OnDelete(DeleteBehavior.Cascade);
-            comment.HasOne(c => c.WorkoutSession).WithMany(s => s.Comments).HasForeignKey(c => c.WorkoutSessionId).OnDelete(DeleteBehavior.Cascade);
+            comment.HasOne(c => c.Author).WithMany().HasForeignKey(c => c.AuthorId).OnDelete(DeleteBehavior.Cascade);
+            comment.HasOne(c => c.WorkoutSession).WithMany().HasForeignKey(c => c.WorkoutSessionId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 

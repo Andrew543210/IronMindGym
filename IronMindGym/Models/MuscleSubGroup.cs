@@ -14,5 +14,4 @@ public class MuscleSubGroup
 
     public int MuscleGroupId { get; set; }
     public MuscleGroup MuscleGroup { get; set; } = null!;
-    public ICollection<Exercise> Exercises { get; set; } = [];
 }

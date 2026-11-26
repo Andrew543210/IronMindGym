@@ -26,7 +26,8 @@ public static class DemoDataSeeder
             Username = "demo_athlete",
             Email = "demo@ironmind.app",
             PasswordHash = PasswordHashUtility.Hash("DemoTraining123!"),
-            Profile = new Profile { Age = 24, HeightCm = 180, AccountCreatedAt = DateTime.UtcNow.AddDays(-40) },
+            CreatedAt = DateTime.UtcNow.AddDays(-40),
+            Profile = new Profile { Age = 24, HeightCm = 180 },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 90, SquatKg = 130, DeadliftKg = 160 }
         };
         var friend = new User
@@ -34,7 +35,8 @@ public static class DemoDataSeeder
             Username = "fit_friend",
             Email = "friend@ironmind.app",
             PasswordHash = PasswordHashUtility.Hash("FriendTraining123!"),
-            Profile = new Profile { Age = 23, HeightCm = 168, AccountCreatedAt = DateTime.UtcNow.AddDays(-20) },
+            CreatedAt = DateTime.UtcNow.AddDays(-20),
+            Profile = new Profile { Age = 23, HeightCm = 168 },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 65, SquatKg = 95, DeadliftKg = 120 }
         };
         db.Users.AddRange(athlete, friend);

@@ -40,5 +40,4 @@ public class Exercise
     public KeyLift? KeyLift { get; set; }
     public int MuscleSubGroupId { get; set; }
     public MuscleSubGroup MuscleSubGroup { get; set; } = null!;
-    public ICollection<PerformedExercise> PerformedExercises { get; set; } = [];
 }

@@ -4,7 +4,7 @@ import { setLanguage } from '../i18n/language';
 import { mockApi, renderPage } from '../test/harness';
 import { AwardsPage, RecordsPage, StatisticsPage } from './StatisticsPages';
 
-const record = { muscleGroupName: 'Chest', muscleSubGroupName: 'Middle Chest', exerciseName: 'Flat Bench Press', maxWeightKg: 82.5, updatedAt: '2026-11-19T21:30:00Z' };
+const record = { muscleGroupName: 'Chest', muscleSubGroupName: 'Middle Chest', exerciseName: 'Flat Bench Press', maxWeightKg: 82.5, achievedAt: '2026-11-19T21:30:00Z' };
 
 const statistics = {
   workoutsCompleted: 12, totalWorkoutMinutes: 600, avgWorkoutDurationMinutes: 50, longestStreak: 3, avgWeeklyWorkouts: 2.4,
