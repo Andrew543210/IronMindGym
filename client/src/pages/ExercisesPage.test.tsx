@@ -9,9 +9,9 @@ it('filters the library by group, subgroup and text', async () => {
     'GET /api/exercises': {
       muscleGroups: [{ id: 1, name: 'Chest' }, { id: 2, name: 'Core' }],
       exercises: [
-        { id: 1, name: 'Flat Bench Press', description: 'Press the bar from the chest.', type: 'StrengthTraining', muscleGroupId: 1, muscleSubGroupName: 'Middle Chest' },
-        { id: 2, name: 'Incline Press', description: 'Press on an incline bench.', type: 'StrengthTraining', muscleGroupId: 1, muscleSubGroupName: 'Upper Chest' },
-        { id: 3, name: 'Weighted Plank', description: 'Hold a straight line.', type: 'Timed', muscleGroupId: 2, muscleSubGroupName: 'Abs' },
+        { exerciseId: 1, exerciseName: 'Flat Bench Press', englishName: 'Flat Bench Press', description: 'Press the bar from the chest.', exerciseType: 'StrengthTraining', muscleGroupId: 1, muscleGroupName: 'Chest', muscleSubGroupId: 1, muscleSubGroupName: 'Middle Chest' },
+        { exerciseId: 2, exerciseName: 'Incline Press', englishName: 'Incline Press', description: 'Press on an incline bench.', exerciseType: 'StrengthTraining', muscleGroupId: 1, muscleGroupName: 'Chest', muscleSubGroupId: 2, muscleSubGroupName: 'Upper Chest' },
+        { exerciseId: 3, exerciseName: 'Weighted Plank', englishName: 'Weighted Plank', description: 'Hold a straight line.', exerciseType: 'Timed', muscleGroupId: 2, muscleGroupName: 'Core', muscleSubGroupId: 3, muscleSubGroupName: 'Abs' },
       ],
     },
   });

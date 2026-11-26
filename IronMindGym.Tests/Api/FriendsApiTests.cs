@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using IronMindGym.Api;
 using IronMindGym.Contracts;
 using IronMindGym.Models;
 using IronMindGym.Services;

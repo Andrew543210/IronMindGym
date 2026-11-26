@@ -1,5 +1,4 @@
 using IronMindGym.Contracts;
-using IronMindGym.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IronMindGym.Api;
@@ -23,12 +22,4 @@ public class GoalsController(GoalService goals) : ApiController
 
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id) => goals.Delete(UserId, id) ? NoContent() : NotFound();
-}
-
-public sealed record GoalCompletionRequest(bool Completed);
-
-public sealed record GoalResponse(int Id, string Title, DateOnly Deadline, bool IsCompleted)
-{
-    public static GoalResponse From(UserGoal goal) =>
-        new(goal.Id, goal.Title, goal.Deadline, goal.IsCompleted);
 }

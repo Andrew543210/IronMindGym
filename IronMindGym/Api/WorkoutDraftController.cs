@@ -1,5 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using IronMindGym.Contracts;
 using IronMindGym.Data;
 using IronMindGym.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -62,7 +62,3 @@ public class WorkoutDraftController(IronMindDbContext db, TimeProvider clock) : 
         return NoContent();
     }
 }
-
-public sealed record WorkoutDraftRequest([Required] Guid? DraftId, [Required] JsonElement? Content);
-
-public sealed record WorkoutDraftResponse(Guid DraftId, JsonElement Content, DateTime UpdatedAt);

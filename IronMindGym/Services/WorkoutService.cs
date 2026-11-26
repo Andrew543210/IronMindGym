@@ -6,9 +6,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class WorkoutService(IronMindDbContext db, TimeProvider clock, PersonalRecordService records, AchievementService achievements)
+public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCalendars calendars, PersonalRecordService records, AchievementService achievements)
 {
-    public WorkoutDetails? BuildDetails(int ownerId, int sessionId, int viewerId)
+    /// <summary>
+    /// A saved workout as its owner or a friend sees it. The owner also sees how many planned workouts are
+    /// left this week.
+    /// </summary>
+    public WorkoutDetailsResponse? Details(int ownerId, int sessionId, int viewerId)
     {
         var session = db.WorkoutSessions.AsNoTracking()
             .Include(s => s.PerformedExercises).ThenInclude(pe => pe.Exercise)
@@ -17,21 +21,35 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, PersonalRe
             .FirstOrDefault(s => s.Id == sessionId && s.UserId == ownerId);
         if (session is null)
             return null;
+        var isOwner = viewerId == ownerId;
         var sets = session.PerformedExercises.SelectMany(pe => pe.Sets).ToList();
-        return new WorkoutDetails
-        {
-            Session = session,
-            IsOwner = viewerId == ownerId,
-            LikesCount = db.ActivityLikes.Count(x => x.WorkoutSessionId == sessionId),
-            IsLikedByCurrentUser = db.ActivityLikes.Any(x => x.WorkoutSessionId == sessionId && x.UserId == viewerId),
-            Comments = db.FriendComments.AsNoTracking()
+        return new WorkoutDetailsResponse(
+            session.Id,
+            SessionName(session.SplitDay?.WorkoutName, session.SplitDay?.WorkoutNameUk),
+            session.SessionDate,
+            session.DurationMinutes,
+            session.Rating,
+            session.Notes,
+            session.PerformedExercises.OrderBy(p => p.OrderInWorkout).Select(p => new PerformedExerciseResponse(
+                Localized.Pick(p.Exercise.Name, p.Exercise.NameUk),
+                p.Exercise.Type,
+                p.Sets.OrderBy(s => s.SetNumber)
+                    .Select(s => new WorkoutSetResponse(s.SetNumber, s.SetType is null ? null : Localized.Pick(s.SetType.Name, s.SetType.NameUk),
+                        s.WeightKg, s.Reps, s.DurationSeconds, s.Intensity, s.RestSeconds))
+                    .ToList())).ToList(),
+            sets.Count > 0 ? Math.Round(sets.Average(s => s.RestSeconds), 1) : 0,
+            isOwner
+                ? Math.Max(db.WorkoutPlans.WorkoutsPerWeek(ownerId) - db.WorkoutSessions.WorkoutsThisWeek(ownerId, calendars.For(ownerId)), 0)
+                : null,
+            BuildExerciseStats(session),
+            isOwner,
+            db.ActivityLikes.Count(x => x.WorkoutSessionId == sessionId),
+            db.ActivityLikes.Any(x => x.WorkoutSessionId == sessionId && x.UserId == viewerId),
+            db.FriendComments.AsNoTracking()
                 .Where(x => x.WorkoutSessionId == sessionId)
                 .OrderByDescending(x => x.CreatedAt)
                 .Select(x => new WorkoutComment { AuthorUsername = x.Author.Username, Text = x.Text, CreatedAt = x.CreatedAt })
-                .ToList(),
-            AverageRestSeconds = sets.Count > 0 ? Math.Round(sets.Average(s => s.RestSeconds), 1) : 0,
-            ExerciseStats = BuildExerciseStats(session)
-        };
+                .ToList());
     }
 
     /// <summary>

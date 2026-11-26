@@ -8,6 +8,7 @@ export interface CatalogExercise {
   exerciseId: number;
   exerciseName: string;
   englishName: string;
+  description: string;
   exerciseType: ExerciseType;
   muscleGroupId: number;
   muscleGroupName: string;

@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using IronMindGym.Contracts;
 using IronMindGym.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -50,13 +49,3 @@ public class ProgressController(
             progress.List(friendId));
     }
 }
-
-public sealed record ProgressResultsRequest(
-    [Required] double? InitialValue1,
-    [Required] double? InitialValue2,
-    [Required] double? CurrentValue1,
-    [Required] double? CurrentValue2);
-
-public sealed record CurrentResultRequest(double? WeightKg, int? Reps, int? DurationSeconds, int? Intensity);
-
-public sealed record FriendProgressResponse(string FriendUsername, double CurrentStrengthCoefficient, List<ExerciseProgressEntry> Exercises);

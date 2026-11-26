@@ -12,4 +12,3 @@ public abstract class ApiController : ControllerBase
     protected int UserId => User.GetUserId() ?? throw new InvalidOperationException("This endpoint requires a signed-in user.");
 }
 
-public sealed record OptionResponse(int Id, string Name);

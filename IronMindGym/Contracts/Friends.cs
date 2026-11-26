@@ -1,52 +1,58 @@
 namespace IronMindGym.Contracts;
 
-public class FriendCard
+public sealed record FriendCard
 {
-    public bool IsFriend { get; set; }
-    public bool RequestSent { get; set; }
-    public bool RequestReceived { get; set; }
-    public int UserId { get; set; }
-    public string Username { get; set; } = string.Empty;
-    public int LastFiveWorkoutsCount { get; set; }
-    public double AverageKcal { get; set; }
-    public List<FriendWorkoutPreview> LastFiveWorkouts { get; set; } = new();
-    public List<FriendNutritionPreview> LastNutritionLogs { get; set; } = new();
-    public List<FriendRecordPreview> PersonalRecords { get; set; } = new();
-    public List<FriendAchievementPreview> Achievements { get; set; } = new();
+    public bool IsFriend { get; init; }
+    public bool RequestSent { get; init; }
+    public bool RequestReceived { get; init; }
+    public int UserId { get; init; }
+    public string Username { get; init; } = string.Empty;
+    public int LastFiveWorkoutsCount { get; init; }
+    public double AverageKcal { get; init; }
+    public List<FriendWorkoutPreview> LastFiveWorkouts { get; init; } = new();
+    public List<FriendNutritionPreview> LastNutritionLogs { get; init; } = new();
+    public List<FriendRecordPreview> PersonalRecords { get; init; } = new();
+    public List<FriendAchievementPreview> Achievements { get; init; } = new();
 }
 
-public class FriendWorkoutPreview
+public sealed record FriendWorkoutPreview
 {
-    public int WorkoutSessionId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public DateTime SessionDate { get; set; }
-    public int DurationMinutes { get; set; }
+    public int WorkoutSessionId { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public DateTime SessionDate { get; init; }
+    public int DurationMinutes { get; init; }
 }
 
-public class FriendAchievementPreview
+public sealed record FriendAchievementPreview
 {
-    public string Name { get; set; } = string.Empty;
-    public string ConditionDescription { get; set; } = string.Empty;
-    public DateTime AchievedAt { get; set; }
+    public string Name { get; init; } = string.Empty;
+    public string ConditionDescription { get; init; } = string.Empty;
+    public DateTime AchievedAt { get; init; }
 }
 
-public class FriendNutritionPreview
+public sealed record FriendNutritionPreview
 {
-    public DateOnly Date { get; set; }
-    public double CaloriesKcal { get; set; }
-    public double ProteinG { get; set; }
-    public double FatG { get; set; }
-    public double CarbsG { get; set; }
+    public DateOnly Date { get; init; }
+    public double CaloriesKcal { get; init; }
+    public double ProteinG { get; init; }
+    public double FatG { get; init; }
+    public double CarbsG { get; init; }
 }
 
-public class FriendRecordPreview
+public sealed record FriendRecordPreview
 {
-    public string ExerciseName { get; set; } = string.Empty;
-    public double MaxWeightKg { get; set; }
-    public DateTime AchievedAt { get; set; }
+    public string ExerciseName { get; init; } = string.Empty;
+    public double MaxWeightKg { get; init; }
+    public DateTime AchievedAt { get; init; }
 }
 
-public class FriendsOverview
+public sealed record FriendsOverview
 {
-    public List<FriendCard> Friends { get; set; } = new();
+    public List<FriendCard> Friends { get; init; } = new();
 }
+
+public sealed record FriendRequestResponse(FriendshipService.RequestResult Result);
+
+public sealed record FriendWorkoutResponse(string FriendUsername, WorkoutDetailsResponse Workout);
+
+public sealed record LikeRequest(bool Liked);

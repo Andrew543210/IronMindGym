@@ -125,7 +125,3 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery, A
         });
     }
 }
-
-public sealed record CsrfTokenResponse(string Token);
-
-public sealed record SessionResponse(int Id, string Username, string Email, string TimeZone, DateOnly Today, bool SetupComplete, string? Language);

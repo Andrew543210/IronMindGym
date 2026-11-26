@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
-using IronMindGym.Api;
 using IronMindGym.Contracts;
 using IronMindGym.Models;
 
@@ -43,7 +42,7 @@ public class ProfileApiTests
         await api.RegisterWithSetup();
         var settings = await Settings(api);
         var weighIns = app.Query(db => db.WeightLogs.Count());
-        settings.CalorieTarget = 2600;
+        settings = settings with { CalorieTarget = 2600 };
 
         await ApiClient.Ok(await api.Put("/api/profile/settings", settings));
 
@@ -58,10 +57,13 @@ public class ProfileApiTests
         using var api = app.Api();
         await api.RegisterWithSetup();
         var settings = await Settings(api);
-        settings.WeightKg = 81.5;
-        settings.HeightCm = 181;
-        settings.SplitTypeId = app.Query(db => db.SplitTypes.Single(s => s.Code == SplitTypeCode.LegsBackChest).Id);
-        settings.WorkoutsPerWeek = 5;
+        settings = settings with
+        {
+            WeightKg = 81.5,
+            HeightCm = 181,
+            SplitTypeId = app.Query(db => db.SplitTypes.Single(s => s.Code == SplitTypeCode.LegsBackChest).Id),
+            WorkoutsPerWeek = 5
+        };
 
         await ApiClient.Ok(await api.Put("/api/profile/settings", settings));
 
@@ -82,16 +84,11 @@ public class ProfileApiTests
         await other.Register("taken");
         var settings = await Settings(api);
 
-        settings.TimeZone = "Mars/Olympus";
-        Assert.Contains("Enter a time zone such as Europe/Kyiv, or leave it empty to use UTC.", await ApiClient.Errors(await api.Put("/api/profile/settings", settings)));
-        settings.TimeZone = null;
-        settings.SplitTypeId = 999;
-        Assert.Contains("Choose a valid training split.", await ApiClient.Errors(await api.Put("/api/profile/settings", settings)));
-        settings.SplitTypeId = app.Query(db => db.SplitTypes.First().Id);
-        settings.Username = "TAKEN";
-        Assert.Contains("This username is already taken.", await ApiClient.Errors(await api.Put("/api/profile/settings", settings)));
-        settings.Username = "bad name!";
-        Assert.NotEmpty(await ApiClient.Errors(await api.Put("/api/profile/settings", settings)));
+        Assert.Contains("Enter a time zone such as Europe/Kyiv, or leave it empty to use UTC.",
+            await ApiClient.Errors(await api.Put("/api/profile/settings", settings with { TimeZone = "Mars/Olympus" })));
+        Assert.Contains("Choose a valid training split.", await ApiClient.Errors(await api.Put("/api/profile/settings", settings with { SplitTypeId = 999 })));
+        Assert.Contains("This username is already taken.", await ApiClient.Errors(await api.Put("/api/profile/settings", settings with { Username = "TAKEN" })));
+        Assert.NotEmpty(await ApiClient.Errors(await api.Put("/api/profile/settings", settings with { Username = "bad name!" })));
 
         Assert.Null(app.Query(db => db.Profiles.Single(p => p.User.Username == "athlete").TimeZone));
     }
@@ -104,8 +101,7 @@ public class ProfileApiTests
         using var api = app.Api();
         await api.RegisterWithSetup();
         var settings = await Settings(api);
-        settings.TimeZone = "Pacific/Kiritimati";
-        await ApiClient.Ok(await api.Put("/api/profile/settings", settings));
+        await ApiClient.Ok(await api.Put("/api/profile/settings", settings with { TimeZone = "Pacific/Kiritimati" }));
         var localToday = new DateOnly(2026, 11, 21);
 
         await ApiClient.Ok(await api.Put($"/api/profile/weights/{Day(localToday)}", new { weightKg = 79.6 }));

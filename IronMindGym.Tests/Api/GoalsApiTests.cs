@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Net;
-using IronMindGym.Api;
+using IronMindGym.Contracts;
 using IronMindGym.Models;
 
 namespace IronMindGym.Tests.Api;

@@ -1,21 +1,10 @@
+using IronMindGym.Contracts;
 using IronMindGym.Data;
 using IronMindGym.Localization;
 using IronMindGym.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
-
-public sealed class AwardProgressItem
-{
-    public required string Code { get; init; }
-    public required string Name { get; init; }
-    public required string ConditionDescription { get; init; }
-    public bool IsUnlocked { get; init; }
-    public bool IsNumeric { get; init; }
-    public double CurrentValue { get; init; }
-    public double TargetValue { get; init; }
-    public double ProgressPercent { get; init; }
-}
 
 /// <summary>
 /// Every award in <see cref="AchievementCatalog"/> is earned once its metric reaches the target. The metrics are

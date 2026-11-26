@@ -8,7 +8,7 @@ namespace IronMindGym.Services;
 
 public class DashboardService(IronMindDbContext db, AthleteCalendars calendars, StrengthService strength)
 {
-    public DashboardSummary Build(int currentUserId)
+    public DashboardResponse Build(int currentUserId)
     {
         var username = db.Users.Where(u => u.Id == currentUserId).Select(u => u.Username).Single();
         var calendar = calendars.For(currentUserId);
@@ -24,25 +24,30 @@ public class DashboardService(IronMindDbContext db, AthleteCalendars calendars, 
             IsCurrent = step.Name == rank.Rank.Name
         }).ToList();
 
-        var vm = new DashboardSummary
-        {
-            NeedsSetup = !AthleteSetup.IsComplete(db, currentUserId),
-            WeightKg = rank.BodyweightKg,
-            TotalWorkouts = db.WorkoutSessions.Count(w => w.UserId == currentUserId),
-            TodayNutrition = db.DailyNutritions.AsNoTracking().FirstOrDefault(n => n.UserId == currentUserId && n.Date == today),
-            Goals = db.UserGoals.AsNoTracking().Where(g => g.UserId == currentUserId && !g.IsCompleted).OrderBy(g => g.Deadline).Take(3).ToList(),
-            RecentWorkouts = db.WorkoutSessions.AsNoTracking().Include(w => w.SplitDay).Where(w => w.UserId == currentUserId).OrderByDescending(w => w.SessionDate).Take(3).ToList(),
-            Username = username,
-            AvatarName = rankName,
-            StrengthCoefficient = rank.Coefficient,
-            CurrentAvatarPositionPercent = StrengthRanks.ScalePosition(rank.Coefficient, rank.Ladder),
-            PlannedWorkoutsPerWeek = db.WorkoutPlans.WorkoutsPerWeek(currentUserId),
-            CompletedThisWeek = db.WorkoutSessions.WorkoutsThisWeek(currentUserId, calendar),
-            AvatarScalePoints = scale,
-            FeedItems = ResearchNotes(db.ResearchItems.OrderByDescending(r => r.PublishedAt).ThenBy(r => r.Id).Take(4))
-        };
-
-        return vm;
+        var nutrition = db.DailyNutritions.AsNoTracking().FirstOrDefault(n => n.UserId == currentUserId && n.Date == today);
+        return new DashboardResponse(
+            username,
+            !AthleteSetup.IsComplete(db, currentUserId),
+            rank.BodyweightKg,
+            db.WorkoutSessions.Count(w => w.UserId == currentUserId),
+            nutrition is null ? null : new NutritionTotalsResponse(nutrition.CaloriesKcal, nutrition.ProteinG, nutrition.FatG, nutrition.CarbsG),
+            db.UserGoals.AsNoTracking().Where(g => g.UserId == currentUserId && !g.IsCompleted).OrderBy(g => g.Deadline).Take(3)
+                .AsEnumerable().Select(GoalResponse.From).ToList(),
+            db.WorkoutSessions.AsNoTracking().Where(w => w.UserId == currentUserId).OrderByDescending(w => w.SessionDate).Take(3)
+                .Select(w => new WorkoutSessionListItem
+                {
+                    Id = w.Id,
+                    Name = WorkoutService.SessionName(w.SplitDay!.WorkoutName, w.SplitDay.WorkoutNameUk),
+                    SessionDate = w.SessionDate,
+                    DurationMinutes = w.DurationMinutes
+                }).ToList(),
+            rankName,
+            rank.Coefficient,
+            StrengthRanks.ScalePosition(rank.Coefficient, rank.Ladder),
+            scale,
+            db.WorkoutPlans.WorkoutsPerWeek(currentUserId),
+            db.WorkoutSessions.WorkoutsThisWeek(currentUserId, calendar),
+            ResearchNotes(db.ResearchItems.OrderByDescending(r => r.PublishedAt).ThenBy(r => r.Id).Take(4)));
     }
 
     /// <summary>Research notes in the request language.</summary>

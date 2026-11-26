@@ -8,8 +8,11 @@ namespace IronMindGym.Tests.Domain;
 
 public class WorkoutRecordTests
 {
-    private static WorkoutService Workouts(IronMindDbContext db) =>
-        new(db, TimeProvider.System, new PersonalRecordService(db), new AchievementService(db, new AthleteCalendars(db, TimeProvider.System)));
+    private static WorkoutService Workouts(IronMindDbContext db)
+    {
+        var calendars = new AthleteCalendars(db, TimeProvider.System);
+        return new(db, TimeProvider.System, calendars, new PersonalRecordService(db), new AchievementService(db, calendars));
+    }
 
     private static int Save(TestApplication app, params (int Exercise, double Weight, int Reps, int Duration)[] sets) => app.Query(db =>
         Workouts(db).Save(db.Users.Single().Id, new SaveWorkoutRequest

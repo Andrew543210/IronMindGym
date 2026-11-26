@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using IronMindGym.Api;
+using IronMindGym.Contracts;
 
 namespace IronMindGym.Tests.Api;
 

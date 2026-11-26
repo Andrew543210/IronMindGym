@@ -13,6 +13,7 @@ public static class ExerciseCatalog
             ExerciseId = e.Id,
             ExerciseName = Localized.Pick(e.Name, e.NameUk),
             EnglishName = e.Name,
+            Description = Localized.Pick(e.Description, e.DescriptionUk),
             ExerciseType = e.Type,
             MuscleGroupId = e.MuscleSubGroup.MuscleGroupId,
             MuscleGroupName = Localized.Pick(e.MuscleSubGroup.MuscleGroup.Name, e.MuscleSubGroup.MuscleGroup.NameUk),

@@ -90,15 +90,8 @@ public class WorkoutsController(
     public SavedWorkoutResponse Save(SaveWorkoutRequest request) => new(workouts.Save(UserId, request));
 
     [HttpGet("{id:int}")]
-    public ActionResult<WorkoutDetailsResponse> Details(int id)
-    {
-        var details = workouts.BuildDetails(UserId, id, UserId);
-        if (details is null)
-            return NotFound();
-        details.RemainingWorkoutsThisWeek = Math.Max(
-            db.WorkoutPlans.WorkoutsPerWeek(UserId) - db.WorkoutSessions.WorkoutsThisWeek(UserId, calendars.For(UserId)), 0);
-        return WorkoutDetailsResponse.From(details);
-    }
+    public ActionResult<WorkoutDetailsResponse> Details(int id) =>
+        workouts.Details(UserId, id, UserId) is { } details ? details : NotFound();
 
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id) => workouts.Delete(UserId, id) ? NoContent() : NotFound();
@@ -106,69 +99,4 @@ public class WorkoutsController(
     [HttpPost("{id:int}/comments")]
     public ActionResult AddComment(int id, CommentRequest request) =>
         social.AddComment(UserId, UserId, id, request.Text) ? NoContent() : NotFound();
-}
-
-public sealed record WorkoutHistoryResponse(List<WorkoutSessionListItem> Sessions, int Page, bool HasOlderSessions);
-
-public sealed record SplitTypeOption(int Id, string Name, List<SplitDayOption> Days);
-
-public sealed record WorkoutLoggerResponse(
-    string? ActiveSplitTypeName,
-    int? ActiveSplitTypeId,
-    List<SplitTypeOption> SplitTypes,
-    List<OptionResponse> SetTypes,
-    int DefaultSetTypeId,
-    List<OptionResponse> MuscleGroups,
-    List<ExerciseCatalogItem> Exercises);
-
-public sealed record PreviousSetResponse(double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds, int SetTypeId, DateOnly LocalDate);
-
-public sealed record SavedWorkoutResponse(int Id);
-
-public sealed record CommentRequest(string? Text);
-
-public sealed record WorkoutSetResponse(int SetNumber, string? SetTypeName, double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds);
-
-public sealed record PerformedExerciseResponse(string ExerciseName, ExerciseType ExerciseType, List<WorkoutSetResponse> Sets);
-
-public sealed record WorkoutDetailsResponse(
-    int Id,
-    string Name,
-    DateTime SessionDate,
-    int DurationMinutes,
-    int? Rating,
-    string? Notes,
-    List<PerformedExerciseResponse> Exercises,
-    double AverageRestSeconds,
-    int? RemainingWorkoutsThisWeek,
-    List<ExerciseWorkoutSummary> ExerciseStats,
-    bool IsOwner,
-    int LikesCount,
-    bool IsLikedByCurrentUser,
-    List<WorkoutComment> Comments)
-{
-    public static WorkoutDetailsResponse From(WorkoutDetails details)
-    {
-        var session = details.Session;
-        return new WorkoutDetailsResponse(
-            session.Id,
-            WorkoutService.SessionName(session.SplitDay?.WorkoutName, session.SplitDay?.WorkoutNameUk),
-            session.SessionDate,
-            session.DurationMinutes,
-            session.Rating,
-            session.Notes,
-            session.PerformedExercises.OrderBy(p => p.OrderInWorkout).Select(p => new PerformedExerciseResponse(
-                Localized.Pick(p.Exercise.Name, p.Exercise.NameUk),
-                p.Exercise.Type,
-                p.Sets.OrderBy(s => s.SetNumber)
-                    .Select(s => new WorkoutSetResponse(s.SetNumber, s.SetType is null ? null : Localized.Pick(s.SetType.Name, s.SetType.NameUk), s.WeightKg, s.Reps, s.DurationSeconds, s.Intensity, s.RestSeconds))
-                    .ToList())).ToList(),
-            details.AverageRestSeconds,
-            details.RemainingWorkoutsThisWeek,
-            details.ExerciseStats,
-            details.IsOwner,
-            details.LikesCount,
-            details.IsLikedByCurrentUser,
-            details.Comments);
-    }
 }

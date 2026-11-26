@@ -19,46 +19,61 @@ public class FriendshipService(IronMindDbContext db, AthleteCalendars calendars,
         var relatedIds = relationships.Select(f => f.User1Id == userId ? f.User2Id : f.User1Id).ToList();
         var users = db.Users.AsNoTracking().Where(u => u.Id != userId);
         users = search.Length == 0 ? users.Where(u => relatedIds.Contains(u.Id)) : users.Where(u => EF.Functions.ILike(u.Username, $"%{EscapeLike(search)}%"));
-        var cards = users.OrderBy(u => u.Username).Take(20).Select(u => new FriendCard { UserId = u.Id, Username = u.Username }).ToList();
-        foreach (var card in cards)
-        {
-            var relationship = relationships.FirstOrDefault(f => f.User1Id == card.UserId || f.User2Id == card.UserId);
-            card.IsFriend = relationship?.Status == FriendshipStatus.Accepted;
-            card.RequestReceived = relationship?.Status == FriendshipStatus.Pending && relationship.RequestedByUserId != userId;
-            card.RequestSent = relationship?.Status == FriendshipStatus.Pending && relationship.RequestedByUserId == userId;
-        }
-        var friendIds = cards.Where(c => c.IsFriend).Select(c => c.UserId).ToList();
         var firstNutritionDay = calendars.For(userId).Today.AddDays(-9);
-        // At most 20 cards are shown. Each preview is a small indexed LIMIT query per friend,
-        // which stays bounded however long a friend's history grows.
-        foreach (var card in cards.Where(c => c.IsFriend))
+        var cards = users.OrderBy(u => u.Username).Take(20).Select(u => new { u.Id, u.Username }).AsEnumerable().Select(u =>
         {
-            card.LastFiveWorkouts = db.WorkoutSessions.AsNoTracking().Where(s => s.UserId == card.UserId)
-                .OrderByDescending(s => s.SessionDate).ThenByDescending(s => s.Id).Take(PreviewSize)
-                .Select(s => new FriendWorkoutPreview { WorkoutSessionId = s.Id, Name = WorkoutService.SessionName(s.SplitDay!.WorkoutName, s.SplitDay.WorkoutNameUk), SessionDate = s.SessionDate, DurationMinutes = s.DurationMinutes })
-                .ToList();
-            card.LastFiveWorkoutsCount = card.LastFiveWorkouts.Count;
-            card.LastNutritionLogs = db.DailyNutritions.AsNoTracking().Where(n => n.UserId == card.UserId && n.Date >= firstNutritionDay)
-                .OrderByDescending(n => n.Date)
-                .Select(n => new FriendNutritionPreview { Date = n.Date, CaloriesKcal = n.CaloriesKcal, ProteinG = n.ProteinG, FatG = n.FatG, CarbsG = n.CarbsG })
-                .ToList();
-            card.AverageKcal = card.LastNutritionLogs.Select(n => n.CaloriesKcal).DefaultIfEmpty(0).Average();
-            card.PersonalRecords = db.PersonalRecords.AsNoTracking().Where(r => r.UserId == card.UserId)
-                .OrderByDescending(r => r.AchievedAt).Take(PreviewSize)
-                .Select(r => new FriendRecordPreview { ExerciseName = Localized.Pick(r.Exercise.Name, r.Exercise.NameUk), MaxWeightKg = r.MaxWeightKg, AchievedAt = r.AchievedAt })
-                .ToList();
-            card.Achievements = db.UserAchievements.AsNoTracking().Where(a => a.UserId == card.UserId)
-                .OrderByDescending(a => a.AchievedAt).Take(PreviewSize)
-                .Select(a => new FriendAchievementPreview
-                {
-                    Name = Localized.Pick(a.Achievement.Name, a.Achievement.NameUk),
-                    ConditionDescription = Localized.Pick(a.Achievement.ConditionDescription, a.Achievement.ConditionDescriptionUk), AchievedAt = a.AchievedAt })
-                .ToList();
-        }
+            var relationship = relationships.FirstOrDefault(f => f.User1Id == u.Id || f.User2Id == u.Id);
+            var pending = relationship?.Status == FriendshipStatus.Pending;
+            var card = new FriendCard
+            {
+                UserId = u.Id,
+                Username = u.Username,
+                IsFriend = relationship?.Status == FriendshipStatus.Accepted,
+                RequestReceived = pending && relationship!.RequestedByUserId != userId,
+                RequestSent = pending && relationship!.RequestedByUserId == userId
+            };
+            return card.IsFriend ? WithPreviews(card, firstNutritionDay) : card;
+        }).ToList();
         return new FriendsOverview { Friends = cards };
     }
 
     private const int PreviewSize = 5;
+
+    /// <summary>
+    /// A friend's card shows their latest training, nutrition, records and awards. At most 20 cards are shown, and
+    /// each preview is a small indexed LIMIT query, which stays bounded however long a friend's history grows.
+    /// </summary>
+    private FriendCard WithPreviews(FriendCard card, DateOnly firstNutritionDay)
+    {
+        var workouts = db.WorkoutSessions.AsNoTracking().Where(s => s.UserId == card.UserId)
+            .OrderByDescending(s => s.SessionDate).ThenByDescending(s => s.Id).Take(PreviewSize)
+            .Select(s => new FriendWorkoutPreview { WorkoutSessionId = s.Id, Name = WorkoutService.SessionName(s.SplitDay!.WorkoutName, s.SplitDay.WorkoutNameUk), SessionDate = s.SessionDate, DurationMinutes = s.DurationMinutes })
+            .ToList();
+        var nutrition = db.DailyNutritions.AsNoTracking().Where(n => n.UserId == card.UserId && n.Date >= firstNutritionDay)
+            .OrderByDescending(n => n.Date)
+            .Select(n => new FriendNutritionPreview { Date = n.Date, CaloriesKcal = n.CaloriesKcal, ProteinG = n.ProteinG, FatG = n.FatG, CarbsG = n.CarbsG })
+            .ToList();
+        return card with
+        {
+            LastFiveWorkouts = workouts,
+            LastFiveWorkoutsCount = workouts.Count,
+            LastNutritionLogs = nutrition,
+            AverageKcal = nutrition.Select(n => n.CaloriesKcal).DefaultIfEmpty(0).Average(),
+            PersonalRecords = db.PersonalRecords.AsNoTracking().Where(r => r.UserId == card.UserId)
+                .OrderByDescending(r => r.AchievedAt).Take(PreviewSize)
+                .Select(r => new FriendRecordPreview { ExerciseName = Localized.Pick(r.Exercise.Name, r.Exercise.NameUk), MaxWeightKg = r.MaxWeightKg, AchievedAt = r.AchievedAt })
+                .ToList(),
+            Achievements = db.UserAchievements.AsNoTracking().Where(a => a.UserId == card.UserId)
+                .OrderByDescending(a => a.AchievedAt).Take(PreviewSize)
+                .Select(a => new FriendAchievementPreview
+                {
+                    Name = Localized.Pick(a.Achievement.Name, a.Achievement.NameUk),
+                    ConditionDescription = Localized.Pick(a.Achievement.ConditionDescription, a.Achievement.ConditionDescriptionUk),
+                    AchievedAt = a.AchievedAt
+                })
+                .ToList()
+        };
+    }
 
     public enum RequestResult { Sent, AlreadyRequested, Connected, AlreadyConnected }
 

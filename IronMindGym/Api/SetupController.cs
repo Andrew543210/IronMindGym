@@ -52,5 +52,3 @@ public class SetupController(IronMindDbContext db, AthleteCalendars calendars, A
         return NoContent();
     }
 }
-
-public sealed record SetupFormResponse(List<OptionResponse> SplitTypes, bool AlreadyCompleted);

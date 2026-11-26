@@ -1,40 +1,52 @@
 namespace IronMindGym.Contracts;
 
-public class TrainingStatistics
+public sealed record TrainingStatistics
 {
-    public int WorkoutsCompleted { get; set; }
-    public int TotalWorkoutMinutes { get; set; }
-    public double AvgWorkoutDurationMinutes { get; set; }
-    public int LongestStreak { get; set; }
-    public double AvgWeeklyWorkouts { get; set; }
+    public int WorkoutsCompleted { get; init; }
+    public int TotalWorkoutMinutes { get; init; }
+    public double AvgWorkoutDurationMinutes { get; init; }
+    public int LongestStreak { get; init; }
+    public double AvgWeeklyWorkouts { get; init; }
 
-    public int TotalSetsCount { get; set; }
-    public double AvgSetsPerWorkout { get; set; }
-    public int AvgRestSeconds { get; set; }
+    public int TotalSetsCount { get; init; }
+    public double AvgSetsPerWorkout { get; init; }
+    public int AvgRestSeconds { get; init; }
 
-    public double TotalVolume { get; set; }
-    public double MonthlyTotalTonnage { get; set; }
-    public double WeeklyProgress { get; set; }
-    public int Last7DaysWorkouts { get; set; }
-    public int Last7DaysMinutes { get; set; }
+    public double TotalVolume { get; init; }
+    public double MonthlyTotalTonnage { get; init; }
+    public double WeeklyProgress { get; init; }
+    public int Last7DaysWorkouts { get; init; }
+    public int Last7DaysMinutes { get; init; }
 
-    public int UniqueExercisesCount { get; set; }
-    public int ExercisesThisMonth { get; set; }
-    public string? FavoriteExerciseName { get; set; }
-    public int FavoriteExerciseCount { get; set; }
+    public int UniqueExercisesCount { get; init; }
+    public int ExercisesThisMonth { get; init; }
+    public string? FavoriteExerciseName { get; init; }
+    public int FavoriteExerciseCount { get; init; }
 
-    public double BestProgressPercent { get; set; }
-    public string? BestProgressExercise { get; set; }
-    public int TotalAwardsCount { get; set; }
+    public double BestProgressPercent { get; init; }
+    public string? BestProgressExercise { get; init; }
+    public int TotalAwardsCount { get; init; }
 
-    public List<PersonalRecordItem> RecentRecords { get; set; } = [];
+    public List<PersonalRecordItem> RecentRecords { get; init; } = [];
 }
 
-public class PersonalRecordItem
+public sealed record PersonalRecordItem
 {
-    public string MuscleGroupName { get; set; } = string.Empty;
-    public string MuscleSubGroupName { get; set; } = string.Empty;
-    public string ExerciseName { get; set; } = string.Empty;
-    public double MaxWeightKg { get; set; }
-    public DateTime AchievedAt { get; set; }
+    public string MuscleGroupName { get; init; } = string.Empty;
+    public string MuscleSubGroupName { get; init; } = string.Empty;
+    public string ExerciseName { get; init; } = string.Empty;
+    public double MaxWeightKg { get; init; }
+    public DateTime AchievedAt { get; init; }
+}
+
+public sealed record AwardProgressItem
+{
+    public required string Code { get; init; }
+    public required string Name { get; init; }
+    public required string ConditionDescription { get; init; }
+    public bool IsUnlocked { get; init; }
+    public bool IsNumeric { get; init; }
+    public double CurrentValue { get; init; }
+    public double TargetValue { get; init; }
+    public double ProgressPercent { get; init; }
 }

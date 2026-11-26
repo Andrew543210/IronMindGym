@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using IronMindGym.Contracts;
 using IronMindGym.Data;
@@ -66,10 +65,3 @@ public class ProfileController(IronMindDbContext db, ProfileService profiles) : 
         return NoContent();
     }
 }
-
-public sealed record ProfileSettingsResponse(ProfileSettings Settings, List<OptionResponse> SplitTypes);
-
-public sealed record WeightRequest([Range(30, 250, ErrorMessage = "Enter a weight between 30 and 250 kg.")] double WeightKg);
-
-public sealed record LanguageRequest(
-    [Required, RegularExpression("^(en|uk)$", ErrorMessage = "Choose English or Ukrainian.")] string Language);

@@ -1,38 +1,38 @@
 namespace IronMindGym.Contracts;
 
-public class DashboardSummary
+public sealed record AvatarScalePoint
 {
-    public bool NeedsSetup { get; set; }
-    public double? WeightKg { get; set; }
-    public int TotalWorkouts { get; set; }
-    public IronMindGym.Models.DailyNutrition? TodayNutrition { get; set; }
-    public List<IronMindGym.Models.UserGoal> Goals { get; set; } = new();
-    public List<IronMindGym.Models.WorkoutSession> RecentWorkouts { get; set; } = new();
-    public string Username { get; set; } = string.Empty;
-    public string AvatarName { get; set; } = string.Empty;
-    public double StrengthCoefficient { get; set; }
-    public int PlannedWorkoutsPerWeek { get; set; }
-    public int CompletedThisWeek { get; set; }
-    public List<AvatarScalePoint> AvatarScalePoints { get; set; } = new();
-    public double CurrentAvatarPositionPercent { get; set; }
-    public List<DashboardResearchItem> FeedItems { get; set; } = new();
+    public string Name { get; init; } = string.Empty;
+    public double MinStrengthCoefficient { get; init; }
+    public double PositionPercent { get; init; }
+    public string RangeLabel { get; init; } = string.Empty;
+    public bool IsCurrent { get; init; }
 }
 
-public class AvatarScalePoint
+public sealed record DashboardResearchItem
 {
-    public string Name { get; set; } = string.Empty;
-    public double MinStrengthCoefficient { get; set; }
-    public double PositionPercent { get; set; }
-    public string RangeLabel { get; set; } = string.Empty;
-    public bool IsCurrent { get; set; }
+    public int Id { get; init; }
+    public DateOnly PublishedAt { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public string ThesisText { get; init; } = string.Empty;
+    public string Source { get; init; } = string.Empty;
+    public string SourceUrl { get; init; } = string.Empty;
 }
 
-public class DashboardResearchItem
-{
-    public int Id { get; set; }
-    public DateOnly PublishedAt { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string ThesisText { get; set; } = string.Empty;
-    public string Source { get; set; } = string.Empty;
-    public string SourceUrl { get; set; } = string.Empty;
-}
+public sealed record DashboardResponse(
+    string Username,
+    bool NeedsSetup,
+    double? WeightKg,
+    int TotalWorkouts,
+    NutritionTotalsResponse? TodayNutrition,
+    List<GoalResponse> Goals,
+    List<WorkoutSessionListItem> RecentWorkouts,
+    string AvatarName,
+    double StrengthCoefficient,
+    double CurrentAvatarPositionPercent,
+    List<AvatarScalePoint> AvatarScalePoints,
+    int PlannedWorkoutsPerWeek,
+    int CompletedThisWeek,
+    List<DashboardResearchItem> FeedItems);
+
+public sealed record NutritionTotalsResponse(double CaloriesKcal, double ProteinG, double FatG, double CarbsG);

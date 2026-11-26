@@ -16,7 +16,7 @@ const options: LoggerOptions = {
   defaultSetTypeId: 1,
   muscleGroups: [{ id: 1, name: 'Chest' }],
   exercises: [{
-    exerciseId: 7, exerciseName: 'Flat Bench Press', englishName: 'Flat Bench Press', exerciseType: 'StrengthTraining',
+    exerciseId: 7, exerciseName: 'Flat Bench Press', englishName: 'Flat Bench Press', description: '', exerciseType: 'StrengthTraining',
     muscleGroupId: 1, muscleGroupName: 'Chest', muscleSubGroupId: 3, muscleSubGroupName: 'Middle Chest',
   }],
 };

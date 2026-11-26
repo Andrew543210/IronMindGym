@@ -2,20 +2,12 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { PageState, ResponsiveTable } from '../components/ui';
 import { useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
-import type { ExerciseType } from './workouts/draft';
+import type { CatalogExercise, ExerciseType } from './workouts/draft';
 
-interface LibraryExercise {
-  id: number;
-  name: string;
-  description: string;
-  type: ExerciseType;
-  muscleGroupId: number;
-  muscleSubGroupName: string;
-}
 
 interface Library {
   muscleGroups: { id: number; name: string }[];
-  exercises: LibraryExercise[];
+  exercises: CatalogExercise[];
 }
 
 const typeLabels: Record<ExerciseType, MessageKey> = {
@@ -43,7 +35,7 @@ export function ExercisesPage() {
     [inGroup, language],
   );
   const shown = inGroup.filter((e) => (subGroup === '' || e.muscleSubGroupName === subGroup)
-    && (query === '' || `${e.name}\n${e.description}`.toLocaleLowerCase(language).includes(query)));
+    && (query === '' || `${e.exerciseName}\n${e.description}`.toLocaleLowerCase(language).includes(query)));
 
   if (!data) return <PageState error={error} loading={loading} />;
 
@@ -83,11 +75,11 @@ export function ExercisesPage() {
           </thead>
           <tbody>
             {shown.map((exercise) => (
-              <tr key={exercise.id}>
-                <td>{exercise.name}</td>
+              <tr key={exercise.exerciseId}>
+                <td>{exercise.exerciseName}</td>
                 <td>{groupNames.get(exercise.muscleGroupId)}</td>
                 <td>{exercise.muscleSubGroupName}</td>
-                <td>{t(typeLabels[exercise.type])}</td>
+                <td>{t(typeLabels[exercise.exerciseType])}</td>
                 <td className="small">{exercise.description}</td>
               </tr>
             ))}

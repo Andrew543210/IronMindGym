@@ -11,7 +11,7 @@ const english = (key: MessageKey | null | undefined) => (key ? t(key) : '');
 const defaults: DraftSettings = { splitTypeId: '2', splitDayId: '3', durationMinutes: '60', reviewRating: '4', reviewComment: '' };
 
 const bench: CatalogExercise = {
-  exerciseId: 7, exerciseName: 'Flat Bench Press', englishName: 'Flat Bench Press', exerciseType: 'StrengthTraining',
+  exerciseId: 7, exerciseName: 'Flat Bench Press', englishName: 'Flat Bench Press', description: '', exerciseType: 'StrengthTraining',
   muscleGroupId: 1, muscleGroupName: 'Chest', muscleSubGroupId: 3, muscleSubGroupName: 'Middle Chest',
 };
 const rowing: CatalogExercise = { ...bench, exerciseId: 8, exerciseName: 'Rowing Machine', exerciseType: 'Cardio' };

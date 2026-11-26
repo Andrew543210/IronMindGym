@@ -1,10 +1,11 @@
+using System.ComponentModel.DataAnnotations;
 using IronMindGym.Models;
 
 namespace IronMindGym.Contracts;
 
 public sealed record ProgressPair(int ExerciseId, double InitialValue1, double InitialValue2, double CurrentValue1, double CurrentValue2);
 
-public class ExerciseProgressEntry
+public sealed record ExerciseProgressEntry
 {
     public int ExerciseId { get; init; }
     public string ExerciseName { get; init; } = string.Empty;
@@ -28,3 +29,13 @@ public class ExerciseProgressEntry
     public int CardioDurationProgressSeconds => CurrentDurationSeconds - InitialDurationSeconds;
     public int CardioIntensityProgressCount => CurrentIntensity - InitialIntensity;
 }
+
+public sealed record ProgressResultsRequest(
+    [Required] double? InitialValue1,
+    [Required] double? InitialValue2,
+    [Required] double? CurrentValue1,
+    [Required] double? CurrentValue2);
+
+public sealed record CurrentResultRequest(double? WeightKg, int? Reps, int? DurationSeconds, int? Intensity);
+
+public sealed record FriendProgressResponse(string FriendUsername, double CurrentStrengthCoefficient, List<ExerciseProgressEntry> Exercises);

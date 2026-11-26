@@ -29,11 +29,11 @@ public class FriendsController(
     {
         if (!friendships.AreFriends(UserId, friendId))
             return NotFound();
-        var details = workouts.BuildDetails(friendId, sessionId, UserId);
+        var details = workouts.Details(friendId, sessionId, UserId);
         if (details is null)
             return NotFound();
         var username = db.Users.AsNoTracking().Where(u => u.Id == friendId).Select(u => u.Username).First();
-        return new FriendWorkoutResponse(username, WorkoutDetailsResponse.From(details));
+        return new FriendWorkoutResponse(username, details);
     }
 
     [HttpPut("{friendId:int}/workouts/{sessionId:int}/like")]
@@ -44,9 +44,3 @@ public class FriendsController(
     public ActionResult AddComment(int friendId, int sessionId, CommentRequest request) =>
         social.AddComment(UserId, friendId, sessionId, request.Text) ? NoContent() : NotFound();
 }
-
-public sealed record FriendRequestResponse(FriendshipService.RequestResult Result);
-
-public sealed record FriendWorkoutResponse(string FriendUsername, WorkoutDetailsResponse Workout);
-
-public sealed record LikeRequest(bool Liked);

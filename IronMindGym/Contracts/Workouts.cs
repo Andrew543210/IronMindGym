@@ -1,85 +1,105 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using IronMindGym.Models;
 
 namespace IronMindGym.Contracts;
 
-public class SaveWorkoutRequest
+public sealed record SaveWorkoutRequest
 {
     [Range(1, 600)]
-    public int DurationMinutes { get; set; } = 60;
+    public int DurationMinutes { get; init; } = 60;
 
     /// <summary>The split day trained; empty for a general training day.</summary>
-    public int? SplitDayId { get; set; }
+    public int? SplitDayId { get; init; }
 
-    public Guid? DraftId { get; set; }
+    public Guid? DraftId { get; init; }
 
     [Range(1, 5)]
-    public int ReviewRating { get; set; } = 4;
+    public int ReviewRating { get; init; } = 4;
 
     [MaxLength(800)]
-    public string? ReviewComment { get; set; }
+    public string? ReviewComment { get; init; }
 
-    public List<WorkoutSetInput> Sets { get; set; } = [];
+    public List<WorkoutSetInput> Sets { get; init; } = [];
 }
 
 public sealed record SplitDayOption(int Id, string Name);
 
-public class ExerciseCatalogItem
+public sealed record WorkoutSetInput
 {
-    public int ExerciseId { get; set; }
-    public string ExerciseName { get; set; } = string.Empty;
-    public string EnglishName { get; set; } = string.Empty;
-    public ExerciseType ExerciseType { get; set; }
-    public int MuscleGroupId { get; set; }
-    public string MuscleGroupName { get; set; } = string.Empty;
-    public int MuscleSubGroupId { get; set; }
-    public string MuscleSubGroupName { get; set; } = string.Empty;
+    public int ExerciseId { get; init; }
+    public int SetTypeId { get; init; }
+    public double WeightKg { get; init; }
+    public int Reps { get; init; }
+    public int DurationSeconds { get; init; }
+    public int Intensity { get; init; }
+    public int RestSeconds { get; init; }
 }
 
-public class WorkoutSetInput
+public sealed record ExerciseWorkoutSummary
 {
-    public int ExerciseId { get; set; }
-    public int SetTypeId { get; set; }
-    public double WeightKg { get; set; }
-    public int Reps { get; set; }
-    public int DurationSeconds { get; set; }
-    public int Intensity { get; set; }
-    public int RestSeconds { get; set; }
+    public string ExerciseName { get; init; } = string.Empty;
+    public int SetsCount { get; init; }
+    public bool TracksLoad { get; init; }
+    public double HeaviestLoadKg { get; init; }
+    public double? PercentOfPreviousBest { get; init; }
+    public bool IsNewRecord { get; init; }
 }
 
-public class ExerciseWorkoutSummary
+public sealed record WorkoutSessionListItem
 {
-    public string ExerciseName { get; set; } = string.Empty;
-    public int SetsCount { get; set; }
-    public bool TracksLoad { get; set; }
-    public double HeaviestLoadKg { get; set; }
-    public double? PercentOfPreviousBest { get; set; }
-    public bool IsNewRecord { get; set; }
+    public int Id { get; init; }
+    public DateTime SessionDate { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public int DurationMinutes { get; init; }
 }
 
-public class WorkoutSessionListItem
+public sealed record WorkoutComment
 {
-    public int Id { get; set; }
-    public DateTime SessionDate { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public int DurationMinutes { get; set; }
+    public string AuthorUsername { get; init; } = string.Empty;
+    public string Text { get; init; } = string.Empty;
+    public DateTime CreatedAt { get; init; }
 }
 
-public class WorkoutDetails
-{
-    public WorkoutSession Session { get; set; } = null!;
-    public bool IsOwner { get; set; }
-    public double AverageRestSeconds { get; set; }
-    public int? RemainingWorkoutsThisWeek { get; set; }
-    public List<ExerciseWorkoutSummary> ExerciseStats { get; set; } = [];
-    public int LikesCount { get; set; }
-    public bool IsLikedByCurrentUser { get; set; }
-    public List<WorkoutComment> Comments { get; set; } = [];
-}
+public sealed record WorkoutDraftRequest([Required] Guid? DraftId, [Required] JsonElement? Content);
 
-public class WorkoutComment
-{
-    public string AuthorUsername { get; set; } = string.Empty;
-    public string Text { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-}
+public sealed record WorkoutDraftResponse(Guid DraftId, JsonElement Content, DateTime UpdatedAt);
+
+public sealed record WorkoutHistoryResponse(List<WorkoutSessionListItem> Sessions, int Page, bool HasOlderSessions);
+
+public sealed record SplitTypeOption(int Id, string Name, List<SplitDayOption> Days);
+
+public sealed record WorkoutLoggerResponse(
+    string? ActiveSplitTypeName,
+    int? ActiveSplitTypeId,
+    List<SplitTypeOption> SplitTypes,
+    List<OptionResponse> SetTypes,
+    int DefaultSetTypeId,
+    List<OptionResponse> MuscleGroups,
+    List<ExerciseCatalogItem> Exercises);
+
+public sealed record PreviousSetResponse(double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds, int SetTypeId, DateOnly LocalDate);
+
+public sealed record SavedWorkoutResponse(int Id);
+
+public sealed record CommentRequest(string? Text);
+
+public sealed record WorkoutSetResponse(int SetNumber, string? SetTypeName, double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds);
+
+public sealed record PerformedExerciseResponse(string ExerciseName, ExerciseType ExerciseType, List<WorkoutSetResponse> Sets);
+
+public sealed record WorkoutDetailsResponse(
+    int Id,
+    string Name,
+    DateTime SessionDate,
+    int DurationMinutes,
+    int? Rating,
+    string? Notes,
+    List<PerformedExerciseResponse> Exercises,
+    double AverageRestSeconds,
+    int? RemainingWorkoutsThisWeek,
+    List<ExerciseWorkoutSummary> ExerciseStats,
+    bool IsOwner,
+    int LikesCount,
+    bool IsLikedByCurrentUser,
+    List<WorkoutComment> Comments);

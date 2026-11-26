@@ -1,5 +1,4 @@
 using System.Net;
-using IronMindGym.Api;
 using IronMindGym.Contracts;
 using IronMindGym.Models;
 

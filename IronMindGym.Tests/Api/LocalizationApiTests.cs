@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
-using IronMindGym.Api;
+using IronMindGym.Contracts;
 using IronMindGym.Models;
 
 namespace IronMindGym.Tests.Api;
