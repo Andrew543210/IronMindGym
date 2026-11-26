@@ -15,8 +15,8 @@ const entry = { caloriesKcal: 2500, proteinG: 140, fatG: 70, carbsG: 250 };
 
 function day(date: string, logged: boolean, overrides: object = {}) {
   return {
-    date: `${date}T00:00:00`, isLogged: logged, ...(logged ? entry : { caloriesKcal: 0, proteinG: 0, fatG: 0, carbsG: 0 }), advice,
-    recentLogs: [{ date: '2026-11-20T00:00:00', ...entry }, { date: '2026-11-18T00:00:00', ...entry, caloriesKcal: 2000 }],
+    date, isLogged: logged, ...(logged ? entry : { caloriesKcal: 0, proteinG: 0, fatG: 0, carbsG: 0 }), advice,
+    recentLogs: [{ date: '2026-11-20', ...entry }, { date: '2026-11-18', ...entry, caloriesKcal: 2000 }],
     ...overrides,
   };
 }

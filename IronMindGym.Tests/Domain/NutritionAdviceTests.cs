@@ -8,7 +8,7 @@ public class NutritionAdviceTests
     private static readonly NutritionAdviceService Advice = new();
 
     private static NutritionAdvice For(NutritionProfileSnapshot profile, DailyNutrition? day = null, params DailyNutrition[] recent) =>
-        Advice.BuildAdvice(day ?? new DailyNutrition { Date = new DateTime(2026, 11, 20) }, profile, recent);
+        Advice.BuildAdvice(day ?? new DailyNutrition { Date = new DateOnly(2026, 11, 20) }, profile, recent);
 
     [Fact]
     public void AdultEstimatesFollowMifflinStJeorAndFitTheEnergyBudget()
@@ -84,9 +84,9 @@ public class NutritionAdviceTests
     public void TheDayMatchesTargetsWithinTenPercentAndChecksItsMacros()
     {
         var profile = new NutritionProfileSnapshot { CalorieTarget = 2000, ProteinTarget = 150, FatTarget = 70, CarbsTarget = 200 };
-        var day = new DailyNutrition { Date = new DateTime(2026, 11, 20), CaloriesKcal = 2100, ProteinG = 120, FatG = 75, CarbsG = 200 };
-        var earlier = new DailyNutrition { Date = new DateTime(2026, 11, 18), CaloriesKcal = 1700 };
-        var tooOld = new DailyNutrition { Date = new DateTime(2026, 11, 1), CaloriesKcal = 4000 };
+        var day = new DailyNutrition { Date = new DateOnly(2026, 11, 20), CaloriesKcal = 2100, ProteinG = 120, FatG = 75, CarbsG = 200 };
+        var earlier = new DailyNutrition { Date = new DateOnly(2026, 11, 18), CaloriesKcal = 1700 };
+        var tooOld = new DailyNutrition { Date = new DateOnly(2026, 11, 1), CaloriesKcal = 4000 };
 
         var advice = For(profile, day, day, earlier, tooOld);
 

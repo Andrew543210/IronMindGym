@@ -99,15 +99,15 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
     }
 
     /// <summary>A weigh-in for any day in the last five years. Today's also becomes the current bodyweight.</summary>
-    public void LogWeight(int userId, DateTime date, double weightKg)
+    public void LogWeight(int userId, DateOnly date, double weightKg)
     {
         var today = calendar.Today;
-        if (date.Date > today || date.Date < today.AddYears(-5))
+        if (date > today || date < today.AddYears(-5))
             throw new ValidationException("Choose a date within the last five years, up to today.");
         using var transaction = WriteLock.BeginForAthletes(db, userId);
         var latest = LatestBody(userId) ?? throw new ValidationException("Complete your profile first.");
-        UpsertWeight(userId, weightKg, date.Date);
-        if (date.Date == today)
+        UpsertWeight(userId, weightKg, date);
+        if (date == today)
             db.AnthropometryLogs.Add(new Anthropometry { UserId = userId, WeightKg = weightKg, HeightCm = latest.HeightCm, RecordedAt = DateTime.UtcNow });
         db.SaveChanges();
         transaction.Commit();
@@ -163,7 +163,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
         .Where(a => a.UserId == userId).OrderByDescending(a => a.RecordedAt).FirstOrDefault();
 
     /// <summary>The settings form always sends the body values; only a real change is a new measurement.</summary>
-    private void RecordBodyIfChanged(int userId, double weightKg, double heightCm, DateTime today)
+    private void RecordBodyIfChanged(int userId, double weightKg, double heightCm, DateOnly today)
     {
         var latest = LatestBody(userId);
         var weightChanged = latest is null || Math.Abs(latest.WeightKg - weightKg) > 0.001;
@@ -175,7 +175,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
             UpsertWeight(userId, weightKg, today);
     }
 
-    private void UpsertWeight(int userId, double value, DateTime date)
+    private void UpsertWeight(int userId, double value, DateOnly date)
     {
         var log = db.WeightLogs.FirstOrDefault(w => w.UserId == userId && w.Date == date);
         if (log is null)

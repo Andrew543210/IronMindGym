@@ -16,7 +16,7 @@ public class NutritionApiTests
         using var other = app.Api();
         await owner.Register();
         await other.Register("other");
-        var day = DateOnly.FromDateTime((await owner.Get<NutritionDay>("/api/nutrition")).Date);
+        var day = (await owner.Get<NutritionDay>("/api/nutrition")).Date;
 
         await ApiClient.Ok(await owner.Put($"/api/nutrition/days/{day:yyyy-MM-dd}", Entry(2000)));
         await ApiClient.Ok(await owner.Put($"/api/nutrition/days/{day:yyyy-MM-dd}", Entry(2001)));
@@ -41,7 +41,7 @@ public class NutritionApiTests
         using var app = new TestApplication();
         using var api = app.Api();
         await api.Register();
-        var today = DateOnly.FromDateTime((await api.Get<NutritionDay>("/api/nutrition")).Date);
+        var today = (await api.Get<NutritionDay>("/api/nutrition")).Date;
 
         await ApiClient.Ok(await api.Put($"/api/nutrition/days/{today.AddDays(-3):yyyy-MM-dd}", Entry(1800)));
         var future = await api.Put($"/api/nutrition/days/{today.AddDays(1):yyyy-MM-dd}", Entry());
@@ -50,7 +50,7 @@ public class NutritionApiTests
         Assert.Contains("Choose a date within the last five years, up to today.", await ApiClient.Errors(future));
         Assert.Contains("Calories must be 0–10000 kcal.", await ApiClient.Errors(tooMuch));
         Assert.Equal(HttpStatusCode.BadRequest, (await api.Put("/api/nutrition/days/not-a-date", Entry())).StatusCode);
-        Assert.Equal(today.AddDays(-3), DateOnly.FromDateTime(app.Query(db => db.DailyNutritions.Single().Date)));
+        Assert.Equal(today.AddDays(-3), app.Query(db => db.DailyNutritions.Single().Date));
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public class NutritionApiTests
             (profile.CalorieTarget, profile.ProteinTarget, profile.FatTarget) = (2400, 150, 70);
             return db.SaveChanges();
         });
-        var today = DateOnly.FromDateTime((await api.Get<NutritionDay>("/api/nutrition")).Date);
+        var today = (await api.Get<NutritionDay>("/api/nutrition")).Date;
         await ApiClient.Ok(await api.Put($"/api/nutrition/days/{today.AddDays(-1):yyyy-MM-dd}", new { caloriesKcal = 2000, proteinG = 120, fatG = 60, carbsG = 250 }));
         await ApiClient.Ok(await api.Put($"/api/nutrition/days/{today:yyyy-MM-dd}", new { caloriesKcal = 2400, proteinG = 150, fatG = 70, carbsG = 290 }));
 

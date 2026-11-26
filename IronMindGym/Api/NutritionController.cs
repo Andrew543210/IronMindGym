@@ -9,18 +9,18 @@ public class NutritionController(NutritionJournalService journal, CurrentCalenda
 {
     [HttpGet]
     public NutritionDay Day(DateOnly? date) =>
-        journal.Day(UserId, date?.ToDateTime(TimeOnly.MinValue) ?? calendar.Today);
+        journal.Day(UserId, date ?? calendar.Today);
 
     [HttpPut("days/{date}")]
     public ActionResult SaveDay(DateOnly date, NutritionEntryRequest request)
     {
-        journal.Save(UserId, date.ToDateTime(TimeOnly.MinValue), request.CaloriesKcal, request.ProteinG, request.FatG, request.CarbsG);
+        journal.Save(UserId, date, request.CaloriesKcal, request.ProteinG, request.FatG, request.CarbsG);
         return NoContent();
     }
 
     [HttpDelete("days/{date}")]
     public ActionResult DeleteDay(DateOnly date) =>
-        journal.Delete(UserId, date.ToDateTime(TimeOnly.MinValue)) ? NoContent() : NotFound();
+        journal.Delete(UserId, date) ? NoContent() : NotFound();
 }
 
 public sealed record NutritionEntryRequest(

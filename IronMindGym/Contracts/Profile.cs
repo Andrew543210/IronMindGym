@@ -15,6 +15,6 @@ public sealed record ProfileOverview(
     List<WeightEntry> WeightHistory,
     List<ProfileAchievement> Achievements);
 
-public sealed record WeightEntry(DateTime Date, double ValueKg);
+public sealed record WeightEntry(DateOnly Date, double ValueKg);
 
 public sealed record ProfileAchievement(string Name, string ConditionDescription, DateTime AchievedAt);

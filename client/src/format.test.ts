@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { calendarDay, formatDay, formatNumber, localDateTime, localDay, parseMoment } from './format';
+import { formatDay, formatNumber, localDateTime, localDay, parseMoment } from './format';
 
 describe('dates follow the athlete calendar', () => {
-  it('keeps a calendar day as stored, whatever the time zone', () => {
-    expect(calendarDay('2026-11-17T00:00:00Z')).toBe('2026-11-17');
-    expect(formatDay('2026-11-17T00:00:00Z')).toBe('Nov 17, 2026');
+  it('shows a calendar day as stored, whatever the time zone', () => {
+    expect(formatDay('2026-11-17')).toBe('Nov 17, 2026');
   });
 
   it('reads UTC moments with microseconds or without a trailing Z', () => {

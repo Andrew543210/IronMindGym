@@ -1,7 +1,7 @@
 namespace IronMindGym.Contracts;
 
 public sealed record NutritionDay(
-    DateTime Date,
+    DateOnly Date,
     bool IsLogged,
     double CaloriesKcal,
     double ProteinG,
@@ -10,4 +10,4 @@ public sealed record NutritionDay(
     NutritionAdvice Advice,
     List<NutritionLogEntry> RecentLogs);
 
-public sealed record NutritionLogEntry(DateTime Date, double CaloriesKcal, double ProteinG, double FatG, double CarbsG);
+public sealed record NutritionLogEntry(DateOnly Date, double CaloriesKcal, double ProteinG, double FatG, double CarbsG);

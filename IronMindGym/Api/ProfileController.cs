@@ -51,7 +51,7 @@ public class ProfileController(IronMindDbContext db, ProfileService profiles) : 
     [HttpPut("weights/{date}")]
     public ActionResult LogWeight(DateOnly date, WeightRequest request)
     {
-        profiles.LogWeight(UserId, date.ToDateTime(TimeOnly.MinValue), request.WeightKg);
+        profiles.LogWeight(UserId, date, request.WeightKg);
         return NoContent();
     }
 

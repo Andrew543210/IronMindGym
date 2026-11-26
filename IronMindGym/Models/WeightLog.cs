@@ -11,5 +11,5 @@ public class WeightLog
     [Range(0, 500)]
     public double ValueKg { get; set; }
 
-    public DateTime Date { get; set; }
+    public DateOnly Date { get; set; }
 }

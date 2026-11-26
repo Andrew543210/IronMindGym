@@ -10,7 +10,7 @@ import { FriendProgressPage } from './ProgressPages';
 const friend = {
   userId: 9, username: 'partner', isFriend: true, requestSent: false, requestReceived: false, averageKcal: 2250.5,
   lastFiveWorkouts: [{ workoutSessionId: 4, name: 'Legs day', sessionDate: '2026-11-19T17:00:00Z', durationMinutes: 55 }],
-  lastNutritionLogs: [{ date: '2026-11-19T00:00:00', caloriesKcal: 2300, proteinG: 150, fatG: 70, carbsG: 240 }],
+  lastNutritionLogs: [{ date: '2026-11-19', caloriesKcal: 2300, proteinG: 150, fatG: 70, carbsG: 240 }],
   personalRecords: [{ exerciseName: 'Barbell Back Squat', maxWeightKg: 120, updatedAt: '2026-11-19T17:00:00Z' }],
   achievements: [{ name: 'First Rep', conditionDescription: 'Complete your first workout', achievedAt: '2026-11-01T10:00:00Z' }],
 };

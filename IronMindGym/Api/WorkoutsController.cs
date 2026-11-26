@@ -81,7 +81,7 @@ public class WorkoutsController(
         if (previous is null)
             return NoContent();
         return new PreviousSetResponse(previous.WeightKg, previous.Reps, previous.DurationSeconds, previous.Intensity,
-            previous.RestSeconds, previous.SetTypeId, calendar.Format(previous.Date, "yyyy-MM-dd"));
+            previous.RestSeconds, previous.SetTypeId, calendar.Value.DayOf(previous.Date));
     }
 
     [HttpPost]
@@ -122,7 +122,7 @@ public sealed record WorkoutLoggerResponse(
     List<OptionResponse> MuscleGroups,
     List<ExerciseCatalogItem> Exercises);
 
-public sealed record PreviousSetResponse(double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds, int SetTypeId, string LocalDate);
+public sealed record PreviousSetResponse(double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds, int SetTypeId, DateOnly LocalDate);
 
 public sealed record SavedWorkoutResponse(int Id);
 

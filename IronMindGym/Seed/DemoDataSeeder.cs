@@ -44,7 +44,7 @@ public static class DemoDataSeeder
         db.DailyNutritions.Add(new DailyNutrition
         {
             User = athlete,
-            Date = DateTime.UtcNow.Date,
+            Date = DateOnly.FromDateTime(DateTime.UtcNow),
             CaloriesKcal = 2550,
             ProteinG = 165,
             FatG = 70,

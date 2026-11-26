@@ -7,13 +7,13 @@ import { GoalsPage } from './GoalsPage';
 it('adds a goal, completes it and deletes another', async () => {
   vi.spyOn(window, 'confirm').mockReturnValue(true);
   let goals = [
-    { id: 1, title: 'Squat 120 kg', deadline: '2026-12-20T00:00:00', isCompleted: false },
-    { id: 2, title: 'Run 5 km', deadline: '2026-11-01T00:00:00', isCompleted: false },
+    { id: 1, title: 'Squat 120 kg', deadline: '2026-12-20', isCompleted: false },
+    { id: 2, title: 'Run 5 km', deadline: '2026-11-01', isCompleted: false },
   ];
   const calls = mockApi({
     'GET /api/goals': () => goals,
     'POST /api/goals': () => {
-      goals = [...goals, { id: 3, title: 'Bench 100 kg', deadline: '2026-12-20T00:00:00', isCompleted: false }];
+      goals = [...goals, { id: 3, title: 'Bench 100 kg', deadline: '2026-12-20', isCompleted: false }];
       return null;
     },
     'PUT /api/goals/1/completed': () => {

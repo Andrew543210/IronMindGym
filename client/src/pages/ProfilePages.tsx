@@ -2,7 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { api, FormError } from '../api';
 import { ErrorAlert, PageState, ResponsiveTable } from '../components/ui';
-import { calendarDay, deviceTimeZone, formatDay, formatFixed, localDay } from '../format';
+import { deviceTimeZone, formatDay, formatFixed, localDay } from '../format';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
 import { useAthlete, useSession } from '../session';
@@ -197,7 +197,7 @@ function WeightHistory({ entries }: { entries: Profile['weightHistory'] }) {
               <thead><tr><th>{t('common.date')}</th><th>{t('profile.weight')}</th></tr></thead>
               <tbody>
                 {[...ordered].reverse().map((entry) => (
-                  <tr key={entry.date}><td className="metric">{calendarDay(entry.date)}</td><td className="metric">{t('unit.kg', { value: formatFixed(entry.valueKg, 1) })}</td></tr>
+                  <tr key={entry.date}><td className="metric">{entry.date}</td><td className="metric">{t('unit.kg', { value: formatFixed(entry.valueKg, 1) })}</td></tr>
                 ))}
               </tbody>
             </ResponsiveTable>

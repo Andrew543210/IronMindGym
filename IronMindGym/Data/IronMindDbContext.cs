@@ -1,6 +1,5 @@
 using IronMindGym.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace IronMindGym.Data;
 
@@ -35,13 +34,6 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
     public DbSet<ResearchItem> ResearchItems => Set<ResearchItem>();
     public DbSet<ActivityFeed> ActivityFeeds => Set<ActivityFeed>();
 
-    /// <summary>
-    /// Every moment is stored as UTC. PostgreSQL timestamptz rejects values of unknown kind,
-    /// so values without a kind, such as calendar days, are marked as UTC.
-    /// </summary>
-    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder) =>
-        configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // citext keeps the entered spelling while unique indexes and lookups ignore letter case.
@@ -57,17 +49,9 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             user.HasOne(u => u.Benchmarks).WithOne(b => b.User).HasForeignKey<InitialBenchmarks>(b => b.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<WeightLog>(log =>
-        {
-            log.Property(w => w.Date).HasColumnType("date");
-            log.HasIndex(w => new { w.UserId, w.Date }).IsUnique();
-        });
-        modelBuilder.Entity<DailyNutrition>(log =>
-        {
-            log.Property(n => n.Date).HasColumnType("date");
-            log.HasIndex(n => new { n.UserId, n.Date }).IsUnique();
-        });
-        modelBuilder.Entity<UserGoal>().Property(g => g.Deadline).HasColumnType("date");
+        // Moments are timestamptz in UTC; calendar days in the athlete's time zone are DateOnly, stored as date.
+        modelBuilder.Entity<WeightLog>().HasIndex(w => new { w.UserId, w.Date }).IsUnique();
+        modelBuilder.Entity<DailyNutrition>().HasIndex(n => new { n.UserId, n.Date }).IsUnique();
 
         modelBuilder.Entity<Exercise>().HasIndex(e => e.Name).IsUnique();
         modelBuilder.Entity<Achievement>().HasIndex(a => a.Code).IsUnique();
@@ -123,8 +107,4 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             comment.HasOne(c => c.WorkoutSession).WithMany(s => s.Comments).HasForeignKey(c => c.WorkoutSessionId).OnDelete(DeleteBehavior.Cascade);
         });
     }
-
-    private sealed class UtcDateTimeConverter() : ValueConverter<DateTime, DateTime>(
-        value => value.Kind == DateTimeKind.Local ? value.ToUniversalTime() : DateTime.SpecifyKind(value, DateTimeKind.Utc),
-        value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
 }

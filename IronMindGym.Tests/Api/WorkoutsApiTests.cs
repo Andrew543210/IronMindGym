@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using IronMindGym.Api;
+using IronMindGym.Services;
 using IronMindGym.Models;
 
 namespace IronMindGym.Tests.Api;
@@ -167,7 +168,7 @@ public class WorkoutsApiTests
 
         var previous = await owner.Get<PreviousSetResponse>(route);
         Assert.Equal((45, 12, 120), (previous.WeightKg, previous.Reps, previous.RestSeconds));
-        Assert.Matches(@"^\d{4}-\d{2}-\d{2}$", previous.LocalDate);
+        Assert.Equal(AthleteCalendar.Utc.Today, previous.LocalDate);
         Assert.Equal(HttpStatusCode.NoContent, (await other.Http.GetAsync(route)).StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, (await owner.Http.GetAsync("/api/workouts/previous-set?exerciseId=999999")).StatusCode);
         using var anonymous = app.Api();

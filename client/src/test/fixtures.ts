@@ -4,7 +4,7 @@ export const overview = {
   weightKg: 80,
   totalWorkouts: 3,
   todayNutrition: { caloriesKcal: 2100, proteinG: 150, fatG: 60, carbsG: 220 },
-  goals: [{ id: 1, title: 'Squat 120 kg', deadline: '2026-12-20T00:00:00', isCompleted: false }],
+  goals: [{ id: 1, title: 'Squat 120 kg', deadline: '2026-12-20', isCompleted: false }],
   recentWorkouts: [{ id: 4, name: 'Legs day', sessionDate: '2026-11-19T17:00:00Z', durationMinutes: 55 }],
   avatarName: 'Gym Centurion',
   strengthCoefficient: 3,

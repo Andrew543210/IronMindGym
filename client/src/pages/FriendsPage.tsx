@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api } from '../api';
 import { ErrorAlert, PageState, ResponsiveTable } from '../components/ui';
-import { calendarDay, formatNumber, localDateTime, localDay } from '../format';
+import { formatNumber, localDateTime, localDay } from '../format';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
 import { useAthlete } from '../session';
@@ -155,7 +155,7 @@ export function FriendsPage() {
                   <tbody>
                     {friend.lastNutritionLogs.map((log) => (
                       <tr key={log.date}>
-                        <td className="metric">{calendarDay(log.date)}</td>
+                        <td className="metric">{log.date}</td>
                         <td className="metric">{formatNumber(log.caloriesKcal)}</td>
                         <td className="metric">{formatNumber(log.proteinG)}</td>
                         <td className="metric">{formatNumber(log.fatG)}</td>

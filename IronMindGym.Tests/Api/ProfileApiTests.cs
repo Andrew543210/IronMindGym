@@ -12,7 +12,7 @@ public class ProfileApiTests
     private static async Task<ProfileSettings> Settings(ApiClient api) =>
         (await api.Get<ProfileSettingsResponse>("/api/profile/settings")).Settings;
 
-    private static string Day(DateTime date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    private static string Day(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     [Fact]
     public async Task OverviewShowsTheAccountBodyRankAndWeighIns()
@@ -20,7 +20,7 @@ public class ProfileApiTests
         using var app = new TestApplication();
         using var api = app.Api();
         await api.RegisterWithSetup();
-        var today = DateTime.Parse((await api.Get<SessionResponse>("/api/session")).Today, CultureInfo.InvariantCulture);
+        var today = (await api.Get<SessionResponse>("/api/session")).Today;
         await ApiClient.Ok(await api.Put($"/api/profile/weights/{Day(today.AddDays(-1))}", new { weightKg = 79.5 }));
 
         var profile = await api.Get<ProfileOverview>("/api/profile");
@@ -118,7 +118,7 @@ public class ProfileApiTests
         using var app = new TestApplication();
         using var api = app.Api();
         await api.Register();
-        var today = DateTime.Parse((await api.Get<SessionResponse>("/api/session")).Today, CultureInfo.InvariantCulture);
+        var today = (await api.Get<SessionResponse>("/api/session")).Today;
 
         Assert.Contains("Complete your profile first.", await ApiClient.Errors(await api.Put($"/api/profile/weights/{Day(today)}", new { weightKg = 80 })));
         await ApiClient.Ok(await api.Post("/api/setup", new { weightKg = 80, heightCm = 180, benchPressKg = 0, squatKg = 0, deadliftKg = 0, workoutsPerWeek = 3, splitTypeId = 1 }));
@@ -179,9 +179,9 @@ public class ProfileApiTests
         await owner.RegisterWithSetup();
         await other.Register("other");
         var today = (await owner.Get<SessionResponse>("/api/session")).Today;
-        await ApiClient.Ok(await owner.Put($"/api/nutrition/days/{today}", new { caloriesKcal = 2100, proteinG = 120, fatG = 60, carbsG = 250 }));
-        await ApiClient.Ok(await other.Put($"/api/nutrition/days/{today}", new { caloriesKcal = 1500, proteinG = 90, fatG = 50, carbsG = 150 }));
-        await ApiClient.Ok(await owner.Post("/api/goals", new { title = "Squat 120 kg", deadline = DateTime.Parse(today, CultureInfo.InvariantCulture).AddMonths(2) }));
+        await ApiClient.Ok(await owner.Put($"/api/nutrition/days/{Day(today)}", new { caloriesKcal = 2100, proteinG = 120, fatG = 60, carbsG = 250 }));
+        await ApiClient.Ok(await other.Put($"/api/nutrition/days/{Day(today)}", new { caloriesKcal = 1500, proteinG = 90, fatG = 50, carbsG = 150 }));
+        await ApiClient.Ok(await owner.Post("/api/goals", new { title = "Squat 120 kg", deadline = today.AddMonths(2) }));
 
         var response = await owner.Http.GetAsync("/api/profile/export");
         await ApiClient.Ok(response);

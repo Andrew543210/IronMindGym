@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using IronMindGym.Api;
+using IronMindGym.Services;
 
 namespace IronMindGym.Tests.Api;
 
@@ -27,7 +28,7 @@ public class SessionApiTests
         Assert.Equal("athlete", session.Username);
         Assert.Equal("Europe/Kyiv", session.TimeZone);
         Assert.False(session.SetupComplete);
-        Assert.Matches(@"^\d{4}-\d{2}-\d{2}$", session.Today);
+        Assert.Equal(AthleteCalendar.FromId("Europe/Kyiv").Today, session.Today);
     }
 
     [Fact]

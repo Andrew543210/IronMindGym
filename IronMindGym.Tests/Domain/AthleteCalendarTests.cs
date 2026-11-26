@@ -25,8 +25,8 @@ public class AthleteCalendarTests
 
         Assert.Equal(new DateTime(2026, 11, 22, 22, 0, 0), Kyiv.WeekStartUtc(lateSundayUtc));
         Assert.Equal(new DateTime(2026, 11, 16), AthleteCalendar.Utc.WeekStartUtc(lateSundayUtc));
-        Assert.Equal(new DateTime(2026, 11, 23), Kyiv.DayOf(lateSundayUtc));
-        Assert.Equal("2026-11-23 01:30", Kyiv.Format(lateSundayUtc, "yyyy-MM-dd HH:mm"));
+        Assert.Equal(new DateOnly(2026, 11, 23), Kyiv.DayOf(lateSundayUtc));
+        Assert.Equal(new DateTime(2026, 11, 23, 1, 30, 0), Kyiv.ToLocal(lateSundayUtc));
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class AthleteCalendarTests
             TimeZoneInfo.TransitionTime.CreateFixedDateRule(new DateTime(1, 1, 1, 0, 0, 0), 10, 1));
         var zone = TimeZoneInfo.CreateCustomTimeZone("Test/MidnightJump", TimeSpan.Zero, "Test", "Test", "Test summer", [rule]);
 
-        Assert.Equal(new DateTime(2027, 3, 1, 0, 0, 0), new AthleteCalendar(zone).StartOfDayUtc(new DateTime(2027, 3, 1)));
+        Assert.Equal(new DateTime(2027, 3, 1, 0, 0, 0), new AthleteCalendar(zone).StartOfDayUtc(new DateOnly(2027, 3, 1)));
     }
 
     private static readonly int[] StreakDays = [1, 2, 2, 3, 5, 6];
@@ -53,8 +53,8 @@ public class AthleteCalendarTests
     [Fact]
     public void TheLongestStreakCountsConsecutiveCalendarDays()
     {
-        Assert.Equal(3, AthleteCalendar.LongestStreak(StreakDays.Select(d => new DateTime(2026, 11, d, 18, 0, 0))));
-        Assert.Equal(1, AthleteCalendar.LongestStreak([new DateTime(2026, 11, 1)]));
+        Assert.Equal(3, AthleteCalendar.LongestStreak(StreakDays.Select(d => new DateOnly(2026, 11, d))));
+        Assert.Equal(1, AthleteCalendar.LongestStreak([new DateOnly(2026, 11, 1)]));
         Assert.Equal(0, AthleteCalendar.LongestStreak([]));
     }
 }

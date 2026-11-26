@@ -7,7 +7,7 @@ public class DailyNutrition
     public int Id { get; set; }
     public int UserId { get; set; }
     public User User { get; set; } = null!;
-    public DateTime Date { get; set; }
+    public DateOnly Date { get; set; }
 
     [Range(0, 10000)]
     public double CaloriesKcal { get; set; }

@@ -1,4 +1,3 @@
-using System.Globalization;
 using IronMindGym.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +13,7 @@ public sealed class AthleteCalendar(TimeZoneInfo zone)
 
     public TimeZoneInfo Zone { get; } = zone;
 
-    public DateTime Today => DayOf(DateTime.UtcNow);
+    public DateOnly Today => DayOf(DateTime.UtcNow);
 
     public string IanaZoneId => TimeZoneInfo.TryConvertWindowsIdToIanaId(Zone.Id, out var iana) ? iana : Zone.Id;
 
@@ -43,11 +42,11 @@ public sealed class AthleteCalendar(TimeZoneInfo zone)
     public DateTime ToLocal(DateTime utc) =>
         TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Zone);
 
-    public DateTime DayOf(DateTime utc) => ToLocal(utc).Date;
+    public DateOnly DayOf(DateTime utc) => DateOnly.FromDateTime(ToLocal(utc));
 
-    public DateTime StartOfDayUtc(DateTime localDate)
+    public DateTime StartOfDayUtc(DateOnly day)
     {
-        var start = DateTime.SpecifyKind(localDate.Date, DateTimeKind.Unspecified);
+        var start = day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
         // A daylight-saving jump can skip local midnight; the day then starts at the next valid hour.
         while (Zone.IsInvalidTime(start))
             start = start.AddHours(1);
@@ -56,13 +55,11 @@ public sealed class AthleteCalendar(TimeZoneInfo zone)
 
     public DateTime WeekStartUtc(DateTime utcNow) => StartOfDayUtc(WeekStart(DayOf(utcNow)));
 
-    public string Format(DateTime utc, string format) => ToLocal(utc).ToString(format, CultureInfo.InvariantCulture);
+    public static DateOnly WeekStart(DateOnly day) => day.AddDays(-(((int)day.DayOfWeek + 6) % 7));
 
-    public static DateTime WeekStart(DateTime day) => day.Date.AddDays(-(((int)day.DayOfWeek + 6) % 7));
-
-    public static int LongestStreak(IEnumerable<DateTime> days)
+    public static int LongestStreak(IEnumerable<DateOnly> days)
     {
-        var ordered = days.Select(d => d.Date).Distinct().Order().ToList();
+        var ordered = days.Distinct().Order().ToList();
         int longest = 0, current = 0;
         for (var i = 0; i < ordered.Count; i++)
         {
@@ -81,7 +78,5 @@ public sealed class CurrentCalendar(IHttpContextAccessor accessor, IronMindDbCon
         ? AthleteCalendar.For(db, userId)
         : AthleteCalendar.Utc;
 
-    public DateTime Today => Value.Today;
-
-    public string Format(DateTime utc, string format) => Value.Format(utc, format);
+    public DateOnly Today => Value.Today;
 }

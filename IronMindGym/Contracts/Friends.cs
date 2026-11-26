@@ -32,7 +32,7 @@ public class FriendAchievementPreview
 
 public class FriendNutritionPreview
 {
-    public DateTime Date { get; set; }
+    public DateOnly Date { get; set; }
     public double CaloriesKcal { get; set; }
     public double ProteinG { get; set; }
     public double FatG { get; set; }

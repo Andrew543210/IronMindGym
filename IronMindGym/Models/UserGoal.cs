@@ -11,6 +11,6 @@ public class UserGoal
     [MaxLength(80)]
     public string GoalType { get; set; } = string.Empty;
 
-    public DateTime Deadline { get; set; }
+    public DateOnly Deadline { get; set; }
     public bool IsCompleted { get; set; }
 }

@@ -7,7 +7,7 @@ import { ChangePasswordPage, ProfilePage, ProfileSettingsPage } from './ProfileP
 const profile = {
   username: 'athlete', email: 'athlete@example.com', age: 24, avatarName: 'Gym Centurion', strengthCoefficient: 3,
   weightKg: 80, heightCm: 180, measuredAt: '2026-11-01T08:00:00Z', benchPressKg: 60, squatKg: 80, deadliftKg: 100,
-  weightHistory: [{ date: '2026-11-19T00:00:00', valueKg: 80.5 }, { date: '2026-11-18T00:00:00', valueKg: 81 }],
+  weightHistory: [{ date: '2026-11-19', valueKg: 80.5 }, { date: '2026-11-18', valueKg: 81 }],
   achievements: [{ name: 'Fully Set', conditionDescription: 'Complete profile, anthropometry and setup', achievedAt: '2026-11-01T08:00:00Z' }],
 };
 

@@ -11,9 +11,8 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
 {
     private const int RecentDays = 30;
 
-    public NutritionDay Day(int userId, DateTime date)
+    public NutritionDay Day(int userId, DateOnly day)
     {
-        var day = date.Date;
         var log = db.DailyNutritions.AsNoTracking().FirstOrDefault(n => n.UserId == userId && n.Date == day)
             ?? new DailyNutrition { UserId = userId, Date = day };
         var recent = db.DailyNutritions.AsNoTracking().Where(n => n.UserId == userId)
@@ -31,9 +30,8 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
             recent.Select(n => new NutritionLogEntry(n.Date, n.CaloriesKcal, n.ProteinG, n.FatG, n.CarbsG)).ToList());
     }
 
-    public void Save(int userId, DateTime date, double caloriesKcal, double proteinG, double fatG, double carbsG)
+    public void Save(int userId, DateOnly day, double caloriesKcal, double proteinG, double fatG, double carbsG)
     {
-        var day = date.Date;
         if (day > calendar.Today || day < calendar.Today.AddYears(-5))
             throw new ValidationException("Choose a date within the last five years, up to today.");
         using var transaction = WriteLock.BeginForAthletes(db, userId);
@@ -49,11 +47,8 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
         transaction.Commit();
     }
 
-    public bool Delete(int userId, DateTime date)
-    {
-        var day = date.Date;
-        return db.DailyNutritions.Where(n => n.UserId == userId && n.Date == day).ExecuteDelete() > 0;
-    }
+    public bool Delete(int userId, DateOnly day) =>
+        db.DailyNutritions.Where(n => n.UserId == userId && n.Date == day).ExecuteDelete() > 0;
 
     private NutritionProfileSnapshot Snapshot(int userId)
     {

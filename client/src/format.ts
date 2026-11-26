@@ -1,13 +1,9 @@
 import { currentLocale } from './i18n/language';
 
 /**
- * Dates follow the athlete's calendar: moments (when a workout was saved) are shown in the profile's
- * time zone, and calendar days (a weigh-in date, a goal deadline) are shown exactly as stored.
+ * Dates follow the athlete's calendar: moments (when a workout was saved) are UTC timestamps shown in the
+ * profile's time zone, and calendar days (a weigh-in date, a goal deadline) are plain yyyy-MM-dd strings.
  */
-
-export function calendarDay(value: string): string {
-  return value.slice(0, 10);
-}
 
 /** The API writes moments in UTC, sometimes with more than three decimals or without the trailing Z. */
 export function parseMoment(value: string): Date {
@@ -43,7 +39,7 @@ export function localFormat(value: string | Date, timeZone: string, options: Int
 
 export function formatDay(day: string, options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }): string {
   // Noon UTC keeps the same day in every time zone used for formatting.
-  return new Intl.DateTimeFormat(currentLocale(), { timeZone: 'UTC', ...options }).format(new Date(`${calendarDay(day)}T12:00:00Z`));
+  return new Intl.DateTimeFormat(currentLocale(), { timeZone: 'UTC', ...options }).format(new Date(`${day}T12:00:00Z`));
 }
 
 export function formatNumber(value: number, decimals = 1): string {

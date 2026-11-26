@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { api } from '../api';
 import { ErrorAlert, PageState, ResponsiveTable } from '../components/ui';
-import { calendarDay, formatDay, formatFixed, formatNumber } from '../format';
+import { formatDay, formatFixed, formatNumber } from '../format';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey, type Translate } from '../i18n/i18n';
 import { useAthlete } from '../session';
@@ -102,7 +102,7 @@ export function NutritionPage() {
       {!data && <PageState error={error} loading={loading} />}
       {data && (
         <>
-          <DayForm key={calendarDay(data.date)} day={data} chosenDate={date} onChoose={choose}
+          <DayForm key={data.date} day={data} chosenDate={date} onChoose={choose}
             onChanged={(text) => { setMessage(text); reload(); }} />
           <Targets advice={data.advice} />
           {data.isLogged && (
@@ -135,7 +135,7 @@ function DayForm({ day, chosenDate, onChoose, onChanged }: {
 }) {
   const { t } = useI18n();
   const athlete = useAthlete();
-  const dayKey = calendarDay(day.date);
+  const dayKey = day.date;
   const [form, setForm] = useState(() => Object.fromEntries(
     macros.map((m) => [m.field, day.isLogged ? String(day[m.field]) : '']),
   ) as Record<keyof Intake, string>);
@@ -231,7 +231,7 @@ function Targets({ advice }: { advice: Advice }) {
 
 function RecentEntries({ day, onChoose }: { day: NutritionDay; onChoose: (date: string) => void }) {
   const { t } = useI18n();
-  const selected = calendarDay(day.date);
+  const selected = day.date;
   return (
     <div className="card mt-4"><div className="card-body">
       <h5>{t('nutrition.recent')}</h5>
@@ -245,7 +245,7 @@ function RecentEntries({ day, onChoose }: { day: NutritionDay; onChoose: (date: 
           </thead>
           <tbody>
             {day.recentLogs.map((log) => {
-              const logDay = calendarDay(log.date);
+              const logDay = log.date;
               return (
                 <tr key={logDay}>
                   <td className="metric">{logDay}</td>

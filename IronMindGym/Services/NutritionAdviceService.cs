@@ -75,7 +75,7 @@ public class NutritionAdviceService
             .Where(c => c.Item2.Value > 0).ToList();
         var matched = comparisons.Count(c => Math.Abs(c.Item1 - c.Item2.Value) <= c.Item2.Value * MatchTolerance);
         var macroEnergy = day.ProteinG * 4 + day.FatG * 9 + day.CarbsG * 4;
-        var week = recentLogs.Where(l => l.Date <= day.Date.Date && l.Date >= day.Date.Date.AddDays(-6)).ToList();
+        var week = recentLogs.Where(l => l.Date <= day.Date && l.Date >= day.Date.AddDays(-6)).ToList();
 
         return new NutritionAdvice(
             calories, protein, fat, carbs,

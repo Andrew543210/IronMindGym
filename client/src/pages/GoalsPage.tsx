@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { EmptyState, ErrorAlert, PageState } from '../components/ui';
-import { calendarDay, formatDay } from '../format';
+import { formatDay } from '../format';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
 import { useAthlete } from '../session';
@@ -97,7 +97,7 @@ export function GoalsPage() {
                 <div>
                   <strong>{goal.title}</strong>
                   <p className="small text-muted mb-0">
-                    {goal.isCompleted ? t('goals.completed') : calendarDay(goal.deadline) < athlete.today ? t('goals.overdue') : t('goals.inProgress')}
+                    {goal.isCompleted ? t('goals.completed') : goal.deadline < athlete.today ? t('goals.overdue') : t('goals.inProgress')}
                     {' · '}{formatDay(goal.deadline)}
                   </p>
                 </div>

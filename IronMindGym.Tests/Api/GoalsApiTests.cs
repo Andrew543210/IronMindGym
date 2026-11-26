@@ -66,7 +66,7 @@ public class GoalsApiTests
         app.Query(db =>
         {
             var userId = db.Users.Single().Id;
-            db.UserGoals.AddRange(Enumerable.Range(1, 20).Select(n => new UserGoal { UserId = userId, GoalType = $"Goal {n}", Deadline = DateTime.UtcNow.Date.AddMonths(1) }));
+            db.UserGoals.AddRange(Enumerable.Range(1, 20).Select(n => new UserGoal { UserId = userId, GoalType = $"Goal {n}", Deadline = DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(1) }));
             return db.SaveChanges();
         });
 
