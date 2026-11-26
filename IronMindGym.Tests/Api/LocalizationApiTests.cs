@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using IronMindGym.Api;
 using IronMindGym.Contracts;
+using IronMindGym.Models;
 
 namespace IronMindGym.Tests.Api;
 
@@ -45,7 +46,7 @@ public partial class LocalizationApiTests
     {
         using var app = new TestApplication();
         using var api = app.Api();
-        var upperLower = app.Query(db => db.SplitTypes.Single(s => s.Name == "Upper-Lower").Id);
+        var upperLower = app.Query(db => db.SplitTypes.Single(s => s.Code == SplitTypeCode.UpperLower).Id);
         await api.RegisterWithSetup(splitTypeId: upperLower);
         api.Http.DefaultRequestHeaders.AcceptLanguage.ParseAdd("uk-UA");
 
@@ -72,7 +73,7 @@ public partial class LocalizationApiTests
         await api.Register();
         api.Http.DefaultRequestHeaders.AcceptLanguage.ParseAdd("uk");
         var bench = app.Query(db => db.Exercises.Single(e => e.Name == "Flat Bench Press").Id);
-        var working = app.Query(db => db.SetTypes.Single(s => s.Name == "Working").Id);
+        var working = app.Query(db => db.SetTypes.Single(s => s.Code == SetTypeCode.Working).Id);
 
         var response = await api.Post("/api/workouts", new
         {

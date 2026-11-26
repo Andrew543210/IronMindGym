@@ -4,6 +4,7 @@ using System.Text.Json;
 using IronMindGym.Api;
 using IronMindGym.Contracts;
 using IronMindGym.Services;
+using IronMindGym.Models;
 
 namespace IronMindGym.Tests.Api;
 
@@ -60,7 +61,7 @@ public class ProfileApiTests
         var settings = await Settings(api);
         settings.WeightKg = 81.5;
         settings.HeightCm = 181;
-        settings.SplitTypeId = app.Query(db => db.SplitTypes.Single(s => s.Name == "Legs-Back-Chest").Id);
+        settings.SplitTypeId = app.Query(db => db.SplitTypes.Single(s => s.Code == SplitTypeCode.LegsBackChest).Id);
         settings.WorkoutsPerWeek = 5;
 
         await ApiClient.Ok(await api.Put("/api/profile/settings", settings));

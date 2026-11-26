@@ -45,14 +45,14 @@ public class WorkoutsController(
             .FirstOrDefault();
         var splitTypes = db.SplitTypes.AsNoTracking()
             .Where(s => activePlan == null || s.Id == activePlan.SplitTypeId)
-            .Select(s => new { s.Id, s.Name, s.NameUk })
+            .Select(s => new { s.Id, s.Code, s.Name, s.NameUk })
             .AsEnumerable()
-            .Select(s => new SplitTypeOption(s.Id, Localized.Pick(s.Name, s.NameUk), WorkoutService.SplitDayOptions(s.Name)))
+            .Select(s => new SplitTypeOption(s.Id, Localized.Pick(s.Name, s.NameUk), WorkoutService.SplitDayOptions(s.Code)))
             .OrderBy(s => s.Name, Localized.Order)
             .ToList();
 
-        var setTypes = db.SetTypes.AsNoTracking().Select(s => new { s.Id, s.Name, s.NameUk }).ToList();
-        var defaultSetTypeId = setTypes.FirstOrDefault(s => s.Name.Equals("Working", StringComparison.OrdinalIgnoreCase))?.Id
+        var setTypes = db.SetTypes.AsNoTracking().Select(s => new { s.Id, s.Code, s.Name, s.NameUk }).ToList();
+        var defaultSetTypeId = setTypes.FirstOrDefault(s => s.Code == SetTypeCode.Working)?.Id
             ?? setTypes.FirstOrDefault()?.Id ?? 0;
 
         return new WorkoutLoggerResponse(

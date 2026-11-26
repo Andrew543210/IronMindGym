@@ -84,6 +84,7 @@ public static class ExerciseCatalogSeeder
                         Description = e.Description,
                         DescriptionUk = e.DescriptionUk,
                         Type = e.Type,
+                        KeyLift = e.KeyLift,
                         MuscleSubGroup = muscleSubGroup
                     });
                 }
@@ -114,6 +115,7 @@ public static class ExerciseCatalogSeeder
             if (!definitions.TryGetValue(exercise.Name, out var definition))
                 continue;
             exercise.NameUk = definition.NameUk;
+            exercise.KeyLift = definition.KeyLift;
             exercise.DescriptionUk = exercise.Description == definition.Description ? definition.DescriptionUk : null;
         }
     }
@@ -125,5 +127,6 @@ public static class ExerciseCatalogSeeder
     }
 
     public sealed record ExerciseDefinition(
-        string Name, string NameUk, string Group, string Subgroup, ExerciseType Type, string Description, string DescriptionUk);
+        string Name, string NameUk, string Group, string Subgroup, ExerciseType Type, string Description, string DescriptionUk,
+        KeyLift? KeyLift = null);
 }

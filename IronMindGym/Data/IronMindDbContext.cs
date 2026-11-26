@@ -52,7 +52,28 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         modelBuilder.Entity<WeightLog>().HasIndex(w => new { w.UserId, w.Date }).IsUnique();
         modelBuilder.Entity<DailyNutrition>().HasIndex(n => new { n.UserId, n.Date }).IsUnique();
 
-        modelBuilder.Entity<Exercise>().HasIndex(e => e.Name).IsUnique();
+        // Reference rows are found by a stable key: a code where the code relies on the row, otherwise the
+        // English name. The seeder matches on the same keys, so every key is unique.
+        modelBuilder.Entity<SplitType>(split =>
+        {
+            split.HasIndex(s => s.Code).IsUnique();
+            split.HasIndex(s => s.Name).IsUnique();
+        });
+        modelBuilder.Entity<SetType>(setType =>
+        {
+            setType.HasIndex(s => s.Code).IsUnique();
+            setType.HasIndex(s => s.Name).IsUnique();
+        });
+        modelBuilder.Entity<Exercise>(exercise =>
+        {
+            exercise.HasIndex(e => e.Name).IsUnique();
+            exercise.Property(e => e.KeyLift).HasConversion<string>().HasMaxLength(20);
+            exercise.HasIndex(e => e.KeyLift).IsUnique();
+        });
+        modelBuilder.Entity<MuscleGroup>().HasIndex(g => g.Name).IsUnique();
+        modelBuilder.Entity<MuscleSubGroup>().HasIndex(s => new { s.MuscleGroupId, s.Name }).IsUnique();
+        modelBuilder.Entity<Avatar>().HasIndex(a => a.Name).IsUnique();
+        modelBuilder.Entity<ResearchItem>().HasIndex(r => r.Title).IsUnique();
         modelBuilder.Entity<Achievement>().HasIndex(a => a.Code).IsUnique();
 
         // Reference data is shared by every athlete. Deleting a row that is still in use fails

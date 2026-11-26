@@ -13,8 +13,8 @@ public static class DemoDataSeeder
     {
         if (db.Users.Any())
             return;
-        var upperLower = db.SplitTypes.Single(s => s.Name == "Upper-Lower");
-        var working = db.SetTypes.Single(s => s.Name == "Working");
+        var upperLower = db.SplitTypes.Single(s => s.Code == SplitTypeCode.UpperLower);
+        var working = db.SetTypes.Single(s => s.Code == SetTypeCode.Working);
         var exercises = db.Exercises.ToDictionary(e => e.Name);
         Exercise Find(string name) => exercises.TryGetValue(name, out var exercise)
             ? exercise

@@ -5,32 +5,29 @@ namespace IronMindGym.Seed;
 
 public static class DataSeeder
 {
-    // The English names are the keys the code matches on; the Ukrainian ones are only shown.
+    // Rows are matched by code and their names are refreshed on every start.
     // The order is the order of the ids in a new database.
-    public static readonly (string Name, string NameUk)[] SplitTypes =
+    public static readonly (string Code, string Name, string NameUk)[] SplitTypes =
     [
-        ("Full-body", "Усе тіло"),
-        ("Upper-Lower", "Верх / низ"),
-        ("Legs-Back-Chest", "Ноги / спина / груди")
+        (SplitTypeCode.FullBody, "Full-body", "Усе тіло"),
+        (SplitTypeCode.UpperLower, "Upper-Lower", "Верх / низ"),
+        (SplitTypeCode.LegsBackChest, "Legs-Back-Chest", "Ноги / спина / груди")
     ];
 
-    public static readonly (string Name, string NameUk)[] SetTypes =
+    public static readonly (string Code, string Name, string NameUk)[] SetTypes =
     [
-        ("Working", "Робочий"),
-        ("Warm-up", "Розминковий"),
-        ("Failure", "До відмови")
+        (SetTypeCode.Working, "Working", "Робочий"),
+        (SetTypeCode.WarmUp, "Warm-up", "Розминковий"),
+        (SetTypeCode.Failure, "Failure", "До відмови")
     ];
 
     public static void Seed(IronMindDbContext db, bool includeDemoData = false)
     {
         using var transaction = WriteLock.BeginForSeeding(db);
-        if (!db.SplitTypes.Any())
-            db.SplitTypes.AddRange(SplitTypes.Select(x => new SplitType { Name = x.Name, NameUk = x.NameUk }));
-        if (!db.SetTypes.Any())
-            db.SetTypes.AddRange(SetTypes.Select(x => new SetType { Name = x.Name, NameUk = x.NameUk }));
+        EnsureSplitTypes(db);
+        EnsureSetTypes(db);
         if (!db.Exercises.Any())
             ExerciseCatalogSeeder.Seed(db);
-        EnsureTranslations(db);
         ExerciseCatalogSeeder.EnsureTranslations(db);
         EnsureAvatarLadder(db);
         db.SaveChanges();
@@ -41,17 +38,25 @@ public static class DataSeeder
         transaction.Commit();
     }
 
-    private static void EnsureTranslations(IronMindDbContext db)
+    private static void EnsureSplitTypes(IronMindDbContext db)
     {
-        foreach (var splitType in db.SplitTypes)
+        var existing = db.SplitTypes.ToDictionary(s => s.Code);
+        foreach (var (code, name, nameUk) in SplitTypes)
         {
-            foreach (var known in SplitTypes.Where(x => x.Name == splitType.Name))
-                splitType.NameUk = known.NameUk;
+            if (!existing.TryGetValue(code, out var split))
+                db.SplitTypes.Add(split = new SplitType { Code = code });
+            (split.Name, split.NameUk) = (name, nameUk);
         }
-        foreach (var setType in db.SetTypes)
+    }
+
+    private static void EnsureSetTypes(IronMindDbContext db)
+    {
+        var existing = db.SetTypes.ToDictionary(s => s.Code);
+        foreach (var (code, name, nameUk) in SetTypes)
         {
-            foreach (var known in SetTypes.Where(x => x.Name == setType.Name))
-                setType.NameUk = known.NameUk;
+            if (!existing.TryGetValue(code, out var setType))
+                db.SetTypes.Add(setType = new SetType { Code = code });
+            (setType.Name, setType.NameUk) = (name, nameUk);
         }
     }
 

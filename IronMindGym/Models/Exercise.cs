@@ -9,11 +9,19 @@ public enum ExerciseType
     Timed = 2
 }
 
+/// <summary>The three lifts behind the strength coefficient, the rank and the record awards.</summary>
+public enum KeyLift
+{
+    BenchPress,
+    Squat,
+    Deadlift
+}
+
 public class Exercise
 {
     public int Id { get; set; }
 
-    /// <summary>The key that records and awards match on; <see cref="NameUk"/> is only shown.</summary>
+    /// <summary>The catalog key, unique in the database; <see cref="NameUk"/> is only shown.</summary>
     [Required, MaxLength(120)]
     public string Name { get; set; } = string.Empty;
 
@@ -27,6 +35,9 @@ public class Exercise
     public string? DescriptionUk { get; set; }
 
     public ExerciseType Type { get; set; } = ExerciseType.StrengthTraining;
+
+    /// <summary>Set for the one exercise that stands for each key lift.</summary>
+    public KeyLift? KeyLift { get; set; }
     public int MuscleSubGroupId { get; set; }
     public MuscleSubGroup MuscleSubGroup { get; set; } = null!;
     public ICollection<PerformedExercise> PerformedExercises { get; set; } = [];

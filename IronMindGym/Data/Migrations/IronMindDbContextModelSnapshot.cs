@@ -132,6 +132,9 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("Avatars", t =>
                         {
                             t.HasCheckConstraint("CK_Avatars_MinStrengthCoefficient", "\"MinStrengthCoefficient\" >= 0");
@@ -192,6 +195,10 @@ namespace IronMindGym.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<string>("KeyLift")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<int>("MuscleSubGroupId")
                         .HasColumnType("integer");
 
@@ -208,6 +215,9 @@ namespace IronMindGym.Data.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("KeyLift")
+                        .IsUnique();
 
                     b.HasIndex("MuscleSubGroupId");
 
@@ -398,6 +408,9 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("MuscleGroups");
                 });
 
@@ -423,7 +436,8 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MuscleGroupId");
+                    b.HasIndex("MuscleGroupId", "Name")
+                        .IsUnique();
 
                     b.ToTable("MuscleSubGroups");
                 });
@@ -582,6 +596,9 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Title")
+                        .IsUnique();
+
                     b.ToTable("ResearchItems");
                 });
 
@@ -593,6 +610,11 @@ namespace IronMindGym.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -603,6 +625,12 @@ namespace IronMindGym.Data.Migrations
                         .HasColumnType("character varying(40)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("SetTypes");
                 });
@@ -615,6 +643,11 @@ namespace IronMindGym.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -625,6 +658,12 @@ namespace IronMindGym.Data.Migrations
                         .HasColumnType("character varying(60)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("SplitTypes");
                 });

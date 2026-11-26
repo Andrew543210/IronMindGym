@@ -223,21 +223,17 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
 
     public static string SessionName(string savedName) => Localized.Pick(savedName, SessionNamesUk.GetValueOrDefault(savedName));
 
-    public static List<SplitDayOption> SplitDayOptions(string? splitTypeName) => SplitDays(splitTypeName)
+    public static List<SplitDayOption> SplitDayOptions(string? splitTypeCode) => SplitDays(splitTypeCode)
         .Select(day => new SplitDayOption(day, Localized.Pick(day, SplitDayNamesUk.GetValueOrDefault(day))))
         .ToList();
 
-    public static List<string> SplitDays(string? splitTypeName)
+    public static List<string> SplitDays(string? splitTypeCode) => splitTypeCode switch
     {
-        var normalized = splitTypeName?.Trim().ToLowerInvariant() ?? string.Empty;
-        if (normalized.Contains("legs-back-chest"))
-            return ["Legs", "Back", "Chest"];
-        if (normalized.Contains("upper-lower"))
-            return ["Upper", "Lower"];
-        if (normalized.Contains("full-body"))
-            return ["Full Body"];
-        return ["Training Day"];
-    }
+        SplitTypeCode.LegsBackChest => ["Legs", "Back", "Chest"],
+        SplitTypeCode.UpperLower => ["Upper", "Lower"],
+        SplitTypeCode.FullBody => ["Full Body"],
+        _ => ["Training Day"]
+    };
 
     /// <summary>A repeated delete, such as a double tap, finds nothing to delete and reports false.</summary>
     public bool Delete(int userId, int sessionId)

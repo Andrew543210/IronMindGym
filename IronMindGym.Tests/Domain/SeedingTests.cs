@@ -26,6 +26,11 @@ public class SeedingTests
             Assert.Equal(DataSeeder.AvatarLadder.Length, db.Avatars.Count());
             Assert.Equal("Hamstrings", db.Exercises.Include(e => e.MuscleSubGroup).Single(e => e.Name == "Romanian Deadlift").MuscleSubGroup.Name);
             Assert.Equal(ExerciseType.Timed, db.Exercises.Single(e => e.Name == "Weighted Plank").Type);
+            Assert.Equal(
+                ["Flat Bench Press", "Deadlift", "Barbell Back Squat"],
+                db.Exercises.Where(e => e.KeyLift != null).OrderBy(e => e.KeyLift).Select(e => e.Name).ToList());
+            Assert.Equal(DataSeeder.SplitTypes.Select(s => s.Code), db.SplitTypes.OrderBy(s => s.Id).Select(s => s.Code));
+            Assert.Equal(DataSeeder.SetTypes.Select(s => s.Code), db.SetTypes.OrderBy(s => s.Id).Select(s => s.Code));
             Assert.Equal(0, db.Users.Count());
             return true;
         });
@@ -105,7 +110,7 @@ public class SeedingTests
             Assert.Equal("Станова тяга", db.Exercises.Single(e => e.Name == "Deadlift").NameUk);
             Assert.Null(db.Exercises.Single(e => e.Name == "Deadlift").DescriptionUk);
             Assert.Equal("Груди", db.MuscleGroups.Single(g => g.Name == "Chest").NameUk);
-            Assert.Equal("Робочий", db.SetTypes.Single(s => s.Name == "Working").NameUk);
+            Assert.Equal("Робочий", db.SetTypes.Single(s => s.Code == SetTypeCode.Working).NameUk);
             Assert.Equal(0, db.Avatars.Count(a => a.NameUk == null));
             Assert.Equal(ExerciseCatalogSeeder.Definitions().Count, db.Exercises.Count());
             return true;

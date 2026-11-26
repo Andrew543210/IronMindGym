@@ -275,6 +275,7 @@
     "group": "Chest",
     "subgroup": "General chest",
     "type": "StrengthTraining",
+    "keyLift": "BenchPress",
     "description": "Core exercise for overall chest strength",
     "descriptionUk": "Базова вправа для загальної сили грудей"
   },
@@ -833,6 +834,7 @@
     "group": "Legs",
     "subgroup": "Posterior chain",
     "type": "StrengthTraining",
+    "keyLift": "Deadlift",
     "description": "Complex strength exercise",
     "descriptionUk": "Комплексна силова вправа"
   },
@@ -842,6 +844,7 @@
     "group": "Legs",
     "subgroup": "Quadriceps",
     "type": "StrengthTraining",
+    "keyLift": "Squat",
     "description": "Base for leg strength and mass",
     "descriptionUk": "Основа сили й маси ніг"
   },

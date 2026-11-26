@@ -99,5 +99,26 @@ public sealed class MigrationTests : IDisposable
         Assert.Equal([182.0, 165.0], Read(db => db.Profiles.OrderBy(p => p.UserId).Select(p => p.HeightCm!.Value).ToList()));
     }
 
+    [Fact]
+    public void ReferenceRowsSeededByNameGetTheirCodes()
+    {
+        MigrateTo("KeepBodyweightInWeighIns");
+        Run("""
+            INSERT INTO "SplitTypes" ("Name") VALUES ('Full-body'), ('Upper-Lower'), ('Legs-Back-Chest'), ('Push-Pull');
+            INSERT INTO "SetTypes" ("Name") VALUES ('Working'), ('Warm-up'), ('Failure');
+            INSERT INTO "MuscleGroups" ("Name") VALUES ('Legs');
+            INSERT INTO "MuscleSubGroups" ("Name", "MuscleGroupId") SELECT 'Quadriceps', "Id" FROM "MuscleGroups";
+            INSERT INTO "Exercises" ("Name", "Description", "Type", "MuscleSubGroupId")
+            SELECT name, '', 0, (SELECT "Id" FROM "MuscleSubGroups") FROM unnest(ARRAY['Barbell Back Squat', 'Front Squat']) name;
+            """);
+
+        MigrateTo("IdentifyReferenceDataByCode");
+
+        Assert.Equal(["FULL_BODY", "UPPER_LOWER", "LEGS_BACK_CHEST", "SPLIT_4"], Read(db => db.SplitTypes.OrderBy(s => s.Id).Select(s => s.Code).ToList()));
+        Assert.Equal(["WORKING", "WARM_UP", "FAILURE"], Read(db => db.SetTypes.OrderBy(s => s.Id).Select(s => s.Code).ToList()));
+        Assert.Equal("Barbell Back Squat", Read(db => db.Exercises.Single(e => e.KeyLift == KeyLift.Squat).Name));
+        Assert.Equal(1, Read(db => db.Exercises.Count(e => e.KeyLift != null)));
+    }
+
     public void Dispose() => TestDatabase.Drop(connectionString);
 }

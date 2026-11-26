@@ -9,7 +9,7 @@ internal static class Journal
     public static int AddWorkout(TestApplication app, DateTime date, int minutes,
         params (int ExerciseId, double Kg, int Reps, int RestSeconds)[] sets) => app.Query(db =>
     {
-        var setType = db.SetTypes.Single(t => t.Name == "Working").Id;
+        var setType = db.SetTypes.Single(t => t.Code == SetTypeCode.Working).Id;
         var session = new WorkoutSession { UserId = db.Users.OrderBy(u => u.Id).First().Id, Name = "Full Body day", SessionDate = date, DurationMinutes = minutes };
         foreach (var group in sets.GroupBy(s => s.ExerciseId))
         {

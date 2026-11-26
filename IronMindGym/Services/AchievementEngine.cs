@@ -151,9 +151,9 @@ public static class AchievementEngine
             .Where(x => x.PerformedExercise.WorkoutSession.SessionDate >= thirtyDaysAgo)
             .Sum(x => (double?)(x.WeightKg * x.Reps)) ?? 0;
 
-        var benchPr = GetBestRecord(db, userId, "Flat Bench Press");
-        var squatPr = GetBestRecord(db, userId, "Barbell Back Squat");
-        var deadliftPr = GetBestRecord(db, userId, "Deadlift");
+        var benchPr = GetBestRecord(db, userId, KeyLift.BenchPress);
+        var squatPr = GetBestRecord(db, userId, KeyLift.Squat);
+        var deadliftPr = GetBestRecord(db, userId, KeyLift.Deadlift);
 
         var nutritionLogs = db.DailyNutritions.Count(x => x.UserId == userId);
 
@@ -191,10 +191,10 @@ public static class AchievementEngine
         };
     }
 
-    private static double GetBestRecord(IronMindDbContext db, int userId, string exerciseNamePart)
+    private static double GetBestRecord(IronMindDbContext db, int userId, KeyLift lift)
     {
         return db.PersonalRecords
-            .Where(x => x.UserId == userId && x.Exercise.Name == exerciseNamePart)
+            .Where(x => x.UserId == userId && x.Exercise.KeyLift == lift)
             .Select(x => (double?)x.MaxWeightKg)
             .Max() ?? 0;
     }

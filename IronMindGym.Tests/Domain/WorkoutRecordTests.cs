@@ -18,7 +18,7 @@ public class WorkoutRecordTests
             Sets = sets.Select(s => new WorkoutSetInput
             {
                 ExerciseId = s.Exercise,
-                SetTypeId = db.SetTypes.Single(t => t.Name == "Working").Id,
+                SetTypeId = db.SetTypes.Single(t => t.Code == SetTypeCode.Working).Id,
                 WeightKg = s.Weight,
                 Reps = s.Reps,
                 DurationSeconds = s.Duration,
@@ -141,9 +141,9 @@ public class WorkoutRecordTests
     }
 
     [Theory]
-    [InlineData("Legs-Back-Chest", new[] { "Legs", "Back", "Chest" })]
-    [InlineData("Upper-Lower", new[] { "Upper", "Lower" })]
-    [InlineData("Full-body", new[] { "Full Body" })]
+    [InlineData(SplitTypeCode.LegsBackChest, new[] { "Legs", "Back", "Chest" })]
+    [InlineData(SplitTypeCode.UpperLower, new[] { "Upper", "Lower" })]
+    [InlineData(SplitTypeCode.FullBody, new[] { "Full Body" })]
     [InlineData(null, new[] { "Training Day" })]
     public void EverySplitHasItsTrainingDays(string? split, string[] days) =>
         Assert.Equal(days, WorkoutService.SplitDays(split));
