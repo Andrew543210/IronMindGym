@@ -42,6 +42,9 @@ public sealed class HostingTests : IDisposable
         Assert.Equal("nosniff", Assert.Single(bundle.Headers.GetValues("X-Content-Type-Options")));
         Assert.Equal("DENY", Assert.Single(bundle.Headers.GetValues("X-Frame-Options")));
         Assert.Equal("strict-origin-when-cross-origin", Assert.Single(bundle.Headers.GetValues("Referrer-Policy")));
+        var policy = Assert.Single(bundle.Headers.GetValues("Content-Security-Policy"));
+        Assert.Contains("script-src 'self'", policy, StringComparison.Ordinal);
+        Assert.Contains("frame-ancestors 'none'", policy, StringComparison.Ordinal);
     }
 
     [Fact]

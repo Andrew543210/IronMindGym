@@ -116,6 +116,8 @@ app.Use(async (context, next) =>
     context.Response.Headers.XContentTypeOptions = "nosniff";
     context.Response.Headers.XFrameOptions = "DENY";
     context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    // The client is one bundle from this origin; Bootstrap's icons are data: images.
+    context.Response.Headers.ContentSecurityPolicy = ContentSecurityPolicy;
     await next();
 });
 
@@ -135,10 +137,15 @@ app.MapFallback("/api/{**path}", () => Results.NotFound()).AllowAnonymous();
 app.MapFallbackToFile("index.html", clientFiles).AllowAnonymous();
 app.Run();
 
-static Task Status(HttpResponse response, int statusCode)
+public partial class Program
 {
-    response.StatusCode = statusCode;
-    return Task.CompletedTask;
-}
+    private const string ContentSecurityPolicy =
+        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; " +
+        "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 
-public partial class Program;
+    private static Task Status(HttpResponse response, int statusCode)
+    {
+        response.StatusCode = statusCode;
+        return Task.CompletedTask;
+    }
+}

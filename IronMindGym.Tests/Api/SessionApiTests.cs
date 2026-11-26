@@ -2,7 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using IronMindGym.Api;
+using IronMindGym.Security;
 using IronMindGym.Services;
+using IronMindGym.Tests.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Tests.Api;
 
@@ -49,7 +52,7 @@ public class SessionApiTests
     }
 
     [Fact]
-    public async Task EmailIsNormalizedAndCaseVariantsCannotRegisterTwice()
+    public async Task CaseVariantsOfAnEmailCannotRegisterTwice()
     {
         using var app = new TestApplication();
         using var api = app.Api();
@@ -84,6 +87,23 @@ public class SessionApiTests
         Assert.Equal("athlete", (await api.Get<SessionResponse>("/api/session")).Username);
         await ApiClient.Ok(await api.Post("/api/session/logout"));
         Assert.Equal(HttpStatusCode.NoContent, (await api.Http.GetAsync("/api/session")).StatusCode);
+    }
+
+    [Fact]
+    public async Task SigningInStoresAnOutdatedHashWithTheCurrentSettings()
+    {
+        using var app = new TestApplication();
+        using var api = app.Api();
+        await api.Register();
+        await api.Post("/api/session/logout");
+        var outdated = PasswordHashTests.OlderHash(ApiClient.Password);
+        app.Query(db => db.Users.ExecuteUpdate(u => u.SetProperty(x => x.PasswordHash, outdated)));
+
+        await api.SignIn("athlete@example.com");
+
+        var stored = app.Query(db => db.Users.Single().PasswordHash);
+        Assert.NotEqual(outdated, stored);
+        Assert.Equal(PasswordCheck.Valid, PasswordHashUtility.Check(ApiClient.Password, stored));
     }
 
     [Fact]

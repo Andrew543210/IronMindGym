@@ -25,11 +25,11 @@ Services use `DbContext` directly. A repository layer would only repeat EF Core'
 
 ### Request pipeline
 
-Forwarded headers (only from the configured proxy) → exception handler and HSTS in Production → request localization → security headers (`nosniff`, `DENY` framing, referrer policy) → static client files → routing → rate limiter → authentication → authorization → controllers. Unknown `/api` paths return `404`; every other unknown path returns `index.html`, so client routes survive a reload. Hashed bundles under `/assets` are cached for a year, while `index.html` is revalidated on every visit.
+Forwarded headers (only from the configured proxy) → exception handler and HSTS in Production → request localization → security headers (`nosniff`, `DENY` framing, referrer policy, a Content-Security-Policy limited to the site's own scripts, styles and connections) → static client files → routing → rate limiter → authentication → authorization → controllers. Unknown `/api` paths return `404`; every other unknown path returns `index.html`, so client routes survive a reload. Hashed bundles under `/assets` are cached for a year, while `index.html` is revalidated on every visit.
 
 ### Authentication and CSRF
 
-- Sign-in issues an HttpOnly, `SameSite=Lax` cookie (Secure outside Development) that lasts 30 days with sliding expiration. Passwords are hashed with ASP.NET Core's salted `PasswordHasher` and need at least 10 characters.
+- Sign-in issues an HttpOnly, `SameSite=Lax` cookie (Secure outside Development) that lasts 30 days with sliding expiration. Passwords are hashed with ASP.NET Core's salted `PasswordHasher` and need at least 10 characters. A hash made with older settings is replaced at the next sign-in, and an unknown email runs the same hash check as a wrong password, so the answer time does not reveal registered addresses.
 - The cookie carries a security stamp. Each request compares it with the stored one, so changing the password ends every other session.
 - Every API endpoint requires a signed-in user except the session endpoints. The client files and the `index.html` fallback are public. An unauthenticated API call gets `401` instead of a redirect.
 - Every request that changes data must send the antiforgery token in `X-CSRF-TOKEN`. The client gets it from `GET /api/session/csrf` after signing in or out. A refused token returns `400` with the problem type `urn:ironmind:problem:csrf-token`; the client then fetches a new token and retries once. Any other `400` is a refused value and is never retried.

@@ -15,5 +15,7 @@ The current `master` branch is maintained. Use a supported, patched .NET 10 SDK/
 - Demo accounts are opt-in and development-only. Production creates no default users.
 - Workouts, nutrition, goals and progress are private to their owner. Accepted friends can see shared training data; searching alone grants no access. Removing a friendship revokes that access.
 - Registration, login and password changes share an IP-based rate limit. It is a single-instance safeguard, not distributed abuse protection.
+- Passwords are hashed with ASP.NET Core's `PasswordHasher`. A hash made with older settings is stored again with the current ones at the next sign-in. An unknown email costs the same hashing work as a wrong password, so the answer time does not reveal registered addresses.
+- Every response carries a Content-Security-Policy that allows scripts, styles and connections only from the site itself.
 - Changing a password revokes existing sessions. Password reset by email and multifactor authentication are not provided.
 - A clean dependency audit is a point-in-time result, not a guarantee of absence of vulnerabilities.

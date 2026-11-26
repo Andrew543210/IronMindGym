@@ -33,9 +33,22 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
     public async Task<ActionResult<SessionResponse>> Login(LoginRequest request)
     {
         var email = request.Email.Trim();
-        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
-        if (user is null || !PasswordHashUtility.Verify(request.Password, user.PasswordHash))
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (user is null)
+        {
+            // The same hashing work as for a wrong password, so the answer time does not tell which emails are registered.
+            PasswordHashUtility.CheckWithoutAccount(request.Password);
             throw new DomainValidationException("Invalid email or password.");
+        }
+        var check = PasswordHashUtility.Check(request.Password, user.PasswordHash);
+        if (check == PasswordCheck.Failed)
+            throw new DomainValidationException("Invalid email or password.");
+        if (check == PasswordCheck.ValidButOutdated)
+        {
+            // The hash was made with older settings; the password is known now, so it is stored with the current ones.
+            user.PasswordHash = PasswordHashUtility.Hash(request.Password);
+            await db.SaveChangesAsync();
+        }
         await SignIn(user, request.RememberMe);
         return Describe(user.Id);
     }
