@@ -95,10 +95,8 @@ public class WorkoutsController(
         var details = workouts.BuildDetails(UserId, id, UserId);
         if (details is null)
             return NotFound();
-        var weeklyTarget = db.WorkoutPlans.Where(w => w.UserId == UserId).Select(w => w.WorkoutsPerWeek).FirstOrDefault();
-        var weekStart = calendars.For(UserId).CurrentWeekStartUtc;
-        var doneThisWeek = db.WorkoutSessions.Count(s => s.UserId == UserId && s.SessionDate >= weekStart);
-        details.RemainingWorkoutsThisWeek = Math.Max(weeklyTarget - doneThisWeek, 0);
+        details.RemainingWorkoutsThisWeek = Math.Max(
+            db.WorkoutPlans.WorkoutsPerWeek(UserId) - db.WorkoutSessions.WorkoutsThisWeek(UserId, calendars.For(UserId)), 0);
         return WorkoutDetailsResponse.From(details);
     }
 

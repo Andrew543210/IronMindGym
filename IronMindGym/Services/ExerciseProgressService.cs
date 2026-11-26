@@ -64,7 +64,7 @@ public class ExerciseProgressService(IronMindDbContext db, TimeProvider clock)
     public void SaveCurrent(int userId, int exerciseId, double? weight, int? reps, int? duration, int? intensity)
     {
         var exercise = FindExercise(exerciseId);
-        var result = Result.Validate(exercise.Type, weight ?? 0, reps ?? 0, duration ?? 0, intensity ?? 0);
+        var result = TrackingRules.Check(exercise.Type, weight ?? 0, reps ?? 0, duration ?? 0, intensity ?? 0);
         using var transaction = WriteLock.BeginForAthletes(db, userId);
         var progress = db.ExerciseProgress.FirstOrDefault(p => p.UserId == userId && p.ExerciseId == exerciseId)
             ?? throw new DomainValidationException("Save initial results first.");
@@ -79,7 +79,7 @@ public class ExerciseProgressService(IronMindDbContext db, TimeProvider clock)
     private Exercise FindExercise(int exerciseId) =>
         db.Exercises.AsNoTracking().FirstOrDefault(e => e.Id == exerciseId) ?? throw new DomainValidationException("Choose a valid exercise.", "ExerciseId");
 
-    private static void Record(ExerciseProgress progress, bool initial, Result result, DateTime now)
+    private static void Record(ExerciseProgress progress, bool initial, TrackedResult result, DateTime now)
     {
         if (initial)
         {
@@ -99,42 +99,19 @@ public class ExerciseProgressService(IronMindDbContext db, TimeProvider clock)
         }
     }
 
-    private readonly record struct Result(double WeightKg, int Reps, int DurationSeconds, int Intensity)
+    /// <summary>A progress result arrives as two numbers whose meaning depends on the exercise type.</summary>
+    private static class Result
     {
-        public static Result FromPair(ExerciseType type, double first, double second) => type switch
+        public static TrackedResult FromPair(ExerciseType type, double first, double second) => type switch
         {
-            ExerciseType.StrengthTraining => Validate(type, first, WholeNumber(second), 0, 0),
-            ExerciseType.Cardio => Validate(type, 0, 0, WholeNumber(first), WholeNumber(second)),
-            _ => Validate(type, second, 0, WholeNumber(first), 0)
+            ExerciseType.StrengthTraining => TrackingRules.Check(type, first, WholeNumber(second), 0, 0),
+            ExerciseType.Cardio => TrackingRules.Check(type, 0, 0, WholeNumber(first), WholeNumber(second)),
+            _ => TrackingRules.Check(type, second, 0, WholeNumber(first), 0)
         };
-
-        public static Result Validate(ExerciseType type, double weight, int reps, int duration, int intensity)
-        {
-            var validLoad = double.IsFinite(weight) && weight is >= 0 and <= 500;
-            switch (type)
-            {
-                case ExerciseType.StrengthTraining:
-                    if (!validLoad)
-                        throw new DomainValidationException("Weight must be between 0 and 500 kg.");
-                    if (reps is < 1 or > 500)
-                        throw new DomainValidationException("Reps must be between 1 and 500.");
-                    return new(weight, reps, 0, 0);
-                case ExerciseType.Cardio:
-                    if (duration is < 1 or > 86400)
-                        throw new DomainValidationException("Duration must be between 1 and 86400 seconds.");
-                    if (intensity is < 1 or > 10)
-                        throw new DomainValidationException("Intensity must be between 1 and 10.");
-                    return new(0, 0, duration, intensity);
-                default:
-                    if (!validLoad || duration is < 1 or > 86400)
-                        throw new DomainValidationException("Timed exercises require a duration of 1–86400 seconds and 0–500 kg of external load.");
-                    return new(weight, 0, duration, 0);
-            }
-        }
 
         private static int WholeNumber(double value)
         {
-            if (!double.IsFinite(value) || value != Math.Truncate(value) || value < 0 || value > 86400)
+            if (!double.IsFinite(value) || value != Math.Truncate(value) || value < 0 || value > TrackingRules.MaxDurationSeconds)
                 throw new DomainValidationException("Repetitions, duration and intensity must be whole numbers within their allowed range.");
             return (int)value;
         }

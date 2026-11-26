@@ -79,7 +79,7 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, PersonalRe
     {
         if (workout.Sets is null || workout.Sets.Count is < 1 or > 200 || workout.Sets.Any(s => s is null))
             throw new DomainValidationException("Add between 1 and 200 sets before saving.", "Sets");
-        var exercises = ValidateSets(workout.Sets);
+        var checkedSets = CheckSets(workout.Sets);
         if (workout.SplitDayId.HasValue && !db.SplitDays.Any(d => d.Id == workout.SplitDayId))
             throw new DomainValidationException("Choose a valid training day.", "SplitDayId");
 
@@ -106,7 +106,7 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, PersonalRe
         // Keep contiguous blocks so supersets and circuits retain their logged order.
         PerformedExercise? performedExercise = null;
         var setNumbers = new Dictionary<int, int>();
-        foreach (var set in workout.Sets)
+        foreach (var (set, result) in checkedSets)
         {
             if (performedExercise?.ExerciseId != set.ExerciseId)
             {
@@ -123,66 +123,37 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, PersonalRe
             performedExercise.Sets.Add(new WorkoutSet
             {
                 SetNumber = setNumber,
-                WeightKg = set.WeightKg,
-                Reps = set.Reps,
+                WeightKg = result.WeightKg,
+                Reps = result.Reps,
                 SetTypeId = set.SetTypeId,
-                DurationSeconds = set.DurationSeconds,
-                Intensity = set.Intensity,
+                DurationSeconds = result.DurationSeconds,
+                Intensity = result.Intensity,
                 RestSeconds = set.RestSeconds
             });
         }
         db.WorkoutSessions.Add(session);
 
         db.SaveChanges();
-        records.Recalculate(currentUserId, exercises.Keys);
+        records.Recalculate(currentUserId, checkedSets.Select(s => s.Input.ExerciseId).Distinct());
         db.SaveChanges();
         achievements.AwardEarned(currentUserId);
         transaction.Commit();
         return session.Id;
     }
 
-    private Dictionary<int, Exercise> ValidateSets(List<WorkoutSetInput> sets)
+    /// <summary>Checks every set against its exercise and returns the values each one keeps.</summary>
+    private List<(WorkoutSetInput Input, TrackedResult Result)> CheckSets(List<WorkoutSetInput> sets)
     {
         var exerciseIds = sets.Select(s => s.ExerciseId).Distinct().ToList();
-        var exercises = db.Exercises.AsNoTracking().Where(e => exerciseIds.Contains(e.Id)).ToDictionary(e => e.Id);
+        var types = db.Exercises.AsNoTracking().Where(e => exerciseIds.Contains(e.Id)).ToDictionary(e => e.Id, e => e.Type);
         var setTypeIds = db.SetTypes.Select(s => s.Id).ToHashSet();
-        foreach (var set in sets)
+        return sets.Select(set =>
         {
-            if (!exercises.TryGetValue(set.ExerciseId, out var exercise) || !setTypeIds.Contains(set.SetTypeId))
+            if (!types.TryGetValue(set.ExerciseId, out var type) || !setTypeIds.Contains(set.SetTypeId))
                 throw new DomainValidationException("Choose valid exercises and set types.");
-            if (set.RestSeconds is < 0 or > 3600)
-                throw new DomainValidationException("Rest must be between 0 and 3600 seconds.");
-            NormalizeForTrackingMode(set, exercise.Type);
-        }
-        return exercises;
-    }
-
-    private static void NormalizeForTrackingMode(WorkoutSetInput set, ExerciseType type)
-    {
-        var validLoad = double.IsFinite(set.WeightKg) && set.WeightKg is >= 0 and <= 500;
-        if (type == ExerciseType.StrengthTraining)
-        {
-            if (!validLoad || set.Reps is < 1 or > 500)
-                throw new DomainValidationException("Strength sets require 0–500 kg and 1–500 reps.");
-            set.DurationSeconds = 0;
-            set.Intensity = 0;
-            return;
-        }
-        if (set.DurationSeconds is < 1 or > 86400)
-            throw new DomainValidationException("Duration must be between 1 and 86400 seconds.");
-        if (type == ExerciseType.Cardio)
-        {
-            if (set.Intensity is < 1 or > 10)
-                throw new DomainValidationException("Cardio effort must be between 1 and 10.");
-            set.WeightKg = 0;
-        }
-        else
-        {
-            if (!validLoad)
-                throw new DomainValidationException("Timed sets accept 0–500 kg of external load.");
-            set.Intensity = 0;
-        }
-        set.Reps = 0;
+            TrackingRules.CheckRest(set.RestSeconds);
+            return (set, TrackingRules.Check(type, set.WeightKg, set.Reps, set.DurationSeconds, set.Intensity));
+        }).ToList();
     }
 
     /// <summary>The title of a workout: its split day's, or a general training day's.</summary>

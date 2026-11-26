@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using IronMindGym.Contracts;
 using IronMindGym.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Api;
 
@@ -11,8 +10,7 @@ public class ProgressController(
     IronMindDbContext db,
     ExerciseProgressService progress,
     FriendshipService friendships,
-    StrengthService strength,
-    AvatarService avatars) : ApiController
+    StrengthService strength) : ApiController
 {
     [HttpGet]
     public List<ExerciseProgressEntry> List() => progress.List(UserId);
@@ -46,10 +44,9 @@ public class ProgressController(
     {
         if (!friendships.AreFriends(UserId, friendId))
             return NotFound();
-        var friend = db.Users.AsNoTracking().Include(u => u.Benchmarks).Single(u => u.Id == friendId);
         return new FriendProgressResponse(
-            friend.Username,
-            avatars.CalculateStrengthCoefficient(strength.Current(friendId, friend.Benchmarks), db.WeightLogs.LatestWeighIn(friendId)?.ValueKg),
+            db.Users.Where(u => u.Id == friendId).Select(u => u.Username).Single(),
+            strength.Rank(friendId).Coefficient,
             progress.List(friendId));
     }
 }

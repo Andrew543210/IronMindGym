@@ -22,6 +22,27 @@ public class DashboardApiTests
     }
 
     [Fact]
+    public async Task TheRankScaleMarksTheCurrentStepAndThisWeeksWorkouts()
+    {
+        using var app = new TestApplication();
+        using var api = app.Api();
+        // 60 + 80 + 100 kg at 80 kg bodyweight is a coefficient of 3.
+        await api.RegisterWithSetup();
+        var bench = app.Query(db => db.Exercises.Single(e => e.Name == "Flat Bench Press").Id);
+        await ApiClient.Ok(await api.Post("/api/workouts", Journal.Workout((bench, 50, 5))));
+
+        var overview = await api.Get<DashboardResponse>("/api/dashboard");
+
+        Assert.Equal(3, overview.StrengthCoefficient);
+        var current = Assert.Single(overview.AvatarScalePoints, p => p.IsCurrent);
+        Assert.Equal(overview.AvatarName, current.Name);
+        Assert.InRange(overview.CurrentAvatarPositionPercent, current.PositionPercent, 100);
+        Assert.Equal(0, overview.AvatarScalePoints[0].PositionPercent);
+        Assert.Equal(100, overview.AvatarScalePoints[^1].PositionPercent);
+        Assert.Equal((3, 1), (overview.PlannedWorkoutsPerWeek, overview.CompletedThisWeek));
+    }
+
+    [Fact]
     public async Task OverviewShowsPlanGoalsAndResearchNotesWithoutAccountSecrets()
     {
         using var app = new TestApplication();

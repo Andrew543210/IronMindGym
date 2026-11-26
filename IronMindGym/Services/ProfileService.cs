@@ -6,20 +6,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, StrengthService strength, AvatarService avatars, AchievementService achievements)
+public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, StrengthService strength, AchievementService achievements)
 {
     public ProfileOverview BuildOverview(int userId)
     {
         var user = db.Users.AsNoTracking().Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
         var weighIn = db.WeightLogs.LatestWeighIn(userId);
-        var current = strength.Current(userId, user.Benchmarks);
-        var avatar = avatars.ResolveAvatar(db.Avatars.AsNoTracking().ToList(), current, weighIn?.ValueKg);
+        var rank = strength.Rank(userId);
         return new ProfileOverview(
             user.Username,
             user.Email,
             user.Profile?.Age ?? 0,
-            Localized.Pick(avatar.Name, avatar.NameUk),
-            avatars.CalculateStrengthCoefficient(current, weighIn?.ValueKg),
+            Localized.Pick(rank.Rank.Name, rank.Rank.NameUk),
+            rank.Coefficient,
             weighIn?.ValueKg,
             user.Profile?.HeightCm,
             weighIn?.Date,
@@ -40,7 +39,7 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
     {
         var user = db.Users.AsNoTracking().Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
         var bodyweightKg = db.WeightLogs.LatestWeighIn(userId)?.ValueKg;
-        var plan = db.WorkoutPlans.AsNoTracking().FirstOrDefault(p => p.UserId == userId);
+        var plan = db.WorkoutPlans.PlanOf(userId);
         return new ProfileSettings
         {
             Username = user.Username,
