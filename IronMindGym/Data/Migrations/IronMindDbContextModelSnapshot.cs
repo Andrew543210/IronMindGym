@@ -360,11 +360,8 @@ namespace IronMindGym.Data.Migrations
 
             modelBuilder.Entity("IronMindGym.Models.InitialBenchmarks", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("UserId")
                         .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<double>("BenchPressKg")
                         .HasColumnType("double precision");
@@ -375,13 +372,7 @@ namespace IronMindGym.Data.Migrations
                     b.Property<double>("SquatKg")
                         .HasColumnType("double precision");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasKey("UserId");
 
                     b.ToTable("InitialBenchmarks", t =>
                         {
@@ -503,11 +494,8 @@ namespace IronMindGym.Data.Migrations
 
             modelBuilder.Entity("IronMindGym.Models.Profile", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("UserId")
                         .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("AccountCreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -543,13 +531,7 @@ namespace IronMindGym.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasKey("UserId");
 
                     b.ToTable("Profiles", t =>
                         {
@@ -859,63 +841,22 @@ namespace IronMindGym.Data.Migrations
 
             modelBuilder.Entity("IronMindGym.Models.WorkoutPlan", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("UserId")
                         .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
 
                     b.Property<int>("SplitTypeId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.Property<int>("WorkoutsPerWeek")
                         .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.HasIndex("SplitTypeId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("WorkoutPlans", t =>
                         {
                             t.HasCheckConstraint("CK_WorkoutPlans_WorkoutsPerWeek", "\"WorkoutsPerWeek\" BETWEEN 1 AND 7");
-                        });
-                });
-
-            modelBuilder.Entity("IronMindGym.Models.WorkoutReview", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasMaxLength(800)
-                        .HasColumnType("character varying(800)");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("WorkoutSessionId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WorkoutSessionId")
-                        .IsUnique();
-
-                    b.ToTable("WorkoutReviews", t =>
-                        {
-                            t.HasCheckConstraint("CK_WorkoutReviews_Rating", "\"Rating\" BETWEEN 1 AND 5");
                         });
                 });
 
@@ -931,6 +872,13 @@ namespace IronMindGym.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(800)
+                        .HasColumnType("character varying(800)");
+
+                    b.Property<int?>("Rating")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("SessionDate")
@@ -954,6 +902,8 @@ namespace IronMindGym.Data.Migrations
                     b.ToTable("WorkoutSessions", t =>
                         {
                             t.HasCheckConstraint("CK_WorkoutSessions_DurationMinutes", "\"DurationMinutes\" >= 0");
+
+                            t.HasCheckConstraint("CK_WorkoutSessions_Rating", "\"Rating\" BETWEEN 1 AND 5");
                         });
                 });
 
@@ -1263,25 +1213,14 @@ namespace IronMindGym.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("IronMindGym.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                        .WithOne("Plan")
+                        .HasForeignKey("IronMindGym.Models.WorkoutPlan", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("SplitType");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("IronMindGym.Models.WorkoutReview", b =>
-                {
-                    b.HasOne("IronMindGym.Models.WorkoutSession", "WorkoutSession")
-                        .WithOne("Review")
-                        .HasForeignKey("IronMindGym.Models.WorkoutReview", "WorkoutSessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("WorkoutSession");
                 });
 
             modelBuilder.Entity("IronMindGym.Models.WorkoutSession", b =>
@@ -1384,6 +1323,8 @@ namespace IronMindGym.Data.Migrations
 
                     b.Navigation("FriendshipsAsUser2");
 
+                    b.Navigation("Plan");
+
                     b.Navigation("Profile");
 
                     b.Navigation("UserAchievements");
@@ -1400,8 +1341,6 @@ namespace IronMindGym.Data.Migrations
                     b.Navigation("Likes");
 
                     b.Navigation("PerformedExercises");
-
-                    b.Navigation("Review");
                 });
 #pragma warning restore 612, 618
         }

@@ -167,7 +167,7 @@ public static class AchievementEngine
         return new Dictionary<AchievementMetricType, double>
         {
             [AchievementMetricType.ProfileCompleted] = AthleteSetup.IsComplete(db, userId) ? 1 : 0,
-            [AchievementMetricType.ReviewsWritten] = db.WorkoutReviews.Count(r => r.WorkoutSession.UserId == userId && r.Comment != ""),
+            [AchievementMetricType.ReviewsWritten] = db.WorkoutSessions.Count(s => s.UserId == userId && s.Notes != null),
             [AchievementMetricType.WorkoutsCompleted] = workouts.Count,
             [AchievementMetricType.TotalSets] = totalSets,
             [AchievementMetricType.MonthlyTonnage] = monthlyTonnage,

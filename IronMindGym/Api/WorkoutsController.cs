@@ -40,7 +40,7 @@ public class WorkoutsController(
     public WorkoutLoggerResponse Logger()
     {
         var activePlan = db.WorkoutPlans.AsNoTracking()
-            .Where(p => p.UserId == UserId && p.IsActive)
+            .Where(p => p.UserId == UserId)
             .Select(p => new { p.SplitTypeId, Name = Localized.Pick(p.SplitType.Name, p.SplitType.NameUk) })
             .FirstOrDefault();
         var splitTypes = db.SplitTypes.AsNoTracking()
@@ -95,7 +95,7 @@ public class WorkoutsController(
         var details = workouts.BuildDetails(UserId, id, UserId);
         if (details is null)
             return NotFound();
-        var weeklyTarget = db.WorkoutPlans.Where(w => w.UserId == UserId && w.IsActive).Select(w => w.WorkoutsPerWeek).FirstOrDefault();
+        var weeklyTarget = db.WorkoutPlans.Where(w => w.UserId == UserId).Select(w => w.WorkoutsPerWeek).FirstOrDefault();
         var weekStart = calendar.Value.WeekStartUtc(DateTime.UtcNow);
         var doneThisWeek = db.WorkoutSessions.Count(s => s.UserId == UserId && s.SessionDate >= weekStart);
         details.RemainingWorkoutsThisWeek = Math.Max(weeklyTarget - doneThisWeek, 0);
@@ -157,8 +157,8 @@ public sealed record WorkoutDetailsResponse(
             WorkoutService.SessionName(session.SplitDay?.WorkoutName, session.SplitDay?.WorkoutNameUk),
             session.SessionDate,
             session.DurationMinutes,
-            session.Review?.Rating,
-            string.IsNullOrWhiteSpace(session.Review?.Comment) ? null : session.Review.Comment,
+            session.Rating,
+            session.Notes,
             session.PerformedExercises.OrderBy(p => p.OrderInWorkout).Select(p => new PerformedExerciseResponse(
                 Localized.Pick(p.Exercise.Name, p.Exercise.NameUk),
                 p.Exercise.Type,

@@ -21,7 +21,6 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
     public DbSet<WorkoutSession> WorkoutSessions => Set<WorkoutSession>();
     public DbSet<PerformedExercise> PerformedExercises => Set<PerformedExercise>();
     public DbSet<WorkoutSet> Sets => Set<WorkoutSet>();
-    public DbSet<WorkoutReview> WorkoutReviews => Set<WorkoutReview>();
     public DbSet<WorkoutDraft> WorkoutDrafts => Set<WorkoutDraft>();
     public DbSet<PersonalRecord> PersonalRecords => Set<PersonalRecord>();
     public DbSet<ExerciseProgress> ExerciseProgress => Set<ExerciseProgress>();
@@ -47,7 +46,12 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             user.HasIndex(u => u.Username).IsUnique();
             user.HasOne(u => u.Profile).WithOne(p => p.User).HasForeignKey<Profile>(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
             user.HasOne(u => u.Benchmarks).WithOne(b => b.User).HasForeignKey<InitialBenchmarks>(b => b.UserId).OnDelete(DeleteBehavior.Cascade);
+            user.HasOne(u => u.Plan).WithOne(p => p.User).HasForeignKey<WorkoutPlan>(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
         });
+        // A user has at most one of each: the user id is the key.
+        modelBuilder.Entity<Profile>().HasKey(p => p.UserId);
+        modelBuilder.Entity<InitialBenchmarks>().HasKey(b => b.UserId);
+        modelBuilder.Entity<WorkoutPlan>().HasKey(p => p.UserId);
 
         // Moments are timestamptz in UTC; calendar days in the athlete's time zone are DateOnly, stored as date.
         modelBuilder.Entity<WeightLog>().HasIndex(w => new { w.UserId, w.Date }).IsUnique();
@@ -98,7 +102,6 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         {
             session.HasIndex(s => new { s.UserId, s.SessionDate });
             session.HasIndex(s => new { s.UserId, s.DraftId }).IsUnique();
-            session.HasOne(s => s.Review).WithOne(r => r.WorkoutSession).HasForeignKey<WorkoutReview>(r => r.WorkoutSessionId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<WorkoutDraft>(draft =>
         {
@@ -127,8 +130,9 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             ("Loads", "\"BenchPressKg\" >= 0 AND \"SquatKg\" >= 0 AND \"DeadliftKg\" >= 0"));
         Checks<WeightLog>(modelBuilder, "WeightLogs", ("ValueKg", "\"ValueKg\" > 0"));
         Checks<WorkoutPlan>(modelBuilder, "WorkoutPlans", ("WorkoutsPerWeek", "\"WorkoutsPerWeek\" BETWEEN 1 AND 7"));
-        Checks<WorkoutSession>(modelBuilder, "WorkoutSessions", ("DurationMinutes", "\"DurationMinutes\" >= 0"));
-        Checks<WorkoutReview>(modelBuilder, "WorkoutReviews", ("Rating", "\"Rating\" BETWEEN 1 AND 5"));
+        Checks<WorkoutSession>(modelBuilder, "WorkoutSessions",
+            ("DurationMinutes", "\"DurationMinutes\" >= 0"),
+            ("Rating", "\"Rating\" BETWEEN 1 AND 5"));
         Checks<WorkoutSet>(modelBuilder, "Sets",
             ("SetNumber", "\"SetNumber\" >= 1"),
             ("Values", "\"WeightKg\" >= 0 AND \"Reps\" >= 0 AND \"DurationSeconds\" >= 0 AND \"RestSeconds\" >= 0"),

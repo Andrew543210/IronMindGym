@@ -14,7 +14,6 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
         var session = db.WorkoutSessions.AsNoTracking()
             .Include(s => s.PerformedExercises).ThenInclude(pe => pe.Exercise)
             .Include(s => s.PerformedExercises).ThenInclude(pe => pe.Sets).ThenInclude(set => set.SetType)
-            .Include(s => s.Review)
             .Include(s => s.SplitDay)
             .FirstOrDefault(s => s.Id == sessionId && s.UserId == ownerId);
         if (session is null)
@@ -101,7 +100,9 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
             SessionDate = DateTime.UtcNow,
             DraftId = workout.DraftId,
             DurationMinutes = workout.DurationMinutes,
-            SplitDayId = workout.SplitDayId
+            SplitDayId = workout.SplitDayId,
+            Rating = workout.ReviewRating,
+            Notes = string.IsNullOrWhiteSpace(workout.ReviewComment) ? null : workout.ReviewComment.Trim()
         };
 
         // Keep contiguous blocks so supersets and circuits retain their logged order.
@@ -133,13 +134,6 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records)
             });
         }
         db.WorkoutSessions.Add(session);
-
-        db.WorkoutReviews.Add(new WorkoutReview
-        {
-            WorkoutSession = session,
-            Rating = workout.ReviewRating,
-            Comment = workout.ReviewComment?.Trim() ?? string.Empty
-        });
 
         db.SaveChanges();
         records.Recalculate(currentUserId, exercises.Keys);

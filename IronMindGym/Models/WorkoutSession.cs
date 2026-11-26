@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace IronMindGym.Models;
 
 public class WorkoutSession
@@ -14,7 +16,13 @@ public class WorkoutSession
     /// <summary>The split day the workout trained; none for a general training day. It also gives the title.</summary>
     public int? SplitDayId { get; set; }
     public SplitDay? SplitDay { get; set; }
-    public WorkoutReview? Review { get; set; }
+
+    /// <summary>The athlete's rating of the workout, 1 to 5.</summary>
+    public int? Rating { get; set; }
+
+    [MaxLength(800)]
+    public string? Notes { get; set; }
+
     public ICollection<PerformedExercise> PerformedExercises { get; set; } = [];
     public ICollection<ActivityLike> Likes { get; set; } = [];
     public ICollection<FriendComment> Comments { get; set; } = [];

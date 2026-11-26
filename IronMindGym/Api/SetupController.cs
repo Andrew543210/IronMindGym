@@ -41,15 +41,11 @@ public class SetupController(IronMindDbContext db) : ApiController
             db.WeightLogs.Add(new WeightLog { UserId = userId, Date = today, ValueKg = request.WeightKg });
         else
             weighIn.ValueKg = request.WeightKg;
-        foreach (var plan in db.WorkoutPlans.Where(p => p.UserId == userId && p.IsActive))
-            plan.IsActive = false;
-        db.WorkoutPlans.Add(new WorkoutPlan
-        {
-            UserId = userId,
-            WorkoutsPerWeek = request.WorkoutsPerWeek,
-            SplitTypeId = request.SplitTypeId,
-            IsActive = true
-        });
+        var plan = db.WorkoutPlans.Find(userId);
+        if (plan is null)
+            db.WorkoutPlans.Add(plan = new WorkoutPlan { UserId = userId });
+        plan.WorkoutsPerWeek = request.WorkoutsPerWeek;
+        plan.SplitTypeId = request.SplitTypeId;
         db.SaveChanges();
         AchievementEngine.AssignAchievements(db, userId);
         transaction.Commit();

@@ -68,7 +68,7 @@ public class ProfileApiTests
 
         Assert.Equal(81.5, app.Query(db => db.WeightLogs.Single().ValueKg));
         Assert.Equal(181, app.Query(db => db.Profiles.Single().HeightCm));
-        var plan = app.Query(db => db.WorkoutPlans.Single(p => p.IsActive));
+        var plan = app.Query(db => db.WorkoutPlans.Single());
         Assert.Equal((settings.SplitTypeId, 5), (plan.SplitTypeId, plan.WorkoutsPerWeek));
         Assert.Equal(81.5, (await Settings(api)).WeightKg);
     }

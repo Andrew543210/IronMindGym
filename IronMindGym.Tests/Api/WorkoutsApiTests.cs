@@ -20,7 +20,8 @@ public class WorkoutsApiTests
         var saved = await Save(app, api, [new { exerciseId = bench, setTypeId = SetType(app), weightKg = 75.5, reps = 5, restSeconds = 120 }], comment: "");
 
         Assert.Equal(75.5, app.Query(db => db.PersonalRecords.Single().MaxWeightKg));
-        Assert.Equal(string.Empty, app.Query(db => db.WorkoutReviews.Single().Comment));
+        var review = app.Query(db => db.WorkoutSessions.Select(s => new { s.Rating, s.Notes }).Single());
+        Assert.Equal<(int?, string?)>((4, null), (review.Rating, review.Notes));
         var response = await api.Http.GetAsync($"/api/workouts/{saved}");
         var json = await response.Content.ReadAsStringAsync();
         var details = JsonSerializer.Deserialize<WorkoutDetailsResponse>(json, ApiClient.Json)!;

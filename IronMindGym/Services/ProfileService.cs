@@ -41,7 +41,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
     {
         var user = db.Users.AsNoTracking().Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
         var bodyweightKg = db.WeightLogs.LatestWeighIn(userId)?.ValueKg;
-        var plan = db.WorkoutPlans.AsNoTracking().FirstOrDefault(p => p.UserId == userId && p.IsActive);
+        var plan = db.WorkoutPlans.AsNoTracking().FirstOrDefault(p => p.UserId == userId);
         return new ProfileSettings
         {
             Username = user.Username,
@@ -89,9 +89,9 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
         user.Benchmarks.SquatKg = settings.SquatKg;
         user.Benchmarks.DeadliftKg = settings.DeadliftKg;
         RecordWeightIfChanged(userId, settings.WeightKg, AthleteCalendar.FromId(timeZone).Today);
-        var plan = db.WorkoutPlans.FirstOrDefault(p => p.UserId == userId && p.IsActive);
+        var plan = db.WorkoutPlans.Find(userId);
         if (plan is null)
-            db.WorkoutPlans.Add(plan = new WorkoutPlan { UserId = userId, IsActive = true });
+            db.WorkoutPlans.Add(plan = new WorkoutPlan { UserId = userId });
         plan.SplitTypeId = settings.SplitTypeId;
         plan.WorkoutsPerWeek = settings.WorkoutsPerWeek;
         db.SaveChanges();

@@ -19,7 +19,7 @@ public class DashboardService(IronMindDbContext db, AvatarService avatarService,
         var bodyweightKg = db.WeightLogs.LatestWeighIn(currentUserId)?.ValueKg;
 
         var activePlan = db.WorkoutPlans
-            .FirstOrDefault(p => p.UserId == currentUserId && p.IsActive);
+            .FirstOrDefault(p => p.UserId == currentUserId);
 
         var calendar = AthleteCalendar.For(db, currentUserId);
         var startOfWeek = calendar.WeekStartUtc(DateTime.UtcNow);

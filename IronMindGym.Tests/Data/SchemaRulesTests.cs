@@ -37,7 +37,8 @@ public class SchemaRulesTests
     [InlineData("""INSERT INTO "DailyNutritions" ("UserId", "Date", "CaloriesKcal", "ProteinG", "FatG", "CarbsG") VALUES (1, '2026-11-01', -1, 0, 0, 0)""")]
     [InlineData("""INSERT INTO "Profiles" ("UserId", "Age", "AccountCreatedAt", "EnergyEquation") VALUES (1, 30, now(), 'Other')""")]
     [InlineData("""INSERT INTO "Profiles" ("UserId", "Age", "AccountCreatedAt", "EnergyEquation", "CalorieTarget") VALUES (1, 30, now(), 'None', 0)""")]
-    [InlineData("""INSERT INTO "WorkoutPlans" ("UserId", "WorkoutsPerWeek", "IsActive", "SplitTypeId") VALUES (1, 0, true, 1)""")]
+    [InlineData("""INSERT INTO "WorkoutPlans" ("UserId", "WorkoutsPerWeek", "SplitTypeId") VALUES (1, 0, 1)""")]
+    [InlineData("""INSERT INTO "WorkoutSessions" ("UserId", "SessionDate", "DurationMinutes", "Rating") VALUES (1, now(), 40, 6)""")]
     public void AthleteValuesStayWithinTheirDomain(string sql)
     {
         using var app = new TestApplication();

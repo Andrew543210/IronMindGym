@@ -140,5 +140,37 @@ public sealed class MigrationTests : IDisposable
         Assert.Equal(["LEGS", "FULL_BODY", null, null], Read(db => db.WorkoutSessions.OrderBy(s => s.Id).Select(s => s.SplitDay == null ? null : s.SplitDay.Code).ToList()));
     }
 
+    [Fact]
+    public void ReviewsMoveIntoTheirWorkoutsAndEachAthleteKeepsOnePlan()
+    {
+        MigrateTo("StoreSplitDaysAsReferenceData");
+        AddUsers(1, 2);
+        Run("""
+            INSERT INTO "SplitTypes" ("Code", "Name") VALUES ('FULL_BODY', 'Full-body');
+            INSERT INTO "WorkoutPlans" ("UserId", "WorkoutsPerWeek", "IsActive", "SplitTypeId") VALUES
+                (1, 3, true, 1), (1, 5, false, 1), (2, 2, false, 1), (2, 4, false, 1);
+            INSERT INTO "WorkoutSessions" ("UserId", "SessionDate", "DurationMinutes") VALUES (1, now(), 40), (1, now(), 50), (1, now(), 60);
+            INSERT INTO "WorkoutReviews" ("WorkoutSessionId", "Rating", "Comment") VALUES (1, 5, ' Heavy '), (2, 3, '  ');
+            """);
+
+        MigrateTo("KeyOneToOneTablesByUser");
+
+        Assert.Equal([3, 4], Read(db => db.WorkoutPlans.OrderBy(p => p.UserId).Select(p => p.WorkoutsPerWeek).ToList()));
+        var sessions = Read(db => db.WorkoutSessions.OrderBy(s => s.Id).Select(s => new { s.Rating, s.Notes }).ToList());
+        Assert.Equal([new { Rating = (int?)5, Notes = (string?)"Heavy" }, new { Rating = (int?)3, Notes = (string?)null }, new { Rating = (int?)null, Notes = (string?)null }], sessions);
+    }
+
+    [Fact]
+    public void EveryMigrationCanBeRevertedOnAnEmptyDatabase()
+    {
+        using var db = Open();
+        var migrator = db.GetService<IMigrator>();
+        migrator.Migrate();
+
+        migrator.Migrate(Migration.InitialDatabase);
+
+        Assert.Empty(db.Database.GetAppliedMigrations());
+    }
+
     public void Dispose() => TestDatabase.Drop(connectionString);
 }

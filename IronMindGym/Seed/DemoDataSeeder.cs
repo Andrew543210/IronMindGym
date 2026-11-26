@@ -43,7 +43,7 @@ public static class DemoDataSeeder
             new WeightLog { User = athlete, Date = today.AddDays(-40), ValueKg = 83 },
             new WeightLog { User = athlete, Date = today.AddDays(-10), ValueKg = 82 },
             new WeightLog { User = friend, Date = today.AddDays(-20), ValueKg = 62 });
-        db.WorkoutPlans.Add(new WorkoutPlan { User = athlete, WorkoutsPerWeek = 4, IsActive = true, SplitType = upperLower });
+        db.WorkoutPlans.Add(new WorkoutPlan { User = athlete, WorkoutsPerWeek = 4, SplitType = upperLower });
         db.DailyNutritions.Add(new DailyNutrition
         {
             User = athlete,
@@ -88,7 +88,8 @@ public static class DemoDataSeeder
                 SplitDay = day,
                 SessionDate = DateTime.UtcNow.AddDays(-daysAgo),
                 DurationMinutes = minutes,
-                Review = new WorkoutReview { Rating = 5, Comment = daysAgo == 1 ? "Strong training session" : string.Empty }
+                Rating = 5,
+                Notes = daysAgo == 1 ? "Strong training session" : null
             };
             foreach (var (exercise, sets) in blocks)
             {
