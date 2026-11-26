@@ -62,27 +62,6 @@ namespace IronMindGym.Data.Migrations
                     b.ToTable("Achievements");
                 });
 
-            modelBuilder.Entity("IronMindGym.Models.ActivityFeed", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("PublishedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("ResearchItemId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ResearchItemId");
-
-                    b.ToTable("ActivityFeeds");
-                });
-
             modelBuilder.Entity("IronMindGym.Models.ActivityLike", b =>
                 {
                     b.Property<int>("Id")
@@ -553,7 +532,15 @@ namespace IronMindGym.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Source")
+                    b.Property<DateOnly>("PublishedAt")
+                        .HasColumnType("date");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SourceUrl")
                         .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
@@ -581,7 +568,10 @@ namespace IronMindGym.Data.Migrations
                     b.HasIndex("Title")
                         .IsUnique();
 
-                    b.ToTable("ResearchItems");
+                    b.ToTable("ResearchItems", t =>
+                        {
+                            t.HasCheckConstraint("CK_ResearchItems_SourceUrl", "\"SourceUrl\" LIKE 'https://%'");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.SetType", b =>
@@ -955,17 +945,6 @@ namespace IronMindGym.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("IronMindGym.Models.ActivityFeed", b =>
-                {
-                    b.HasOne("IronMindGym.Models.ResearchItem", "ResearchItem")
-                        .WithMany("FeedItems")
-                        .HasForeignKey("ResearchItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ResearchItem");
-                });
-
             modelBuilder.Entity("IronMindGym.Models.ActivityLike", b =>
                 {
                     b.HasOne("IronMindGym.Models.User", "User")
@@ -1283,11 +1262,6 @@ namespace IronMindGym.Data.Migrations
             modelBuilder.Entity("IronMindGym.Models.PerformedExercise", b =>
                 {
                     b.Navigation("Sets");
-                });
-
-            modelBuilder.Entity("IronMindGym.Models.ResearchItem", b =>
-                {
-                    b.Navigation("FeedItems");
                 });
 
             modelBuilder.Entity("IronMindGym.Models.SetType", b =>

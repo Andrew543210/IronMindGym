@@ -1,8 +1,6 @@
 using IronMindGym.Contracts;
 using IronMindGym.Data;
-using IronMindGym.Localization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Api;
 
@@ -37,31 +35,8 @@ public class DashboardController(IronMindDbContext db, DashboardService dashboar
     }
 
     [HttpGet("api/feed/{id:int}")]
-    public ActionResult<DashboardResearchItem> FeedItem(int id)
-    {
-        var item = db.ActivityFeeds.AsNoTracking()
-            .Where(x => x.Id == id)
-            .Select(x => new
-            {
-                x.Id,
-                x.PublishedAt,
-                Title = Localized.Pick(x.ResearchItem.Title, x.ResearchItem.TitleUk),
-                ThesisText = Localized.Pick(x.ResearchItem.ThesisText, x.ResearchItem.ThesisTextUk),
-                x.ResearchItem.Source
-            })
-            .FirstOrDefault();
-        if (item is null)
-            return NotFound();
-        return new DashboardResearchItem
-        {
-            FeedId = item.Id,
-            PublishedAt = item.PublishedAt,
-            Title = item.Title,
-            ThesisText = item.ThesisText,
-            Source = DashboardService.BuildSourceName(item.Source),
-            SourceUrl = DashboardService.BuildSourceUrl(item.Source)
-        };
-    }
+    public ActionResult<DashboardResearchItem> FeedItem(int id) =>
+        DashboardService.ResearchNotes(db.ResearchItems.Where(r => r.Id == id)).SingleOrDefault() is { } note ? note : NotFound();
 }
 
 public sealed record DashboardResponse(

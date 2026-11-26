@@ -16,7 +16,7 @@ export const overview = {
   plannedWorkoutsPerWeek: 3,
   completedThisWeek: 2,
   feedItems: [{
-    feedId: 7, publishedAt: '2021-05-01T00:00:00Z', title: 'Rest periods', thesisText: 'Longer rest helps strength.', source: 'Journal of Strength',
+    id: 7, publishedAt: '2021-05-01', title: 'Rest periods', thesisText: 'Longer rest helps strength.', source: 'Journal of Strength',
     sourceUrl: 'https://example.org/rest',
   }],
 };

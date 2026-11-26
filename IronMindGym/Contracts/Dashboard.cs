@@ -29,8 +29,8 @@ public class AvatarScalePoint
 
 public class DashboardResearchItem
 {
-    public int FeedId { get; set; }
-    public DateTime PublishedAt { get; set; }
+    public int Id { get; set; }
+    public DateOnly PublishedAt { get; set; }
     public string Title { get; set; } = string.Empty;
     public string ThesisText { get; set; } = string.Empty;
     public string Source { get; set; } = string.Empty;

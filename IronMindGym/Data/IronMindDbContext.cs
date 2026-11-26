@@ -31,7 +31,6 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
     public DbSet<Achievement> Achievements => Set<Achievement>();
     public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
     public DbSet<ResearchItem> ResearchItems => Set<ResearchItem>();
-    public DbSet<ActivityFeed> ActivityFeeds => Set<ActivityFeed>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -145,6 +144,7 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         Checks<DailyNutrition>(modelBuilder, "DailyNutritions",
             ("Intake", "\"CaloriesKcal\" >= 0 AND \"ProteinG\" >= 0 AND \"FatG\" >= 0 AND \"CarbsG\" >= 0"));
         Checks<Avatar>(modelBuilder, "Avatars", ("MinStrengthCoefficient", "\"MinStrengthCoefficient\" >= 0"));
+        Checks<ResearchItem>(modelBuilder, "ResearchItems", ("SourceUrl", "\"SourceUrl\" LIKE 'https://%'"));
 
         modelBuilder.Entity<Friendship>(friendship =>
         {

@@ -16,14 +16,16 @@ public class SeedingTests
         using var app = new TestApplication();
         app.Query(db =>
         {
-            var counts = (db.Exercises.Count(), db.Avatars.Count(), db.ActivityFeeds.Count(), db.Achievements.Count());
+            var counts = (db.Exercises.Count(), db.Avatars.Count(), db.ResearchItems.Count(), db.Achievements.Count());
 
             DataSeeder.Seed(db);
 
-            Assert.Equal(counts, (db.Exercises.Count(), db.Avatars.Count(), db.ActivityFeeds.Count(), db.Achievements.Count()));
+            Assert.Equal(counts, (db.Exercises.Count(), db.Avatars.Count(), db.ResearchItems.Count(), db.Achievements.Count()));
             Assert.Equal(ExerciseCatalogSeeder.Definitions().Count, db.Exercises.Count());
             Assert.Equal(AchievementCatalog.All.Count, db.Achievements.Count());
             Assert.Equal(DataSeeder.AvatarLadder.Length, db.Avatars.Count());
+            Assert.Equal(DataSeeder.ResearchNotes.Length, db.ResearchItems.Count());
+            Assert.All(db.ResearchItems.ToList(), r => Assert.StartsWith("https://", r.SourceUrl, StringComparison.Ordinal));
             Assert.Equal("Hamstrings", db.Exercises.Include(e => e.MuscleSubGroup).Single(e => e.Name == "Romanian Deadlift").MuscleSubGroup.Name);
             Assert.Equal(ExerciseType.Timed, db.Exercises.Single(e => e.Name == "Weighted Plank").Type);
             Assert.Equal(

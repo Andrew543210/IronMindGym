@@ -1,5 +1,6 @@
 using IronMindGym.Data;
 using IronMindGym.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Seed;
 
@@ -109,35 +110,45 @@ public static class DataSeeder
         }
     }
 
+    public sealed record ResearchNote(
+        string Title, string Summary, string TitleUk, string SummaryUk, string SourceName, string SourceUrl, DateOnly PublishedAt);
+
+    // The research notes are content rather than data anything points at: a note left out of this list is removed.
+    public static readonly ResearchNote[] ResearchNotes =
+    [
+        new("Build movement into your week",
+            "WHO guidance counts everyday movement as well as structured exercise. Walking, cycling and strength work can all contribute to an active week. Recommendations differ by age and circumstances.",
+            "Додайте рух у свій тиждень",
+            "Рекомендації ВООЗ враховують як повсякденний рух, так і структуровані тренування. Ходьба, їзда на велосипеді й силові вправи — усе це робить тиждень активним. Рекомендації залежать від віку та обставин.",
+            "WHO · Public health guidance", "https://www.who.int/news-room/fact-sheets/detail/physical-activity", new DateOnly(2026, 11, 4)),
+        new("Recovery includes consistent sleep",
+            "CDC guidance emphasizes both sleep duration and quality. A consistent bedtime and wake-up time are practical starting habits; sleep requirements vary with age.",
+            "Відновлення — це й регулярний сон",
+            "Рекомендації CDC наголошують і на тривалості, і на якості сну. Сталий час відходу до сну й пробудження — практичні звички для початку; потреба уві сні залежить від віку.",
+            "CDC · Sleep guidance", "https://www.cdc.gov/sleep/about/index.html", new DateOnly(2024, 5, 15)),
+        new("Protein and resistance training",
+            "The ISSN position stand reviews how dietary protein supports adaptations to exercise in healthy, active people. It discusses total daily intake, protein quality and timing, rather than a single rule for everyone.",
+            "Білок і силові тренування",
+            "Позиційна заява ISSN розглядає, як харчовий білок підтримує адаптацію до тренувань у здорових активних людей. Ідеться про загальне добове споживання, якість і час прийому білка, а не про одне правило для всіх.",
+            "Jäger et al. · ISSN position stand, 2017", "https://pmc.ncbi.nlm.nih.gov/articles/PMC5477153/", new DateOnly(2017, 6, 20)),
+        new("Weekly training volume and muscle growth",
+            "This systematic review and meta-analysis found a dose-response relationship between weekly resistance-training sets and muscle growth in the included studies. It does not establish one optimal set count for every lifter.",
+            "Тижневий обсяг тренувань і ріст м’язів",
+            "Цей систематичний огляд і метааналіз виявив дозозалежний зв’язок між кількістю тижневих підходів силових тренувань і ростом м’язів у включених дослідженнях. Єдиної оптимальної кількості підходів для кожного він не встановлює.",
+            "Schoenfeld et al. · Journal of Sports Sciences, 2017", "https://pubmed.ncbi.nlm.nih.gov/27433992/", new DateOnly(2017, 6, 1))
+    ];
+
     private static void EnsureResearchFeed(IronMindDbContext db)
     {
-        var articles = new[]
+        var titles = ResearchNotes.Select(n => n.Title).ToList();
+        db.ResearchItems.Where(r => !titles.Contains(r.Title)).ExecuteDelete();
+        var existing = db.ResearchItems.ToDictionary(r => r.Title);
+        foreach (var note in ResearchNotes)
         {
-            new { Title = "Build movement into your week", Summary = "WHO guidance counts everyday movement as well as structured exercise. Walking, cycling and strength work can all contribute to an active week. Recommendations differ by age and circumstances.", TitleUk = "Додайте рух у свій тиждень", SummaryUk = "Рекомендації ВООЗ враховують як повсякденний рух, так і структуровані тренування. Ходьба, їзда на велосипеді й силові вправи — усе це робить тиждень активним. Рекомендації залежать від віку та обставин.", Source = "WHO · Public health guidance|https://www.who.int/news-room/fact-sheets/detail/physical-activity", Published = new DateTime(2026, 11, 4, 0, 0, 0, DateTimeKind.Utc) },
-            new { Title = "Recovery includes consistent sleep", Summary = "CDC guidance emphasizes both sleep duration and quality. A consistent bedtime and wake-up time are practical starting habits; sleep requirements vary with age.", TitleUk = "Відновлення — це й регулярний сон", SummaryUk = "Рекомендації CDC наголошують і на тривалості, і на якості сну. Сталий час відходу до сну й пробудження — практичні звички для початку; потреба уві сні залежить від віку.", Source = "CDC · Sleep guidance|https://www.cdc.gov/sleep/about/index.html", Published = new DateTime(2024, 5, 15, 0, 0, 0, DateTimeKind.Utc) },
-            new { Title = "Protein and resistance training", Summary = "The ISSN position stand reviews how dietary protein supports adaptations to exercise in healthy, active people. It discusses total daily intake, protein quality and timing, rather than a single rule for everyone.", TitleUk = "Білок і силові тренування", SummaryUk = "Позиційна заява ISSN розглядає, як харчовий білок підтримує адаптацію до тренувань у здорових активних людей. Ідеться про загальне добове споживання, якість і час прийому білка, а не про одне правило для всіх.", Source = "Jäger et al. · ISSN position stand, 2017|https://pmc.ncbi.nlm.nih.gov/articles/PMC5477153/", Published = new DateTime(2017, 6, 20, 0, 0, 0, DateTimeKind.Utc) },
-            new { Title = "Weekly training volume and muscle growth", Summary = "This systematic review and meta-analysis found a dose-response relationship between weekly resistance-training sets and muscle growth in the included studies. It does not establish one optimal set count for every lifter.", TitleUk = "Тижневий обсяг тренувань і ріст м’язів", SummaryUk = "Цей систематичний огляд і метааналіз виявив дозозалежний зв’язок між кількістю тижневих підходів силових тренувань і ростом м’язів у включених дослідженнях. Єдиної оптимальної кількості підходів для кожного він не встановлює.", Source = "Schoenfeld et al. · Journal of Sports Sciences, 2017|https://pubmed.ncbi.nlm.nih.gov/27433992/", Published = new DateTime(2017, 6, 1, 0, 0, 0, DateTimeKind.Utc) }
-        };
-        var titles = articles.Select(a => a.Title).ToList();
-        db.ActivityFeeds.RemoveRange(db.ActivityFeeds.Where(f => !titles.Contains(f.ResearchItem.Title)));
-        db.ResearchItems.RemoveRange(db.ResearchItems.Where(r => !titles.Contains(r.Title)));
-        foreach (var article in articles)
-        {
-            var item = db.ResearchItems.FirstOrDefault(r => r.Title == article.Title);
-            if (item is null)
-            {
-                item = new ResearchItem { Title = article.Title };
-                db.ResearchItems.Add(item);
-            }
-            item.ThesisText = article.Summary;
-            item.TitleUk = article.TitleUk;
-            item.ThesisTextUk = article.SummaryUk;
-            item.Source = article.Source;
-            var feed = item.Id == 0 ? null : db.ActivityFeeds.FirstOrDefault(f => f.ResearchItemId == item.Id);
-            if (feed is null)
-                db.ActivityFeeds.Add(new ActivityFeed { ResearchItem = item, PublishedAt = article.Published });
-            else
-                feed.PublishedAt = article.Published;
+            if (!existing.TryGetValue(note.Title, out var item))
+                db.ResearchItems.Add(item = new ResearchItem { Title = note.Title });
+            (item.ThesisText, item.TitleUk, item.ThesisTextUk) = (note.Summary, note.TitleUk, note.SummaryUk);
+            (item.SourceName, item.SourceUrl, item.PublishedAt) = (note.SourceName, note.SourceUrl, note.PublishedAt);
         }
         db.SaveChanges();
     }

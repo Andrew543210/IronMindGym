@@ -161,6 +161,30 @@ public sealed class MigrationTests : IDisposable
     }
 
     [Fact]
+    public void FeedRowsFoldIntoTheirResearchNotes()
+    {
+        MigrateTo("KeyOneToOneTablesByUser");
+        Run("""
+            INSERT INTO "ResearchItems" ("Title", "ThesisText", "Source") VALUES
+                ('Sleep', 'Text', 'CDC · Sleep guidance | https://www.cdc.gov/sleep'),
+                ('Link only', 'Text', 'https://example.org/note'),
+                ('No link', 'Text', 'Somebody|http://example.org');
+            INSERT INTO "ActivityFeeds" ("ResearchItemId", "PublishedAt") VALUES (1, '2024-05-15 00:00+00');
+            """);
+
+        MigrateTo("FoldTheFeedIntoResearchNotes");
+
+        var notes = Read(db => db.ResearchItems.OrderBy(r => r.Id).Select(r => new { r.Title, r.SourceName, r.SourceUrl }).ToList());
+        Assert.Equal(
+            [
+                new { Title = "Sleep", SourceName = "CDC · Sleep guidance", SourceUrl = "https://www.cdc.gov/sleep" },
+                new { Title = "Link only", SourceName = "Research source", SourceUrl = "https://example.org/note" }
+            ],
+            notes);
+        Assert.Equal(new DateOnly(2024, 5, 15), Read(db => db.ResearchItems.Single(r => r.Title == "Sleep").PublishedAt));
+    }
+
+    [Fact]
     public void EveryMigrationCanBeRevertedOnAnEmptyDatabase()
     {
         using var db = Open();

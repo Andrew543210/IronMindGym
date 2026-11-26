@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Models;
 
+/// <summary>A short research note on the dashboard, with the source it summarizes.</summary>
 public class ResearchItem
 {
     public int Id { get; set; }
@@ -18,8 +19,13 @@ public class ResearchItem
     [MaxLength(1200)]
     public string? ThesisTextUk { get; set; }
 
-    [MaxLength(300)]
-    public string Source { get; set; } = string.Empty;
+    /// <summary>The publication date of the source.</summary>
+    public DateOnly PublishedAt { get; set; }
 
-    public ICollection<ActivityFeed> FeedItems { get; set; } = [];
+    [Required, MaxLength(200)]
+    public string SourceName { get; set; } = string.Empty;
+
+    /// <summary>An https link to the source.</summary>
+    [Required, MaxLength(300)]
+    public string SourceUrl { get; set; } = string.Empty;
 }

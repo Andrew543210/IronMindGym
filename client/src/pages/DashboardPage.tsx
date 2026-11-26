@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router';
 import { EmptyState, PageState } from '../components/ui';
-import { formatDay, formatFixed, formatNumber, localFormat, parseMoment } from '../format';
+import { formatDay, formatFixed, formatNumber, localFormat } from '../format';
 import { useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
 import { useAthlete } from '../session';
@@ -14,7 +14,7 @@ export interface WorkoutListItem {
 }
 
 interface ResearchNote {
-  feedId: number;
+  id: number;
   publishedAt: string;
   title: string;
   thesisText: string;
@@ -186,14 +186,14 @@ export function DashboardPage() {
       </div>
       <div className="feed-grid">
         {data.feedItems.map((item) => (
-          <article className="feed-card" key={item.feedId}>
+          <article className="feed-card" key={item.id}>
             <span className="eyebrow">{t('dashboard.trainingNotes')}</span>
             <h5>{item.title}</h5>
             <p>{item.thesisText}</p>
             <div className="source-label mb-3">{item.source}</div>
             <div className="d-flex flex-wrap gap-2">
               {item.sourceUrl && <a className="btn btn-outline-secondary btn-sm" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{t('dashboard.readSource')}</a>}
-              <Link className="btn btn-outline-secondary btn-sm" to={`/feed/${item.feedId}`}>{t('dashboard.viewNote')}</Link>
+              <Link className="btn btn-outline-secondary btn-sm" to={`/feed/${item.id}`}>{t('dashboard.viewNote')}</Link>
             </div>
           </article>
         ))}
@@ -229,7 +229,7 @@ export function FeedNotePage() {
     <>
       <h2>{t('feed.title')}</h2>
       <div className="card"><div className="card-body">
-        <div className="small text-muted mb-2">{t('feed.year', { year: String(parseMoment(data.publishedAt).getUTCFullYear()) })}</div>
+        <div className="small text-muted mb-2">{t('feed.year', { year: data.publishedAt.slice(0, 4) })}</div>
         <h4 className="mb-3">{data.title}</h4>
         <p>{data.thesisText}</p>
         <p className="mb-3"><strong>{t('feed.source')}</strong> {data.source}</p>

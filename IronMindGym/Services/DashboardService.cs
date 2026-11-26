@@ -27,12 +27,6 @@ public class DashboardService(IronMindDbContext db, AvatarService avatarService,
 
         var completedThisWeek = db.WorkoutSessions.Count(s => s.UserId == currentUserId && s.SessionDate >= startOfWeek);
 
-        var feed = db.ActivityFeeds
-            .Include(f => f.ResearchItem)
-            .OrderByDescending(f => f.PublishedAt)
-            .Take(4)
-            .ToList();
-
         var currentStrength = strengthService.Current(currentUserId, user.Benchmarks);
         var strengthCoefficient = avatarService.CalculateStrengthCoefficient(currentStrength, bodyweightKg);
         var avatars = db.Avatars.AsNoTracking().OrderBy(a => a.MinStrengthCoefficient).ToList();
@@ -58,48 +52,24 @@ public class DashboardService(IronMindDbContext db, AvatarService avatarService,
             PlannedWorkoutsPerWeek = activePlan?.WorkoutsPerWeek ?? 0,
             CompletedThisWeek = completedThisWeek,
             AvatarScalePoints = avatarScalePoints,
-            FeedItems = feed
-                .Select(f => new DashboardResearchItem
-                {
-                    FeedId = f.Id,
-                    PublishedAt = f.PublishedAt,
-                    Title = Localized.Pick(f.ResearchItem.Title, f.ResearchItem.TitleUk),
-                    ThesisText = Localized.Pick(f.ResearchItem.ThesisText, f.ResearchItem.ThesisTextUk),
-                    Source = BuildSourceName(f.ResearchItem.Source),
-                    SourceUrl = BuildSourceUrl(f.ResearchItem.Source)
-                })
-                .ToList()
+            FeedItems = ResearchNotes(db.ResearchItems.OrderByDescending(r => r.PublishedAt).ThenBy(r => r.Id).Take(4))
         };
 
         return vm;
     }
 
-    public static string BuildSourceName(string source)
-    {
-        if (string.IsNullOrWhiteSpace(source))
+    /// <summary>Research notes in the request language.</summary>
+    public static List<DashboardResearchItem> ResearchNotes(IQueryable<ResearchItem> items) => items.AsNoTracking()
+        .Select(r => new DashboardResearchItem
         {
-            return "Research Source";
-        }
-
-        var parts = source.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        return parts.Length == 0 ? source : parts[0];
-    }
-
-    public static string BuildSourceUrl(string source)
-    {
-        if (string.IsNullOrWhiteSpace(source))
-        {
-            return string.Empty;
-        }
-
-        var parts = source.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length >= 2)
-        {
-            return Uri.TryCreate(parts[1], UriKind.Absolute, out var link) && link.Scheme == "https" ? link.AbsoluteUri : string.Empty;
-        }
-
-        return Uri.TryCreate(source, UriKind.Absolute, out var uri) && uri.Scheme == "https" ? uri.AbsoluteUri : string.Empty;
-    }
+            Id = r.Id,
+            PublishedAt = r.PublishedAt,
+            Title = Localized.Pick(r.Title, r.TitleUk),
+            ThesisText = Localized.Pick(r.ThesisText, r.ThesisTextUk),
+            Source = r.SourceName,
+            SourceUrl = r.SourceUrl
+        })
+        .ToList();
 
     private static List<AvatarScalePoint> BuildAvatarScalePoints(List<Avatar> avatars)
     {

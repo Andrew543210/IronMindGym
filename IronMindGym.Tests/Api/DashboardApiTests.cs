@@ -41,7 +41,7 @@ public class DashboardApiTests
         Assert.DoesNotContain("passwordHash", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("securityStamp", json, StringComparison.OrdinalIgnoreCase);
 
-        var note = await api.Get<JsonElement>($"/api/feed/{overview.FeedItems[0].FeedId}");
+        var note = await api.Get<JsonElement>($"/api/feed/{overview.FeedItems[0].Id}");
         Assert.Equal(overview.FeedItems[0].Title, note.GetProperty("title").GetString());
         Assert.Equal(HttpStatusCode.NotFound, (await api.Http.GetAsync("/api/feed/999999")).StatusCode);
     }
