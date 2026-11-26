@@ -6,11 +6,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class StatisticsService(IronMindDbContext db)
+public class StatisticsService(IronMindDbContext db, AthleteCalendars calendars)
 {
     public TrainingStatistics Build(int userId)
     {
-        var now = DateTime.UtcNow;
+        var calendar = calendars.For(userId);
+        var now = calendar.UtcNow;
         var monthAgo = now.AddDays(-30);
         var weekAgo = now.AddDays(-7);
         var sessions = db.WorkoutSessions.Where(s => s.UserId == userId);
@@ -40,7 +41,6 @@ public class StatisticsService(IronMindDbContext db)
             .OrderByDescending(x => x.Sessions).ThenBy(x => x.Name)
             .FirstOrDefault();
 
-        var calendar = AthleteCalendar.For(db, userId);
         var sessionDates = sessions.Select(s => s.SessionDate).ToList();
         var workouts = sessionTotals?.Count ?? 0;
         var setCount = setTotals?.Count ?? 0;

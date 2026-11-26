@@ -16,7 +16,7 @@ namespace IronMindGym.Api;
 
 [Route("api/session")]
 [AllowAnonymous]
-public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) : ApiController
+public class SessionController(IronMindDbContext db, IAntiforgery antiforgery, AthleteCalendars calendars, TimeProvider clock) : ApiController
 {
     /// <summary>
     /// The token the client sends in the X-CSRF-TOKEN header with every change.
@@ -69,6 +69,7 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
             Username = username,
             Email = email,
             PasswordHash = PasswordHashUtility.Hash(request.Password),
+            CreatedAt = clock.UtcNow(),
             Profile = new Profile
             {
                 Age = request.Age,
@@ -101,7 +102,7 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
     {
         var user = db.Users.AsNoTracking().Where(u => u.Id == userId)
             .Select(u => new { u.Username, u.Email, Language = u.Profile == null ? null : u.Profile.Language }).Single();
-        var calendar = AthleteCalendar.For(db, userId);
+        var calendar = calendars.For(userId);
         return new SessionResponse(userId, user.Username, user.Email, calendar.IanaZoneId,
             calendar.Today, AthleteSetup.IsComplete(db, userId), user.Language);
     }
@@ -119,7 +120,7 @@ public class SessionController(IronMindDbContext db, IAntiforgery antiforgery) :
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
         {
             IsPersistent = rememberMe,
-            ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null,
+            ExpiresUtc = rememberMe ? clock.GetUtcNow().AddDays(30) : null,
             AllowRefresh = true
         });
     }

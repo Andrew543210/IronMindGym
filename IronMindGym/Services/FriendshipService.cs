@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class FriendshipService(IronMindDbContext db, AchievementService achievements)
+public class FriendshipService(IronMindDbContext db, AthleteCalendars calendars, AchievementService achievements)
 {
     public bool AreFriends(int userId, int otherId) => db.Friendships.AsNoTracking().Any(f =>
         f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId) && f.Status == FriendshipStatus.Accepted);
@@ -28,7 +28,7 @@ public class FriendshipService(IronMindDbContext db, AchievementService achievem
             card.RequestSent = relationship?.Status == FriendshipStatus.Pending && relationship.RequestedByUserId == userId;
         }
         var friendIds = cards.Where(c => c.IsFriend).Select(c => c.UserId).ToList();
-        var firstNutritionDay = AthleteCalendar.For(db, userId).Today.AddDays(-9);
+        var firstNutritionDay = calendars.For(userId).Today.AddDays(-9);
         // At most 20 cards are shown. Each preview is a small indexed LIMIT query per friend,
         // which stays bounded however long a friend's history grows.
         foreach (var card in cards.Where(c => c.IsFriend))

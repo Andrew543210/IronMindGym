@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IronMindGym.Api;
 
 [Route("api/workouts/draft")]
-public class WorkoutDraftController(IronMindDbContext db) : ApiController
+public class WorkoutDraftController(IronMindDbContext db, TimeProvider clock) : ApiController
 {
     public const int MaxContentLength = 64_000;
 
@@ -49,7 +49,7 @@ public class WorkoutDraftController(IronMindDbContext db) : ApiController
             db.WorkoutDrafts.Add(draft = new WorkoutDraft { UserId = UserId });
         draft.DraftId = draftId;
         draft.Content = json;
-        draft.UpdatedAt = DateTime.UtcNow;
+        draft.UpdatedAt = clock.UtcNow();
         db.SaveChanges();
         transaction.Commit();
         return NoContent();

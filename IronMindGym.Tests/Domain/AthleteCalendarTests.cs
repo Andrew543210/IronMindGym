@@ -4,7 +4,8 @@ namespace IronMindGym.Tests.Domain;
 
 public class AthleteCalendarTests
 {
-    private static readonly AthleteCalendar Kyiv = AthleteCalendar.FromId("Europe/Kyiv");
+    private static readonly AthleteCalendar Kyiv = AthleteCalendar.InZone("Europe/Kyiv", TimeProvider.System);
+    private static readonly AthleteCalendar Utc = AthleteCalendar.InZone(null, TimeProvider.System);
 
     [Fact]
     public void KnowsRealZonesAndFallsBackToUtc()
@@ -12,8 +13,8 @@ public class AthleteCalendarTests
         Assert.True(AthleteCalendar.TryFindZone("Europe/Kyiv", out _));
         Assert.False(AthleteCalendar.TryFindZone("Mars/Olympus", out _));
         Assert.False(AthleteCalendar.TryFindZone(null, out _));
-        Assert.Same(AthleteCalendar.Utc, AthleteCalendar.FromId(null));
-        Assert.Same(AthleteCalendar.Utc, AthleteCalendar.FromId("Mars/Olympus"));
+        Assert.Equal(TimeZoneInfo.Utc, Utc.Zone);
+        Assert.Equal(TimeZoneInfo.Utc, AthleteCalendar.InZone("Mars/Olympus", TimeProvider.System).Zone);
         Assert.Equal("Europe/Kyiv", Kyiv.IanaZoneId);
     }
 
@@ -24,7 +25,7 @@ public class AthleteCalendarTests
         var lateSundayUtc = new DateTime(2026, 11, 22, 23, 30, 0, DateTimeKind.Utc);
 
         Assert.Equal(new DateTime(2026, 11, 22, 22, 0, 0), Kyiv.WeekStartUtc(lateSundayUtc));
-        Assert.Equal(new DateTime(2026, 11, 16), AthleteCalendar.Utc.WeekStartUtc(lateSundayUtc));
+        Assert.Equal(new DateTime(2026, 11, 16), Utc.WeekStartUtc(lateSundayUtc));
         Assert.Equal(new DateOnly(2026, 11, 23), Kyiv.DayOf(lateSundayUtc));
         Assert.Equal(new DateTime(2026, 11, 23, 1, 30, 0), Kyiv.ToLocal(lateSundayUtc));
     }
@@ -45,7 +46,19 @@ public class AthleteCalendarTests
             TimeZoneInfo.TransitionTime.CreateFixedDateRule(new DateTime(1, 1, 1, 0, 0, 0), 10, 1));
         var zone = TimeZoneInfo.CreateCustomTimeZone("Test/MidnightJump", TimeSpan.Zero, "Test", "Test", "Test summer", [rule]);
 
-        Assert.Equal(new DateTime(2027, 3, 1, 0, 0, 0), new AthleteCalendar(zone).StartOfDayUtc(new DateOnly(2027, 3, 1)));
+        Assert.Equal(new DateTime(2027, 3, 1, 0, 0, 0), new AthleteCalendar(zone, TimeProvider.System).StartOfDayUtc(new DateOnly(2027, 3, 1)));
+    }
+
+    [Fact]
+    public void TodayAndTheCurrentWeekFollowTheClock()
+    {
+        var clock = new TestClock();
+        clock.Set(new DateTimeOffset(2026, 11, 22, 23, 30, 0, TimeSpan.Zero));
+        var kyiv = AthleteCalendar.InZone("Europe/Kyiv", clock);
+
+        Assert.Equal(new DateOnly(2026, 11, 23), kyiv.Today);
+        Assert.Equal(new DateTime(2026, 11, 22, 22, 0, 0), kyiv.CurrentWeekStartUtc);
+        Assert.Equal(new DateOnly(2026, 11, 22), AthleteCalendar.InZone(null, clock).Today);
     }
 
     private static readonly int[] StreakDays = [1, 2, 2, 3, 5, 6];

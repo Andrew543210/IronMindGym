@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using IronMindGym.Api;
 using IronMindGym.Security;
-using IronMindGym.Services;
 using IronMindGym.Tests.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +23,8 @@ public class SessionApiTests
     public async Task RegistrationSignsInAndReportsTheAthletesCalendar()
     {
         using var app = new TestApplication();
+        // Late on the day Kyiv moved to summer time, it is already the next day there.
+        app.Clock.Set(new DateTimeOffset(2026, 3, 29, 21, 30, 0, TimeSpan.Zero));
         using var api = app.Api();
 
         await api.Register(timeZone: "Europe/Kyiv");
@@ -32,7 +33,7 @@ public class SessionApiTests
         Assert.Equal("athlete", session.Username);
         Assert.Equal("Europe/Kyiv", session.TimeZone);
         Assert.False(session.SetupComplete);
-        Assert.Equal(AthleteCalendar.FromId("Europe/Kyiv").Today, session.Today);
+        Assert.Equal(new DateOnly(2026, 3, 30), session.Today);
     }
 
     [Fact]

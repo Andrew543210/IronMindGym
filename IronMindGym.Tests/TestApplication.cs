@@ -1,6 +1,7 @@
 using IronMindGym.Data;
 using IronMindGym.Tests.Api;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,9 @@ public sealed class TestApplication(string? webRoot = null) : WebApplicationFact
 {
     private readonly string connectionString = TestDatabase.Create();
 
+    /// <summary>The clock the application reads; set it before the first request to fix "now".</summary>
+    public TestClock Clock { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -19,6 +23,7 @@ public sealed class TestApplication(string? webRoot = null) : WebApplicationFact
         if (webRoot is not null)
             builder.UseWebRoot(webRoot);
         builder.ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Error));
+        builder.ConfigureTestServices(services => services.AddSingleton<TimeProvider>(Clock));
     }
 
     public HttpClient Browser() => CreateClient(new WebApplicationFactoryClientOptions

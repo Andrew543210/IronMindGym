@@ -3,7 +3,6 @@ using System.Net;
 using System.Text.Json;
 using IronMindGym.Api;
 using IronMindGym.Contracts;
-using IronMindGym.Services;
 using IronMindGym.Models;
 
 namespace IronMindGym.Tests.Api;
@@ -101,12 +100,13 @@ public class ProfileApiTests
     public async Task AnAthleteAheadOfUtcLogsWeightForTheirOwnToday()
     {
         using var app = new TestApplication();
+        app.Clock.Set(new DateTimeOffset(2026, 11, 20, 12, 0, 0, TimeSpan.Zero));
         using var api = app.Api();
         await api.RegisterWithSetup();
         var settings = await Settings(api);
         settings.TimeZone = "Pacific/Kiritimati";
         await ApiClient.Ok(await api.Put("/api/profile/settings", settings));
-        var localToday = AthleteCalendar.FromId("Pacific/Kiritimati").Today;
+        var localToday = new DateOnly(2026, 11, 21);
 
         await ApiClient.Ok(await api.Put($"/api/profile/weights/{Day(localToday)}", new { weightKg = 79.6 }));
 

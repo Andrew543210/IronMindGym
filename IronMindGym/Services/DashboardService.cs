@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class DashboardService(IronMindDbContext db, AvatarService avatarService, StrengthService strengthService)
+public class DashboardService(IronMindDbContext db, AthleteCalendars calendars, AvatarService avatarService, StrengthService strengthService)
 {
     public DashboardSummary Build(int currentUserId)
     {
@@ -21,8 +21,8 @@ public class DashboardService(IronMindDbContext db, AvatarService avatarService,
         var activePlan = db.WorkoutPlans
             .FirstOrDefault(p => p.UserId == currentUserId);
 
-        var calendar = AthleteCalendar.For(db, currentUserId);
-        var startOfWeek = calendar.WeekStartUtc(DateTime.UtcNow);
+        var calendar = calendars.For(currentUserId);
+        var startOfWeek = calendar.CurrentWeekStartUtc;
         var today = calendar.Today;
 
         var completedThisWeek = db.WorkoutSessions.Count(s => s.UserId == currentUserId && s.SessionDate >= startOfWeek);

@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class GoalService(IronMindDbContext db)
+public class GoalService(IronMindDbContext db, AthleteCalendars calendars)
 {
     public List<UserGoal> List(int userId) => db.UserGoals.Where(g => g.UserId == userId)
         .OrderBy(g => g.IsCompleted).ThenBy(g => g.Deadline).ToList();
 
     public void Create(int userId, string title, DateOnly deadline)
     {
-        var today = AthleteCalendar.For(db, userId).Today;
+        var today = calendars.For(userId).Today;
         if (deadline < today || deadline > today.AddYears(5))
             throw new DomainValidationException("Choose a deadline between today and five years from now.", "Deadline");
         if (db.UserGoals.Count(g => g.UserId == userId && !g.IsCompleted) >= 20)

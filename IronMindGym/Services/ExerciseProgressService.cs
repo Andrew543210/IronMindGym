@@ -10,7 +10,7 @@ namespace IronMindGym.Services;
 /// Keeps a starting and a latest result per exercise. What the two numbers of a result mean depends on the
 /// exercise: weight and repetitions for strength, duration and effort for cardio, duration and load for timed holds.
 /// </summary>
-public class ExerciseProgressService(IronMindDbContext db)
+public class ExerciseProgressService(IronMindDbContext db, TimeProvider clock)
 {
     public List<ExerciseProgressEntry> List(int userId) => db.ExerciseProgress.AsNoTracking()
         .Where(p => p.UserId == userId)
@@ -55,8 +55,8 @@ public class ExerciseProgressService(IronMindDbContext db)
         var progress = db.ExerciseProgress.FirstOrDefault(p => p.UserId == userId && p.ExerciseId == exercise.Id);
         if (progress is null)
             db.ExerciseProgress.Add(progress = new ExerciseProgress { UserId = userId, ExerciseId = exercise.Id });
-        Record(progress, initial: true, Result.FromPair(exercise.Type, pair.InitialValue1, pair.InitialValue2));
-        Record(progress, initial: false, Result.FromPair(exercise.Type, pair.CurrentValue1, pair.CurrentValue2));
+        Record(progress, initial: true, Result.FromPair(exercise.Type, pair.InitialValue1, pair.InitialValue2), clock.UtcNow());
+        Record(progress, initial: false, Result.FromPair(exercise.Type, pair.CurrentValue1, pair.CurrentValue2), clock.UtcNow());
         db.SaveChanges();
         transaction.Commit();
     }
@@ -68,7 +68,7 @@ public class ExerciseProgressService(IronMindDbContext db)
         using var transaction = WriteLock.BeginForAthletes(db, userId);
         var progress = db.ExerciseProgress.FirstOrDefault(p => p.UserId == userId && p.ExerciseId == exerciseId)
             ?? throw new DomainValidationException("Save initial results first.");
-        Record(progress, initial: false, result);
+        Record(progress, initial: false, result, clock.UtcNow());
         db.SaveChanges();
         transaction.Commit();
     }
@@ -79,7 +79,7 @@ public class ExerciseProgressService(IronMindDbContext db)
     private Exercise FindExercise(int exerciseId) =>
         db.Exercises.AsNoTracking().FirstOrDefault(e => e.Id == exerciseId) ?? throw new DomainValidationException("Choose a valid exercise.", "ExerciseId");
 
-    private static void Record(ExerciseProgress progress, bool initial, Result result)
+    private static void Record(ExerciseProgress progress, bool initial, Result result, DateTime now)
     {
         if (initial)
         {
@@ -87,7 +87,7 @@ public class ExerciseProgressService(IronMindDbContext db)
             progress.InitialReps = result.Reps;
             progress.InitialDurationSeconds = result.DurationSeconds;
             progress.InitialIntensity = result.Intensity;
-            progress.InitialRecordedAt = DateTime.UtcNow;
+            progress.InitialRecordedAt = now;
         }
         else
         {
@@ -95,7 +95,7 @@ public class ExerciseProgressService(IronMindDbContext db)
             progress.CurrentReps = result.Reps;
             progress.CurrentDurationSeconds = result.DurationSeconds;
             progress.CurrentIntensity = result.Intensity;
-            progress.CurrentRecordedAt = DateTime.UtcNow;
+            progress.CurrentRecordedAt = now;
         }
     }
 

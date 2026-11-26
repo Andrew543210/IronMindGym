@@ -8,7 +8,8 @@ namespace IronMindGym.Tests.Domain;
 
 public class WorkoutRecordTests
 {
-    private static WorkoutService Workouts(IronMindDbContext db) => new(db, new PersonalRecordService(db), new AchievementService(db));
+    private static WorkoutService Workouts(IronMindDbContext db) =>
+        new(db, TimeProvider.System, new PersonalRecordService(db), new AchievementService(db, new AthleteCalendars(db, TimeProvider.System)));
 
     private static int Save(TestApplication app, params (int Exercise, double Weight, int Reps, int Duration)[] sets) => app.Query(db =>
         Workouts(db).Save(db.Users.Single().Id, new SaveWorkoutRequest
@@ -55,7 +56,7 @@ public class WorkoutRecordTests
             Assert.Equal(2, stats.Count);
             Assert.All(stats, s => Assert.Equal(2, s.SetsCount));
             Assert.Equal(2, db.PersonalRecords.Count());
-            Assert.Equal(1, new StatisticsService(db).Build(db.Users.Single().Id).FavoriteExerciseCount);
+            Assert.Equal(1, new StatisticsService(db, new AthleteCalendars(db, TimeProvider.System)).Build(db.Users.Single().Id).FavoriteExerciseCount);
             return true;
         });
     }

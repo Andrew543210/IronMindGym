@@ -3,7 +3,7 @@ using IronMindGym.Models;
 
 namespace IronMindGym.Services;
 
-public class WorkoutSocialService(IronMindDbContext db, FriendshipService friendships)
+public class WorkoutSocialService(IronMindDbContext db, TimeProvider clock, FriendshipService friendships)
 {
     public const int MaxCommentLength = 500;
 
@@ -14,7 +14,7 @@ public class WorkoutSocialService(IronMindDbContext db, FriendshipService friend
         using var transaction = WriteLock.BeginForAthletes(db, viewerId);
         var existing = db.ActivityLikes.FirstOrDefault(x => x.WorkoutSessionId == sessionId && x.UserId == viewerId);
         if (like && existing is null)
-            db.ActivityLikes.Add(new ActivityLike { WorkoutSessionId = sessionId, UserId = viewerId, CreatedAt = DateTime.UtcNow });
+            db.ActivityLikes.Add(new ActivityLike { WorkoutSessionId = sessionId, UserId = viewerId, CreatedAt = clock.UtcNow() });
         else if (!like && existing is not null)
             db.ActivityLikes.Remove(existing);
         db.SaveChanges();
@@ -31,7 +31,7 @@ public class WorkoutSocialService(IronMindDbContext db, FriendshipService friend
             throw new DomainValidationException($"Comments are limited to {MaxCommentLength} characters.");
         if (comment.Length == 0)
             return true;
-        db.FriendComments.Add(new FriendComment { WorkoutSessionId = sessionId, AuthorId = viewerId, Text = comment, CreatedAt = DateTime.UtcNow });
+        db.FriendComments.Add(new FriendComment { WorkoutSessionId = sessionId, AuthorId = viewerId, Text = comment, CreatedAt = clock.UtcNow() });
         db.SaveChanges();
         return true;
     }

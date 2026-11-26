@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IronMindGym.Services;
 
 /// <summary>One entry per calendar day. Saving a day again replaces it, so a missed day can be filled in later.</summary>
-public class NutritionJournalService(IronMindDbContext db, NutritionAdviceService advice, CurrentCalendar calendar, AchievementService achievements)
+public class NutritionJournalService(IronMindDbContext db, NutritionAdviceService advice, AthleteCalendars calendars, AchievementService achievements)
 {
     private const int RecentDays = 30;
 
@@ -31,7 +31,8 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
 
     public void Save(int userId, DateOnly day, double caloriesKcal, double proteinG, double fatG, double carbsG)
     {
-        if (day > calendar.Today || day < calendar.Today.AddYears(-5))
+        var today = calendars.For(userId).Today;
+        if (day > today || day < today.AddYears(-5))
             throw new DomainValidationException("Choose a date within the last five years, up to today.", "Date");
         using var transaction = WriteLock.BeginForAthletes(db, userId);
         var log = db.DailyNutritions.FirstOrDefault(n => n.UserId == userId && n.Date == day);

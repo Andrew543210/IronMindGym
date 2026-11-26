@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class WorkoutService(IronMindDbContext db, PersonalRecordService records, AchievementService achievements)
+public class WorkoutService(IronMindDbContext db, TimeProvider clock, PersonalRecordService records, AchievementService achievements)
 {
     public WorkoutDetails? BuildDetails(int ownerId, int sessionId, int viewerId)
     {
@@ -95,7 +95,7 @@ public class WorkoutService(IronMindDbContext db, PersonalRecordService records,
         var session = new WorkoutSession
         {
             UserId = currentUserId,
-            SessionDate = DateTime.UtcNow,
+            SessionDate = clock.UtcNow(),
             DraftId = workout.DraftId,
             DurationMinutes = workout.DurationMinutes,
             SplitDayId = workout.SplitDayId,

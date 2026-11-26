@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IronMindGym.Api;
 
 [Route("api/setup")]
-public class SetupController(IronMindDbContext db, AchievementService achievements) : ApiController
+public class SetupController(IronMindDbContext db, AthleteCalendars calendars, AchievementService achievements) : ApiController
 {
     [HttpGet]
     public SetupFormResponse Form() => new(
@@ -35,7 +35,7 @@ public class SetupController(IronMindDbContext db, AchievementService achievemen
         user.Benchmarks.BenchPressKg = request.BenchPressKg;
         user.Benchmarks.SquatKg = request.SquatKg;
         user.Benchmarks.DeadliftKg = request.DeadliftKg;
-        var today = AthleteCalendar.FromId(user.Profile.TimeZone).Today;
+        var today = calendars.InZone(user.Profile.TimeZone).Today;
         var weighIn = db.WeightLogs.FirstOrDefault(w => w.UserId == userId && w.Date == today);
         if (weighIn is null)
             db.WeightLogs.Add(new WeightLog { UserId = userId, Date = today, ValueKg = request.WeightKg });

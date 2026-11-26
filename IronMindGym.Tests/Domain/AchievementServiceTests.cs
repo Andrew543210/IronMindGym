@@ -7,6 +7,8 @@ namespace IronMindGym.Tests.Domain;
 
 public class AchievementServiceTests
 {
+    private static AchievementService Awards(IronMindDbContext db) => new(db, new AthleteCalendars(db, TimeProvider.System));
+
     private static int Lift(IronMindDbContext db, KeyLift lift) => db.Exercises.Single(e => e.KeyLift == lift).Id;
 
     private static int[] Users(IronMindDbContext db) => db.Users.OrderBy(u => u.Id).Select(u => u.Id).ToArray();
@@ -50,7 +52,7 @@ public class AchievementServiceTests
             return db.SaveChanges();
         });
 
-        var awards = app.Query(db => new AchievementService(db).Progress(Users(db)[0])).ToDictionary(a => a.Code);
+        var awards = app.Query(db => Awards(db).Progress(Users(db)[0])).ToDictionary(a => a.Code);
 
         Assert.Equal(4, awards["WORKOUT_005"].CurrentValue);
         Assert.Equal(5, awards["SETS_050"].CurrentValue);
@@ -74,7 +76,7 @@ public class AchievementServiceTests
 
         app.Query(db =>
         {
-            new AchievementService(db).AwardEarned(Users(db)[0]);
+            Awards(db).AwardEarned(Users(db)[0]);
             return 0;
         });
         Assert.Equal(["BENCH_40", "PROFILE_SETUP", "WORKOUT_001"], Earned(app));
@@ -83,7 +85,7 @@ public class AchievementServiceTests
         {
             db.WorkoutSessions.Where(s => s.Id == workout).ExecuteDelete();
             db.PersonalRecords.ExecuteDelete();
-            new AchievementService(db).AwardEarned(Users(db)[0]);
+            Awards(db).AwardEarned(Users(db)[0]);
             return 0;
         });
         Assert.Equal(["BENCH_40", "PROFILE_SETUP", "WORKOUT_001"], Earned(app));
@@ -96,8 +98,8 @@ public class AchievementServiceTests
 
         var awards = app.Query(db =>
         {
-            new AchievementService(db).AwardEarned(Users(db)[0]);
-            return new AchievementService(db).Progress(Users(db)[0]).ToDictionary(a => a.Code);
+            Awards(db).AwardEarned(Users(db)[0]);
+            return Awards(db).Progress(Users(db)[0]).ToDictionary(a => a.Code);
         });
 
         var setup = awards["PROFILE_SETUP"];

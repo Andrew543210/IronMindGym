@@ -21,7 +21,7 @@ public sealed class AwardProgressItem
 /// Every award in <see cref="AchievementCatalog"/> is earned once its metric reaches the target. The metrics are
 /// counted from the athlete's saved data, and an earned award stays earned even if the metric later drops.
 /// </summary>
-public sealed class AchievementService(IronMindDbContext db)
+public sealed class AchievementService(IronMindDbContext db, AthleteCalendars calendars)
 {
     /// <summary>Adds the awards whose target the athlete has reached since the last check.</summary>
     public void AwardEarned(int userId)
@@ -34,7 +34,7 @@ public sealed class AchievementService(IronMindDbContext db)
             if (!earned.Contains(award.Code) && metrics[award.MetricType] >= award.TargetValue
                 && achievementIds.TryGetValue(award.Code, out var achievementId))
             {
-                db.UserAchievements.Add(new UserAchievement { UserId = userId, AchievementId = achievementId, AchievedAt = DateTime.UtcNow });
+                db.UserAchievements.Add(new UserAchievement { UserId = userId, AchievementId = achievementId, AchievedAt = calendars.For(userId).UtcNow });
             }
         }
         db.SaveChanges();
@@ -67,10 +67,10 @@ public sealed class AchievementService(IronMindDbContext db)
 
     private Dictionary<AchievementMetricType, double> Metrics(int userId)
     {
-        var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+        var calendar = calendars.For(userId);
+        var thirtyDaysAgo = calendar.UtcNow.AddDays(-30);
         var workouts = db.WorkoutSessions.Where(x => x.UserId == userId).Select(x => new { x.SessionDate, x.DurationMinutes }).ToList();
         var sets = db.Sets.Where(x => x.PerformedExercise.WorkoutSession.UserId == userId);
-        var calendar = AthleteCalendar.For(db, userId);
 
         return new Dictionary<AchievementMetricType, double>
         {

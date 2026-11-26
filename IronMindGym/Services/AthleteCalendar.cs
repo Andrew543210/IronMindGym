@@ -7,21 +7,22 @@ namespace IronMindGym.Services;
 /// Calendar rules for one athlete. Timestamps are stored in UTC; "today", training weeks
 /// and streaks follow the time zone saved in the athlete's profile (UTC when unset).
 /// </summary>
-public sealed class AthleteCalendar(TimeZoneInfo zone)
+public sealed class AthleteCalendar(TimeZoneInfo zone, TimeProvider clock)
 {
-    public static readonly AthleteCalendar Utc = new(TimeZoneInfo.Utc);
-
     public TimeZoneInfo Zone { get; } = zone;
 
-    public DateOnly Today => DayOf(DateTime.UtcNow);
+    public DateTime UtcNow => clock.UtcNow();
+
+    public DateOnly Today => DayOf(UtcNow);
+
+    /// <summary>The start of the current Monday-based week, in UTC.</summary>
+    public DateTime CurrentWeekStartUtc => WeekStartUtc(UtcNow);
 
     public string IanaZoneId => TimeZoneInfo.TryConvertWindowsIdToIanaId(Zone.Id, out var iana) ? iana : Zone.Id;
 
-    public static AthleteCalendar For(IronMindDbContext db, int userId) => FromId(db.Profiles.AsNoTracking()
-        .Where(p => p.UserId == userId).Select(p => p.TimeZone).FirstOrDefault());
-
-    public static AthleteCalendar FromId(string? timeZoneId) =>
-        TryFindZone(timeZoneId, out var zone) ? new AthleteCalendar(zone) : Utc;
+    /// <summary>The calendar of a time zone id, or UTC when the id is empty or unknown.</summary>
+    public static AthleteCalendar InZone(string? timeZoneId, TimeProvider clock) =>
+        new(TryFindZone(timeZoneId, out var zone) ? zone : TimeZoneInfo.Utc, clock);
 
     public static bool TryFindZone(string? timeZoneId, out TimeZoneInfo zone)
     {
@@ -53,7 +54,7 @@ public sealed class AthleteCalendar(TimeZoneInfo zone)
         return TimeZoneInfo.ConvertTimeToUtc(start, Zone);
     }
 
-    public DateTime WeekStartUtc(DateTime utcNow) => StartOfDayUtc(WeekStart(DayOf(utcNow)));
+    public DateTime WeekStartUtc(DateTime utc) => StartOfDayUtc(WeekStart(DayOf(utc)));
 
     public static DateOnly WeekStart(DateOnly day) => day.AddDays(-(((int)day.DayOfWeek + 6) % 7));
 
@@ -70,13 +71,31 @@ public sealed class AthleteCalendar(TimeZoneInfo zone)
     }
 }
 
-public sealed class CurrentCalendar(IHttpContextAccessor accessor, IronMindDbContext db)
+/// <summary>
+/// The calendars of the athletes one request works with. Each athlete's time zone is read from the profile
+/// once per request; <see cref="Forget"/> drops it after the athlete chooses another zone.
+/// </summary>
+public sealed class AthleteCalendars(IronMindDbContext db, TimeProvider clock)
 {
-    private AthleteCalendar? calendar;
+    private readonly Dictionary<int, AthleteCalendar> calendars = [];
 
-    public AthleteCalendar Value => calendar ??= accessor.HttpContext?.User.GetUserId() is int userId
-        ? AthleteCalendar.For(db, userId)
-        : AthleteCalendar.Utc;
+    public AthleteCalendar For(int userId)
+    {
+        if (!calendars.TryGetValue(userId, out var calendar))
+        {
+            var zone = db.Profiles.AsNoTracking().Where(p => p.UserId == userId).Select(p => p.TimeZone).FirstOrDefault();
+            calendars[userId] = calendar = AthleteCalendar.InZone(zone, clock);
+        }
+        return calendar;
+    }
 
-    public DateOnly Today => Value.Today;
+    public AthleteCalendar InZone(string? timeZoneId) => AthleteCalendar.InZone(timeZoneId, clock);
+
+    public void Forget(int userId) => calendars.Remove(userId);
+}
+
+public static class Clock
+{
+    /// <summary>The current moment as a UTC <see cref="DateTime"/>, the form every timestamp column holds.</summary>
+    public static DateTime UtcNow(this TimeProvider clock) => clock.GetUtcNow().UtcDateTime;
 }

@@ -78,7 +78,7 @@ public static class DemoDataSeeder
         foreach (var user in new[] { athlete, friend })
             records.Recalculate(user.Id, exercises.Values.Select(e => e.Id));
         db.SaveChanges();
-        var achievements = new AchievementService(db);
+        var achievements = new AchievementService(db, new AthleteCalendars(db, TimeProvider.System));
         achievements.AwardEarned(athlete.Id);
         achievements.AwardEarned(friend.Id);
 

@@ -26,8 +26,8 @@ public static class ServiceSetup
             npgsql => npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
         services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
 
-        services.AddHttpContextAccessor();
-        services.AddScoped<CurrentCalendar>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<AthleteCalendars>();
         services.AddScoped<DashboardService>();
         services.AddScoped<StatisticsService>();
         services.AddScoped<StrengthService>();

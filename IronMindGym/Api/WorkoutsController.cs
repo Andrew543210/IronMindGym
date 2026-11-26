@@ -12,7 +12,7 @@ public class WorkoutsController(
     IronMindDbContext db,
     WorkoutService workouts,
     WorkoutSocialService social,
-    CurrentCalendar calendar) : ApiController
+    AthleteCalendars calendars) : ApiController
 {
     private const int HistoryPageSize = 20;
 
@@ -82,7 +82,7 @@ public class WorkoutsController(
         if (previous is null)
             return NoContent();
         return new PreviousSetResponse(previous.WeightKg, previous.Reps, previous.DurationSeconds, previous.Intensity,
-            previous.RestSeconds, previous.SetTypeId, calendar.Value.DayOf(previous.Date));
+            previous.RestSeconds, previous.SetTypeId, calendars.For(UserId).DayOf(previous.Date));
     }
 
     [HttpPost]
@@ -96,7 +96,7 @@ public class WorkoutsController(
         if (details is null)
             return NotFound();
         var weeklyTarget = db.WorkoutPlans.Where(w => w.UserId == UserId).Select(w => w.WorkoutsPerWeek).FirstOrDefault();
-        var weekStart = calendar.Value.WeekStartUtc(DateTime.UtcNow);
+        var weekStart = calendars.For(UserId).CurrentWeekStartUtc;
         var doneThisWeek = db.WorkoutSessions.Count(s => s.UserId == UserId && s.SessionDate >= weekStart);
         details.RemainingWorkoutsThisWeek = Math.Max(weeklyTarget - doneThisWeek, 0);
         return WorkoutDetailsResponse.From(details);

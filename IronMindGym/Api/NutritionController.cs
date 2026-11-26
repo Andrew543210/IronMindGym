@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace IronMindGym.Api;
 
 [Route("api/nutrition")]
-public class NutritionController(NutritionJournalService journal, CurrentCalendar calendar) : ApiController
+public class NutritionController(NutritionJournalService journal, AthleteCalendars calendars) : ApiController
 {
     [HttpGet]
     public NutritionDay Day(DateOnly? date) =>
-        journal.Day(UserId, date ?? calendar.Today);
+        journal.Day(UserId, date ?? calendars.For(UserId).Today);
 
     [HttpPut("days/{date}")]
     public ActionResult SaveDay(DateOnly date, NutritionEntryRequest request)

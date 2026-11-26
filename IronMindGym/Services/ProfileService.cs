@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, StrengthService strength, AvatarService avatars, AchievementService achievements)
+public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, StrengthService strength, AvatarService avatars, AchievementService achievements)
 {
     public ProfileOverview BuildOverview(int userId)
     {
@@ -87,7 +87,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
         user.Benchmarks.BenchPressKg = settings.BenchPressKg;
         user.Benchmarks.SquatKg = settings.SquatKg;
         user.Benchmarks.DeadliftKg = settings.DeadliftKg;
-        RecordWeightIfChanged(userId, settings.WeightKg, AthleteCalendar.FromId(timeZone).Today);
+        RecordWeightIfChanged(userId, settings.WeightKg, calendars.InZone(timeZone).Today);
         var plan = db.WorkoutPlans.Find(userId);
         if (plan is null)
             db.WorkoutPlans.Add(plan = new WorkoutPlan { UserId = userId });
@@ -102,6 +102,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
             // Another account took the username between the check above and the update.
             throw new DomainValidationException("This username is already taken.", "Username");
         }
+        calendars.Forget(userId);
         achievements.AwardEarned(userId);
         transaction.Commit();
     }
@@ -109,7 +110,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
     /// <summary>A weigh-in for any day in the last five years. The latest one is the current bodyweight.</summary>
     public void LogWeight(int userId, DateOnly date, double weightKg)
     {
-        var today = calendar.Today;
+        var today = calendars.For(userId).Today;
         if (date > today || date < today.AddYears(-5))
             throw new DomainValidationException("Choose a date within the last five years, up to today.", "Date");
         using var transaction = WriteLock.BeginForAthletes(db, userId);
@@ -134,7 +135,7 @@ public class ProfileService(IronMindDbContext db, CurrentCalendar calendar, Stre
     /// <summary>Everything the athlete recorded, without credentials, for keeping a personal copy.</summary>
     public object Export(int userId) => new
     {
-        ExportedAtUtc = DateTime.UtcNow,
+        ExportedAtUtc = calendars.For(userId).UtcNow,
         Account = db.Users.Where(u => u.Id == userId)
             .Select(u => new { u.Username, u.Email, Age = u.Profile == null ? 0 : u.Profile.Age, HeightCm = u.Profile == null ? null : u.Profile.HeightCm }).Single(),
         Weight = db.WeightLogs.Where(w => w.UserId == userId).OrderBy(w => w.Date).Select(w => new { w.Date, w.ValueKg }).ToList(),
