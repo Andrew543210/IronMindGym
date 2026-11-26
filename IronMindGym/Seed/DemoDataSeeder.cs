@@ -3,24 +3,31 @@ using IronMindGym.Models;
 
 namespace IronMindGym.Seed;
 
+/// <summary>
+/// Two connected athletes for trying the app locally. The demo athlete's records and awards are derived
+/// from its workouts the same way as for anyone else, so the demo never shows a result it did not log.
+/// </summary>
 public static class DemoDataSeeder
 {
     public static void Seed(IronMindDbContext db)
     {
         if (db.Users.Any())
             return;
-        var splitType = db.SplitTypes.Single(s => s.Name == "Upper-Lower");
-        var workingSetType = db.SetTypes.Single(s => s.Name == "Working");
-        var exercises = db.Exercises.ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
-        var user = new User
+        var upperLower = db.SplitTypes.Single(s => s.Name == "Upper-Lower");
+        var working = db.SetTypes.Single(s => s.Name == "Working");
+        var exercises = db.Exercises.ToDictionary(e => e.Name);
+        Exercise Find(string name) => exercises.TryGetValue(name, out var exercise)
+            ? exercise
+            : throw new InvalidOperationException($"The demo data needs the catalog exercise \"{name}\".");
+
+        var athlete = new User
         {
             Username = "demo_athlete",
             Email = "demo@ironmind.app",
             PasswordHash = PasswordHashUtility.Hash("DemoTraining123!"),
             Profile = new Profile { Age = 24, AccountCreatedAt = DateTime.UtcNow.AddDays(-40) },
-            Benchmarks = new InitialBenchmarks { BenchPressKg = 100, SquatKg = 140, DeadliftKg = 170 }
+            Benchmarks = new InitialBenchmarks { BenchPressKg = 90, SquatKg = 130, DeadliftKg = 160 }
         };
-
         var friend = new User
         {
             Username = "fit_friend",
@@ -29,46 +36,14 @@ public static class DemoDataSeeder
             Profile = new Profile { Age = 23, AccountCreatedAt = DateTime.UtcNow.AddDays(-20) },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 65, SquatKg = 95, DeadliftKg = 120 }
         };
-
-        db.Users.AddRange(user, friend);
-
+        db.Users.AddRange(athlete, friend);
         db.AnthropometryLogs.AddRange(
-            new Anthropometry { User = user, WeightKg = 82, HeightCm = 180, RecordedAt = DateTime.UtcNow.Date },
-            new Anthropometry { User = friend, WeightKg = 62, HeightCm = 168, RecordedAt = DateTime.UtcNow.Date });
-
-        db.WorkoutPlans.Add(new WorkoutPlan
-        {
-            User = user,
-            WorkoutsPerWeek = 4,
-            IsActive = true,
-            SplitType = splitType
-        });
-
-        var session = new WorkoutSession
-        {
-            User = user,
-            Name = "Upper Day",
-            SessionDate = DateTime.UtcNow.AddDays(-1),
-            DurationMinutes = 70,
-            SplitType = splitType
-        };
-
-        var performed = new PerformedExercise
-        {
-            WorkoutSession = session,
-            Exercise = FindExerciseByAnyName(exercises, "Flat Bench Press"),
-            OrderInWorkout = 1
-        };
-
-        performed.Sets.Add(new WorkoutSet { SetNumber = 1, SetType = workingSetType, WeightKg = 80, Reps = 8 });
-        performed.Sets.Add(new WorkoutSet { SetNumber = 2, SetType = workingSetType, WeightKg = 85, Reps = 6 });
-        db.PerformedExercises.Add(performed);
-
-        db.WorkoutReviews.Add(new WorkoutReview { WorkoutSession = session, Rating = 5, Comment = "Strong training session" });
-
+            new Anthropometry { User = athlete, WeightKg = 82, HeightCm = 180, RecordedAt = DateTime.UtcNow.AddDays(-40) },
+            new Anthropometry { User = friend, WeightKg = 62, HeightCm = 168, RecordedAt = DateTime.UtcNow.AddDays(-20) });
+        db.WorkoutPlans.Add(new WorkoutPlan { User = athlete, WorkoutsPerWeek = 4, IsActive = true, SplitType = upperLower });
         db.DailyNutritions.Add(new DailyNutrition
         {
-            User = user,
+            User = athlete,
             Date = DateTime.UtcNow.Date,
             CaloriesKcal = 2550,
             ProteinG = 165,
@@ -76,32 +51,51 @@ public static class DemoDataSeeder
             CarbsG = 280
         });
 
-        var seededBenchAchievement = db.Achievements.FirstOrDefault(a => a.Code == "BENCH_100");
-        if (seededBenchAchievement != null)
-        {
-            db.UserAchievements.Add(new UserAchievement { User = user, Achievement = seededBenchAchievement, AchievedAt = DateTime.UtcNow.AddDays(-5) });
-        }
-
-        db.PersonalRecords.AddRange(
-            new PersonalRecord { User = user, Exercise = FindExerciseByAnyName(exercises, "Bench Press", "Жим лежачи"), MaxWeightKg = 105, UpdatedAt = DateTime.UtcNow.AddDays(-10) },
-            new PersonalRecord { User = user, Exercise = FindExerciseByAnyName(exercises, "Barbell Back Squat"), MaxWeightKg = 155, UpdatedAt = DateTime.UtcNow.AddDays(-12) });
-
-        db.Friendships.Add(new Friendship { User1 = user, User2 = friend, Status = "Accepted" });
-
+        Workout(athlete, "Upper day", daysAgo: 8, minutes: 65, upperLower, working,
+            (Find("Flat Bench Press"), [(80, 8), (90, 5), (95, 3)]),
+            (Find("Bent-Over Barbell Row"), [(60, 10), (70, 8)]));
+        Workout(athlete, "Lower day", daysAgo: 6, minutes: 70, upperLower, working,
+            (Find("Barbell Back Squat"), [(120, 6), (140, 3), (150, 1)]),
+            (Find("Romanian Deadlift"), [(100, 8), (110, 6)]));
+        Workout(athlete, "Upper day", daysAgo: 1, minutes: 70, upperLower, working,
+            (Find("Flat Bench Press"), [(85, 6), (100, 2)]),
+            (Find("Bent-Over Barbell Row"), [(72.5, 8)]));
         db.SaveChanges();
-    }
 
-    private static Exercise FindExerciseByAnyName(IReadOnlyDictionary<string, Exercise> exercises, params string[] names)
-    {
-        foreach (var name in names)
+        db.Friendships.Add(new Friendship
         {
-            if (exercises.TryGetValue(name, out var exercise))
+            User1Id = Math.Min(athlete.Id, friend.Id),
+            User2Id = Math.Max(athlete.Id, friend.Id),
+            RequestedByUserId = friend.Id,
+            Status = FriendshipStatus.Accepted
+        });
+        var records = new PersonalRecordService(db);
+        foreach (var user in new[] { athlete, friend })
+            records.Recalculate(user.Id, exercises.Values.Select(e => e.Id));
+        db.SaveChanges();
+        AchievementEngine.AssignAchievements(db, athlete.Id);
+        AchievementEngine.AssignAchievements(db, friend.Id);
+
+        void Workout(User user, string name, int daysAgo, int minutes, SplitType split, SetType setType,
+            params (Exercise Exercise, (double Kg, int Reps)[] Sets)[] blocks)
+        {
+            var session = new WorkoutSession
             {
-                return exercise;
+                User = user,
+                Name = name,
+                SessionDate = DateTime.UtcNow.AddDays(-daysAgo),
+                DurationMinutes = minutes,
+                SplitType = split,
+                Review = new WorkoutReview { Rating = 5, Comment = daysAgo == 1 ? "Strong training session" : string.Empty }
+            };
+            foreach (var (exercise, sets) in blocks)
+            {
+                var performed = new PerformedExercise { Exercise = exercise, OrderInWorkout = session.PerformedExercises.Count + 1 };
+                foreach (var (kg, reps) in sets)
+                    performed.Sets.Add(new WorkoutSet { SetNumber = performed.Sets.Count + 1, SetType = setType, WeightKg = kg, Reps = reps, RestSeconds = 120 });
+                session.PerformedExercises.Add(performed);
             }
+            db.WorkoutSessions.Add(session);
         }
-
-        return exercises.Values.First();
     }
-
 }

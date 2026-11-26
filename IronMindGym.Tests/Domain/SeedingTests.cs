@@ -43,8 +43,19 @@ public class SeedingTests
             var demo = db.Users.Include(u => u.Profile).Single(u => u.Email == "demo@ironmind.app");
             Assert.Equal(2, db.Users.Count());
             Assert.True(PasswordHashUtility.Verify("DemoTraining123!", demo.PasswordHash));
-            Assert.Equal(FriendshipStatus.Accepted, db.Friendships.Single().Status);
-            Assert.NotEmpty(db.WorkoutSessions.Where(s => s.UserId == demo.Id));
+            var friendship = db.Friendships.Single();
+            Assert.Equal(FriendshipStatus.Accepted, friendship.Status);
+            Assert.Contains(friendship.RequestedByUserId, new[] { friendship.User1Id, friendship.User2Id });
+            Assert.Equal(3, db.WorkoutSessions.Count(s => s.UserId == demo.Id));
+
+            // Records and awards come from the logged sets, never from the seeder itself.
+            var records = db.PersonalRecords.Where(r => r.UserId == demo.Id).ToDictionary(r => r.Exercise.Name, r => r.MaxWeightKg);
+            Assert.Equal(100, records["Flat Bench Press"]);
+            Assert.Equal(150, records["Barbell Back Squat"]);
+            var awards = db.UserAchievements.Where(a => a.UserId == demo.Id).Select(a => a.Achievement.Code).ToList();
+            Assert.Contains("BENCH_100", awards);
+            Assert.DoesNotContain("BENCH_120", awards);
+            Assert.Contains("FRIENDS_001", awards);
             return true;
         });
     }
