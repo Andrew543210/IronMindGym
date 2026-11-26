@@ -12,8 +12,7 @@ public class WorkoutsController(
     IronMindDbContext db,
     WorkoutService workouts,
     WorkoutSocialService social,
-    CurrentCalendar calendar,
-    ILogger<WorkoutsController> logger) : ApiController
+    CurrentCalendar calendar) : ApiController
 {
     private const int HistoryPageSize = 20;
 
@@ -87,18 +86,7 @@ public class WorkoutsController(
 
     [HttpPost]
     [RequestSizeLimit(150_000)]
-    public ActionResult<SavedWorkoutResponse> Save(SaveWorkoutRequest request)
-    {
-        try
-        {
-            return new SavedWorkoutResponse(workouts.Save(UserId, request));
-        }
-        catch (DbUpdateException ex)
-        {
-            logger.LogError(ex, "Could not save workout for user {UserId}", UserId);
-            return Rejected("Could not save this workout. Please try again.");
-        }
-    }
+    public SavedWorkoutResponse Save(SaveWorkoutRequest request) => new(workouts.Save(UserId, request));
 
     [HttpGet("{id:int}")]
     public ActionResult<WorkoutDetailsResponse> Details(int id)
