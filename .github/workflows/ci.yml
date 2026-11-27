@@ -31,7 +31,10 @@ jobs:
           sys.exit(lines < 0.8 or branches < 0.8)
       - run: dotnet tool restore
       - run: dotnet ef migrations has-pending-model-changes --project IronMindGym --configuration Release --no-build
-      - run: dotnet list package --vulnerable --include-transitive
+      - name: Refuse packages with known vulnerabilities
+        run: |
+          dotnet list package --vulnerable --include-transitive | tee vulnerable.txt
+          ! grep -q "has the following vulnerable packages" vulnerable.txt
       - uses: actions/upload-artifact@v4
         with:
           name: api-coverage
