@@ -52,7 +52,11 @@ public class AchievementServiceTests
             return db.SaveChanges();
         });
 
-        var awards = (await app.QueryAsync(db => Awards(db).ProgressAsync(Users(db)[0], CancellationToken.None))).ToDictionary(a => a.Code);
+        var awards = (await app.QueryAsync(async db =>
+        {
+            await Awards(db).AwardEarnedAsync(Users(db)[0], CancellationToken.None);
+            return await Awards(db).ProgressAsync(Users(db)[0], CancellationToken.None);
+        })).ToDictionary(a => a.Code);
 
         Assert.Equal(4, awards["WORKOUT_005"].CurrentValue);
         Assert.Equal(5, awards["SETS_050"].CurrentValue);
@@ -65,6 +69,21 @@ public class AchievementServiceTests
         Assert.Equal(3, awards["STREAK_007"].CurrentValue);
         Assert.Equal(2, awards["LONG_005"].CurrentValue);
         Assert.Equal((2.0, 5.0, 40.0), (awards["LONG_005"].CurrentValue, awards["LONG_005"].TargetValue, awards["LONG_005"].ProgressPercent));
+        // The review and the completed setup have no scale, so they show only whether they are earned.
+        Assert.True(awards["REVIEW_FIRST"].IsUnlocked);
+        Assert.True(awards["PROFILE_SETUP"].IsUnlocked);
+        Assert.False(awards["WORKOUT_005"].IsUnlocked);
+    }
+
+    [Fact]
+    public async Task EveryMetricOfTheCatalogIsMeasured()
+    {
+        using var app = await WithAthletes();
+
+        var awards = await app.QueryAsync(db => Awards(db).ProgressAsync(Users(db)[0], CancellationToken.None));
+
+        Assert.Equal(AchievementCatalog.All.Select(a => a.Code).Order(), awards.Select(a => a.Code).Order());
+        Assert.Equal(Enum.GetValues<AchievementMetricType>().Order(), AchievementCatalog.All.Select(a => a.MetricType).Distinct().Order());
     }
 
     [Fact]
