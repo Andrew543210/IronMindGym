@@ -83,6 +83,7 @@ public static class ServerMessages
         ["Send the unfinished workout as a JSON object."] = "Надішліть незавершене тренування як JSON-об'єкт.",
         ["This workout is too large to keep on the server."] = "Це тренування завелике, щоб зберегти його на сервері.",
         ["The workout contains a character that cannot be stored."] = "Тренування містить символ, який неможливо зберегти.",
+        ["Write a comment first."] = "Спершу напишіть коментар.",
         [$"Comments are limited to {WorkoutSocialService.MaxCommentLength} characters."] = $"Коментар — не довше {WorkoutSocialService.MaxCommentLength} символів.",
 
         // Friends

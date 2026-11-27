@@ -45,9 +45,9 @@ public class WorkoutSocialService(IronMindDbContext db, TimeProvider clock, Frie
             return false;
         var comment = (text ?? string.Empty).Trim();
         if (comment.Length > MaxCommentLength)
-            throw new DomainValidationException($"Comments are limited to {MaxCommentLength} characters.");
+            throw new DomainValidationException($"Comments are limited to {MaxCommentLength} characters.", nameof(CommentRequest.Text));
         if (comment.Length == 0)
-            return true;
+            throw new DomainValidationException("Write a comment first.", nameof(CommentRequest.Text));
         db.FriendComments.Add(new FriendComment { WorkoutSessionId = sessionId, AuthorId = viewerId, Text = comment, CreatedAt = clock.UtcNow() });
         await db.SaveChangesAsync(cancellationToken);
         return true;

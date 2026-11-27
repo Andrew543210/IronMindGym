@@ -118,6 +118,7 @@ public class FriendsApiTests
         Assert.Equal(0, app.Query(db => db.ActivityLikes.Count()));
         Assert.Equal(HttpStatusCode.NotFound, (await owner.Put($"{route}/like", new { liked = true })).StatusCode);
 
+        Assert.Equal(["Write a comment first."], await ApiClient.Errors(await partner.Post($"{route}/comments", new { text = "   " })));
         await ApiClient.Ok(await partner.Post($"{route}/comments", new { text = "Strong session" }));
         var comments = (await owner.Get<WorkoutDetailsResponse>($"/api/workouts/{sessionId}")).Comments;
         Assert.Equal(("partner", "Strong session"), (comments.Single().AuthorUsername, comments.Single().Text));
