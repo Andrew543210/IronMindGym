@@ -118,13 +118,19 @@ public static class ServiceSetup
 
     /// <summary>
     /// Headers every response carries. The client is one bundle from this origin, and Bootstrap's icons are data: images.
+    /// They are added as the response starts, because the error handler clears the headers of a failed request.
     /// </summary>
-    public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app) => app.Use(async (context, next) =>
+    public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app) => app.Use((context, next) =>
     {
-        context.Response.Headers.XContentTypeOptions = "nosniff";
-        context.Response.Headers.XFrameOptions = "DENY";
-        context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-        context.Response.Headers.ContentSecurityPolicy = ContentSecurityPolicy;
-        await next();
+        var response = context.Response;
+        response.OnStarting(() =>
+        {
+            response.Headers.XContentTypeOptions = "nosniff";
+            response.Headers.XFrameOptions = "DENY";
+            response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+            response.Headers.ContentSecurityPolicy = ContentSecurityPolicy;
+            return Task.CompletedTask;
+        });
+        return next(context);
     });
 }

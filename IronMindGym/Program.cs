@@ -35,6 +35,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 }
 
 app.UseForwardedHeaders();
+app.UseSecurityHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler();
@@ -48,7 +49,6 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = [new CultureInfo("en"), new CultureInfo("uk")],
     RequestCultureProviders = [new AcceptLanguageHeaderRequestCultureProvider()]
 });
-app.UseSecurityHeaders();
 
 // The React client is built into wwwroot. Its hashed bundles never change, while index.html is always revalidated.
 var clientFiles = new StaticFileOptions

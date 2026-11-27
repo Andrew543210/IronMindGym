@@ -1,4 +1,7 @@
 using System.Net;
+using IronMindGym.Services;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IronMindGym.Tests.Api;
 
@@ -45,6 +48,22 @@ public sealed class HostingTests : IDisposable
         var policy = Assert.Single(bundle.Headers.GetValues("Content-Security-Policy"));
         Assert.Contains("script-src 'self'", policy, StringComparison.Ordinal);
         Assert.Contains("frame-ancestors 'none'", policy, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task AFailedRequestKeepsTheSecurityHeaders()
+    {
+        using var app = new TestApplication(webRoot);
+        using var failing = app.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddScoped<AccountService>(_ => throw new InvalidOperationException("Broken on purpose."))));
+        using var browser = failing.CreateClient();
+
+        var response = await browser.GetAsync("/api/session/csrf");
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
+        Assert.Equal("DENY", Assert.Single(response.Headers.GetValues("X-Frame-Options")));
+        Assert.Contains("frame-ancestors 'none'", Assert.Single(response.Headers.GetValues("Content-Security-Policy")), StringComparison.Ordinal);
     }
 
     [Fact]
