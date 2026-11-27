@@ -1,9 +1,10 @@
-import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, Navigate, useLocation } from 'react-router';
 import { api, FormError } from '../../api/client';
 import type { Session } from '../../api/types/session';
 import { ErrorAlert } from '../../components/ui';
 import { deviceTimeZone } from '../../format';
+import { textFields } from '../../forms';
 import { useAction, usePageTitle } from '../../hooks';
 import { useI18n, type MessageKey } from '../../i18n/i18n';
 import { useSession, type SessionEnd } from '../../session';
@@ -56,6 +57,8 @@ export function LoginPage() {
     });
   }
 
+  const field = textFields(form, setForm);
+
   return (
     <AuthLayout heading={t('login.heading')} intro={t('login.intro')}>
       {notice && !error && <div className={`alert ${notice.style}`} role="status">{t(notice.text)}</div>}
@@ -63,13 +66,11 @@ export function LoginPage() {
         <ErrorAlert error={error} />
         <div className="col-md-6">
           <label htmlFor="email" className="form-label">{t('common.email')}</label>
-          <input id="email" type="email" className="form-control" autoComplete="email" required maxLength={120}
-            value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <input {...field('email')} type="email" className="form-control" autoComplete="email" required maxLength={120} />
         </div>
         <div className="col-md-6">
           <label htmlFor="password" className="form-label">{t('common.password')}</label>
-          <input id="password" type="password" className="form-control" autoComplete="current-password" required maxLength={128}
-            value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <input {...field('password')} type="password" className="form-control" autoComplete="current-password" required maxLength={128} />
         </div>
         <div className="col-12 form-check">
           <input id="rememberMe" type="checkbox" className="form-check-input"
@@ -113,11 +114,7 @@ export function RegisterPage() {
     });
   }
 
-  const field = (name: keyof typeof form) => ({
-    id: name,
-    value: form[name],
-    onChange: (e: ChangeEvent<HTMLInputElement>) => setForm({ ...form, [name]: e.target.value }),
-  });
+  const field = textFields(form, setForm);
 
   return (
     <AuthLayout heading={t('register.heading')} intro={t('register.intro')}>

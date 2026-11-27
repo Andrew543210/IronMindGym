@@ -1,9 +1,10 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { api } from '../../api/client';
 import type { ProfileSettings, SettingsPage } from '../../api/types/profile';
 import { ErrorAlert, PageState } from '../../components/ui';
 import { deviceTimeZone } from '../../format';
+import { textFields } from '../../forms';
 import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n } from '../../i18n/i18n';
 import { useSession } from '../../session';
@@ -27,11 +28,7 @@ export function ProfileSettingsPage() {
   if (!data) return <PageState error={loadError} loading={loading} />;
   const form = edited ?? toForm(data.settings);
 
-  const field = (name: keyof ProfileSettings) => ({
-    id: name,
-    value: form[name],
-    onChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setEdited({ ...form, [name]: e.target.value }),
-  });
+  const field = textFields(form, setEdited);
 
   function submit(event: FormEvent) {
     event.preventDefault();

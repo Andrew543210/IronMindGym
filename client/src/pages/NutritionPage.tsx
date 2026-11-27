@@ -5,6 +5,7 @@ import type { Intake } from '../api/types/common';
 import type { NutritionAdvice, NutritionDay, Target } from '../api/types/nutrition';
 import { ErrorAlert, PageState, ResponsiveTable } from '../components/ui';
 import { formatDay, formatFixed, formatNumber } from '../format';
+import { textFields } from '../forms';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey, type Translate } from '../i18n/i18n';
 import { useAthlete } from '../session';
@@ -120,6 +121,7 @@ function DayForm({ day, chosenDate, onChoose, onChanged }: {
     });
   }
 
+  const field = textFields(form, setForm);
   return (
     <form className="row g-3" onSubmit={submit}>
       <ErrorAlert error={error} />
@@ -133,8 +135,7 @@ function DayForm({ day, chosenDate, onChoose, onChanged }: {
       {macros.map((macro) => (
         <div className="col-6 col-md-3" key={macro.field}>
           <label htmlFor={macro.field} className="form-label">{t(macro.label)}</label>
-          <input id={macro.field} type="number" inputMode="decimal" step="any" min={0} max={macro.max} required className="form-control"
-            value={form[macro.field]} onChange={(e) => setForm({ ...form, [macro.field]: e.target.value })} />
+          <input {...field(macro.field)} type="number" inputMode="decimal" step="any" min={0} max={macro.max} required className="form-control" />
         </div>
       ))}
       <div className="col-12 d-flex flex-wrap gap-2">

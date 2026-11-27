@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import type { Goal } from '../api/types/goals';
 import { EmptyState, ErrorAlert, PageState } from '../components/ui';
 import { formatDay } from '../format';
+import { textFields } from '../forms';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
 import { useAthlete } from '../session';
@@ -47,6 +48,7 @@ export function GoalsPage() {
     });
   }
 
+  const field = textFields(form, setForm);
   return (
     <>
       <p className="eyebrow">{t('goals.eyebrow')}</p>
@@ -60,13 +62,11 @@ export function GoalsPage() {
               <ErrorAlert error={create.error} />
               <div className="col-12">
                 <label htmlFor="title" className="form-label">{t('goals.what')}</label>
-                <input id="title" className="form-control" placeholder={t('goals.placeholder')} required minLength={3} maxLength={80}
-                  value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                <input {...field('title')} className="form-control" placeholder={t('goals.placeholder')} required minLength={3} maxLength={80} />
               </div>
               <div className="col-12">
                 <label htmlFor="deadline" className="form-label">{t('goals.date')}</label>
-                <input id="deadline" type="date" className="form-control" required min={athlete.today}
-                  value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
+                <input {...field('deadline')} type="date" className="form-control" required min={athlete.today} />
               </div>
               <div className="col-12">
                 <button className="btn btn-primary w-100" type="submit" disabled={create.busy}>{t('goals.add')}</button>

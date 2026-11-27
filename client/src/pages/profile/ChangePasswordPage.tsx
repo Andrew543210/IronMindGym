@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { api, FormError } from '../../api/client';
 import { ErrorAlert } from '../../components/ui';
+import { textFields } from '../../forms';
 import { useAction, usePageTitle } from '../../hooks';
 import { useI18n } from '../../i18n/i18n';
 import { useSession } from '../../session';
@@ -24,11 +25,12 @@ export function ChangePasswordPage() {
     });
   }
 
+  const field = textFields(form, setForm);
   const input = (name: keyof typeof form, label: string, autoComplete: string) => (
     <div className="col-12">
       <label htmlFor={name} className="form-label">{label}</label>
-      <input id={name} type="password" className="form-control" required minLength={name === 'currentPassword' ? undefined : 10} maxLength={128}
-        autoComplete={autoComplete} value={form[name]} onChange={(e) => setForm({ ...form, [name]: e.target.value })} />
+      <input type="password" className="form-control" required minLength={name === 'currentPassword' ? undefined : 10} maxLength={128}
+        autoComplete={autoComplete} {...field(name)} />
     </div>
   );
 

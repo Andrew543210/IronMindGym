@@ -1,9 +1,10 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { api } from '../api/client';
 import type { SetupForm } from '../api/types/profile';
 import { ErrorAlert, PageState } from '../components/ui';
 import { deviceTimeZone } from '../format';
+import { textFields } from '../forms';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
 import { useSession } from '../session';
@@ -29,11 +30,7 @@ export function SetupPage() {
   if (data.alreadyCompleted) return <Navigate to="/" replace />;
   const splitTypeId = form.splitTypeId || String(data.splitTypes[0]?.id ?? '');
 
-  const field = (name: keyof typeof form) => ({
-    id: name,
-    value: form[name],
-    onChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [name]: e.target.value }),
-  });
+  const field = textFields(form, setForm);
 
   function submit(event: FormEvent) {
     event.preventDefault();
