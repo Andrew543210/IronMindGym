@@ -59,6 +59,18 @@ describe('server copy of the draft', () => {
     await vi.waitFor(() => expect(sent('PUT')).toHaveLength(1));
   });
 
+  it('lets the last change finish after the tab closes', async () => {
+    const sync = serverDraftSync(() => {});
+    sync.push(withSets(1));
+    sync.flush();
+    await vi.waitFor(() => expect(sent('PUT')).toHaveLength(1));
+    sync.push(withSets(2));
+    sync.flush(true);
+    await vi.waitFor(() => expect(sent('PUT')).toHaveLength(2));
+
+    expect(sent('PUT').map(([, init]) => init.keepalive)).toEqual([false, true]);
+  });
+
   it('reports a workout already saved elsewhere', async () => {
     putStatus = 409;
     const savedElsewhere = vi.fn();

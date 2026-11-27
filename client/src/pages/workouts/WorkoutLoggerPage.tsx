@@ -186,14 +186,15 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
   }, [draft, store, sync, syncWithServer]);
 
   useEffect(() => {
+    const leave = () => sync.flush(true);
     const onHidden = () => {
-      if (document.hidden) sync.flush();
+      if (document.hidden) leave();
     };
     document.addEventListener('visibilitychange', onHidden);
-    window.addEventListener('pagehide', sync.flush);
+    window.addEventListener('pagehide', leave);
     return () => {
       document.removeEventListener('visibilitychange', onHidden);
-      window.removeEventListener('pagehide', sync.flush);
+      window.removeEventListener('pagehide', leave);
       sync.flush();
     };
   }, [sync]);

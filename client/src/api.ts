@@ -25,6 +25,8 @@ type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 export interface RequestOptions {
   /** Cancels the request once its answer is no longer needed. */
   signal?: AbortSignal;
+  /** Lets the request finish after the tab closes; the browser allows it only for a small body. */
+  keepalive?: boolean;
 }
 
 /** The problem type of a change refused for a missing or expired antiforgery token. */
@@ -35,6 +37,9 @@ interface ProblemDetails {
   title?: string;
   errors?: Record<string, string[]>;
 }
+
+/** Browsers refuse a keepalive request with a larger body instead of sending it the ordinary way. */
+const KEEPALIVE_LIMIT_BYTES = 64 * 1024;
 
 let csrfToken: string | null = null;
 let onSessionEnded: (() => void) | null = null;
@@ -93,14 +98,10 @@ async function send(method: Method, url: string, body?: unknown, token?: string,
   const headers: Record<string, string> = { Accept: 'application/json', 'Accept-Language': currentLanguage() };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers['X-CSRF-TOKEN'] = token;
+  const json = body === undefined ? undefined : JSON.stringify(body);
+  const keepalive = options.keepalive === true && (json === undefined || new TextEncoder().encode(json).length <= KEEPALIVE_LIMIT_BYTES);
   try {
-    return await fetch(url, {
-      method,
-      headers,
-      credentials: 'same-origin',
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: options.signal,
-    });
+    return await fetch(url, { method, headers, credentials: 'same-origin', body: json, signal: options.signal, keepalive });
   } catch (failure) {
     if (options.signal?.aborted) throw failure;
     throw new ApiError(0, [translate('errors.offline')]);

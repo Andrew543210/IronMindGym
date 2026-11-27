@@ -50,4 +50,16 @@ describe('api', () => {
 
     await expect(api.get('/api/dashboard', { signal: controller.signal })).rejects.toBe(aborted);
   });
+
+  it('asks the browser to finish a small request after the tab closes, and sends a large one the ordinary way', async () => {
+    const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (url) =>
+      (url === '/api/session/csrf' ? json(200, { token: 't' }) : new Response(null, { status: 204 })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await api.put('/api/workouts/draft', { note: 'short' }, { keepalive: true });
+    await api.put('/api/workouts/draft', { note: 'я'.repeat(40_000) }, { keepalive: true });
+
+    const sent = fetchMock.mock.calls.slice(1).map(([, init]) => init?.keepalive);
+    expect(sent).toEqual([true, false]);
+  });
 });
