@@ -43,6 +43,22 @@ public class FriendsApiTests
     }
 
     [Fact]
+    public async Task SearchMatchesUnderscoresLiterally()
+    {
+        using var app = new TestApplication();
+        using var searcher = app.Api();
+        using var other = app.Api();
+        using var similar = app.Api();
+        await searcher.Register("searcher");
+        await other.Register("iron_lifter");
+        await similar.Register("ironXlifter");
+
+        var found = await searcher.Get<FriendsOverview>("/api/friends?search=N_L");
+
+        Assert.Equal(["iron_lifter"], found.Friends.Select(f => f.Username));
+    }
+
+    [Fact]
     public async Task FriendCardShowsTheLatestFiveWorkoutsNewestFirst()
     {
         using var app = new TestApplication();

@@ -18,7 +18,7 @@ public class FriendshipService(IronMindDbContext db, AthleteCalendars calendars,
             .Where(f => f.User1Id == userId || f.User2Id == userId).ToListAsync(cancellationToken);
         var relatedIds = relationships.Select(f => f.User1Id == userId ? f.User2Id : f.User1Id).ToList();
         var users = db.Users.AsNoTracking().Where(u => u.Id != userId);
-        users = search.Length == 0 ? users.Where(u => relatedIds.Contains(u.Id)) : users.Where(u => EF.Functions.ILike(u.Username, $"%{EscapeLike(search)}%"));
+        users = search.Length == 0 ? users.Where(u => relatedIds.Contains(u.Id)) : users.Where(u => EF.Functions.ILike(u.Username, $"%{EscapeLike(search)}%", LikeEscape));
         var found = await users.OrderBy(u => u.Username).Take(20).Select(u => new { u.Id, u.Username }).ToListAsync(cancellationToken);
         var firstNutritionDay = (await calendars.ForAsync(userId, cancellationToken)).Today.AddDays(-9);
         var cards = new List<FriendCard>(found.Count);
@@ -142,11 +142,16 @@ public class FriendshipService(IronMindDbContext db, AthleteCalendars calendars,
         .Where(f => f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId))
         .ExecuteDeleteAsync(cancellationToken) > 0;
 
-    /// <summary>Usernames may contain "_", which LIKE would otherwise treat as a wildcard.</summary>
+    /// <summary>
+    /// Usernames may contain "_", which LIKE would otherwise treat as a wildcard. The escape character is named
+    /// in the query, because Npgsql turns escaping off for a pattern that is not a constant.
+    /// </summary>
+    private const string LikeEscape = @"\";
+
     private static string EscapeLike(string text) => text
-        .Replace(@"\", @"\\", StringComparison.Ordinal)
-        .Replace("%", @"\%", StringComparison.Ordinal)
-        .Replace("_", @"\_", StringComparison.Ordinal);
+        .Replace(LikeEscape, LikeEscape + LikeEscape, StringComparison.Ordinal)
+        .Replace("%", LikeEscape + "%", StringComparison.Ordinal)
+        .Replace("_", LikeEscape + "_", StringComparison.Ordinal);
 
     private Task<Friendship?> FindAsync(int userId, int otherId, CancellationToken cancellationToken) => db.Friendships.FirstOrDefaultAsync(f =>
         f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId), cancellationToken);
