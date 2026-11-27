@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { describe, expect, it, vi } from 'vitest';
-import { progressEntry } from '../test/fixtures';
-import { Layout } from '../components/Layout';
-import { mockApi, renderPage, renderRoutes, respond } from '../test/harness';
-import { ProgressPage, TrackExercisePage } from './ProgressPages';
+import { Layout } from '../../components/Layout';
+import { progressEntry } from '../../test/fixtures';
+import { mockApi, renderPage, renderRoutes, respond } from '../../test/harness';
+import { ProgressPage } from './ProgressPage';
+import { TrackExercisePage } from './TrackExercisePage';
 
 it('loads the saved results, compares them while typing and saves both columns', async () => {
   const saved: unknown[] = [];

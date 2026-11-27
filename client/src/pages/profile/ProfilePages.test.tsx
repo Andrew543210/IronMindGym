@@ -1,8 +1,10 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { mockApi, renderPage, sessionContext } from '../test/harness';
-import { ChangePasswordPage, ProfilePage, ProfileSettingsPage } from './ProfilePages';
+import { mockApi, renderPage, sessionContext } from '../../test/harness';
+import { ChangePasswordPage } from './ChangePasswordPage';
+import { ProfilePage } from './ProfilePage';
+import { ProfileSettingsPage } from './ProfileSettingsPage';
 
 const profile = {
   username: 'athlete', email: 'athlete@example.com', age: 24, avatarName: 'Gym Centurion', strengthCoefficient: 3,

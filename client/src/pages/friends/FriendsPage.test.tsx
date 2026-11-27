@@ -1,11 +1,12 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { Layout } from '../components/Layout';
-import { mockApi, renderPage, renderRoutes } from '../test/harness';
-import { progressEntry, workout } from '../test/fixtures';
-import { FriendWorkoutPage, FriendsPage } from './FriendsPage';
-import { FriendProgressPage } from './ProgressPages';
+import { Layout } from '../../components/Layout';
+import { progressEntry, workout } from '../../test/fixtures';
+import { mockApi, renderPage, renderRoutes } from '../../test/harness';
+import { FriendProgressPage } from './FriendProgressPage';
+import { FriendsPage } from './FriendsPage';
+import { FriendWorkoutPage } from './FriendWorkoutPage';
 
 const friend = {
   userId: 9, username: 'partner', isFriend: true, requestSent: false, requestReceived: false, averageKcal: 2250.5,

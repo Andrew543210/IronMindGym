@@ -59,3 +59,10 @@ export function deviceTimeZone(): string {
     return '';
   }
 }
+
+/** A change with its sign, such as +2.5 or -1; a change that rounds to nothing is 0. */
+export function formatSigned(value: number, decimals = 1): string {
+  const rounded = Number(value.toFixed(decimals));
+  if (rounded === 0) return '0';
+  return `${rounded > 0 ? '+' : ''}${formatNumber(rounded, decimals)}`;
+}
