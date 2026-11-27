@@ -32,9 +32,13 @@ type Answer = Response | object | null;
 type Reply = Answer | (() => Answer | Promise<Answer>);
 
 /**
- * Answers fetch from a table keyed by "METHOD /url". A plain value becomes a 200 JSON response, null a 204,
- * a missing route a 404. The antiforgery token is always available; every other request is recorded in order.
+ * Answers fetch from a table keyed by "METHOD /url". A plain value becomes a 200 JSON response, null a 204;
+ * a function may answer later. The antiforgery token is always available; every other request is recorded in order.
+ * A request without a route gets a 404 and fails the test once it ends.
  */
+/** Requests of the running test that no route answered; the test setup fails the test on them. */
+export const unmocked: string[] = [];
+
 export function mockApi(routes: Record<string, Reply>) {
   const calls: ApiCall[] = [];
   vi.stubGlobal('fetch', vi.fn(async (url: string, init: RequestInit = {}) => {
@@ -43,7 +47,10 @@ export function mockApi(routes: Record<string, Reply>) {
     const body = typeof init.body === 'string' ? JSON.parse(init.body) as unknown : undefined;
     calls.push({ method, url, body, headers: (init.headers ?? {}) as Record<string, string> });
     const route = routes[`${method} ${url}`];
-    if (route === undefined) return respond(404);
+    if (route === undefined) {
+      unmocked.push(`${method} ${url}`);
+      return respond(404);
+    }
     const reply = typeof route === 'function' ? await route() : route;
     if (reply instanceof Response) return reply;
     return reply === null ? respond(204) : respond(200, reply);

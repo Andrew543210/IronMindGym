@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { athlete, mockApi, renderPage, renderRoutes } from '../../test/harness';
+import { athlete, mockApi, renderPage, renderRoutes, respond } from '../../test/harness';
 import { workout } from '../../test/fixtures';
 import { WorkoutDetailsPage, WorkoutHistoryPage } from './WorkoutPages';
 
@@ -83,7 +83,7 @@ describe('workout details', () => {
   });
 
   it('shows that a workout does not exist', async () => {
-    mockApi({});
+    mockApi({ 'GET /api/workouts/99': () => respond(404) });
     renderRoutes([{ path: '/workouts/:id', element: <WorkoutDetailsPage /> }], '/workouts/99');
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Not found. It may have been deleted.');

@@ -58,7 +58,7 @@ describe('useApi', () => {
 
   it('waits for a url and aborts a request that is no longer needed', async () => {
     const signals: AbortSignal[] = [];
-    mockApi({});
+    mockApi({ 'GET /api/slow': () => new Promise<null>(() => {}) });
     const stubbed = globalThis.fetch;
     globalThis.fetch = (input, init) => {
       if (init?.signal) signals.push(init.signal);
