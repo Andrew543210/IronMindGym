@@ -76,7 +76,7 @@ describe('app', () => {
     const more = screen.getByRole('button', { name: /More/ });
     await user.click(more);
     expect(more).toHaveAttribute('aria-expanded', 'true');
-    expect(within(document.getElementById('moreMenu')!).getByRole('link', { name: 'Goals ↗' })).toBeVisible();
+    expect(within(document.getElementById('moreMenu')!).getByRole('link', { name: 'Goals' })).toBeVisible();
     await user.keyboard('{Escape}');
     expect(more).toHaveAttribute('aria-expanded', 'false');
 

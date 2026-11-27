@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { AwardProgress, PersonalRecord, Statistics } from '../api/types/statistics';
 import { StatCard } from '../components/StatCard';
-import { EmptyState, PageState, ResponsiveTable } from '../components/ui';
+import { EmptyState, Glyph, PageState, ResponsiveTable } from '../components/ui';
 import { formatNumber, localDay } from '../format';
 import { useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
@@ -48,7 +48,7 @@ export function StatisticsPage() {
 
   return (
     <>
-      <h2>{t('statistics.heading')}</h2>
+      <h1 className="h2">{t('statistics.heading')}</h1>
       <p className="small text-muted">{t('statistics.note')}</p>
       <StatRow>
         <StatCard label={t('statistics.workouts')} value={data.workoutsCompleted} />
@@ -63,10 +63,10 @@ export function StatisticsPage() {
       <StatRow>
         <StatCard label={t('statistics.bestChange')} value={`${formatNumber(data.bestProgressPercent)}%`}
           note={data.bestProgressExercise ?? t('statistics.bestChangeNone')} />
-        <StatCard label={t('statistics.awards')} value={data.totalAwardsCount} note={<Link to="/awards">{t('profile.allAwards')}</Link>} />
+        <StatCard label={t('statistics.awards')} value={data.totalAwardsCount} note={<Link to="/awards">{t('profile.allAwards')} <Glyph>↗</Glyph></Link>} />
       </StatRow>
 
-      <h4 className="mt-5 mb-3">{t('statistics.volumeHeading')}</h4>
+      <h2 className="h4 mt-5 mb-3">{t('statistics.volumeHeading')}</h2>
       <StatRow>
         <StatCard label={t('statistics.totalVolume')} value={formatNumber(data.totalVolume)} unit={volume} note={t('statistics.totalVolumeNote')} />
         <StatCard label={t('statistics.sets')} value={data.totalSetsCount} note={t('statistics.setsNote')} />
@@ -80,19 +80,19 @@ export function StatisticsPage() {
 
       <StatRow>
         <div>
-          <h4 className="mb-3">{t('statistics.weekHeading')}</h4>
+          <h2 className="h4 mb-3">{t('statistics.weekHeading')}</h2>
           <StatCard label={t('statistics.weekVolume')} value={formatNumber(data.weeklyProgress)} unit={volume}
             note={`${t('count.workouts', { count: data.last7DaysWorkouts })} · ${t('unit.min', { value: data.last7DaysMinutes })}`} />
         </div>
         <div>
-          <h4 className="mb-3">{t('statistics.favoriteHeading')}</h4>
+          <h2 className="h4 mb-3">{t('statistics.favoriteHeading')}</h2>
           <StatCard label={t('statistics.favorite')} value={data.favoriteExerciseName ?? '—'}
             note={data.favoriteExerciseName ? t('statistics.favoriteCount', { count: data.favoriteExerciseCount }) : t('statistics.favoriteNone')} />
         </div>
       </StatRow>
 
       <div className="section-heading">
-        <h4>{t('statistics.recentRecords')}</h4>
+        <h2 className="h4">{t('statistics.recentRecords')}</h2>
         <Link className="small text-muted" to="/statistics/records">{t('statistics.allRecords')}</Link>
       </div>
       <p className="small text-muted">{t('statistics.recordsNote')}</p>
@@ -109,12 +109,12 @@ export function RecordsPage() {
   const { data, error, loading } = useApi<PersonalRecord[]>('/api/statistics/records');
   return (
     <>
-      <h2>{t('records.title')}</h2>
+      <h1 className="h2">{t('records.title')}</h1>
       <p className="small text-muted">{t('records.note')}</p>
       {!data && <PageState error={error} loading={loading} />}
       {data?.length === 0 && <p className="text-muted">{t('statistics.noRecords')}</p>}
       {data && data.length > 0 && <RecordsTable records={data} grouped />}
-      <Link to="/statistics" className="btn btn-outline-secondary mt-3">{t('records.back')}</Link>
+      <Link to="/statistics" className="btn btn-outline-secondary mt-3"><Glyph>←</Glyph> {t('records.back')}</Link>
     </>
   );
 }
@@ -128,7 +128,7 @@ export function AwardsPage() {
   return (
     <>
       <div className="section-heading mt-0">
-        <h2 className="mb-0">{t('awards.title')}</h2>
+        <h1 className="h2 mb-0">{t('awards.title')}</h1>
         <span className="text-muted small">{t('awards.summary', { unlocked: data.filter((a) => a.isUnlocked).length, total: data.length })}</span>
       </div>
       <p className="text-muted">{t('awards.intro')}</p>
@@ -139,7 +139,7 @@ export function AwardsPage() {
             <div key={award.code} className="col-md-6 col-lg-4">
               <div className={`card h-100${award.isUnlocked ? ' border border-light' : ''}`}><div className="card-body d-flex flex-column">
                 <div className="d-flex justify-content-between align-items-start mb-2 gap-2">
-                  <h5 className="mb-0">{award.name}</h5>
+                  <h2 className="h5 mb-0">{award.name}</h2>
                   {award.isUnlocked && <span className="badge bg-light text-dark" title={t('awards.unlocked')}>✓<span className="visually-hidden"> {t('awards.unlocked')}</span></span>}
                 </div>
                 <div className="small text-muted mb-3">{award.conditionDescription}</div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { errorMessages } from '../api/client';
 import type { FlashState } from '../flash';
@@ -6,6 +6,7 @@ import { useAction } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
 import { useSession } from '../session';
 import { LanguageSwitch } from './LanguageSwitch';
+import { Glyph } from './ui';
 
 const navigation: { to: string; label: MessageKey; number: string }[] = [
   { to: '/', label: 'nav.overview', number: '01' },
@@ -53,21 +54,39 @@ function useFlash(): FlashState {
   return flash;
 }
 
+/** After a move to another page, focus goes to its content, so keyboard and screen reader users start there. */
+function useFocusAfterNavigation() {
+  const { pathname } = useLocation();
+  const main = useRef<HTMLElement>(null);
+  const shown = useRef(pathname);
+  useEffect(() => {
+    if (shown.current === pathname) return;
+    shown.current = pathname;
+    main.current?.focus();
+  }, [pathname]);
+  return main;
+}
+
 export function Layout() {
   const { session, signOut } = useSession();
   const { t, show } = useI18n();
   const [moreOpen, setMoreOpen] = useState(false);
   const flash = useFlash();
+  const main = useFocusAfterNavigation();
   const leaving = useAction();
   const signedIn = session !== null;
 
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMoreOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [moreOpen]);
+
   return (
-    <div
-      className={signedIn ? 'app-shell' : 'public-shell'}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') setMoreOpen(false);
-      }}
-    >
+    <div className={signedIn ? 'app-shell' : 'public-shell'}>
       <a href="#main" className="skip-link">{t('nav.skip')}</a>
       {signedIn && (
         <aside className="sidebar" aria-label={t('nav.main')}>
@@ -79,14 +98,14 @@ export function Layout() {
           <nav>
             {navigation.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-                <span className="nav-number">{item.number}</span>{t(item.label)}
+                <span className="nav-number" aria-hidden="true">{item.number}</span>{t(item.label)}
               </NavLink>
             ))}
           </nav>
           <div className="sidebar-bottom">
             <p>{t('nav.motto1')}<br /><strong>{t('nav.motto2')}</strong></p>
             <NavLink to="/profile" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-              <span className="nav-number">↗</span>{t('nav.profile')}
+              <span className="nav-number" aria-hidden="true">↗</span>{t('nav.profile')}
             </NavLink>
           </div>
         </aside>
@@ -100,14 +119,14 @@ export function Layout() {
             <LanguageSwitch />
             {signedIn ? (
               <>
-                <Link className="profile-link" to="/profile">{t('nav.account')}</Link>
+                <Link className="profile-link" to="/profile">{t('nav.account')} <Glyph>↗</Glyph></Link>
                 <button type="button" className="btn btn-sm btn-outline-secondary" disabled={leaving.busy}
                   onClick={() => void leaving.run(signOut)}>{t('nav.signOut')}</button>
               </>
             ) : <span className="text-muted small topbar-motto">{t('topbar.public')}</span>}
           </div>
         </header>
-        <main id="main" className="main-content">
+        <main id="main" ref={main} tabIndex={-1} className="main-content">
           {flash.message && <div className="alert alert-success" role="status">{show(flash.message)}</div>}
           {signedIn && leaving.error !== undefined && (
             <div className="alert alert-danger" role="alert">{t('nav.signOutFailed')} {errorMessages(leaving.error).join(' ')}</div>
@@ -121,18 +140,18 @@ export function Layout() {
           <nav className="mobile-nav" aria-label={t('nav.quick')}>
             {quickLinks.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.to === '/'} onClick={() => setMoreOpen(false)}>
-                <b>{item.icon}</b>{t(item.label)}
+                <b aria-hidden="true">{item.icon}</b>{t(item.label)}
               </NavLink>
             ))}
             <button type="button" aria-expanded={moreOpen} aria-controls="moreMenu" onClick={() => setMoreOpen((open) => !open)}>
-              <b>•••</b>{t('nav.more')}
+              <b aria-hidden="true">•••</b>{t('nav.more')}
             </button>
           </nav>
           <div id="moreMenu" className="more-menu" hidden={!moreOpen}>
             {navigation.filter((item) => !quickLinks.some((quick) => quick.to === item.to)).map((item) => (
-              <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)}>{t(item.label)} ↗</Link>
+              <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)}>{t(item.label)} <Glyph>↗</Glyph></Link>
             ))}
-            <Link to="/profile" onClick={() => setMoreOpen(false)}>{t('nav.profile')} ↗</Link>
+            <Link to="/profile" onClick={() => setMoreOpen(false)}>{t('nav.profile')} <Glyph>↗</Glyph></Link>
           </div>
         </>
       )}

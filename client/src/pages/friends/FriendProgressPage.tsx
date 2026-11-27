@@ -17,12 +17,12 @@ export function FriendProgressPage() {
     <div className="mt-4">
       {!data ? <PageState error={error} loading={loading} /> : (
         <>
-          <h2 className="text-break">{t('friendProgress.heading', { name: data.friendUsername })}</h2>
+          <h1 className="h2 text-break">{t('friendProgress.heading', { name: data.friendUsername })}</h1>
           <p className="small text-muted">{t('progress.note')}</p>
           <div className="row mb-4"><div className="col-md-6">
             <div className="card border border-light"><div className="card-body">
-              <h6 className="text-muted small mb-2">{t('friendProgress.strength')}</h6>
-              <h3 className="mb-0">{formatFixed(data.currentStrengthCoefficient, 2)}</h3>
+              <h2 className="h6 text-muted small mb-2 text-uppercase">{t('friendProgress.strength')}</h2>
+              <p className="h3 mb-0">{formatFixed(data.currentStrengthCoefficient, 2)}</p>
             </div></div>
           </div></div>
           {data.exercises.length === 0

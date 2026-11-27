@@ -27,7 +27,7 @@ export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: Frien
   return (
     <div className="card mb-3"><div className="card-body">
       <div>
-        <strong className="text-break">{friend.username}</strong>
+        <h2 className="fs-6 fw-bold text-break mb-0">{friend.username}</h2>
         <div className="small text-muted">{t('friends.status', { status: t(statusOf(friend)) })}</div>
         {friend.isFriend && (
           <div className="small text-muted">
@@ -52,7 +52,7 @@ export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: Frien
       {friend.isFriend && (
         <>
           <hr />
-          <h6>{t('friends.lastWorkouts')}</h6>
+          <h3 className="h6">{t('friends.lastWorkouts')}</h3>
           {friend.lastFiveWorkouts.length === 0 ? <div className="small text-muted">{t('friends.noWorkouts')}</div> : (
             <ul className="mb-0 mt-1">
               {friend.lastFiveWorkouts.map((workout) => (
@@ -69,7 +69,7 @@ export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: Frien
           )}
 
           <hr />
-          <h6>{t('friends.nutrition')}</h6>
+          <h3 className="h6">{t('friends.nutrition')}</h3>
           {friend.lastNutritionLogs.length === 0 ? <div className="small text-muted">{t('friends.noNutrition')}</div> : (
             <ResponsiveTable>
               <thead>
@@ -96,7 +96,7 @@ export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: Frien
           )}
 
           <hr />
-          <h6>{t('friends.records')}</h6>
+          <h3 className="h6">{t('friends.records')}</h3>
           {friend.personalRecords.length === 0 ? <div className="small text-muted">{t('friends.noRecords')}</div> : (
             <ul className="mb-0 mt-1">
               {friend.personalRecords.map((record) => (
@@ -112,7 +112,7 @@ export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: Frien
           )}
 
           <hr />
-          <h6>{t('friends.awards')}</h6>
+          <h3 className="h6">{t('friends.awards')}</h3>
           {friend.achievements.length === 0 ? <div className="small text-muted">{t('friends.noAwards')}</div> : (
             <ul className="mb-0 mt-1">
               {friend.achievements.map((award) => (

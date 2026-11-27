@@ -11,7 +11,7 @@ function app() {
   return renderRoutes([{
     element: <Layout />,
     children: [
-      { path: '/goals', element: <Link to="/awards">Awards</Link> },
+      { path: '/goals', element: <Link to="/awards">Open the awards</Link> },
       { path: '/awards', element: <p>Awards page</p> },
     ],
   }], '/awards');
@@ -26,12 +26,14 @@ describe('layout', () => {
     await vi.waitFor(() => expect(router.state.location.state).toEqual({ from: '/awards' }));
     expect(screen.getByText('Profile updated.')).toBeInTheDocument();
 
-    await userEvent.setup().click(screen.getByRole('link', { name: 'Awards' }));
+    await userEvent.setup().click(screen.getByRole('link', { name: 'Open the awards' }));
     expect(await screen.findByText('Awards page')).toBeInTheDocument();
+    // The next page starts where its content does.
+    await vi.waitFor(() => expect(screen.getByRole('main')).toHaveFocus());
     expect(screen.queryByText('Profile updated.')).not.toBeInTheDocument();
 
     await act(() => router.navigate(-1));
-    expect(await screen.findByRole('link', { name: 'Awards' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Open the awards' })).toBeInTheDocument();
     expect(screen.queryByText('Profile updated.')).not.toBeInTheDocument();
   });
 

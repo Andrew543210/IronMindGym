@@ -51,26 +51,32 @@ h2,
 h3,
 h4,
 h5,
-h6 {
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
     color: var(--white);
     font-weight: 650;
     line-height: 1.2;
     letter-spacing: -0.035em;
 }
-h2 {
+.h2 {
     font-size: clamp(1.7rem, 3.2vw, 2.5rem);
     margin-bottom: 1.7rem;
     text-transform: none;
 }
-h4 {
+.h4 {
     font-size: 1.15rem;
     letter-spacing: -0.015em;
     margin-bottom: 1rem;
 }
-h5 {
+.h5 {
     font-size: 1.05rem;
 }
-h6 {
+.h6 {
     font-size: 0.85rem;
     letter-spacing: 0.015em;
 }
@@ -127,6 +133,7 @@ h6 {
     border-radius: 10px;
 }
 .brand small {
+    text-transform: uppercase;
     display: block;
     font-size: 0.48rem;
     color: var(--muted);
@@ -134,6 +141,7 @@ h6 {
     font-weight: 500;
 }
 .nav-caption {
+    text-transform: uppercase;
     color: #737d86;
     font-size: 0.58rem;
     letter-spacing: 0.14em;
@@ -196,7 +204,9 @@ h6 {
     border-bottom: 1px solid var(--line);
     gap: 12px;
 }
-.topbar-label {
+.topbar-label,
+.topbar-motto {
+    text-transform: uppercase;
     font-size: 0.58rem;
     letter-spacing: 0.17em;
     color: #858f99;
@@ -214,6 +224,9 @@ h6 {
     font-size: 0.75rem;
     text-decoration: none;
     color: #a7afb7;
+}
+.main-content:focus {
+    outline: none;
 }
 .main-content {
     padding: 36px 42px 48px;
@@ -253,7 +266,7 @@ h6 {
     font-size: 0.78rem;
     letter-spacing: 0.035em;
 }
-.card-header h6 {
+.card-header .h6 {
     margin: 0;
 }
 .border-light,
@@ -441,7 +454,7 @@ hr {
     gap: 16px;
     margin: 30px 0 18px;
 }
-.section-heading h4 {
+.section-heading :is(h2, h3) {
     margin: 0;
 }
 .dashboard-hero {
@@ -482,7 +495,10 @@ hr {
     position: relative;
     max-width: 500px;
 }
-.hero-copy h1 {
+.hero-copy .hero-title {
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
     font-size: clamp(2rem, 4vw, 3.5rem);
     font-weight: 750;
     letter-spacing: -0.055em;
@@ -498,7 +514,7 @@ hr {
     align-items: end;
     gap: 16px;
 }
-.dashboard-greeting h2 {
+.dashboard-greeting h1 {
     margin: 0;
 }
 .dashboard-greeting .date-label {
@@ -582,7 +598,7 @@ hr {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
 }
-.feed-card h5 {
+.feed-card .h5 {
     font-size: 0.94rem;
     letter-spacing: -0.015em;
     margin: 10px 0;
@@ -621,7 +637,11 @@ hr {
     justify-content: end;
     min-height: 540px;
 }
-.auth-story h1 {
+.auth-story .story-title {
+    color: var(--white);
+    font-weight: 650;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
     font-size: 3.2rem;
     letter-spacing: -0.05em;
 }
@@ -632,7 +652,7 @@ hr {
 .auth-form {
     padding: 42px 34px;
 }
-.auth-form h2 {
+.auth-form h1 {
     margin-bottom: 12px;
 }
 .auth-form .col-md-6,
@@ -656,10 +676,16 @@ hr {
     border: 1px dashed #35414b;
     border-radius: 12px;
 }
-.empty-state strong {
+.empty-state strong,
+.empty-state .empty-state-title {
     display: block;
     color: #ced6dd;
     margin-bottom: 8px;
+}
+.empty-state .empty-state-title {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: normal;
 }
 .formula-target {
     padding: 18px;
@@ -865,7 +891,7 @@ hr {
     .card-body {
         padding: 20px;
     }
-    h2 {
+    .h2 {
         margin-bottom: 22px;
     }
     .dashboard-hero {
@@ -911,7 +937,7 @@ hr {
         min-height: 185px;
         padding: 28px;
     }
-    .auth-story h1 {
+    .auth-story .story-title {
         font-size: 2rem;
     }
     .auth-story p {

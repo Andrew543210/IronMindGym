@@ -18,7 +18,7 @@ export function SessionSets({ sets, catalog, setTypeName, onEdit, onRemove }: Se
   return (
     <div className="col-12">
       <div className="section-heading">
-        <h5 className="mb-0">{t('logger.thisSession')}</h5>
+        <h2 className="h5 mb-0">{t('logger.thisSession')}</h2>
         <span className="small text-muted">{t('logger.logged', { sets: t('count.sets', { count: sets.length }) })}</span>
       </div>
       {sets.length === 0 && <p className="text-muted small">{t('logger.firstSet')}</p>}

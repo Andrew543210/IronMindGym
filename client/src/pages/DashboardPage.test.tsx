@@ -16,6 +16,9 @@ it('brings the week, rank, sessions, nutrition, goals and research together and 
   const user = userEvent.setup();
 
   expect(await screen.findByText("Let's build, athlete.")).toBeInTheDocument();
+  // The greeting heads the page; the hero line is a slogan, and sections are one level below.
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent("Let's build, athlete.");
+  expect(screen.getByRole('heading', { level: 2, name: 'Recent sessions' })).toBeInTheDocument();
   expect(screen.getByRole('img', { name: 'Weekly completion 66%' })).toBeInTheDocument();
   expect(screen.getAllByText('Gym Centurion')).toHaveLength(2);
   expect(screen.getByRole('meter', { name: 'Position on the rank scale' })).toHaveAttribute('aria-valuenow', '60');
@@ -24,7 +27,7 @@ it('brings the week, rank, sessions, nutrition, goals and research together and 
   expect(screen.getByRole('link', { name: /Legs day/ })).toHaveAttribute('href', '/workouts/4');
   expect(screen.getByText('2100')).toBeInTheDocument();
   expect(screen.getByText('Squat 120 kg')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Read original source ↗' })).toHaveAttribute('href', 'https://example.org/rest');
+  expect(screen.getByRole('link', { name: 'Read original source' })).toHaveAttribute('href', 'https://example.org/rest');
 
   await user.click(screen.getByRole('link', { name: 'View note' }));
 

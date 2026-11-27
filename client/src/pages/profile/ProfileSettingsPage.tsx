@@ -65,12 +65,12 @@ export function ProfileSettingsPage() {
   return (
     <>
       <p className="eyebrow">{t('settings.eyebrow')}</p>
-      <h2>{t('settings.title')}</h2>
+      <h1 className="h2">{t('settings.title')}</h1>
       <form className="row g-4" onSubmit={submit}>
         <div className="col-12"><ErrorAlert error={error} /></div>
         <div className="col-lg-6">
           <div className="card h-100"><div className="card-body">
-            <h4>{t('settings.about')}</h4>
+            <h2 className="h4">{t('settings.about')}</h2>
             <div className="mb-3">
               <label htmlFor="username" className="form-label">{t('common.username')}</label>
               <input {...field('username')} className="form-control" required minLength={2} maxLength={50} pattern="[A-Za-z0-9_.\-]{2,50}" autoComplete="username" />
@@ -95,7 +95,7 @@ export function ProfileSettingsPage() {
         </div>
         <div className="col-lg-6">
           <div className="card h-100"><div className="card-body">
-            <h4>{t('settings.training')}</h4>
+            <h2 className="h4">{t('settings.training')}</h2>
             <div className="mb-3">
               <label htmlFor="splitTypeId" className="form-label">{t('settings.split')}</label>
               <select {...field('splitTypeId')} className="form-select" required>
@@ -113,7 +113,7 @@ export function ProfileSettingsPage() {
         </div>
         <div className="col-12">
           <div className="card"><div className="card-body">
-            <h4>{t('settings.nutrition')}</h4>
+            <h2 className="h4">{t('settings.nutrition')}</h2>
             <p className="text-muted small">{t('settings.nutritionHint')}</p>
             <div className="row g-3">
               <div className="col-md-4">

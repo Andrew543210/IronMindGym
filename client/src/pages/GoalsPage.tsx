@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import type { Goal } from '../api/types/goals';
-import { EmptyState, ErrorAlert, PageState } from '../components/ui';
+import { EmptyState, ErrorAlert, Glyph, PageState } from '../components/ui';
 import { formatDay } from '../format';
 import { textFields } from '../forms';
 import { useAction, useApi, usePageTitle } from '../hooks';
@@ -52,11 +52,11 @@ export function GoalsPage() {
   return (
     <>
       <p className="eyebrow">{t('goals.eyebrow')}</p>
-      <h2>{t('goals.heading')}</h2>
+      <h1 className="h2">{t('goals.heading')}</h1>
       <div className="row g-4">
         <div className="col-lg-4">
           <div className="card"><div className="card-body">
-            <h4>{t('goals.next')}</h4>
+            <h2 className="h4">{t('goals.next')}</h2>
             <p className="text-muted small">{t('goals.hint')}</p>
             <form className="row g-3" onSubmit={submit}>
               <ErrorAlert error={create.error} />
@@ -69,7 +69,7 @@ export function GoalsPage() {
                 <input {...field('deadline')} type="date" className="form-control" required min={athlete.today} />
               </div>
               <div className="col-12">
-                <button className="btn btn-primary w-100" type="submit" disabled={create.busy}>{t('goals.add')}</button>
+                <button className="btn btn-primary w-100" type="submit" disabled={create.busy}>{t('goals.add')} <Glyph>＋</Glyph></button>
               </div>
             </form>
           </div></div>
@@ -77,7 +77,7 @@ export function GoalsPage() {
         <div className="col-lg-8">
           <div className="card"><div className="card-body">
             <div className="section-heading mt-0">
-              <h4>{t('goals.list')}</h4>
+              <h2 className="h4">{t('goals.list')}</h2>
               {goals && (
                 <span className="text-muted small">{t('goals.done', { done: goals.filter((g) => g.isCompleted).length, total: goals.length })}</span>
               )}
@@ -98,7 +98,7 @@ export function GoalsPage() {
                 </div>
                 <div className="d-flex gap-2">
                   <button type="button" className="btn btn-outline-secondary btn-sm" disabled={change.busy} onClick={() => setCompleted(goal)}>
-                    {goal.isCompleted ? t('goals.reopen') : t('goals.complete')}
+                    {goal.isCompleted ? t('goals.reopen') : <>{t('goals.complete')} <Glyph>✓</Glyph></>}
                   </button>
                   <button type="button" className="btn btn-outline-danger btn-sm" disabled={change.busy} onClick={() => remove(goal)}
                     aria-label={t('goals.deleteLabel', { title: goal.title })}>×</button>

@@ -37,7 +37,7 @@ export function WorkoutLoggerPage() {
   }, []);
   return (
     <>
-      <h2>{t('workouts.title')}</h2>
+      <h1 className="h2">{t('workouts.title')}</h1>
       <p className="mb-3 text-muted">{t('logger.intro')}</p>
       {data && serverCopy
         ? <WorkoutLogger options={data} userId={athlete.id} serverCopy={serverCopy.value} syncWithServer={serverCopy.known} />

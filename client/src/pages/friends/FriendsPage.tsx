@@ -58,7 +58,7 @@ export function FriendsPage() {
 
   return (
     <>
-      <h2>{t('friends.heading')}</h2>
+      <h1 className="h2">{t('friends.heading')}</h1>
       <p className="text-muted">{t('friends.intro')}</p>
       <form className="row g-2 mb-3" role="search" onSubmit={submit}>
         <div className="col-md-4">

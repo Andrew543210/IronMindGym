@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { api, FormError } from '../../api/client';
 import type { ProgressEntry } from '../../api/types/progress';
-import { ErrorAlert, PageState } from '../../components/ui';
+import { ErrorAlert, Glyph, PageState } from '../../components/ui';
 import { flash } from '../../flash';
 import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n } from '../../i18n/i18n';
@@ -34,7 +34,7 @@ function QuickUpdate({ entry, onSaved }: { entry: ProgressEntry; onSaved: () => 
 
   return (
     <form className="mt-2 mb-3 px-2 border-top pt-2" onSubmit={submit} noValidate>
-      <h6 className="small fw-bold">{t('progress.update')}</h6>
+      <h4 className="h6 small fw-bold text-uppercase">{t('progress.update')}</h4>
       <ErrorAlert error={save.error} />
       <div className="input-group input-group-sm">
         <input type="number" className="form-control" step={strength ? 0.5 : 1}
@@ -69,9 +69,9 @@ export function ProgressPage() {
 
   return (
     <div className="mt-4">
-      <h2 className="mb-4">{t('progress.heading')}</h2>
+      <h1 className="h2 mb-4">{t('progress.heading')}</h1>
       <p className="small text-muted">{t('progress.note')}</p>
-      <div className="mb-4"><Link to="/progress/track" className="btn btn-primary">{t('progress.add')}</Link></div>
+      <div className="mb-4"><Link to="/progress/track" className="btn btn-primary"><Glyph>+</Glyph> {t('progress.add')}</Link></div>
       <ErrorAlert error={remove.error} />
       {!data && <PageState error={error} loading={loading} />}
       {data?.length === 0 && <div className="alert alert-info">{t('progress.empty')}</div>}

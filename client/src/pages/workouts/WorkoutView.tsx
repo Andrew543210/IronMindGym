@@ -20,7 +20,7 @@ export function WorkoutSessionView({ workout, timeZone }: { workout: WorkoutDeta
   return (
     <>
       <div className="card mb-3"><div className="card-body">
-        <h5>{workout.name}</h5>
+        <h2 className="h5">{workout.name}</h2>
         <div>{t('workout.date')} <span className="metric">{localDateTime(workout.sessionDate, timeZone)}</span></div>
         <div>{t('workout.duration')} <span className="metric">{t('unit.min', { value: workout.durationMinutes })}</span></div>
         <div>{t('workout.rating')} {workout.rating === null ? '—' : `${workout.rating}/5`}</div>
@@ -32,7 +32,7 @@ export function WorkoutSessionView({ workout, timeZone }: { workout: WorkoutDeta
         const hasSetType = performed.sets.some((s) => s.setTypeName?.trim());
         return (
           <div className="card mb-3" key={index}><div className="card-body">
-            <h6>{performed.exerciseName}</h6>
+            <h3 className="h6">{performed.exerciseName}</h3>
             <ResponsiveTable>
               <thead>
                 <tr>
@@ -60,7 +60,7 @@ export function WorkoutSessionView({ workout, timeZone }: { workout: WorkoutDeta
       })}
 
       <div className="card border-success mb-3"><div className="card-body">
-        <h5>{t('workout.summary')}</h5>
+        <h2 className="h5">{t('workout.summary')}</h2>
         <p className="mb-1">{t('workout.averageRest')} <strong className="metric">{sec(workout.averageRestSeconds)}</strong></p>
         {workout.remainingWorkoutsThisWeek !== null && (
           <p className="mb-1">{t('workout.left')} <strong className="metric">{workout.remainingWorkoutsThisWeek}</strong></p>

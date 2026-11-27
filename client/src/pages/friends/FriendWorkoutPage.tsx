@@ -21,7 +21,7 @@ export function FriendWorkoutPage() {
     <>
       {!data ? <PageState error={error} loading={loading} /> : (
         <>
-          <h2 className="text-break">{t('friendWorkout.heading', { name: data.friendUsername })}</h2>
+          <h1 className="h2 text-break">{t('friendWorkout.heading', { name: data.friendUsername })}</h1>
           <WorkoutSessionView workout={data.workout} timeZone={athlete.timeZone} />
           <WorkoutReactions
             workout={data.workout}

@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router';
 import type { WorkoutListItem } from '../api/types/common';
 import type { Overview, ResearchNote } from '../api/types/dashboard';
 import { StatCard } from '../components/StatCard';
-import { EmptyState, PageState } from '../components/ui';
+import { EmptyState, Glyph, PageState } from '../components/ui';
 import { formatDay, formatFixed, formatNumber, localFormat } from '../format';
 import { useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
@@ -28,19 +28,19 @@ export function DashboardPage() {
       <div className="dashboard-greeting">
         <div>
           <p className="eyebrow">{t('dashboard.eyebrow')}</p>
-          <h2>{t('dashboard.greeting', { name: data.username })}</h2>
+          <h1 className="h2">{t('dashboard.greeting', { name: data.username })}</h1>
         </div>
         <span className="date-label">{localFormat(new Date(), zone, { weekday: 'long', month: 'long', day: 'numeric' })} · {zone}</span>
       </div>
       {data.needsSetup && (
-        <div className="alert alert-info mt-4">{t('dashboard.needsSetup')} <Link to="/setup">{t('dashboard.setupLink')}</Link></div>
+        <div className="alert alert-info mt-4">{t('dashboard.needsSetup')} <Link to="/setup">{t('dashboard.setupLink')} <Glyph>→</Glyph></Link></div>
       )}
 
       <section className="dashboard-hero" aria-label={t('dashboard.heroLabel')}>
         <img src="/images/photo.jpg" alt="" />
         <div className="hero-copy">
           <p className="eyebrow">{t('dashboard.heroEyebrow')}</p>
-          <h1>{t('dashboard.hero1')}<br />{t('dashboard.hero2')}</h1>
+          <p className="hero-title">{t('dashboard.hero1')}<br />{t('dashboard.hero2')}</p>
           <p>{t('dashboard.heroText')}</p>
           <Link className="btn btn-primary mt-2" to="/workouts/new">{t('dashboard.start')} <span aria-hidden="true">↗</span></Link>
         </div>
@@ -57,7 +57,7 @@ export function DashboardPage() {
         </div>
         <div className="col-6 col-xl-3">
           <StatCard label={t('dashboard.bodyweight')} value={data.weightKg === null ? '—' : formatFixed(data.weightKg, 1)} unit={t('unit.kgShort')}
-            note={<Link to="/profile">{t('dashboard.weighIn')}</Link>} />
+            note={<Link to="/profile">{t('dashboard.weighIn')} <Glyph>↗</Glyph></Link>} />
         </div>
         <div className="col-6 col-xl-3">
           <StatCard label={t('dashboard.sessions')} value={data.totalWorkouts} note={t('dashboard.sessionsNote')} />
@@ -65,8 +65,8 @@ export function DashboardPage() {
       </div>
 
       <div className="section-heading">
-        <h4>{t('dashboard.journey')}</h4>
-        <Link className="small text-muted" to="/progress">{t('dashboard.viewProgress')}</Link>
+        <h2 className="h4">{t('dashboard.journey')}</h2>
+        <Link className="small text-muted" to="/progress">{t('dashboard.viewProgress')} <Glyph>↗</Glyph></Link>
       </div>
       <section className="card"><div className="card-body">
         <div className="d-flex flex-wrap justify-content-between gap-2">
@@ -96,8 +96,8 @@ export function DashboardPage() {
       <div className="row g-4 mt-1">
         <div className="col-lg-7">
           <div className="section-heading">
-            <h4>{t('dashboard.recent')}</h4>
-            <Link className="small text-muted" to="/workouts">{t('dashboard.history')}</Link>
+            <h2 className="h4">{t('dashboard.recent')}</h2>
+            <Link className="small text-muted" to="/workouts">{t('dashboard.history')} <Glyph>↗</Glyph></Link>
           </div>
           <div className="card"><div className="card-body">
             {data.recentWorkouts.length === 0 && (
@@ -108,8 +108,8 @@ export function DashboardPage() {
         </div>
         <div className="col-lg-5">
           <div className="section-heading">
-            <h4>{t('dashboard.nutrition')}</h4>
-            <Link className="small text-muted" to="/nutrition">{t('dashboard.logFood')}</Link>
+            <h2 className="h4">{t('dashboard.nutrition')}</h2>
+            <Link className="small text-muted" to="/nutrition">{t('dashboard.logFood')} <Glyph>↗</Glyph></Link>
           </div>
           <div className="card"><div className="card-body">
             <p className="stat-label">{t('dashboard.energy')}</p>
@@ -124,12 +124,12 @@ export function DashboardPage() {
       </div>
 
       <div className="section-heading">
-        <h4>{t('dashboard.milestones')}</h4>
-        <Link className="small text-muted" to="/goals">{t('dashboard.manageGoals')}</Link>
+        <h2 className="h4">{t('dashboard.milestones')}</h2>
+        <Link className="small text-muted" to="/goals">{t('dashboard.manageGoals')} <Glyph>↗</Glyph></Link>
       </div>
       <div className="card"><div className="card-body">
         {data.goals.length === 0 && (
-          <p className="text-muted mb-0">{t('dashboard.noGoals')} <Link to="/goals">{t('dashboard.firstGoal')}</Link></p>
+          <p className="text-muted mb-0">{t('dashboard.noGoals')} <Link to="/goals">{t('dashboard.firstGoal')} <Glyph>→</Glyph></Link></p>
         )}
         {data.goals.map((goal) => (
           <div className="goal-row" key={goal.id}>
@@ -140,18 +140,18 @@ export function DashboardPage() {
       </div></div>
 
       <div className="section-heading">
-        <h4>{t('dashboard.research')}</h4>
+        <h2 className="h4">{t('dashboard.research')}</h2>
         <span className="small text-muted">{t('dashboard.researchNote')}</span>
       </div>
       <div className="feed-grid">
         {data.feedItems.map((item) => (
           <article className="feed-card" key={item.id}>
             <span className="eyebrow">{t('dashboard.trainingNotes')}</span>
-            <h5>{item.title}</h5>
+            <h3 className="h5">{item.title}</h3>
             <p>{item.thesisText}</p>
             <div className="source-label mb-3">{item.source}</div>
             <div className="d-flex flex-wrap gap-2">
-              {item.sourceUrl && <a className="btn btn-outline-secondary btn-sm" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{t('dashboard.readSource')}</a>}
+              {item.sourceUrl && <a className="btn btn-outline-secondary btn-sm" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{t('dashboard.readSource')} <Glyph>↗</Glyph></a>}
               <Link className="btn btn-outline-secondary btn-sm" to={`/feed/${item.id}`}>{t('dashboard.viewNote')}</Link>
             </div>
           </article>
@@ -186,10 +186,10 @@ export function FeedNotePage() {
   if (!data || loading) return <PageState error={error} loading={loading} />;
   return (
     <>
-      <h2>{t('feed.title')}</h2>
+      <h1 className="h2">{t('feed.title')}</h1>
       <div className="card"><div className="card-body">
         <div className="small text-muted mb-2">{t('feed.year', { year: data.publishedAt.slice(0, 4) })}</div>
-        <h4 className="mb-3">{data.title}</h4>
+        <h2 className="h4 mb-3">{data.title}</h2>
         <p>{data.thesisText}</p>
         <p className="mb-3"><strong>{t('feed.source')}</strong> {data.source}</p>
         {data.sourceUrl && <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-light text-dark">{t('feed.read')}</a>}

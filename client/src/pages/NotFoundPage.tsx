@@ -7,7 +7,7 @@ export function NotFoundPage() {
   usePageTitle(t('notFound.title'));
   return (
     <div className="empty-state">
-      <strong>{t('notFound.text')}</strong>
+      <h1 className="empty-state-title">{t('notFound.text')}</h1>
       <Link to="/">{t('notFound.back')}</Link>
     </div>
   );

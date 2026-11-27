@@ -23,11 +23,11 @@ describe('workout history', () => {
     expect(await screen.findByText('You have an unsaved workout with 1 set.')).toBeInTheDocument();
     expect(await screen.findByText(/Session 1/)).toBeInTheDocument();
     expect(screen.getByText('2026-11-19 19:00')).toBeInTheDocument();
-    await user.click(screen.getByRole('link', { name: 'Older →' }));
+    await user.click(screen.getByRole('link', { name: 'Older' }));
 
     expect(await screen.findByText(/Session 2/)).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Older →' })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '← Newer' })).toHaveAttribute('href', '/workouts');
+    expect(screen.queryByRole('link', { name: 'Older' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Newer' })).toHaveAttribute('href', '/workouts');
   });
 
   it('says when there are no workouts', async () => {

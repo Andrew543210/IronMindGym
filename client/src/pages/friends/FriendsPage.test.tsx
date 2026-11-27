@@ -39,7 +39,7 @@ describe('friends', () => {
     expect(screen.getByRole('link', { name: 'Details' })).toHaveAttribute('href', '/friends/9/workouts/4');
     expect(screen.getAllByText('2026-11-19')).toHaveLength(2);
     expect(screen.getByText('First Rep')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'VIEW PROGRESS TRACKER' })).toHaveAttribute('href', '/friends/9/progress');
+    expect(screen.getByRole('link', { name: 'View progress tracker' })).toHaveAttribute('href', '/friends/9/progress');
 
     await user.click(screen.getByRole('button', { name: 'Remove friend' }));
 

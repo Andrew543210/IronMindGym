@@ -37,7 +37,7 @@ export function ChangePasswordPage() {
   return (
     <>
       <p className="eyebrow">{t('password.eyebrow')}</p>
-      <h2>{t('password.title')}</h2>
+      <h1 className="h2">{t('password.title')}</h1>
       <div className="card narrow-card"><div className="card-body">
         <p className="text-muted small">{t('password.hint')}</p>
         <form className="row g-3" onSubmit={submit}>

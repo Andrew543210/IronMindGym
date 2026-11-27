@@ -20,7 +20,7 @@ export function RouteError() {
   if (isRouteErrorResponse(error) && error.status === 404) return <NotFoundPage />;
   return (
     <div className="empty-state" role="alert">
-      <strong>{t(outdated ? 'routeError.updated' : 'routeError.unexpected')}</strong>
+      <h1 className="empty-state-title">{t(outdated ? 'routeError.updated' : 'routeError.unexpected')}</h1>
       <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>{t('routeError.reload')}</button>
       <Link to="/">{t('notFound.back')}</Link>
     </div>

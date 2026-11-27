@@ -33,12 +33,12 @@ it('adds a goal, completes it and deletes another', async () => {
   expect(screen.getByLabelText('Target date')).toHaveValue('2026-12-20');
 
   await user.type(screen.getByLabelText('What are you working toward?'), 'Bench 100 kg');
-  await user.click(screen.getByRole('button', { name: 'Add goal ＋' }));
+  await user.click(screen.getByRole('button', { name: 'Add goal' }));
   expect(await screen.findByText('Bench 100 kg')).toBeInTheDocument();
   expect(screen.getByLabelText('What are you working toward?')).toHaveValue('');
 
   const squat = screen.getByText('Squat 120 kg').closest('.goal-row') as HTMLElement;
-  await user.click(within(squat).getByRole('button', { name: 'Complete ✓' }));
+  await user.click(within(squat).getByRole('button', { name: 'Complete' }));
   expect(await screen.findByText('1 / 3 complete')).toBeInTheDocument();
   expect(within(squat).getByRole('button', { name: 'Reopen' })).toBeInTheDocument();
 
@@ -69,11 +69,11 @@ it('keeps a title typed while the previous goal was being added', async () => {
   const title = await screen.findByLabelText('What are you working toward?');
 
   await user.type(title, 'Bench 100 kg');
-  await user.click(screen.getByRole('button', { name: 'Add goal ＋' }));
+  await user.click(screen.getByRole('button', { name: 'Add goal' }));
   await user.clear(title);
   await user.type(title, 'Squat 140 kg');
   release();
 
-  await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Add goal ＋' })).toBeEnabled());
+  await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Add goal' })).toBeEnabled());
   expect(title).toHaveValue('Squat 140 kg');
 });

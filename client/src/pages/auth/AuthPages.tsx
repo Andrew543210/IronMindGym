@@ -22,12 +22,12 @@ function AuthLayout({ heading, intro, children }: { heading: string; intro: stri
     <div className="auth-layout">
       <div className="auth-story">
         <p className="eyebrow">{t('auth.eyebrow')}</p>
-        <h1>{t('auth.story1')}<br />{t('auth.story2')}<br />{t('auth.story3')}</h1>
+        <p className="story-title">{t('auth.story1')}<br />{t('auth.story2')}<br />{t('auth.story3')}</p>
         <p>{t('auth.storyText')}</p>
       </div>
       <div className="auth-form">
         <p className="eyebrow">{t('auth.formEyebrow')}</p>
-        <h2>{heading}</h2>
+        <h1 className="h2">{heading}</h1>
         <p className="text-muted small mb-4">{intro}</p>
         {children}
       </div>

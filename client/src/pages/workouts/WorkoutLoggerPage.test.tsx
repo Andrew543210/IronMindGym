@@ -124,7 +124,7 @@ describe('workout logger', () => {
     expect(await screen.findByText('No previous set for this exercise. Start with your own values.')).toBeInTheDocument();
     await user.clear(screen.getByLabelText('External load (kg)'));
     await user.type(screen.getByLabelText('External load (kg)'), '80');
-    await user.click(screen.getByRole('button', { name: 'Log completed set ＋' }));
+    await user.click(screen.getByRole('button', { name: 'Log completed set' }));
 
     expect(screen.getByText('Set logged · draft saved')).toBeInTheDocument();
     expect(screen.getByText('1 set logged')).toBeInTheDocument();
@@ -143,7 +143,7 @@ describe('workout logger', () => {
     await user.selectOptions(await screen.findByLabelText('Muscle group'), 'Chest');
     await user.selectOptions(screen.getByLabelText('Exercise'), 'Flat Bench Press');
     await user.clear(screen.getByLabelText('Reps'));
-    await user.click(screen.getByRole('button', { name: 'Log completed set ＋' }));
+    await user.click(screen.getByRole('button', { name: 'Log completed set' }));
 
     expect(screen.getByRole('alert')).toHaveTextContent('Enter 1–500 reps.');
     expect(screen.getByText('0 sets logged')).toBeInTheDocument();
@@ -203,7 +203,7 @@ describe('workout logger', () => {
     await user.type(await screen.findByLabelText('Знайти вправу'), 'bench');
     await user.click(screen.getByRole('button', { name: 'Жим лежачи на горизонтальній лаві · Груди' }));
     await user.clear(screen.getByLabelText('Повторення'));
-    await user.click(screen.getByRole('button', { name: 'Записати виконаний підхід ＋' }));
+    await user.click(screen.getByRole('button', { name: 'Записати виконаний підхід' }));
     expect(screen.getByRole('alert')).toHaveTextContent('Вкажіть 1–500 повторень.');
     expect(screen.getByText('Записано: 0 підходів')).toBeInTheDocument();
 
@@ -233,7 +233,7 @@ describe('workout logger', () => {
 
     await user.click(screen.getByRole('button', { name: 'Edit set 1' }));
     await user.click(screen.getByRole('button', { name: 'Cancel edit' }));
-    expect(screen.getByRole('button', { name: 'Log completed set ＋' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Log completed set' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Remove set 1' }));
     expect(window.confirm).toHaveBeenCalledWith('Remove set 1 (Flat Bench Press)?');
@@ -315,7 +315,7 @@ describe('workout logger', () => {
 
     await user.type(await screen.findByLabelText('Find an exercise'), 'bench');
     await user.click(screen.getByRole('button', { name: 'Flat Bench Press · Chest' }));
-    await user.click(screen.getByRole('button', { name: 'Log completed set ＋' }));
+    await user.click(screen.getByRole('button', { name: 'Log completed set' }));
 
     expect(await screen.findByText('This workout was already saved on another device. A new one has started.', {}, { timeout: 10_000 })).toBeInTheDocument();
     expect(screen.getByText('0 sets logged')).toBeInTheDocument();

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api } from '../../api/client';
 import type { WorkoutDetails, WorkoutHistory } from '../../api/types/workouts';
 import { Phrase } from '../../components/Phrase';
-import { ErrorAlert, PageState } from '../../components/ui';
+import { ErrorAlert, Glyph, PageState } from '../../components/ui';
 import { flash } from '../../flash';
 import { localDateTime } from '../../format';
 import { useAction, useApi, usePageTitle } from '../../hooks';
@@ -29,7 +29,7 @@ export function WorkoutHistoryPage() {
 
   return (
     <>
-      <h2>{t('workouts.title')}</h2>
+      <h1 className="h2">{t('workouts.title')}</h1>
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <p className="mb-0 text-muted">{t('workouts.intro')}</p>
         <Link className="btn btn-primary" to="/workouts/new">{t('workouts.start')}</Link>
@@ -42,7 +42,7 @@ export function WorkoutHistoryPage() {
         </div>
       )}
 
-      <h4>{t('workouts.history')}</h4>
+      <h2 className="h4">{t('workouts.history')}</h2>
       {!data && <PageState error={error} loading={loading} />}
       {data?.sessions.length === 0 && (
         <p className="text-muted">{page > 1 ? t('workouts.noOlder') : t('workouts.none')}</p>
@@ -63,8 +63,8 @@ export function WorkoutHistoryPage() {
       </ul>
 
       <div className="d-flex gap-2 mb-4">
-        {page > 1 && <Link className="btn btn-outline-secondary btn-sm" to={page === 2 ? '/workouts' : `/workouts?page=${page - 1}`}>{t('workouts.newer')}</Link>}
-        {data?.hasOlderSessions && <Link className="btn btn-outline-secondary btn-sm" to={`/workouts?page=${page + 1}`}>{t('workouts.older')}</Link>}
+        {page > 1 && <Link className="btn btn-outline-secondary btn-sm" to={page === 2 ? '/workouts' : `/workouts?page=${page - 1}`}><Glyph>←</Glyph> {t('workouts.newer')}</Link>}
+        {data?.hasOlderSessions && <Link className="btn btn-outline-secondary btn-sm" to={`/workouts?page=${page + 1}`}>{t('workouts.older')} <Glyph>→</Glyph></Link>}
       </div>
     </>
   );
@@ -89,7 +89,7 @@ export function WorkoutDetailsPage() {
 
   return (
     <>
-      <h2>{t('workoutDetails.title')}</h2>
+      <h1 className="h2">{t('workoutDetails.title')}</h1>
       {!data ? <PageState error={error} loading={loading} /> : (
         <>
           <WorkoutSessionView workout={data} timeZone={athlete.timeZone} />

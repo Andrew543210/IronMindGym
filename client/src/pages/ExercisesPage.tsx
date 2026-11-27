@@ -37,7 +37,7 @@ export function ExercisesPage() {
 
   return (
     <>
-      <h2>{t('exercises.title')}</h2>
+      <h1 className="h2">{t('exercises.title')}</h1>
       <p className="text-muted">{t('exercises.intro')}</p>
       <div className="row g-2 mb-4" role="search">
         <div className="col-md-3">

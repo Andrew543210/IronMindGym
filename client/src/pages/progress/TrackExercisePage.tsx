@@ -6,7 +6,7 @@ import type { CatalogExercise } from '../../api/types/exercises';
 import type { ResultPair } from '../../api/types/progress';
 import { choiceOf, chosenExercise, type ExerciseChoice } from '../../components/exerciseChoice';
 import { ExercisePicker } from '../../components/ExercisePicker';
-import { ErrorAlert, PageState } from '../../components/ui';
+import { ErrorAlert, Glyph, PageState } from '../../components/ui';
 import { formatSigned } from '../../format';
 import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n, type MessageKey, type Text } from '../../i18n/i18n';
@@ -123,7 +123,7 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
     return (
       <div className="col-md-4">
         <div className={`card border-${border}`}>
-          <div className={`card-header bg-${border} text-dark`}><h6 className="mb-0">{title}</h6></div>
+          <div className={`card-header bg-${border} text-dark`}><h2 className="h6 mb-0 text-uppercase">{title}</h2></div>
           <div className="card-body">
             <div className="mb-3">
               <label className="form-label fw-bold" htmlFor={`${prefix}Value1`}>{t(texts.labels[0])}</label>
@@ -146,9 +146,9 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
 
   return (
     <>
-      <h2>{t('track.heading')}</h2>
+      <h1 className="h2">{t('track.heading')}</h1>
       <p className="small text-muted">{t('progress.note')}</p>
-      <div className="mb-4"><Link to="/progress" className="btn btn-outline-light btn-sm">{t('track.back')}</Link></div>
+      <div className="mb-4"><Link to="/progress" className="btn btn-outline-light btn-sm"><Glyph>←</Glyph> {t('track.back')}</Link></div>
 
       <div className="card mb-4">
         <div className="card-header">{t('track.select')}</div>
@@ -162,7 +162,7 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
           {column(t('track.initial'), 'info', 0)}
           <div className="col-md-4">
             <div className="card border-success">
-              <div className="card-header bg-success text-dark"><h6 className="mb-0">{t('track.progress')}</h6></div>
+              <div className="card-header bg-success text-dark"><h2 className="h6 mb-0 text-uppercase">{t('track.progress')}</h2></div>
               <div className="card-body text-center" role="status">{display}</div>
             </div>
           </div>

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { api } from '../../api/client';
 import type { Profile } from '../../api/types/profile';
-import { ErrorAlert, PageState, ResponsiveTable } from '../../components/ui';
+import { ErrorAlert, Glyph, PageState, ResponsiveTable } from '../../components/ui';
 import { formatDay, formatFixed, localDay } from '../../format';
 import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n } from '../../i18n/i18n';
@@ -37,13 +37,13 @@ export function ProfilePage() {
       <div className="section-heading mt-0">
         <div>
           <p className="eyebrow">{t('profile.eyebrow')}</p>
-          <h2 className="mb-0">{t('profile.heading')}</h2>
+          <h1 className="h2 mb-0">{t('profile.heading')}</h1>
         </div>
         <Link to="/profile/settings" className="btn btn-primary">{t('profile.edit')}</Link>
       </div>
       <div className="d-flex flex-wrap gap-2 mb-4">
         <Link className="btn btn-outline-secondary btn-sm" to="/profile/password">{t('profile.changePassword')}</Link>
-        <a className="btn btn-outline-secondary btn-sm" href="/api/profile/export" download>{t('profile.export')}</a>
+        <a className="btn btn-outline-secondary btn-sm" href="/api/profile/export" download>{t('profile.export')} <Glyph>↓</Glyph></a>
       </div>
       <div className="row g-3 mb-4">
         <div className="col-md-6">
@@ -62,8 +62,8 @@ export function ProfilePage() {
         <div className="col-md-6">
           <div className="card h-100"><div className="card-body">
             <div className="section-heading mt-0">
-              <h5 className="mb-0">{t('profile.awards')}</h5>
-              <Link className="small text-muted" to="/awards">{t('profile.allAwards')}</Link>
+              <h2 className="h5 mb-0">{t('profile.awards')}</h2>
+              <Link className="small text-muted" to="/awards">{t('profile.allAwards')} <Glyph>↗</Glyph></Link>
             </div>
             {data.achievements.length === 0
               ? <p className="text-muted mb-0">{t('profile.noAwards')}</p>
@@ -111,7 +111,7 @@ function WeightForm({ onSaved }: { onSaved: () => void }) {
   return (
     <div className="card h-100"><div className="card-body">
       <p className="eyebrow">{t('profile.logEyebrow')}</p>
-      <h4>{t('profile.logHeading')}</h4>
+      <h2 className="h4">{t('profile.logHeading')}</h2>
       <p className="text-muted small">{t('profile.logHint')}</p>
       <form className="row g-3" onSubmit={submit}>
         <ErrorAlert error={error} />
@@ -143,7 +143,7 @@ function WeightHistory({ entries }: { entries: Profile['weightHistory'] }) {
 
   return (
     <div className="card h-100"><div className="card-body">
-      <h4>{t('profile.history')}</h4>
+      <h2 className="h4">{t('profile.history')}</h2>
       {ordered.length === 0 ? <p className="text-muted mb-0">{t('profile.historyEmpty')}</p> : (
         <>
           <div className="weight-bars" role="img" aria-label={t('profile.historyChart', { count: ordered.length })}>

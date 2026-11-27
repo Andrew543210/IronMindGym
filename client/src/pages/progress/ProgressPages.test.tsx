@@ -35,7 +35,7 @@ it('loads the saved results, compares them while typing and saves both columns',
   await user.clear(currentLoad);
   await user.type(currentLoad, '12.5');
   expect(screen.getByText('+15 sec duration; +2.5 kg load. Compare under similar conditions.')).toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'SET RESULT' }));
+  await user.click(screen.getByRole('button', { name: 'Set result' }));
 
   expect(await screen.findByText('Results saved. Your next session starts from here.')).toBeInTheDocument();
   expect(saved).toEqual([{ initialValue1: 60, initialValue2: 10, currentValue1: 75, currentValue2: 12.5 }]);
@@ -79,6 +79,6 @@ describe('progress tracker', () => {
     mockApi({ 'GET /api/progress': [] });
     renderPage('/progress', <ProgressPage />);
 
-    expect(await screen.findByText('No progress tracked yet. Click “+ ADD EXERCISE PROGRESS” to start!')).toBeInTheDocument();
+    expect(await screen.findByText('No progress tracked yet. Choose “Add exercise progress” to start!')).toBeInTheDocument();
   });
 });

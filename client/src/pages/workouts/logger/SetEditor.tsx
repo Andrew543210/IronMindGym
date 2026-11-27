@@ -1,6 +1,7 @@
 import type { Ref } from 'react';
 import type { CatalogExercise } from '../../../api/types/exercises';
 import type { LoggerOptions, PreviousSet } from '../../../api/types/workouts';
+import { Glyph } from '../../../components/ui';
 import { useApi } from '../../../hooks';
 import { useI18n, type Text } from '../../../i18n/i18n';
 import { fieldsFrom, type SetFields } from '../draft';
@@ -105,7 +106,7 @@ export function SetEditor({ options, exercise, fields, onFields, editingIndex, e
         <div ref={errorRef} className="alert alert-danger" role="alert" hidden={!error}>{error ? show(error) : ''}</div>
         <div className="d-flex gap-2">
           <button type="button" className="btn btn-primary flex-grow-1" onClick={onSave}>
-            {editingIndex === null ? t('logger.logSet') : t('logger.saveSet', { number: editingIndex + 1 })}
+            {editingIndex === null ? <>{t('logger.logSet')} <Glyph>＋</Glyph></> : t('logger.saveSet', { number: editingIndex + 1 })}
           </button>
           {editingIndex !== null && <button type="button" className="btn btn-outline-secondary" onClick={onCancel}>{t('logger.cancelEdit')}</button>}
         </div>

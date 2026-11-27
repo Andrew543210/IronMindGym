@@ -53,7 +53,7 @@ export function SetupPage() {
 
   return (
     <>
-      <h2>{t('setup.title')}</h2>
+      <h1 className="h2">{t('setup.title')}</h1>
       <p className="text-muted">{t('setup.intro')}</p>
       <form className="row g-3" onSubmit={submit}>
         <ErrorAlert error={error} />

@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router';
 import { api } from '../api/client';
 import type { Intake } from '../api/types/common';
 import type { NutritionAdvice, NutritionDay, Target } from '../api/types/nutrition';
-import { ErrorAlert, PageState, ResponsiveTable } from '../components/ui';
+import { ErrorAlert, Glyph, PageState, ResponsiveTable } from '../components/ui';
 import { formatDay, formatFixed, formatNumber } from '../format';
 import { textFields } from '../forms';
 import { useAction, useApi, usePageTitle } from '../hooks';
@@ -60,7 +60,7 @@ export function NutritionPage() {
   return (
     <>
       <p className="eyebrow">{t('nutrition.eyebrow')}</p>
-      <h2>{t('nutrition.heading')}</h2>
+      <h1 className="h2">{t('nutrition.heading')}</h1>
       <p className="text-muted">{t('nutrition.intro')}</p>
       {change && (
         <div className="alert alert-success" role="status">
@@ -185,8 +185,8 @@ function Targets({ advice }: { advice: NutritionAdvice }) {
   return (
     <div className="card mt-4"><div className="card-body">
       <div className="section-heading mt-0">
-        <h5>{t('nutrition.targets')}</h5>
-        <Link className="small text-muted" to="/profile/settings">{t('nutrition.editTargets')}</Link>
+        <h2 className="h5">{t('nutrition.targets')}</h2>
+        <Link className="small text-muted" to="/profile/settings">{t('nutrition.editTargets')} <Glyph>↗</Glyph></Link>
       </div>
       <p className="small mb-3">{t('nutrition.priority')}</p>
       <div className="row g-2">
@@ -208,7 +208,7 @@ function RecentEntries({ day, onChoose }: { day: NutritionDay; onChoose: (date: 
   const selected = day.date;
   return (
     <div className="card mt-4"><div className="card-body">
-      <h5>{t('nutrition.recent')}</h5>
+      <h2 className="h5">{t('nutrition.recent')}</h2>
       {day.recentLogs.length === 0 ? <p className="mb-0">{t('nutrition.none')}</p> : (
         <ResponsiveTable className="table table-sm mt-3 mb-0">
           <thead>

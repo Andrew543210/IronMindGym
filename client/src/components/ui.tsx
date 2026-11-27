@@ -36,6 +36,11 @@ export function EmptyState({ title, children }: { title: string; children: React
   );
 }
 
+/** A symbol that only decorates its text, such as an arrow; screen readers skip it. */
+export function Glyph({ children }: { children: string }) {
+  return <span aria-hidden="true">{children}</span>;
+}
+
 export function ResponsiveTable({ children, className = 'table table-sm' }: { children: ReactNode; className?: string }) {
   return (
     <div className="table-responsive">

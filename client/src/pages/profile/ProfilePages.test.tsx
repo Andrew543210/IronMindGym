@@ -28,7 +28,7 @@ describe('profile', () => {
     expect(screen.getByText('180.0 cm')).toBeInTheDocument();
     expect(screen.getByText('Fully Set')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Weight over your last 2 entries' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Export my data ↓' })).toHaveAttribute('href', '/api/profile/export');
+    expect(screen.getByRole('link', { name: 'Export my data' })).toHaveAttribute('href', '/api/profile/export');
 
     await user.type(screen.getByLabelText('Weight (kg)'), '79.8');
     await user.click(screen.getByRole('button', { name: 'Save weight' }));
