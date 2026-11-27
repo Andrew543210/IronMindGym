@@ -47,7 +47,7 @@ export function SetupPage() {
         timeZone: deviceTimeZone() || null,
       });
       await refresh();
-      navigate('/', { replace: true, state: flash({ key: 'setup.saved' }) });
+      void navigate('/', { replace: true, state: flash({ key: 'setup.saved' }) });
     });
   }
 

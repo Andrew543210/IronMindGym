@@ -176,7 +176,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
         reviewComment: draft.settings.reviewComment,
         sets: draft.sets,
       }));
-      navigate(`/workouts/${result.id}`, { state: flash({ key: 'logger.saved' }) });
+      void navigate(`/workouts/${result.id}`, { state: flash({ key: 'logger.saved' }) });
     });
   }
 

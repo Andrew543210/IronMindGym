@@ -11,11 +11,11 @@ export interface SessionState {
 }
 
 export interface SessionContextValue extends SessionState {
-  signedIn(session: Session): void;
+  signedIn: (session: Session) => void;
   /** The server already ended the session, for example after a password change. */
-  signedOut(reason: SessionEnd): void;
-  signOut(): Promise<void>;
-  refresh(): Promise<void>;
+  signedOut: (reason: SessionEnd) => void;
+  signOut: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 export const SessionContext = createContext<SessionContextValue | null>(null);

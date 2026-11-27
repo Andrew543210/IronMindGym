@@ -32,16 +32,22 @@ export interface ApiCall {
 }
 
 type Answer = Response | object | null;
-type Reply = Answer | (() => Answer | Promise<Answer>);
+type Later = () => Answer | Promise<Answer>;
+type Reply = Answer | Later;
+
+/** A function is an object too, so the guard tells a reply given later from a plain answer. */
+function isLater(reply: Reply): reply is Later {
+  return typeof reply === 'function';
+}
+
+/** Requests of the running test that no route answered; the test setup fails the test on them. */
+export const unmocked: string[] = [];
 
 /**
  * Answers fetch from a table keyed by "METHOD /url". A plain value becomes a 200 JSON response, null a 204;
  * a function may answer later. The antiforgery token is always available; every other request is recorded in order.
  * A request without a route gets a 404 and fails the test once it ends.
  */
-/** Requests of the running test that no route answered; the test setup fails the test on them. */
-export const unmocked: string[] = [];
-
 export function mockApi(routes: Record<string, Reply>) {
   const calls: ApiCall[] = [];
   vi.stubGlobal('fetch', vi.fn(async (url: string, init: RequestInit = {}) => {
@@ -54,7 +60,7 @@ export function mockApi(routes: Record<string, Reply>) {
       unmocked.push(`${method} ${url}`);
       return respond(404);
     }
-    const reply = typeof route === 'function' ? await route() : route;
+    const reply = isLater(route) ? await route() : route;
     if (reply instanceof Response) return reply;
     return reply === null ? respond(204) : respond(200, reply);
   }));

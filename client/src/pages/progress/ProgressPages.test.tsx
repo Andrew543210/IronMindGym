@@ -21,7 +21,7 @@ it('loads the saved results, compares them while typing and saves both columns',
     if (url === '/api/progress/9' && !init?.method?.startsWith('P')) return respond(200, { initialValue1: 60, initialValue2: 10, currentValue1: 75, currentValue2: 10 });
     if (url === '/api/session/csrf') return respond(200, { token: 'token' });
     if (url === '/api/progress/9' && init?.method === 'PUT') {
-      saved.push(JSON.parse(String(init.body)));
+      saved.push(JSON.parse(init.body as string));
       return respond(204);
     }
     return respond(404);

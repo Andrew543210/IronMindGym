@@ -50,7 +50,7 @@ export function ProfileSettingsPage() {
         ...optional,
       });
       await refresh();
-      navigate('/profile', { state: flash({ key: 'settings.saved' }) });
+      void navigate('/profile', { state: flash({ key: 'settings.saved' }) });
     });
   }
 

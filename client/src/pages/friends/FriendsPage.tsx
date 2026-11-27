@@ -35,7 +35,7 @@ export function FriendsPage() {
   function act(action: () => Promise<MessageKey>) {
     void change.run(async () => {
       const message = await action();
-      navigate(location.pathname + location.search, { replace: true, state: flash({ key: message }) });
+      void navigate(location.pathname + location.search, { replace: true, state: flash({ key: message }) });
       reload();
     });
   }

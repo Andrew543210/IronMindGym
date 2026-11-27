@@ -10,6 +10,7 @@ import { useI18n } from '../../i18n/i18n';
 import { setLanguage } from '../../i18n/language';
 import { SessionContext } from '../../session';
 import { respond, sessionContext } from '../../test/harness';
+import type { StoredDraft } from './draft';
 import { WorkoutLoggerPage } from './WorkoutLoggerPage';
 
 const benchPress: CatalogExercise = {
@@ -54,8 +55,13 @@ function storeDraft(overrides: object = {}) {
   return draft;
 }
 
+/** The draft this browser keeps for the signed-in athlete. */
+function storedDraft() {
+  return JSON.parse(localStorage.getItem('ironmind-workout-5') ?? '{}') as Partial<StoredDraft>;
+}
+
 function storedSets() {
-  return (JSON.parse(localStorage.getItem('ironmind-workout-5') ?? '{}') as { sets?: typeof bench[] }).sets;
+  return storedDraft().sets;
 }
 
 function SavedPage() {
@@ -92,7 +98,7 @@ beforeEach(() => {
     if (url.startsWith('/api/workouts/previous-set')) return respond(204);
     if (url === '/api/session/csrf') return respond(200, { token: 'token' });
     if (url === '/api/workouts' && init?.method === 'POST') {
-      posted.push(JSON.parse(String(init.body)));
+      posted.push(JSON.parse(init.body as string));
       return respond(200, { id: 42 });
     }
     return respond(404);
@@ -136,7 +142,7 @@ describe('workout logger', () => {
     expect(screen.getByText(/Rest timer:/).textContent).toMatch(/0[12]:\d\d/);
     // On a phone each set becomes a card that names the rest from the column header.
     expect(screen.getByRole('cell', { name: '120 sec' })).toHaveAttribute('data-label', 'Rest');
-    const stored = JSON.parse(localStorage.getItem('ironmind-workout-5')!);
+    const stored = storedDraft();
     expect(stored.sets).toEqual([{ exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 80, reps: 8, durationSeconds: 0, intensity: 0, restSeconds: 120 }]);
     expect(stored.settings).toMatchObject({ splitTypeId: '2', splitDayId: '3' });
   });
@@ -193,7 +199,7 @@ describe('workout logger', () => {
     renderLogger();
 
     expect(await screen.findByText('Unsaved workout restored · 2 sets')).toBeInTheDocument();
-    await waitFor(() => expect(JSON.parse(localStorage.getItem('ironmind-workout-5') ?? '{}').draftId).toBe(draftId));
+    await waitFor(() => expect(storedDraft().draftId).toBe(draftId));
     await user.click(screen.getByRole('button', { name: 'Discard workout' }));
 
     await waitFor(() => expect(requests).toContainEqual({ method: 'DELETE', url: `/api/workouts/draft?draftId=${draftId}` }));
@@ -308,7 +314,9 @@ describe('workout logger', () => {
       window.dispatchEvent(new StorageEvent('storage', { key: 'ironmind-workout-5' }));
     });
     expect(screen.getByText('0 sets logged')).toBeInTheDocument();
-    act(() => window.dispatchEvent(new StorageEvent('storage', { key: 'another-key' })));
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'another-key' }));
+    });
     expect(screen.getByText('0 sets logged')).toBeInTheDocument();
   });
 
@@ -324,6 +332,6 @@ describe('workout logger', () => {
 
     expect(await screen.findByText('This workout was already saved on another device. A new one has started.', {}, { timeout: 10_000 })).toBeInTheDocument();
     expect(screen.getByText('0 sets logged')).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('ironmind-workout-5') ?? '{}').draftId).not.toBe(DRAFT_ID);
+    expect(storedDraft().draftId).not.toBe(DRAFT_ID);
   });
 });

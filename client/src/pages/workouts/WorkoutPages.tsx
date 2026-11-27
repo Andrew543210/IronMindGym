@@ -83,7 +83,7 @@ export function WorkoutDetailsPage() {
     if (!window.confirm(t('workoutDetails.confirmDelete'))) return;
     void remove.run(async () => {
       await api.delete(`/api/workouts/${id}`);
-      navigate('/workouts', { state: flash({ key: 'workoutDetails.deleted' }) });
+      void navigate('/workouts', { state: flash({ key: 'workoutDetails.deleted' }) });
     });
   }
 

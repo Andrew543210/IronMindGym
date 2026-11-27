@@ -41,7 +41,7 @@ describe('server copy of the draft', () => {
     await vi.waitFor(() => expect(sent('PUT')).toHaveLength(1));
     const [url, init] = sent('PUT')[0] ?? ['', {}];
     expect(url).toBe('/api/workouts/draft');
-    const body = JSON.parse(String(init.body));
+    const body = JSON.parse(init.body as string) as { draftId: string; content: StoredDraft };
     expect(body.draftId).toBe(draft.draftId);
     expect(body.content.sets).toHaveLength(2);
   });

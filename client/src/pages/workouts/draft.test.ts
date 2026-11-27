@@ -100,6 +100,13 @@ describe('restoring a draft', () => {
     expect(draft.draftId).toBe(base.draftId);
   });
 
+  it('keeps settings that are text or numbers and drops anything else', () => {
+    const base = freshDraft(defaults, now);
+    const draft = applyStored({ settings: { durationMinutes: 45, reviewComment: { text: 'hacked' }, reviewRating: '5' } }, base, now);
+
+    expect(draft.settings).toEqual({ ...defaults, durationMinutes: '45', reviewRating: '5' });
+  });
+
   it('creates version 4 ids', () => {
     expect(newDraftId()).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   });

@@ -19,7 +19,7 @@ it('switches the interface and saves the choice on the account', async () => {
   const [url, init] = fetchMock.mock.calls[1] as [string, RequestInit];
   expect(url).toBe('/api/profile/language');
   expect(init.method).toBe('PUT');
-  expect(JSON.parse(String(init.body))).toEqual({ language: 'uk' });
+  expect(JSON.parse(init.body as string)).toEqual({ language: 'uk' });
 });
 
 it('keeps the choice on the device for a visitor', async () => {

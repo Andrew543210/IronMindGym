@@ -62,7 +62,7 @@ export function draftStore(userId: number): DraftStore {
     try {
       const raw = localStorage.getItem(key);
       const value: unknown = raw ? JSON.parse(raw) : null;
-      return value && typeof value === 'object' ? (value as StoredValue) : null;
+      return value && typeof value === 'object' ? value : null;
     } catch {
       return null;
     }
@@ -152,7 +152,7 @@ export function applyStored(stored: StoredValue, base: StoredDraft, now = Date.n
   const settings = { ...base.settings };
   for (const name of Object.keys(settings) as (keyof DraftSettings)[]) {
     const value = stored.settings?.[name];
-    if (value !== null && value !== undefined) settings[name] = String(value);
+    if (typeof value === 'string' || typeof value === 'number') settings[name] = String(value);
   }
   return {
     draftId: isDraftId(stored.draftId) ? stored.draftId : base.draftId,

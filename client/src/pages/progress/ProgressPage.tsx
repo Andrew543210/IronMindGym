@@ -62,7 +62,7 @@ export function ProgressPage() {
     if (!window.confirm(t('progress.confirmDelete', { name: entry.exerciseName }))) return;
     void remove.run(async () => {
       await api.delete(`/api/progress/${entry.exerciseId}`);
-      navigate(location.pathname, { replace: true, state: flash({ key: 'progress.deleted' }) });
+      void navigate(location.pathname, { replace: true, state: flash({ key: 'progress.deleted' }) });
       reload();
     });
   }
