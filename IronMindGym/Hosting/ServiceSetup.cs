@@ -21,6 +21,20 @@ public static class ServiceSetup
                 // Every contract states [Required] with its own message. The implicit one would only repeat an
                 // unreadable body as "The request field is required." in English.
                 options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+                // The binder's own messages quote the value and the parameter name in English, such as a page
+                // number that is not a number; the athlete gets the generic, translated one.
+                var binding = options.ModelBindingMessageProvider;
+                binding.SetAttemptedValueIsInvalidAccessor((_, _) => ServerMessages.InvalidInput);
+                binding.SetNonPropertyAttemptedValueIsInvalidAccessor(_ => ServerMessages.InvalidInput);
+                binding.SetUnknownValueIsInvalidAccessor(_ => ServerMessages.InvalidInput);
+                binding.SetNonPropertyUnknownValueIsInvalidAccessor(() => ServerMessages.InvalidInput);
+                binding.SetValueIsInvalidAccessor(_ => ServerMessages.InvalidInput);
+                binding.SetValueMustBeANumberAccessor(_ => ServerMessages.InvalidInput);
+                binding.SetNonPropertyValueMustBeANumberAccessor(() => ServerMessages.InvalidInput);
+                binding.SetValueMustNotBeNullAccessor(_ => ServerMessages.InvalidInput);
+                binding.SetMissingBindRequiredValueAccessor(_ => ServerMessages.InvalidInput);
+                binding.SetMissingKeyOrValueAccessor(() => ServerMessages.InvalidInput);
+                binding.SetMissingRequestBodyRequiredValueAccessor(() => "A non-empty request body is required.");
             })
             .AddJsonOptions(options =>
             {

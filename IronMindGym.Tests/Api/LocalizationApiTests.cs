@@ -164,10 +164,17 @@ public partial class LocalizationApiTests
         }));
         var refused = await ApiClient.Errors(await api.Post("/api/session/login", new { email = "nobody@example.com", password = "TrainingPass123!" }));
         var malformed = await ApiClient.Errors(await api.Post("/api/session/login", new { email = 5, password = "x" }));
+        await api.Register();
+        var page = await ApiClient.Errors(await api.Http.GetAsync("/api/workouts?page=second"));
+        var unverified = await api.Http.PostAsJsonAsync("/api/goals", new { title = "Run 5 km" });
 
         Assert.Equal(["Використовуйте 2–50 латинських літер, цифр, підкреслень, крапок або дефісів."], invalid.Distinct());
         Assert.Equal(["Неправильна пошта або пароль."], refused);
         Assert.All(malformed, message => Assert.Matches(Cyrillic(), message));
         Assert.DoesNotContain(malformed, message => message.Contains("System.", StringComparison.Ordinal));
+        Assert.Equal(["Дані запиту некоректні."], page);
+        Assert.Equal(HttpStatusCode.BadRequest, unverified.StatusCode);
+        var problem = await unverified.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal("Не вдалося перевірити запит. Оновіть сторінку й спробуйте ще раз.", problem.GetProperty("title").GetString());
     }
 }

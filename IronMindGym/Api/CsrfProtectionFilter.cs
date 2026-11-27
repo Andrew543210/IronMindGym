@@ -1,3 +1,4 @@
+using IronMindGym.Localization;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -27,7 +28,7 @@ public sealed class CsrfProtectionFilter(IAntiforgery antiforgery, ProblemDetail
         catch (AntiforgeryValidationException)
         {
             var problem = problems.CreateProblemDetails(context.HttpContext, StatusCodes.Status400BadRequest,
-                title: "The request could not be verified. Reload the page and try again.", type: ProblemType);
+                title: ServerMessages.Translate(ServerMessages.UnverifiedRequest), type: ProblemType);
             context.Result = new BadRequestObjectResult(problem);
         }
     }

@@ -89,9 +89,13 @@ public static class ServerMessages
         ["Choose another registered user."] = "Оберіть іншого зареєстрованого користувача.",
 
         // Requests the framework refuses before an action runs
-        ["The input was not valid."] = "Дані запиту некоректні.",
+        [InvalidInput] = "Дані запиту некоректні.",
+        [UnverifiedRequest] = "Не вдалося перевірити запит. Оновіть сторінку й спробуйте ще раз.",
         ["A non-empty request body is required."] = "Запит не містить даних.",
     };
+
+    public const string InvalidInput = "The input was not valid.";
+    public const string UnverifiedRequest = "The request could not be verified. Reload the page and try again.";
 
     public static IReadOnlyCollection<string> English => Ukrainian.Keys;
 
@@ -104,7 +108,7 @@ public static class ServerMessages
         foreach (var entry in modelState.Values)
         {
             var messages = entry.Errors
-                .Select(e => Translate(string.IsNullOrEmpty(e.ErrorMessage) ? "The input was not valid." : e.ErrorMessage))
+                .Select(e => Translate(string.IsNullOrEmpty(e.ErrorMessage) ? InvalidInput : e.ErrorMessage))
                 .ToList();
             entry.Errors.Clear();
             foreach (var message in messages)
