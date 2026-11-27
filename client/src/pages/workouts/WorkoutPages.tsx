@@ -23,7 +23,7 @@ export function WorkoutHistoryPage() {
   const athlete = useAthlete();
   const [params] = useSearchParams();
   const page = Math.max(1, Math.floor(Number(params.get('page'))) || 1);
-  const { data, error, loading } = useApi<WorkoutHistory>(`/api/workouts?page=${page}`);
+  const { data, error, loading } = useApi<WorkoutHistory>(`/api/workouts?page=${page}`, { keepPrevious: true });
   const [localDraft] = useState(() => draftStore(athlete.id).read());
   const [serverDraft, setServerDraft] = useState<StoredValue | null>(null);
   useEffect(() => {
@@ -90,7 +90,7 @@ export function WorkoutDetailsPage() {
   return (
     <>
       <h2>{t('workoutDetails.title')}</h2>
-      {!data || data.id !== id ? <PageState error={error} loading={loading} /> : (
+      {!data ? <PageState error={error} loading={loading} /> : (
         <>
           <WorkoutSessionView workout={data} timeZone={athlete.timeZone} />
           <WorkoutReactions workout={data} timeZone={athlete.timeZone} onComment={async (text) => {

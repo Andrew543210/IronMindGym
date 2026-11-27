@@ -4,40 +4,53 @@ import { useI18n } from './i18n/i18n';
 
 interface Loaded<T> {
   key: string;
+  url: string;
   data?: T;
   error?: unknown;
 }
 
+export interface ApiOptions {
+  /** Keeps the answer of the previous url on screen while the next one loads, for a list filtered or paged in place. */
+  keepPrevious?: boolean;
+}
+
+export interface Loading<T> {
+  data: T | undefined;
+  error: unknown;
+  loading: boolean;
+  /** The data shown belongs to an earlier request: the url changed with `keepPrevious`, or a reload is running. */
+  isStale: boolean;
+  reload: () => void;
+}
+
 /**
- * Loads JSON for a page. While the url changes the previous data is kept until the new answer arrives,
- * so lists do not flash empty; `reload` reads the same url again after a change.
- * Names such as exercises come translated from the API, so a new interface language loads them again.
+ * Loads JSON for a page; a null url waits. A new url starts without data, so a form never shows or changes
+ * the record of another address, unless `keepPrevious` asks to keep the last answer. `reload` reads the same
+ * url again and keeps its data meanwhile. Names such as exercises come translated from the API, so a new
+ * interface language loads them again. A request the page no longer needs is aborted.
  */
-export function useApi<T>(url: string) {
+export function useApi<T>(url: string | null, { keepPrevious = false }: ApiOptions = {}): Loading<T> {
   const [version, setVersion] = useState(0);
   const [result, setResult] = useState<Loaded<T>>();
   const { language } = useI18n();
   const key = `${version}:${language}:${url}`;
 
   useEffect(() => {
-    let active = true;
-    api.get<T>(url).then(
-      (data) => active && setResult({ key, data }),
-      (error: unknown) => active && setResult({ key, error }),
+    if (url === null) return;
+    const controller = new AbortController();
+    api.get<T>(url, { signal: controller.signal }).then(
+      (data) => controller.signal.aborted || setResult({ key, url, data }),
+      (error: unknown) => controller.signal.aborted || setResult({ key, url, error }),
     );
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
   }, [url, key]);
 
   const reload = useCallback(() => setVersion((current) => current + 1), []);
+  if (url === null) return { data: undefined, error: undefined, loading: false, isStale: false, reload };
   const current = result?.key === key ? result : undefined;
-  return {
-    data: current ? current.data : result?.data,
-    error: current?.error,
-    loading: current === undefined,
-    reload,
-  };
+  if (current) return { data: current.data, error: current.error, loading: false, isStale: false, reload };
+  const earlier = result && (keepPrevious || result.url === url) ? result.data : undefined;
+  return { data: earlier, error: undefined, loading: true, isStale: earlier !== undefined, reload };
 }
 
 /**

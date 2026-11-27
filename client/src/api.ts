@@ -22,6 +22,11 @@ export class FormError extends Error {}
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
+export interface RequestOptions {
+  /** Cancels the request once its answer is no longer needed. */
+  signal?: AbortSignal;
+}
+
 /** The problem type of a change refused for a missing or expired antiforgery token. */
 export const CSRF_PROBLEM = 'urn:ironmind:problem:csrf-token';
 
@@ -42,18 +47,18 @@ export function forgetCsrfToken() {
   csrfToken = null;
 }
 
-export async function request<T>(method: Method, url: string, body?: unknown): Promise<T> {
+export async function request<T>(method: Method, url: string, body?: unknown, options: RequestOptions = {}): Promise<T> {
   let response: Response;
   if (method === 'GET') {
-    response = await send(method, url);
+    response = await send(method, url, body, undefined, options);
   } else {
     csrfToken ??= await fetchCsrfToken();
-    response = await send(method, url, body, csrfToken);
+    response = await send(method, url, body, csrfToken, options);
     // A token that expired, for example after the server's keys changed, is refused before the request
     // does anything, so one retry with a fresh token is safe.
     if (response.status === 400 && (await problemType(response)) === CSRF_PROBLEM) {
       csrfToken = await fetchCsrfToken();
-      response = await send(method, url, body, csrfToken);
+      response = await send(method, url, body, csrfToken, options);
     }
   }
   if (response.status === 401) {
@@ -66,10 +71,10 @@ export async function request<T>(method: Method, url: string, body?: unknown): P
 }
 
 export const api = {
-  get: <T>(url: string) => request<T>('GET', url),
-  post: <T = void>(url: string, body?: unknown) => request<T>('POST', url, body),
-  put: <T = void>(url: string, body?: unknown) => request<T>('PUT', url, body),
-  delete: <T = void>(url: string) => request<T>('DELETE', url),
+  get: <T>(url: string, options?: RequestOptions) => request<T>('GET', url, undefined, options),
+  post: <T = void>(url: string, body?: unknown, options?: RequestOptions) => request<T>('POST', url, body, options),
+  put: <T = void>(url: string, body?: unknown, options?: RequestOptions) => request<T>('PUT', url, body, options),
+  delete: <T = void>(url: string, options?: RequestOptions) => request<T>('DELETE', url, undefined, options),
 };
 
 export function errorMessages(error: unknown): string[] {
@@ -84,7 +89,7 @@ async function fetchCsrfToken(): Promise<string> {
   return ((await response.json()) as { token: string }).token;
 }
 
-async function send(method: Method, url: string, body?: unknown, token?: string): Promise<Response> {
+async function send(method: Method, url: string, body?: unknown, token?: string, options: RequestOptions = {}): Promise<Response> {
   const headers: Record<string, string> = { Accept: 'application/json', 'Accept-Language': currentLanguage() };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers['X-CSRF-TOKEN'] = token;
@@ -94,8 +99,10 @@ async function send(method: Method, url: string, body?: unknown, token?: string)
       headers,
       credentials: 'same-origin',
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal: options.signal,
     });
-  } catch {
+  } catch (failure) {
+    if (options.signal?.aborted) throw failure;
     throw new ApiError(0, [translate('errors.offline')]);
   }
 }

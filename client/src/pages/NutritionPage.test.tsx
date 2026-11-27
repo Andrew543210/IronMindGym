@@ -62,6 +62,28 @@ describe('nutrition journal', () => {
     expect(await screen.findByRole('button', { name: 'Delete entry' })).toBeInTheDocument();
   });
 
+  it('hides the form of the previous day while another day loads', async () => {
+    let release = () => {};
+    const later = new Promise<object>((resolve) => {
+      release = () => resolve(day('2026-11-18', true, { caloriesKcal: 1800 }));
+    });
+    const calls = mockApi({
+      'GET /api/nutrition?date=2026-11-20': day('2026-11-20', true),
+      'GET /api/nutrition?date=2026-11-18': () => later,
+    });
+    renderPage('/nutrition', <NutritionPage />);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete entry' })).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Loading');
+    release();
+    expect(await screen.findByLabelText('Calories (kcal)')).toHaveValue(1800);
+    expect(calls.filter((c) => c.method !== 'GET')).toEqual([]);
+  });
+
   it('deletes an entry after confirmation and shows when estimates are off', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     let deleted = false;

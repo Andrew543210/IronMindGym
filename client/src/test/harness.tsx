@@ -28,7 +28,8 @@ export interface ApiCall {
   headers: Record<string, string>;
 }
 
-type Reply = Response | object | null | (() => Response | object | null);
+type Answer = Response | object | null;
+type Reply = Answer | (() => Answer | Promise<Answer>);
 
 /**
  * Answers fetch from a table keyed by "METHOD /url". A plain value becomes a 200 JSON response, null a 204,
@@ -43,7 +44,7 @@ export function mockApi(routes: Record<string, Reply>) {
     calls.push({ method, url, body, headers: (init.headers ?? {}) as Record<string, string> });
     const route = routes[`${method} ${url}`];
     if (route === undefined) return respond(404);
-    const reply = typeof route === 'function' ? route() : route;
+    const reply = typeof route === 'function' ? await route() : route;
     if (reply instanceof Response) return reply;
     return reply === null ? respond(204) : respond(200, reply);
   }));

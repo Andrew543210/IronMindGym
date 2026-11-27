@@ -45,7 +45,8 @@ export function FriendsPage() {
   const [params, setParams] = useSearchParams();
   const search = params.get('search') ?? '';
   const [query, setQuery] = useState(search);
-  const { data, error, loading, reload } = useApi<{ friends: FriendCard[] }>(`/api/friends?search=${encodeURIComponent(search)}`);
+  const { data, error, loading, reload } = useApi<{ friends: FriendCard[] }>(
+    `/api/friends?search=${encodeURIComponent(search)}`, { keepPrevious: true });
   const change = useAction();
 
   function submit(event: FormEvent) {
@@ -213,7 +214,7 @@ export function FriendWorkoutPage() {
 
   return (
     <>
-      {!data || data.workout.id !== sessionId ? <PageState error={error} loading={loading} /> : (
+      {!data ? <PageState error={error} loading={loading} /> : (
         <>
           <h2 className="text-break">{t('friendWorkout.heading', { name: data.friendUsername })}</h2>
           <WorkoutSessionView workout={data.workout} timeZone={athlete.timeZone} />

@@ -93,21 +93,12 @@ function storageWorks(): boolean {
   }
 }
 
-/** Loads the athlete's last saved set of an exercise. Each answer is kept with its exercise id, so a late answer is ignored. */
-function usePreviousSet(exerciseId: number | undefined) {
-  const [result, setResult] = useState<{ exerciseId: number; value?: PreviousSet | null; failed?: boolean }>();
-  useEffect(() => {
-    if (exerciseId === undefined) return;
-    let active = true;
-    api.get<PreviousSet | undefined>(`/api/workouts/previous-set?exerciseId=${exerciseId}`).then(
-      (value) => active && setResult({ exerciseId, value: value ?? null }),
-      () => active && setResult({ exerciseId, failed: true }),
-    );
-    return () => {
-      active = false;
-    };
-  }, [exerciseId]);
-  return result?.exerciseId === exerciseId ? result : undefined;
+/** The athlete's last saved set of an exercise: undefined while it loads, null when there is none. */
+function usePreviousSet(exerciseId: number | undefined): { value?: PreviousSet | null; failed?: boolean } | undefined {
+  const { data, error, loading } = useApi<PreviousSet | undefined>(
+    exerciseId === undefined ? null : `/api/workouts/previous-set?exerciseId=${exerciseId}`);
+  if (exerciseId === undefined || loading) return undefined;
+  return error ? { failed: true } : { value: data ?? null };
 }
 
 interface WorkoutLoggerProps {

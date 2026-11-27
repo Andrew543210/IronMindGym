@@ -41,4 +41,13 @@ describe('api', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
     await expect(api.get('/api/dashboard')).rejects.toThrow('No connection to the server.');
   });
+
+  it('passes a cancelled request on as cancelled, not as a lost connection', async () => {
+    const aborted = new DOMException('The operation was aborted.', 'AbortError');
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(aborted));
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(api.get('/api/dashboard', { signal: controller.signal })).rejects.toBe(aborted);
+  });
 });

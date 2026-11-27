@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, FormError } from '../api';
 import { ErrorAlert, PageState } from '../components/ui';
@@ -248,27 +248,16 @@ function isValid(text: string, limit: Limit): boolean {
 
 type Values = [string, string, string, string];
 
-/** Loads the saved pair for an exercise; each answer is kept with its exercise id, so a late answer is ignored. */
-function useSavedResults(exerciseId: number | undefined, attempt: number) {
-  const [result, setResult] = useState<{ key: string; values?: Values; failed?: boolean }>();
-  const key = `${exerciseId}:${attempt}`;
-  useEffect(() => {
-    if (exerciseId === undefined) return;
-    let active = true;
-    api.get<ResultPair | undefined>(`/api/progress/${exerciseId}`).then(
-      (saved) => active && setResult({
-        key,
-        values: saved
-          ? [String(saved.initialValue1), String(saved.initialValue2), String(saved.currentValue1), String(saved.currentValue2)]
-          : ['', '', '', ''],
-      }),
-      () => active && setResult({ key, failed: true }),
-    );
-    return () => {
-      active = false;
-    };
-  }, [exerciseId, key]);
-  return result?.key === key ? result : undefined;
+/** The saved pair of an exercise as the four form texts; undefined until the answer for this exercise arrives. */
+function useSavedResults(exerciseId: number | undefined) {
+  const { data, error, loading, isStale, reload } = useApi<ResultPair | undefined>(
+    exerciseId === undefined ? null : `/api/progress/${exerciseId}`);
+  if (exerciseId === undefined || (loading && !isStale)) return { retry: reload };
+  if (error) return { failed: true, retry: reload };
+  const values: Values = data
+    ? [String(data.initialValue1), String(data.initialValue2), String(data.currentValue1), String(data.currentValue2)]
+    : ['', '', '', ''];
+  return { values, retry: reload };
 }
 
 export function TrackExercisePage() {
@@ -293,15 +282,13 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
     const chosen = catalog.find((e) => e.exerciseId === initialExerciseId);
     return { groupId: chosen ? String(chosen.muscleGroupId) : '', subGroupId: '', exerciseId: chosen ? String(chosen.exerciseId) : '' };
   });
-  const [attempt, setAttempt] = useState(0);
-  const [edited, setEdited] = useState<{ key: string; values: Values }>();
+  const [edited, setEdited] = useState<{ exerciseId: number; values: Values }>();
   const [message, setMessage] = useState<{ text: Text; error: boolean }>();
   const save = useAction();
 
   const exercise = catalog.find((e) => e.exerciseId === Number(selection.exerciseId));
-  const saved = useSavedResults(exercise?.exerciseId, attempt);
-  const loadKey = `${exercise?.exerciseId}:${attempt}`;
-  const values = edited?.key === loadKey ? edited.values : saved?.values;
+  const saved = useSavedResults(exercise?.exerciseId);
+  const values = exercise && edited?.exerciseId === exercise.exerciseId ? edited.values : saved.values;
   const groups = [...new Map(catalog.map((e) => [e.muscleGroupId, e.muscleGroupName]))]
     .sort((a, b) => a[1].localeCompare(b[1]));
   const groupRows = catalog.filter((e) => e.muscleGroupId === Number(selection.groupId));
@@ -315,10 +302,10 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
   }
 
   function setValue(index: number, text: string) {
-    if (!values) return;
+    if (!exercise || !values) return;
     const next = [...values] as Values;
     next[index] = text;
-    setEdited({ key: loadKey, values: next });
+    setEdited({ exerciseId: exercise.exerciseId, values: next });
   }
 
   const type = exercise?.exerciseType ?? 'StrengthTraining';
@@ -327,8 +314,8 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
   const texts = columnTexts(type);
 
   let display = t('track.enter');
-  if (!saved) display = t('track.loading');
-  else if (saved.failed) display = t('track.unavailable');
+  if (saved.failed) display = t('track.unavailable');
+  else if (!values) display = t('track.loading');
   else if (valid && values) {
     const [i1, i2, c1, c2] = values.map(Number);
     const first = type === 'StrengthTraining'
@@ -431,10 +418,10 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
         </form>
       )}
 
-      {saved?.failed && (
+      {saved.failed && (
         <div className="alert alert-danger mt-4" role="alert">
           {t('track.loadFailed')}
-          <button type="button" className="btn btn-outline-secondary btn-sm ms-2" onClick={() => setAttempt(attempt + 1)}>{t('common.retry')}</button>
+          <button type="button" className="btn btn-outline-secondary btn-sm ms-2" onClick={saved.retry}>{t('common.retry')}</button>
         </div>
       )}
       <div className="mt-4"><ErrorAlert error={save.error} /></div>
