@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using IronMindGym.Api;
 
 namespace IronMindGym.Tests.Api;
 
@@ -37,7 +38,7 @@ public sealed class ApiClient(HttpClient http) : IDisposable
         using var request = new HttpRequestMessage(method, url);
         if (body is not null)
             request.Content = JsonContent.Create(body, options: Json);
-        request.Headers.Add("X-CSRF-TOKEN", csrf);
+        request.Headers.Add(CsrfProtectionFilter.HeaderName, csrf);
         var response = await http.SendAsync(request);
         if (url.StartsWith("/api/session/", StringComparison.Ordinal) || url == "/api/profile/password")
             csrf = null;

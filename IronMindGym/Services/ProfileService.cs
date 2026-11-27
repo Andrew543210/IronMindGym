@@ -78,14 +78,14 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
     public async Task UpdateAsync(int userId, ProfileSettings settings, CancellationToken cancellationToken)
     {
         if (!await db.SplitTypes.AnyAsync(s => s.Id == settings.SplitTypeId, cancellationToken))
-            throw new DomainValidationException("Choose a valid training split.", "SplitTypeId");
+            throw new DomainValidationException("Choose a valid training split.", nameof(settings.SplitTypeId));
         var timeZone = string.IsNullOrWhiteSpace(settings.TimeZone) ? null : settings.TimeZone.Trim();
         if (timeZone is not null && !AthleteCalendar.TryFindZone(timeZone, out _))
-            throw new DomainValidationException("Enter a time zone such as Europe/Kyiv, or leave it empty to use UTC.", "TimeZone");
+            throw new DomainValidationException("Enter a time zone such as Europe/Kyiv, or leave it empty to use UTC.", nameof(settings.TimeZone));
         var username = settings.Username.Trim();
         await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
         if (await db.Users.AnyAsync(u => u.Id != userId && u.Username == username, cancellationToken))
-            throw new DomainValidationException("This username is already taken.", "Username");
+            throw new DomainValidationException("This username is already taken.", nameof(ProfileSettings.Username));
         var user = await db.Users.Include(u => u.Profile).Include(u => u.Benchmarks).SingleAsync(u => u.Id == userId, cancellationToken);
         user.Username = username;
         user.Profile ??= new Profile { UserId = userId };
@@ -114,7 +114,7 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
         catch (DbUpdateException ex) when (DbErrors.IsUniqueViolation(ex))
         {
             // Another account took the username between the check above and the update.
-            throw new DomainValidationException("This username is already taken.", "Username");
+            throw new DomainValidationException("This username is already taken.", nameof(ProfileSettings.Username));
         }
         calendars.Forget(userId);
         await achievements.AwardEarnedAsync(userId, cancellationToken);
@@ -140,7 +140,7 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
     {
         var user = await db.Users.SingleAsync(u => u.Id == userId, cancellationToken);
         if (!PasswordHashUtility.Verify(request.CurrentPassword, user.PasswordHash))
-            throw new DomainValidationException("Current password is incorrect.", "CurrentPassword");
+            throw new DomainValidationException("Current password is incorrect.", nameof(request.CurrentPassword));
         user.PasswordHash = PasswordHashUtility.Hash(request.NewPassword);
         user.SecurityStamp = Guid.NewGuid().ToString("N");
         await db.SaveChangesAsync(cancellationToken);

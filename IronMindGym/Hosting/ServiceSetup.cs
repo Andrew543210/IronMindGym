@@ -87,7 +87,7 @@ public static class ServiceSetup
     /// </summary>
     public static IServiceCollection AddSessionSecurity(this IServiceCollection services, IWebHostEnvironment environment)
     {
-        services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+        services.AddAntiforgery(options => options.HeaderName = CsrfProtectionFilter.HeaderName);
         services.AddAuthorization(options => options.FallbackPolicy =
             new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
         services.AddScoped<SessionCookieEvents>();

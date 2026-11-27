@@ -27,13 +27,13 @@ public sealed class WorkoutDraftService(IronMindDbContext db, TimeProvider clock
     public async Task SaveAsync(int userId, Guid draftId, JsonElement content, CancellationToken cancellationToken)
     {
         if (content.ValueKind != JsonValueKind.Object)
-            throw new DomainValidationException("Send the unfinished workout as a JSON object.", "Content");
+            throw new DomainValidationException("Send the unfinished workout as a JSON object.", nameof(WorkoutDraftRequest.Content));
         var json = content.GetRawText();
         if (json.Length > MaxContentLength)
-            throw new DomainValidationException("This workout is too large to keep on the server.", "Content");
+            throw new DomainValidationException("This workout is too large to keep on the server.", nameof(WorkoutDraftRequest.Content));
         // PostgreSQL jsonb rejects the NUL character.
         if (json.Contains("\\u0000", StringComparison.Ordinal))
-            throw new DomainValidationException("The workout contains a character that cannot be stored.", "Content");
+            throw new DomainValidationException("The workout contains a character that cannot be stored.", nameof(WorkoutDraftRequest.Content));
 
         await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
         if (await db.WorkoutSessions.AnyAsync(s => s.UserId == userId && s.DraftId == draftId, cancellationToken))

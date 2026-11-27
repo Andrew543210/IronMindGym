@@ -19,7 +19,7 @@ public class GoalService(IronMindDbContext db, AthleteCalendars calendars)
     {
         var today = (await calendars.ForAsync(userId, cancellationToken)).Today;
         if (deadline < today || deadline > today.AddYears(5))
-            throw new DomainValidationException("Choose a deadline between today and five years from now.", "Deadline");
+            throw new DomainValidationException("Choose a deadline between today and five years from now.", nameof(GoalRequest.Deadline));
         // The count and the insert hold the athlete's lock, so parallel requests cannot pass the limit together.
         await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
         await EnsureRoomForAnotherActiveGoalAsync(userId, cancellationToken);

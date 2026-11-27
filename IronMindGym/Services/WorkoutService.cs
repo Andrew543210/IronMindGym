@@ -192,10 +192,10 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
         CancellationToken cancellationToken)
     {
         if (workout.Sets is null || workout.Sets.Count is < 1 or > 200 || workout.Sets.Any(s => s is null))
-            throw new DomainValidationException("Add between 1 and 200 sets before saving.", "Sets");
+            throw new DomainValidationException("Add between 1 and 200 sets before saving.", nameof(SaveWorkoutRequest.Sets));
         var sets = await CheckSetsAsync(workout.Sets, cancellationToken);
         if (workout.SplitDayId.HasValue && !await db.SplitDays.AnyAsync(d => d.Id == workout.SplitDayId, cancellationToken))
-            throw new DomainValidationException("Choose a valid training day.", "SplitDayId");
+            throw new DomainValidationException("Choose a valid training day.", nameof(SaveWorkoutRequest.SplitDayId));
         return sets;
     }
 
@@ -249,7 +249,7 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
         return sets.Select(set =>
         {
             if (!types.TryGetValue(set.ExerciseId, out var type) || !setTypeIds.Contains(set.SetTypeId))
-                throw new DomainValidationException("Choose valid exercises and set types.");
+                throw new DomainValidationException("Choose valid exercises and set types.", nameof(SaveWorkoutRequest.Sets));
             TrackingRules.CheckRest(set.RestSeconds);
             return (set, TrackingRules.Check(type, set.WeightKg, set.Reps, set.DurationSeconds, set.Intensity));
         }).ToList();

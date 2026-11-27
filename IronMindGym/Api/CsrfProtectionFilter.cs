@@ -14,6 +14,7 @@ namespace IronMindGym.Api;
 /// </summary>
 public sealed class CsrfProtectionFilter(IAntiforgery antiforgery, ProblemDetailsFactory problems) : IAsyncAuthorizationFilter
 {
+    public const string HeaderName = "X-CSRF-TOKEN";
     public const string ProblemType = "urn:ironmind:problem:csrf-token";
 
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
