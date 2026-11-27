@@ -1,21 +1,12 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { AwardProgress, PersonalRecord, Statistics } from '../api/types/statistics';
+import { StatCard } from '../components/StatCard';
 import { EmptyState, PageState, ResponsiveTable } from '../components/ui';
 import { formatNumber, localDay } from '../format';
 import { useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
 import { useAthlete } from '../session';
-
-function Stat({ label, value, unit, note }: { label: string; value: ReactNode; unit?: string; note?: ReactNode }) {
-  return (
-    <div className="card stat-card h-100"><div className="card-body">
-      <div className="stat-label">{label}</div>
-      <div className="stat-value">{value}{unit && <small> {unit}</small>}</div>
-      {note && <p className="stat-note">{note}</p>}
-    </div></div>
-  );
-}
 
 function StatRow({ children }: { children: ReactNode[] }) {
   const width = children.length === 2 ? 'col-md-6' : 'col-md-4';
@@ -60,42 +51,42 @@ export function StatisticsPage() {
       <h2>{t('statistics.heading')}</h2>
       <p className="small text-muted">{t('statistics.note')}</p>
       <StatRow>
-        <Stat label={t('statistics.workouts')} value={data.workoutsCompleted} />
-        <Stat label={t('statistics.time')} value={data.totalWorkoutMinutes} unit={minutes} />
-        <Stat label={t('statistics.avgDuration')} value={formatNumber(data.avgWorkoutDurationMinutes)} unit={minutes} />
+        <StatCard label={t('statistics.workouts')} value={data.workoutsCompleted} />
+        <StatCard label={t('statistics.time')} value={data.totalWorkoutMinutes} unit={minutes} />
+        <StatCard label={t('statistics.avgDuration')} value={formatNumber(data.avgWorkoutDurationMinutes)} unit={minutes} />
       </StatRow>
       <StatRow>
-        <Stat label={t('statistics.streak')} value={t('count.days', { count: data.longestStreak })} />
-        <Stat label={t('statistics.monthVolume')} value={formatNumber(data.monthlyTotalTonnage)} unit={volume} />
-        <Stat label={t('statistics.avgRest')} value={data.avgRestSeconds} unit={t('unit.secShort')} />
+        <StatCard label={t('statistics.streak')} value={t('count.days', { count: data.longestStreak })} />
+        <StatCard label={t('statistics.monthVolume')} value={formatNumber(data.monthlyTotalTonnage)} unit={volume} />
+        <StatCard label={t('statistics.avgRest')} value={data.avgRestSeconds} unit={t('unit.secShort')} />
       </StatRow>
       <StatRow>
-        <Stat label={t('statistics.bestChange')} value={`${formatNumber(data.bestProgressPercent)}%`}
+        <StatCard label={t('statistics.bestChange')} value={`${formatNumber(data.bestProgressPercent)}%`}
           note={data.bestProgressExercise ?? t('statistics.bestChangeNone')} />
-        <Stat label={t('statistics.awards')} value={data.totalAwardsCount} note={<Link to="/awards">{t('profile.allAwards')}</Link>} />
+        <StatCard label={t('statistics.awards')} value={data.totalAwardsCount} note={<Link to="/awards">{t('profile.allAwards')}</Link>} />
       </StatRow>
 
       <h4 className="mt-5 mb-3">{t('statistics.volumeHeading')}</h4>
       <StatRow>
-        <Stat label={t('statistics.totalVolume')} value={formatNumber(data.totalVolume)} unit={volume} note={t('statistics.totalVolumeNote')} />
-        <Stat label={t('statistics.sets')} value={data.totalSetsCount} note={t('statistics.setsNote')} />
-        <Stat label={t('statistics.setsPerWorkout')} value={formatNumber(data.avgSetsPerWorkout)} note={t('statistics.setsPerWorkoutNote')} />
+        <StatCard label={t('statistics.totalVolume')} value={formatNumber(data.totalVolume)} unit={volume} note={t('statistics.totalVolumeNote')} />
+        <StatCard label={t('statistics.sets')} value={data.totalSetsCount} note={t('statistics.setsNote')} />
+        <StatCard label={t('statistics.setsPerWorkout')} value={formatNumber(data.avgSetsPerWorkout)} note={t('statistics.setsPerWorkoutNote')} />
       </StatRow>
       <StatRow>
-        <Stat label={t('statistics.unique')} value={data.uniqueExercisesCount} note={t('statistics.uniqueNote')} />
-        <Stat label={t('statistics.month')} value={data.exercisesThisMonth} note={t('statistics.monthNote')} />
-        <Stat label={t('statistics.frequency')} value={formatNumber(data.avgWeeklyWorkouts)} note={t('statistics.frequencyNote')} />
+        <StatCard label={t('statistics.unique')} value={data.uniqueExercisesCount} note={t('statistics.uniqueNote')} />
+        <StatCard label={t('statistics.month')} value={data.exercisesThisMonth} note={t('statistics.monthNote')} />
+        <StatCard label={t('statistics.frequency')} value={formatNumber(data.avgWeeklyWorkouts)} note={t('statistics.frequencyNote')} />
       </StatRow>
 
       <StatRow>
         <div>
           <h4 className="mb-3">{t('statistics.weekHeading')}</h4>
-          <Stat label={t('statistics.weekVolume')} value={formatNumber(data.weeklyProgress)} unit={volume}
+          <StatCard label={t('statistics.weekVolume')} value={formatNumber(data.weeklyProgress)} unit={volume}
             note={`${t('count.workouts', { count: data.last7DaysWorkouts })} · ${t('unit.min', { value: data.last7DaysMinutes })}`} />
         </div>
         <div>
           <h4 className="mb-3">{t('statistics.favoriteHeading')}</h4>
-          <Stat label={t('statistics.favorite')} value={data.favoriteExerciseName ?? '—'}
+          <StatCard label={t('statistics.favorite')} value={data.favoriteExerciseName ?? '—'}
             note={data.favoriteExerciseName ? t('statistics.favoriteCount', { count: data.favoriteExerciseCount }) : t('statistics.favoriteNone')} />
         </div>
       </StatRow>

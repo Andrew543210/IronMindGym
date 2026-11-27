@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router';
 import type { WorkoutListItem } from '../api/types/common';
 import type { Overview, ResearchNote } from '../api/types/dashboard';
+import { StatCard } from '../components/StatCard';
 import { EmptyState, PageState } from '../components/ui';
 import { formatDay, formatFixed, formatNumber, localFormat } from '../format';
 import { useApi, usePageTitle } from '../hooks';
@@ -47,32 +48,19 @@ export function DashboardPage() {
 
       <div className="row g-3">
         <div className="col-6 col-xl-3">
-          <div className="card stat-card h-100"><div className="card-body">
-            <div className="stat-label">{t('dashboard.thisWeek')}</div>
-            <div className="stat-value">{data.completedThisWeek} <small>{t('dashboard.weekPlan', { count: data.plannedWorkoutsPerWeek })}</small></div>
+          <StatCard label={t('dashboard.thisWeek')} value={data.completedThisWeek} unit={t('dashboard.weekPlan', { count: data.plannedWorkoutsPerWeek })}>
             <div className="weekly-meter" role="img" aria-label={t('dashboard.weeklyMeter', { percent: weeklyPercent })}><span style={{ width: `${weeklyPercent}%` }}></span></div>
-          </div></div>
+          </StatCard>
         </div>
         <div className="col-6 col-xl-3">
-          <div className="card stat-card h-100"><div className="card-body">
-            <div className="stat-label">{t('dashboard.strength')}</div>
-            <div className="stat-value">{coefficient}<small> {t('dashboard.timesBodyweight')}</small></div>
-            <p className="stat-note">{t('dashboard.strengthNote')}</p>
-          </div></div>
+          <StatCard label={t('dashboard.strength')} value={coefficient} unit={t('dashboard.timesBodyweight')} note={t('dashboard.strengthNote')} />
         </div>
         <div className="col-6 col-xl-3">
-          <div className="card stat-card h-100"><div className="card-body">
-            <div className="stat-label">{t('dashboard.bodyweight')}</div>
-            <div className="stat-value">{data.weightKg === null ? '—' : formatFixed(data.weightKg, 1)} <small>{t('unit.kgShort')}</small></div>
-            <Link to="/profile" className="stat-note">{t('dashboard.weighIn')}</Link>
-          </div></div>
+          <StatCard label={t('dashboard.bodyweight')} value={data.weightKg === null ? '—' : formatFixed(data.weightKg, 1)} unit={t('unit.kgShort')}
+            note={<Link to="/profile">{t('dashboard.weighIn')}</Link>} />
         </div>
         <div className="col-6 col-xl-3">
-          <div className="card stat-card h-100"><div className="card-body">
-            <div className="stat-label">{t('dashboard.sessions')}</div>
-            <div className="stat-value">{data.totalWorkouts}</div>
-            <p className="stat-note">{t('dashboard.sessionsNote')}</p>
-          </div></div>
+          <StatCard label={t('dashboard.sessions')} value={data.totalWorkouts} note={t('dashboard.sessionsNote')} />
         </div>
       </div>
 
