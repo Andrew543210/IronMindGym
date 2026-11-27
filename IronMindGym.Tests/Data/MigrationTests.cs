@@ -1,5 +1,6 @@
 using IronMindGym.Data;
 using IronMindGym.Models;
+using IronMindGym.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -196,6 +197,35 @@ public sealed class MigrationTests : IDisposable
         var created = Read(db => db.Users.OrderBy(u => u.Id).Select(u => u.CreatedAt).ToList());
         Assert.Equal(new DateTime(2026, 4, 1, 9, 0, 0, DateTimeKind.Utc), created[0]);
         Assert.True(created[1] > DateTime.UtcNow.AddMinutes(-5));
+    }
+
+    [Fact]
+    public async Task PersonalRecordsAreRebuiltFromTheLoggedSets()
+    {
+        MigrateTo("CheckExerciseOrderAndKeyLift");
+        using (var db = Open())
+            await DataSeeder.SeedAsync(db, includeDemoData: false, TimeProvider.System, CancellationToken.None);
+        Run("""
+            INSERT INTO "Users" ("Id", "Username", "Email", "PasswordHash", "SecurityStamp", "CreatedAt")
+            VALUES (1, 'athlete1', 'athlete1@example.com', 'hash', 'stamp', now());
+            INSERT INTO "WorkoutSessions" ("Id", "UserId", "SessionDate", "DurationMinutes", "Rating") VALUES
+                (1, 1, '2026-05-01 18:00+00', 40, 4), (2, 1, '2026-05-08 18:00+00', 40, 4), (3, 1, '2026-05-15 18:00+00', 40, 4);
+            INSERT INTO "PerformedExercises" ("Id", "WorkoutSessionId", "ExerciseId", "OrderInWorkout")
+            SELECT session, session, (SELECT "Id" FROM "Exercises" WHERE "Name" = 'Barbell Back Squat'), 1 FROM generate_series(1, 3) session;
+            INSERT INTO "PerformedExercises" ("Id", "WorkoutSessionId", "ExerciseId", "OrderInWorkout")
+            VALUES (4, 3, (SELECT "Id" FROM "Exercises" WHERE "Name" = 'Rowing Machine Intervals'), 2);
+            INSERT INTO "Sets" ("PerformedExerciseId", "SetNumber", "SetTypeId", "WeightKg", "Reps", "DurationSeconds", "Intensity", "RestSeconds")
+            SELECT performed, 1, (SELECT "Id" FROM "SetTypes" WHERE "Code" = 'WORKING'), weight, 5, 0, 0, 90
+            FROM (VALUES (1, 80), (2, 100), (3, 100), (4, 200)) sets (performed, weight);
+            INSERT INTO "PersonalRecords" ("UserId", "ExerciseId", "MaxWeightKg", "AchievedAt")
+            SELECT 1, "Id", 105, '2026-11-01' FROM "Exercises" WHERE "Name" IN ('Barbell Back Squat', 'Flat Bench Press');
+            """);
+
+        MigrateTo("RecalculatePersonalRecords");
+
+        // The squat record is the 100 kg first reached on 8 May; the bench record had no sets behind it, and cardio has none.
+        var records = Read(db => db.PersonalRecords.Select(r => new { r.Exercise.Name, r.MaxWeightKg, r.AchievedAt }).ToList());
+        Assert.Equal([new { Name = "Barbell Back Squat", MaxWeightKg = 100.0, AchievedAt = new DateTime(2026, 5, 8, 18, 0, 0, DateTimeKind.Utc) }], records);
     }
 
     [Fact]
