@@ -57,22 +57,40 @@ export interface DraftStore {
   read(): StoredValue | null;
   write(state: StoredDraft): boolean;
   clear(): void;
+  /** Notes that the server holds this version of the draft. */
+  markSent(state: StoredDraft): void;
+  /** Removes the draft from this browser unless it has sets the server has not received; true when nothing is left. */
+  forgetIfSent(): boolean;
+}
+
+function version(state: StoredValue): string {
+  return `${String(state.draftId)}:${Number(state.savedAt) || 0}:${Array.isArray(state.sets) ? state.sets.length : 0}`;
 }
 
 /** The draft is kept in localStorage per athlete, so it survives a reload, a closed tab or a tab the phone discarded. */
 export function draftStore(userId: number): DraftStore {
   const key = `ironmind-workout-${userId}`;
+  const sentKey = `${key}-sent`;
+  function read(): StoredValue | null {
+    try {
+      const raw = localStorage.getItem(key);
+      const value: unknown = raw ? JSON.parse(raw) : null;
+      return value && typeof value === 'object' ? (value as StoredValue) : null;
+    } catch {
+      return null;
+    }
+  }
+  function clear() {
+    try {
+      localStorage.removeItem(key);
+      localStorage.removeItem(sentKey);
+    } catch {
+      /* Storage may be unavailable. */
+    }
+  }
   return {
     key,
-    read() {
-      try {
-        const raw = localStorage.getItem(key);
-        const value: unknown = raw ? JSON.parse(raw) : null;
-        return value && typeof value === 'object' ? (value as StoredValue) : null;
-      } catch {
-        return null;
-      }
-    },
+    read,
     write(state) {
       try {
         const raw = JSON.stringify(state);
@@ -83,12 +101,26 @@ export function draftStore(userId: number): DraftStore {
         return false;
       }
     },
-    clear() {
+    clear,
+    markSent(state) {
       try {
-        localStorage.removeItem(key);
+        localStorage.setItem(sentKey, version(state));
       } catch {
-        /* Storage may be unavailable. */
+        /* Without the note the draft is only kept longer. */
       }
+    },
+    forgetIfSent() {
+      const stored = read();
+      let sent: string | null;
+      try {
+        sent = localStorage.getItem(sentKey);
+      } catch {
+        return false;
+      }
+      const unsent = stored !== null && Array.isArray(stored.sets) && stored.sets.length > 0 && sent !== version(stored);
+      if (unsent) return false;
+      clear();
+      return true;
     },
   };
 }

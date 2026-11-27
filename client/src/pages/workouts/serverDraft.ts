@@ -22,6 +22,23 @@ export interface ServerDraftSync {
   cancel(): void;
   discard(draftId: string): void;
   stop(): void;
+  /** Sends the waiting change and resolves once the server has answered the last request. */
+  settle(): Promise<void>;
+}
+
+const open = new Set<ServerDraftSync>();
+
+/** Registers the sync of an open logger until it closes, so a sign-out can wait for its last change. */
+export function holdForSignOut(sync: ServerDraftSync): () => void {
+  open.add(sync);
+  return () => {
+    open.delete(sync);
+  };
+}
+
+/** Sends what open loggers have not sent yet; the sign-out ends the session these requests need. */
+export async function settleServerDrafts(): Promise<void> {
+  await Promise.all([...open].map((sync) => sync.settle()));
 }
 
 /**
@@ -31,9 +48,14 @@ export interface ServerDraftSync {
  * 409 means the workout was saved elsewhere. A change still waiting when the tab hides goes out with
  * keepalive, because the browser cancels an ordinary request of a closing tab.
  */
-export function serverDraftSync(onSavedElsewhere: (draftId: string) => void, serverDraftId?: string): ServerDraftSync {
+export function serverDraftSync(
+  onSavedElsewhere: (draftId: string) => void,
+  serverDraftId?: string,
+  onSent?: (draft: StoredDraft) => void,
+): ServerDraftSync {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let pending: StoredDraft | null = null;
+  let sending: Promise<void> = Promise.resolve();
   let stopped = false;
   const known = new Set<string>(serverDraftId ? [serverDraftId] : []);
 
@@ -44,9 +66,12 @@ export function serverDraftSync(onSavedElsewhere: (draftId: string) => void, ser
     pending = null;
     if (!draft || stopped) return;
     known.add(draft.draftId);
-    api.put(ROUTE, { draftId: draft.draftId, content: draft }, { keepalive: leaving }).catch((error: unknown) => {
-      if (error instanceof ApiError && error.status === 409 && !stopped) onSavedElsewhere(draft.draftId);
-    });
+    sending = api.put(ROUTE, { draftId: draft.draftId, content: draft }, { keepalive: leaving }).then(
+      () => onSent?.(draft),
+      (error: unknown) => {
+        if (error instanceof ApiError && error.status === 409 && !stopped) onSavedElsewhere(draft.draftId);
+      },
+    );
   }
 
   return {
@@ -71,6 +96,10 @@ export function serverDraftSync(onSavedElsewhere: (draftId: string) => void, ser
       stopped = true;
       clearTimeout(timer);
       pending = null;
+    },
+    async settle() {
+      flush();
+      await sending;
     },
   };
 }

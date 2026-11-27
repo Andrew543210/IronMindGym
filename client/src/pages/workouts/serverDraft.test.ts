@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { freshDraft, type DraftSettings, type StoredDraft } from './draft';
-import { serverDraftSync } from './serverDraft';
+import { holdForSignOut, serverDraftSync, settleServerDrafts } from './serverDraft';
 
 const settings: DraftSettings = { splitTypeId: '2', splitDayId: '3', durationMinutes: '60', reviewRating: '4', reviewComment: '' };
 const set = { exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 60, reps: 5, durationSeconds: 0, intensity: 0, restSeconds: 90 };
@@ -69,6 +69,23 @@ describe('server copy of the draft', () => {
     await vi.waitFor(() => expect(sent('PUT')).toHaveLength(2));
 
     expect(sent('PUT').map(([, init]) => init.keepalive)).toEqual([false, true]);
+  });
+
+  it('sends the waiting change of an open logger before a sign-out and reports what the server holds', async () => {
+    const onSent = vi.fn();
+    const sync = serverDraftSync(() => {}, undefined, onSent);
+    const release = holdForSignOut(sync);
+    const draft = withSets(2);
+
+    sync.push(draft);
+    await settleServerDrafts();
+
+    expect(sent('PUT')).toHaveLength(1);
+    expect(onSent).toHaveBeenCalledWith(draft);
+    release();
+    sync.push(withSets(3));
+    await settleServerDrafts();
+    expect(sent('PUT')).toHaveLength(1);
   });
 
   it('reports a workout already saved elsewhere', async () => {

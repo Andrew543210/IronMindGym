@@ -11,7 +11,7 @@ import {
   restoreDraft, setCells, startingFields,
   type CatalogExercise, type DraftSettings, type SetFields, type StoredDraft, type StoredValue,
 } from './draft';
-import { readServerDraft, serverDraftSync } from './serverDraft';
+import { holdForSignOut, readServerDraft, serverDraftSync } from './serverDraft';
 
 interface Option {
   id: number;
@@ -142,6 +142,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
   const [sync] = useState(() => serverDraftSync(
     (draftId) => savedElsewhere.current?.(draftId),
     isDraftId(serverCopy?.draftId) ? serverCopy.draftId : undefined,
+    (sent) => store.markSent(sent),
   ));
   const changedElsewhere = useRef(false);
   const restAlerted = useRef(draft.timerEnd <= now);
@@ -192,10 +193,12 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
     };
     document.addEventListener('visibilitychange', onHidden);
     window.addEventListener('pagehide', leave);
+    const release = holdForSignOut(sync);
     return () => {
       document.removeEventListener('visibilitychange', onHidden);
       window.removeEventListener('pagehide', leave);
       sync.flush();
+      release();
     };
   }, [sync]);
 

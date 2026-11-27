@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api, ApiError, forgetCsrfToken, whenSessionEnds } from './api';
 import { currentLanguage, setLanguage } from './i18n/language';
+import { draftStore } from './pages/workouts/draft';
+import { settleServerDrafts } from './pages/workouts/serverDraft';
 import { SessionContext, type Session, type SessionContextValue, type SessionEnd, type SessionState } from './session';
 
 /**
@@ -54,12 +56,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       signedOut,
       async signOut() {
+        const userId = state.session?.id;
+        await settleServerDrafts();
         try {
           await api.post('/api/session/logout');
         } catch (failure) {
           // A session that has already ended needs no sign-out; any other failure leaves the athlete signed in.
           if (!(failure instanceof ApiError && failure.status === 401)) throw failure;
         }
+        // A shared device keeps no workout of the athlete who left, unless it has sets the server never received.
+        if (userId !== undefined) draftStore(userId).forgetIfSent();
         signedOut('signedOut');
       },
       refresh,

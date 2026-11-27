@@ -36,6 +36,26 @@ describe('draft store', () => {
     expect(store.read()).toBeNull();
   });
 
+  it('forgets a draft on sign-out only when the server holds its last version', () => {
+    const store = draftStore(5);
+    const draft = { ...freshDraft(defaults), sets: [set()] };
+
+    store.write(draft);
+    expect(store.forgetIfSent()).toBe(false);
+    store.markSent(draft);
+    store.write({ ...draft, sets: [set(), set()], savedAt: draft.savedAt + 1 });
+    expect(store.forgetIfSent()).toBe(false);
+    expect(store.read()?.sets).toHaveLength(2);
+
+    store.markSent({ ...draft, sets: [set(), set()], savedAt: draft.savedAt + 1 });
+    expect(store.forgetIfSent()).toBe(true);
+    expect(store.read()).toBeNull();
+    expect(localStorage.getItem('ironmind-workout-5-sent')).toBeNull();
+
+    store.write(freshDraft(defaults));
+    expect(store.forgetIfSent()).toBe(true);
+  });
+
   it('treats damaged storage as no draft', () => {
     localStorage.setItem('ironmind-workout-5', '{not json');
     expect(draftStore(5).read()).toBeNull();

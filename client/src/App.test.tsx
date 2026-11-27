@@ -2,8 +2,12 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { App } from './App';
+import { draftStore, freshDraft, type DraftSettings } from './pages/workouts/draft';
 import { athlete, mockApi, respond } from './test/harness';
 import { overview } from './test/fixtures';
+
+const settings: DraftSettings = { splitTypeId: '2', splitDayId: '3', durationMinutes: '60', reviewRating: '4', reviewComment: '' };
+const set = { exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 60, reps: 5, durationSeconds: 0, intensity: 0, restSeconds: 90 };
 
 function open(path: string) {
   window.history.replaceState(null, '', path);
@@ -79,6 +83,36 @@ describe('app', () => {
     await user.click(screen.getByRole('button', { name: 'Sign out' }));
     expect(await screen.findByText('You have logged out.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
+  });
+
+  it('removes the workout of the athlete who signed out from this browser once the server holds it', async () => {
+    const store = draftStore(athlete.id);
+    const draft = { ...freshDraft(settings), sets: [set] };
+    store.write(draft);
+    store.markSent(draft);
+    mockApi({ 'GET /api/session': athlete, 'GET /api/dashboard': overview, 'POST /api/session/logout': null });
+    open('/');
+    const user = userEvent.setup();
+
+    await screen.findByText("Let's build, athlete.");
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+
+    expect(await screen.findByText('You have logged out.')).toBeInTheDocument();
+    expect(store.read()).toBeNull();
+  });
+
+  it('keeps a workout the server has not received after the sign-out', async () => {
+    const store = draftStore(athlete.id);
+    store.write({ ...freshDraft(settings), sets: [set] });
+    mockApi({ 'GET /api/session': athlete, 'GET /api/dashboard': overview, 'POST /api/session/logout': null });
+    open('/');
+    const user = userEvent.setup();
+
+    await screen.findByText("Let's build, athlete.");
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+
+    expect(await screen.findByText('You have logged out.')).toBeInTheDocument();
+    expect(store.read()?.sets).toEqual([set]);
   });
 
   it('says so when the sign-out fails and keeps the athlete signed in', async () => {
