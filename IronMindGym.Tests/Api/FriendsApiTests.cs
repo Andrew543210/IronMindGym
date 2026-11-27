@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using IronMindGym.Contracts;
 using IronMindGym.Models;
-using IronMindGym.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Tests.Api;
@@ -27,7 +26,7 @@ public class FriendsApiTests
         Assert.Equal(("owner", false, false, false), (card.Username, card.IsFriend, card.RequestSent, card.RequestReceived));
         Assert.Empty(card.LastFiveWorkouts);
 
-        Assert.Equal(FriendshipService.RequestResult.Sent, await Request(partner, ownerId));
+        Assert.Equal(FriendRequestResult.Sent, await Request(partner, ownerId));
         Assert.Equal(HttpStatusCode.NotFound, (await partner.Http.GetAsync(route)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await partner.Post($"/api/friends/{ownerId}/accept", new { })).StatusCode);
         Assert.True((await owner.Get<FriendsOverview>("/api/friends")).Friends.Single().RequestReceived);
@@ -74,7 +73,7 @@ public class FriendsApiTests
         var card = (await partner.Get<FriendsOverview>("/api/friends")).Friends.Single();
 
         Assert.True(card.IsFriend);
-        Assert.Equal(newestFirst.Take(5), card.LastFiveWorkouts.Select(w => w.WorkoutSessionId));
+        Assert.Equal(newestFirst.Take(5), card.LastFiveWorkouts.Select(w => w.Id));
     }
 
     [Fact]
@@ -88,9 +87,9 @@ public class FriendsApiTests
 
         var parallel = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => Request(first, UserId(app, "second"))));
         Assert.Equal(1, app.Query(db => db.Friendships.Count()));
-        Assert.Contains(FriendshipService.RequestResult.Sent, parallel);
-        Assert.Equal(FriendshipService.RequestResult.Connected, await Request(second, UserId(app, "first")));
-        Assert.Equal(FriendshipService.RequestResult.AlreadyConnected, await Request(second, UserId(app, "first")));
+        Assert.Contains(FriendRequestResult.Sent, parallel);
+        Assert.Equal(FriendRequestResult.Connected, await Request(second, UserId(app, "first")));
+        Assert.Equal(FriendRequestResult.AlreadyConnected, await Request(second, UserId(app, "first")));
 
         Assert.Equal(FriendshipStatus.Accepted, app.Query(db => db.Friendships.Single().Status));
         var self = await first.Post($"/api/friends/{UserId(app, "first")}/request", new { });
@@ -140,7 +139,7 @@ public class FriendsApiTests
         await third.Register("third");
         await Connect(app, owner, partner);
         // The partner is the second athlete of one pair and the requester of the other.
-        Assert.Equal(FriendshipService.RequestResult.Sent, await Request(partner, UserId(app, "third")));
+        Assert.Equal(FriendRequestResult.Sent, await Request(partner, UserId(app, "third")));
         var (ownerId, partnerId) = (UserId(app, "owner"), UserId(app, "partner"));
         var ownerWorkout = $"/api/friends/{ownerId}/workouts/{AddWorkout(app, ownerId)}";
         AddWorkout(app, partnerId);
@@ -155,11 +154,11 @@ public class FriendsApiTests
 
     private static async Task Connect(TestApplication app, ApiClient owner, ApiClient partner)
     {
-        Assert.Equal(FriendshipService.RequestResult.Sent, await Request(partner, UserId(app, "owner")));
+        Assert.Equal(FriendRequestResult.Sent, await Request(partner, UserId(app, "owner")));
         await ApiClient.Ok(await owner.Post($"/api/friends/{UserId(app, "partner")}/accept", new { }));
     }
 
-    private static async Task<FriendshipService.RequestResult> Request(ApiClient api, int userId)
+    private static async Task<FriendRequestResult> Request(ApiClient api, int userId)
     {
         var response = await api.Post($"/api/friends/{userId}/request", new { });
         await ApiClient.Ok(response);

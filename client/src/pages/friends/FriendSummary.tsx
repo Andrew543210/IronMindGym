@@ -56,13 +56,13 @@ export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: Frien
           {friend.lastFiveWorkouts.length === 0 ? <div className="small text-muted">{t('friends.noWorkouts')}</div> : (
             <ul className="mb-0 mt-1">
               {friend.lastFiveWorkouts.map((workout) => (
-                <li key={workout.workoutSessionId} className="mb-1">
+                <li key={workout.id} className="mb-1">
                   <Phrase text="workouts.entry" parts={{
                     date: <span className="metric">{localDateTime(workout.sessionDate, athlete.timeZone).slice(5)}</span>,
                     name: workout.name,
                     duration: <span className="metric">{t('unit.min', { value: workout.durationMinutes })}</span>,
                   }} />
-                  <Link className="btn btn-outline-light btn-sm ms-2" to={`/friends/${friend.userId}/workouts/${workout.workoutSessionId}`}>{t('common.details')}</Link>
+                  <Link className="btn btn-outline-light btn-sm ms-2" to={`/friends/${friend.userId}/workouts/${workout.id}`}>{t('common.details')}</Link>
                 </li>
               ))}
             </ul>

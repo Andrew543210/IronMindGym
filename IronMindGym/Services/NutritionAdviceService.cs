@@ -1,16 +1,7 @@
+using IronMindGym.Contracts;
 using IronMindGym.Models;
 
 namespace IronMindGym.Services;
-
-public enum TargetSource
-{
-    NotSet,
-    Personal,
-    Estimate,
-    Remainder
-}
-
-public sealed record NutritionTarget(double Value, TargetSource Source);
 
 public sealed class NutritionProfileSnapshot
 {
@@ -24,24 +15,6 @@ public sealed class NutritionProfileSnapshot
     public int? Age { get; init; }
     public int WorkoutsPerWeek { get; init; }
 }
-
-/// <summary>A day's intake compared with the athlete's targets. The client words it in the interface language.</summary>
-public sealed record NutritionAdvice(
-    NutritionTarget Calories,
-    NutritionTarget Protein,
-    NutritionTarget Fat,
-    NutritionTarget Carbs,
-    EnergyEquation? EnergyEquation,
-    double BasalMetabolicRate,
-    double ActivityMultiplier,
-    int TargetsSet,
-    int TargetsMatched,
-    int Score,
-    bool TargetsExceedEnergy,
-    double MacroEnergyKcal,
-    bool MacrosDisagreeWithEnergy,
-    int WeekDaysLogged,
-    double WeekAverageKcal);
 
 /// <summary>
 /// Personal targets win. Without them, adults with an energy equation get optional estimates: Mifflin–St Jeor BMR

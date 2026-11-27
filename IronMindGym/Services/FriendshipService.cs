@@ -8,8 +8,8 @@ namespace IronMindGym.Services;
 
 public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars calendars, AchievementService achievements)
 {
-    public Task<bool> AreFriendsAsync(int userId, int otherId, CancellationToken cancellationToken) => db.Friendships.AsNoTracking().AnyAsync(f =>
-        f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId) && f.Status == FriendshipStatus.Accepted, cancellationToken);
+    public Task<bool> AreFriendsAsync(int userId, int otherId, CancellationToken cancellationToken) =>
+        Between(userId, otherId).AsNoTracking().AnyAsync(f => f.Status == FriendshipStatus.Accepted, cancellationToken);
 
     public async Task<FriendsOverview> BuildIndexAsync(int userId, string? searchUsername, CancellationToken cancellationToken)
     {
@@ -49,11 +49,11 @@ public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars cal
     {
         var workouts = await db.WorkoutSessions.AsNoTracking().Where(s => s.UserId == card.UserId)
             .OrderByDescending(s => s.SessionDate).ThenByDescending(s => s.Id).Take(PreviewSize)
-            .Select(s => new FriendWorkoutPreview { WorkoutSessionId = s.Id, Name = WorkoutService.SessionName(s.SplitDay!.WorkoutName, s.SplitDay.WorkoutNameUk), SessionDate = s.SessionDate, DurationMinutes = s.DurationMinutes })
+            .Select(WorkoutService.ListItem)
             .ToListAsync(cancellationToken);
         var nutrition = await db.DailyNutritions.AsNoTracking().Where(n => n.UserId == card.UserId && n.Date >= firstNutritionDay)
             .OrderByDescending(n => n.Date)
-            .Select(n => new FriendNutritionPreview { Date = n.Date, CaloriesKcal = n.CaloriesKcal, ProteinG = n.ProteinG, FatG = n.FatG, CarbsG = n.CarbsG })
+            .Select(n => new NutritionLogEntry(n.Date, n.CaloriesKcal, n.ProteinG, n.FatG, n.CarbsG))
             .ToListAsync(cancellationToken);
         var records = await db.PersonalRecords.AsNoTracking().Where(r => r.UserId == card.UserId)
             .OrderByDescending(r => r.AchievedAt).Take(PreviewSize)
@@ -61,12 +61,10 @@ public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars cal
             .ToListAsync(cancellationToken);
         var awards = await db.UserAchievements.AsNoTracking().Where(a => a.UserId == card.UserId)
             .OrderByDescending(a => a.AchievedAt).Take(PreviewSize)
-            .Select(a => new FriendAchievementPreview
-            {
-                Name = Localized.Pick(a.Achievement.Name, a.Achievement.NameUk),
-                ConditionDescription = Localized.Pick(a.Achievement.ConditionDescription, a.Achievement.ConditionDescriptionUk),
-                AchievedAt = a.AchievedAt
-            })
+            .Select(a => new ProfileAchievement(
+                Localized.Pick(a.Achievement.Name, a.Achievement.NameUk),
+                Localized.Pick(a.Achievement.ConditionDescription, a.Achievement.ConditionDescriptionUk),
+                a.AchievedAt))
             .ToListAsync(cancellationToken);
         return card with
         {
@@ -78,39 +76,38 @@ public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars cal
         };
     }
 
-    public enum RequestResult { Sent, AlreadyRequested, Connected, AlreadyConnected }
 
     /// <summary>
     /// Sends a request, or accepts the other user's pending request when both want to connect.
     /// The lock serializes a double tap, so the second request sees the first one's row.
     /// </summary>
-    public async Task<RequestResult> SendRequestAsync(int userId, int otherId, CancellationToken cancellationToken)
+    public async Task<FriendRequestResult> SendRequestAsync(int userId, int otherId, CancellationToken cancellationToken)
     {
         if (userId == otherId || !await db.Users.AnyAsync(u => u.Id == otherId, cancellationToken))
             throw new DomainValidationException("Choose another registered user.");
         await using var transaction = await WriteLock.BeginForAthletesAsync(db, [userId, otherId], cancellationToken);
         var relationship = await FindAsync(userId, otherId, cancellationToken);
-        RequestResult result;
+        FriendRequestResult result;
         if (relationship is null)
         {
             db.Friendships.Add(new Friendship { User1Id = Math.Min(userId, otherId), User2Id = Math.Max(userId, otherId), RequestedByUserId = userId });
-            result = RequestResult.Sent;
+            result = FriendRequestResult.Sent;
         }
         else if (relationship.Status == FriendshipStatus.Accepted)
         {
-            result = RequestResult.AlreadyConnected;
+            result = FriendRequestResult.AlreadyConnected;
         }
         else if (relationship.RequestedByUserId == userId)
         {
-            result = RequestResult.AlreadyRequested;
+            result = FriendRequestResult.AlreadyRequested;
         }
         else
         {
             relationship.Status = FriendshipStatus.Accepted;
-            result = RequestResult.Connected;
+            result = FriendRequestResult.Connected;
         }
         await db.SaveChangesAsync(cancellationToken);
-        if (result == RequestResult.Connected)
+        if (result == FriendRequestResult.Connected)
             await AssignFriendAwardsAsync(userId, otherId, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return result;
@@ -137,9 +134,8 @@ public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars cal
         await achievements.AwardEarnedAsync(otherId, cancellationToken);
     }
 
-    public async Task<bool> RemoveAsync(int userId, int otherId, CancellationToken cancellationToken) => await db.Friendships
-        .Where(f => f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId))
-        .ExecuteDeleteAsync(cancellationToken) > 0;
+    public async Task<bool> RemoveAsync(int userId, int otherId, CancellationToken cancellationToken) =>
+        await Between(userId, otherId).ExecuteDeleteAsync(cancellationToken) > 0;
 
     /// <summary>
     /// Usernames may contain "_", which LIKE would otherwise treat as a wildcard. The escape character is named
@@ -152,6 +148,13 @@ public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars cal
         .Replace("%", LikeEscape + "%", StringComparison.Ordinal)
         .Replace("_", LikeEscape + "_", StringComparison.Ordinal);
 
-    private Task<Friendship?> FindAsync(int userId, int otherId, CancellationToken cancellationToken) => db.Friendships.FirstOrDefaultAsync(f =>
-        f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId), cancellationToken);
+    private Task<Friendship?> FindAsync(int userId, int otherId, CancellationToken cancellationToken) =>
+        Between(userId, otherId).FirstOrDefaultAsync(cancellationToken);
+
+    /// <summary>The row of two athletes, which always stores the lower id first.</summary>
+    private IQueryable<Friendship> Between(int userId, int otherId)
+    {
+        var (first, second) = userId < otherId ? (userId, otherId) : (otherId, userId);
+        return db.Friendships.Where(f => f.User1Id == first && f.User2Id == second);
+    }
 }

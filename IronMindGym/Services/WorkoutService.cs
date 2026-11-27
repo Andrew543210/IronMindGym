@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using IronMindGym.Contracts;
 using IronMindGym.Data;
 using IronMindGym.Localization;
@@ -19,13 +20,7 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
             .OrderByDescending(s => s.SessionDate).ThenByDescending(s => s.Id)
             .Skip((page - 1) * HistoryPageSize)
             .Take(HistoryPageSize + 1)
-            .Select(s => new WorkoutSessionListItem
-            {
-                Id = s.Id,
-                SessionDate = s.SessionDate,
-                Name = SessionName(s.SplitDay!.WorkoutName, s.SplitDay.WorkoutNameUk),
-                DurationMinutes = s.DurationMinutes
-            })
+            .Select(ListItem)
             .ToListAsync(cancellationToken);
         return new WorkoutHistoryResponse(rows.Take(HistoryPageSize).ToList(), page, rows.Count > HistoryPageSize);
     }
@@ -255,10 +250,22 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
         }).ToList();
     }
 
+    /// <summary>The title of a workout without a split day, as the export keeps it.</summary>
+    public const string GeneralDayName = "Training Day";
+
     /// <summary>The title of a workout: its split day's, or a general training day's.</summary>
     public static string SessionName(string? workoutName, string? workoutNameUk) => workoutName is null
-        ? Localized.Pick("Training Day", "Тренувальний день")
+        ? Localized.Pick(GeneralDayName, "Тренувальний день")
         : Localized.Pick(workoutName, workoutNameUk);
+
+    /// <summary>A workout as the history, the dashboard and a friend's card list it.</summary>
+    public static readonly Expression<Func<WorkoutSession, WorkoutSessionListItem>> ListItem = s => new WorkoutSessionListItem
+    {
+        Id = s.Id,
+        SessionDate = s.SessionDate,
+        Name = SessionName(s.SplitDay!.WorkoutName, s.SplitDay.WorkoutNameUk),
+        DurationMinutes = s.DurationMinutes
+    };
 
     /// <summary>A repeated delete, such as a double tap, finds nothing to delete and reports false.</summary>
     public async Task<bool> DeleteAsync(int userId, int sessionId, CancellationToken cancellationToken)

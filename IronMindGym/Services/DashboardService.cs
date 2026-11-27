@@ -31,13 +31,7 @@ public sealed class DashboardService(IronMindDbContext db, AthleteCalendars cale
             await db.UserGoals.AsNoTracking().Where(g => g.UserId == userId && !g.IsCompleted).OrderBy(g => g.Deadline).Take(3)
                 .Select(g => new GoalResponse(g.Id, g.Title, g.Deadline, g.IsCompleted)).ToListAsync(cancellationToken),
             await db.WorkoutSessions.AsNoTracking().Where(w => w.UserId == userId).OrderByDescending(w => w.SessionDate).Take(3)
-                .Select(w => new WorkoutSessionListItem
-                {
-                    Id = w.Id,
-                    Name = WorkoutService.SessionName(w.SplitDay!.WorkoutName, w.SplitDay.WorkoutNameUk),
-                    SessionDate = w.SessionDate,
-                    DurationMinutes = w.DurationMinutes
-                }).ToListAsync(cancellationToken),
+                .Select(WorkoutService.ListItem).ToListAsync(cancellationToken),
             Localized.Pick(rank.Rank.Name, rank.Rank.NameUk),
             rank.Coefficient,
             StrengthRanks.ScalePosition(rank.Coefficient, rank.Ladder),

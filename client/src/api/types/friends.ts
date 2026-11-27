@@ -1,4 +1,4 @@
-import type { DatedIntake, EarnedAward } from './common';
+import type { DatedIntake, EarnedAward, WorkoutListItem } from './common';
 import type { WorkoutDetails } from './workouts';
 
 export interface FriendCard {
@@ -8,7 +8,7 @@ export interface FriendCard {
   requestSent: boolean;
   requestReceived: boolean;
   averageKcal: number;
-  lastFiveWorkouts: { workoutSessionId: number; name: string; sessionDate: string; durationMinutes: number }[];
+  lastFiveWorkouts: WorkoutListItem[];
   lastNutritionLogs: DatedIntake[];
   personalRecords: { exerciseName: string; maxWeightKg: number; achievedAt: string }[];
   achievements: EarnedAward[];

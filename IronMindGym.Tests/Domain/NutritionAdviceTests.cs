@@ -1,3 +1,4 @@
+using IronMindGym.Contracts;
 using IronMindGym.Models;
 using IronMindGym.Services;
 

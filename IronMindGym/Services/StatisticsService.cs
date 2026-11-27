@@ -12,7 +12,7 @@ public sealed class StatisticsService(IronMindDbContext db, AthleteCalendars cal
     {
         var calendar = await calendars.ForAsync(userId, cancellationToken);
         var now = calendar.UtcNow;
-        var monthAgo = now.AddDays(-30);
+        var monthAgo = calendar.MonthAgoUtc;
         var weekAgo = now.AddDays(-7);
         var sessions = db.WorkoutSessions.Where(s => s.UserId == userId);
         var performed = db.PerformedExercises.Where(pe => pe.WorkoutSession.UserId == userId);

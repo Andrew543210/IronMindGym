@@ -8,34 +8,10 @@ public sealed record FriendCard
     public int UserId { get; init; }
     public string Username { get; init; } = string.Empty;
     public double AverageKcal { get; init; }
-    public List<FriendWorkoutPreview> LastFiveWorkouts { get; init; } = new();
-    public List<FriendNutritionPreview> LastNutritionLogs { get; init; } = new();
+    public List<WorkoutSessionListItem> LastFiveWorkouts { get; init; } = new();
+    public List<NutritionLogEntry> LastNutritionLogs { get; init; } = new();
     public List<FriendRecordPreview> PersonalRecords { get; init; } = new();
-    public List<FriendAchievementPreview> Achievements { get; init; } = new();
-}
-
-public sealed record FriendWorkoutPreview
-{
-    public int WorkoutSessionId { get; init; }
-    public string Name { get; init; } = string.Empty;
-    public DateTime SessionDate { get; init; }
-    public int DurationMinutes { get; init; }
-}
-
-public sealed record FriendAchievementPreview
-{
-    public string Name { get; init; } = string.Empty;
-    public string ConditionDescription { get; init; } = string.Empty;
-    public DateTime AchievedAt { get; init; }
-}
-
-public sealed record FriendNutritionPreview
-{
-    public DateOnly Date { get; init; }
-    public double CaloriesKcal { get; init; }
-    public double ProteinG { get; init; }
-    public double FatG { get; init; }
-    public double CarbsG { get; init; }
+    public List<ProfileAchievement> Achievements { get; init; } = new();
 }
 
 public sealed record FriendRecordPreview
@@ -50,7 +26,9 @@ public sealed record FriendsOverview
     public List<FriendCard> Friends { get; init; } = new();
 }
 
-public sealed record FriendRequestResponse(FriendshipService.RequestResult Result);
+public enum FriendRequestResult { Sent, AlreadyRequested, Connected, AlreadyConnected }
+
+public sealed record FriendRequestResponse(FriendRequestResult Result);
 
 public sealed record FriendWorkoutResponse(string FriendUsername, WorkoutDetailsResponse Workout);
 

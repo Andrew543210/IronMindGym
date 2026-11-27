@@ -143,7 +143,7 @@ public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, Ath
         await db.DailyNutritions.Where(n => n.UserId == userId).OrderBy(n => n.Date)
             .Select(n => new ExportedNutritionDay(n.Date, n.CaloriesKcal, n.ProteinG, n.FatG, n.CarbsG)).ToListAsync(cancellationToken),
         await db.WorkoutSessions.Where(w => w.UserId == userId).OrderBy(w => w.SessionDate).Select(w => new ExportedWorkout(
-            w.SplitDay == null ? "Training Day" : w.SplitDay.WorkoutName,
+            w.SplitDay == null ? WorkoutService.GeneralDayName : w.SplitDay.WorkoutName,
             w.SessionDate,
             w.DurationMinutes,
             w.Rating,

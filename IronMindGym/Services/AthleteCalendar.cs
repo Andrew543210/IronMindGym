@@ -15,6 +15,9 @@ public sealed class AthleteCalendar(TimeZoneInfo zone, TimeProvider clock)
 
     public DateOnly Today => DayOf(UtcNow);
 
+    /// <summary>The start of the last 30 days, over which the statistics and the awards count monthly tonnage.</summary>
+    public DateTime MonthAgoUtc => UtcNow.AddDays(-30);
+
     /// <summary>Weigh-ins and nutrition days can be entered for the last five years, up to today.</summary>
     public void EnsureJournalDay(DateOnly day)
     {

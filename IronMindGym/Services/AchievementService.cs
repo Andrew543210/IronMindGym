@@ -58,7 +58,7 @@ public sealed class AchievementService(IronMindDbContext db, AthleteCalendars ca
     private async Task<Dictionary<AchievementMetricType, double>> MetricsAsync(int userId, CancellationToken cancellationToken)
     {
         var calendar = await calendars.ForAsync(userId, cancellationToken);
-        var thirtyDaysAgo = calendar.UtcNow.AddDays(-30);
+        var monthAgo = calendar.MonthAgoUtc;
         var workouts = await db.WorkoutSessions.Where(x => x.UserId == userId)
             .Select(x => new { x.SessionDate, x.DurationMinutes }).ToListAsync(cancellationToken);
         var sets = db.Sets.Where(x => x.PerformedExercise.WorkoutSession.UserId == userId);
@@ -70,7 +70,7 @@ public sealed class AchievementService(IronMindDbContext db, AthleteCalendars ca
             [AchievementMetricType.WorkoutsCompleted] = workouts.Count,
             [AchievementMetricType.TotalSets] = await sets.CountAsync(cancellationToken),
             [AchievementMetricType.MonthlyTonnage] = await sets
-                .Where(x => x.PerformedExercise.WorkoutSession.SessionDate >= thirtyDaysAgo)
+                .Where(x => x.PerformedExercise.WorkoutSession.SessionDate >= monthAgo)
                 .SumAsync(x => (double?)(x.WeightKg * x.Reps), cancellationToken) ?? 0,
             [AchievementMetricType.BenchPr] = await BestRecordAsync(userId, KeyLift.BenchPress, cancellationToken),
             [AchievementMetricType.SquatPr] = await BestRecordAsync(userId, KeyLift.Squat, cancellationToken),

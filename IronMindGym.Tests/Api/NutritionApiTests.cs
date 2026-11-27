@@ -1,6 +1,5 @@
 using System.Net;
 using IronMindGym.Contracts;
-using IronMindGym.Services;
 
 namespace IronMindGym.Tests.Api;
 
