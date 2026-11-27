@@ -4,20 +4,19 @@ using Microsoft.AspNetCore.Mvc;
 namespace IronMindGym.Api;
 
 [Route("api/nutrition")]
-public class NutritionController(NutritionJournalService journal, AthleteCalendars calendars) : ApiController
+public class NutritionController(NutritionJournalService journal) : ApiController
 {
     [HttpGet]
-    public NutritionDay Day(DateOnly? date) =>
-        journal.Day(UserId, date ?? calendars.For(UserId).Today);
+    public Task<NutritionDay> Day(DateOnly? date, CancellationToken cancellationToken) => journal.DayAsync(UserId, date, cancellationToken);
 
     [HttpPut("days/{date}")]
-    public ActionResult SaveDay(DateOnly date, NutritionEntryRequest request)
+    public async Task<ActionResult> SaveDay(DateOnly date, NutritionEntryRequest request, CancellationToken cancellationToken)
     {
-        journal.Save(UserId, date, request.CaloriesKcal, request.ProteinG, request.FatG, request.CarbsG);
+        await journal.SaveAsync(UserId, date, request, cancellationToken);
         return NoContent();
     }
 
     [HttpDelete("days/{date}")]
-    public ActionResult DeleteDay(DateOnly date) =>
-        journal.Delete(UserId, date) ? NoContent() : NotFound();
+    public async Task<ActionResult> DeleteDay(DateOnly date, CancellationToken cancellationToken) =>
+        await journal.DeleteAsync(UserId, date, cancellationToken) ? NoContent() : NotFound();
 }

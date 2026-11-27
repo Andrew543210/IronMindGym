@@ -6,8 +6,8 @@ namespace IronMindGym.Tests;
 /// <summary>Builds training history for tests: workouts in the past go straight to the database, with their records.</summary>
 internal static class Journal
 {
-    public static int AddWorkout(TestApplication app, DateTime date, int minutes,
-        params (int ExerciseId, double Kg, int Reps, int RestSeconds)[] sets) => app.Query(db =>
+    public static Task<int> AddWorkoutAsync(TestApplication app, DateTime date, int minutes,
+        params (int ExerciseId, double Kg, int Reps, int RestSeconds)[] sets) => app.QueryAsync(async db =>
     {
         var setType = db.SetTypes.Single(t => t.Code == SetTypeCode.Working).Id;
         var session = new WorkoutSession { UserId = db.Users.OrderBy(u => u.Id).First().Id, SessionDate = date, DurationMinutes = minutes };
@@ -20,9 +20,9 @@ internal static class Journal
             session.PerformedExercises.Add(performed);
         }
         db.WorkoutSessions.Add(session);
-        db.SaveChanges();
-        new PersonalRecordService(db).Recalculate(session.UserId, sets.Select(s => s.ExerciseId));
-        db.SaveChanges();
+        await db.SaveChangesAsync();
+        await new PersonalRecordService(db).RecalculateAsync(session.UserId, sets.Select(s => s.ExerciseId), CancellationToken.None);
+        await db.SaveChangesAsync();
         return session.Id;
     });
 

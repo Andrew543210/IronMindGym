@@ -7,26 +7,30 @@ namespace IronMindGym.Api;
 public class FriendsController(FriendshipService friendships, WorkoutSocialService social) : ApiController
 {
     [HttpGet]
-    public FriendsOverview Index(string? search) => friendships.BuildIndex(UserId, search);
+    public Task<FriendsOverview> Index(string? search, CancellationToken cancellationToken) =>
+        friendships.BuildIndexAsync(UserId, search, cancellationToken);
 
     [HttpPost("{userId:int}/request")]
-    public FriendRequestResponse SendRequest(int userId) => new(friendships.SendRequest(UserId, userId));
+    public async Task<FriendRequestResponse> SendRequest(int userId, CancellationToken cancellationToken) =>
+        new(await friendships.SendRequestAsync(UserId, userId, cancellationToken));
 
     [HttpPost("{userId:int}/accept")]
-    public ActionResult Accept(int userId) => friendships.Accept(UserId, userId) ? NoContent() : NotFound();
+    public async Task<ActionResult> Accept(int userId, CancellationToken cancellationToken) =>
+        await friendships.AcceptAsync(UserId, userId, cancellationToken) ? NoContent() : NotFound();
 
     [HttpDelete("{userId:int}")]
-    public ActionResult Remove(int userId) => friendships.Remove(UserId, userId) ? NoContent() : NotFound();
+    public async Task<ActionResult> Remove(int userId, CancellationToken cancellationToken) =>
+        await friendships.RemoveAsync(UserId, userId, cancellationToken) ? NoContent() : NotFound();
 
     [HttpGet("{friendId:int}/workouts/{sessionId:int}")]
-    public ActionResult<FriendWorkoutResponse> Workout(int friendId, int sessionId) =>
-        social.FriendWorkout(UserId, friendId, sessionId) is { } workout ? workout : NotFound();
+    public async Task<ActionResult<FriendWorkoutResponse>> Workout(int friendId, int sessionId, CancellationToken cancellationToken) =>
+        await social.FriendWorkoutAsync(UserId, friendId, sessionId, cancellationToken) is { } workout ? workout : NotFound();
 
     [HttpPut("{friendId:int}/workouts/{sessionId:int}/like")]
-    public ActionResult SetLike(int friendId, int sessionId, LikeRequest request) =>
-        social.SetLike(UserId, friendId, sessionId, request.Liked) ? NoContent() : NotFound();
+    public async Task<ActionResult> SetLike(int friendId, int sessionId, LikeRequest request, CancellationToken cancellationToken) =>
+        await social.SetLikeAsync(UserId, friendId, sessionId, request.Liked, cancellationToken) ? NoContent() : NotFound();
 
     [HttpPost("{friendId:int}/workouts/{sessionId:int}/comments")]
-    public ActionResult AddComment(int friendId, int sessionId, CommentRequest request) =>
-        social.AddComment(UserId, friendId, sessionId, request.Text) ? NoContent() : NotFound();
+    public async Task<ActionResult> AddComment(int friendId, int sessionId, CommentRequest request, CancellationToken cancellationToken) =>
+        await social.AddCommentAsync(UserId, friendId, sessionId, request.Text, cancellationToken) ? NoContent() : NotFound();
 }

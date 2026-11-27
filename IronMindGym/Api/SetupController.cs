@@ -7,12 +7,12 @@ namespace IronMindGym.Api;
 public class SetupController(SetupService setup) : ApiController
 {
     [HttpGet]
-    public SetupFormResponse Form() => setup.Form(UserId);
+    public Task<SetupFormResponse> Form(CancellationToken cancellationToken) => setup.FormAsync(UserId, cancellationToken);
 
     [HttpPost]
-    public ActionResult Save(SetupRequest request)
+    public async Task<ActionResult> Save(SetupRequest request, CancellationToken cancellationToken)
     {
-        setup.Save(UserId, request);
+        await setup.SaveAsync(UserId, request, cancellationToken);
         return NoContent();
     }
 }

@@ -7,19 +7,20 @@ namespace IronMindGym.Api;
 public class GoalsController(GoalService goals) : ApiController
 {
     [HttpGet]
-    public List<GoalResponse> List() => goals.List(UserId).Select(GoalResponse.From).ToList();
+    public Task<List<GoalResponse>> List(CancellationToken cancellationToken) => goals.ListAsync(UserId, cancellationToken);
 
     [HttpPost]
-    public NoContentResult Create(GoalRequest request)
+    public async Task<NoContentResult> Create(GoalRequest request, CancellationToken cancellationToken)
     {
-        goals.Create(UserId, request.Title, request.Deadline);
+        await goals.CreateAsync(UserId, request.Title, request.Deadline, cancellationToken);
         return NoContent();
     }
 
     [HttpPut("{id:int}/completed")]
-    public ActionResult SetCompleted(int id, GoalCompletionRequest request) =>
-        goals.SetCompleted(UserId, id, request.Completed) ? NoContent() : NotFound();
+    public async Task<ActionResult> SetCompleted(int id, GoalCompletionRequest request, CancellationToken cancellationToken) =>
+        await goals.SetCompletedAsync(UserId, id, request.Completed, cancellationToken) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]
-    public ActionResult Delete(int id) => goals.Delete(UserId, id) ? NoContent() : NotFound();
+    public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken) =>
+        await goals.DeleteAsync(UserId, id, cancellationToken) ? NoContent() : NotFound();
 }

@@ -1,5 +1,6 @@
 using IronMindGym.Data;
 using IronMindGym.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Seed;
 
@@ -9,14 +10,15 @@ namespace IronMindGym.Seed;
 /// </summary>
 public static class DemoDataSeeder
 {
-    public static void Seed(IronMindDbContext db)
+    public static async Task SeedAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
-        if (db.Users.Any())
+        if (await db.Users.AnyAsync(cancellationToken))
             return;
-        var upperLower = db.SplitTypes.Single(s => s.Code == SplitTypeCode.UpperLower);
-        var (upper, lower) = (db.SplitDays.Single(d => d.Code == "UPPER"), db.SplitDays.Single(d => d.Code == "LOWER"));
-        var working = db.SetTypes.Single(s => s.Code == SetTypeCode.Working);
-        var exercises = db.Exercises.ToDictionary(e => e.Name);
+        var upperLower = await db.SplitTypes.SingleAsync(s => s.Code == SplitTypeCode.UpperLower, cancellationToken);
+        var upper = await db.SplitDays.SingleAsync(d => d.Code == "UPPER", cancellationToken);
+        var lower = await db.SplitDays.SingleAsync(d => d.Code == "LOWER", cancellationToken);
+        var working = await db.SetTypes.SingleAsync(s => s.Code == SetTypeCode.Working, cancellationToken);
+        var exercises = await db.Exercises.ToDictionaryAsync(e => e.Name, cancellationToken);
         Exercise Find(string name) => exercises.TryGetValue(name, out var exercise)
             ? exercise
             : throw new InvalidOperationException($"The demo data needs the catalog exercise \"{name}\".");
@@ -65,7 +67,7 @@ public static class DemoDataSeeder
         Workout(athlete, upper, daysAgo: 1, minutes: 70, working,
             (Find("Flat Bench Press"), [(85, 6), (100, 2)]),
             (Find("Bent-Over Barbell Row"), [(72.5, 8)]));
-        db.SaveChanges();
+        await db.SaveChangesAsync(cancellationToken);
 
         db.Friendships.Add(new Friendship
         {
@@ -76,11 +78,11 @@ public static class DemoDataSeeder
         });
         var records = new PersonalRecordService(db);
         foreach (var user in new[] { athlete, friend })
-            records.Recalculate(user.Id, exercises.Values.Select(e => e.Id));
-        db.SaveChanges();
+            await records.RecalculateAsync(user.Id, exercises.Values.Select(e => e.Id), cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
         var achievements = new AchievementService(db, new AthleteCalendars(db, TimeProvider.System));
-        achievements.AwardEarned(athlete.Id);
-        achievements.AwardEarned(friend.Id);
+        await achievements.AwardEarnedAsync(athlete.Id, cancellationToken);
+        await achievements.AwardEarnedAsync(friend.Id, cancellationToken);
 
         void Workout(User user, SplitDay day, int daysAgo, int minutes, SetType setType,
             params (Exercise Exercise, (double Kg, int Reps)[] Sets)[] blocks)

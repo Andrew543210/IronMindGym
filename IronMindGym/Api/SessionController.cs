@@ -23,24 +23,25 @@ public class SessionController(AccountService accounts, IAntiforgery antiforgery
     public CsrfTokenResponse Csrf() => new(antiforgery.GetAndStoreTokens(HttpContext).RequestToken!);
 
     [HttpGet]
-    public ActionResult<SessionResponse> Current() => User.GetUserId() is int userId ? accounts.Describe(userId) : NoContent();
+    public async Task<ActionResult<SessionResponse>> Current(CancellationToken cancellationToken) =>
+        User.GetUserId() is int userId ? await accounts.DescribeAsync(userId, cancellationToken) : NoContent();
 
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitPolicies.Authentication)]
-    public async Task<ActionResult<SessionResponse>> Login(LoginRequest request)
+    public async Task<ActionResult<SessionResponse>> Login(LoginRequest request, CancellationToken cancellationToken)
     {
-        var user = accounts.Authenticate(request.Email, request.Password);
+        var user = await accounts.AuthenticateAsync(request.Email, request.Password, cancellationToken);
         await SignIn(user, request.RememberMe);
-        return accounts.Describe(user.Id);
+        return await accounts.DescribeAsync(user.Id, cancellationToken);
     }
 
     [HttpPost("register")]
     [EnableRateLimiting(RateLimitPolicies.Authentication)]
-    public async Task<ActionResult<SessionResponse>> Register(RegisterRequest request)
+    public async Task<ActionResult<SessionResponse>> Register(RegisterRequest request, CancellationToken cancellationToken)
     {
-        var user = accounts.Register(request);
+        var user = await accounts.RegisterAsync(request, cancellationToken);
         await SignIn(user, rememberMe: false);
-        return accounts.Describe(user.Id);
+        return await accounts.DescribeAsync(user.Id, cancellationToken);
     }
 
     [HttpPost("logout")]

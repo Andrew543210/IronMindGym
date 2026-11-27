@@ -50,11 +50,13 @@ internal static class TestDatabase
         Execute(server, $"DROP DATABASE IF EXISTS \"{TemplateName}\" WITH (FORCE)");
         Execute(server, $"CREATE DATABASE \"{TemplateName}\"");
         var options = new DbContextOptionsBuilder<IronMindDbContext>().UseNpgsql(WithDatabase(server, TemplateName)).Options;
-        using (var db = new IronMindDbContext(options))
+        // The template is built once, inside a Lazy, so the asynchronous setup is awaited off the test's context.
+        Task.Run(async () =>
         {
-            DatabaseMigrations.Apply(db);
-            DataSeeder.Seed(db);
-        }
+            await using var db = new IronMindDbContext(options);
+            await DatabaseMigrations.ApplyAsync(db, CancellationToken.None);
+            await DataSeeder.SeedAsync(db, includeDemoData: false, CancellationToken.None);
+        }).GetAwaiter().GetResult();
         return server;
     }
 

@@ -8,9 +8,9 @@ namespace IronMindGym.Services;
 
 public class StatisticsService(IronMindDbContext db, AthleteCalendars calendars)
 {
-    public TrainingStatistics Build(int userId)
+    public async Task<TrainingStatistics> BuildAsync(int userId, CancellationToken cancellationToken)
     {
-        var calendar = calendars.For(userId);
+        var calendar = await calendars.ForAsync(userId, cancellationToken);
         var now = calendar.UtcNow;
         var monthAgo = now.AddDays(-30);
         var weekAgo = now.AddDays(-7);
@@ -18,15 +18,15 @@ public class StatisticsService(IronMindDbContext db, AthleteCalendars calendars)
         var performed = db.PerformedExercises.Where(pe => pe.WorkoutSession.UserId == userId);
         var sets = db.Sets.Where(s => s.PerformedExercise.WorkoutSession.UserId == userId);
 
-        var sessionTotals = sessions.GroupBy(_ => 1).Select(g => new
+        var sessionTotals = await sessions.GroupBy(_ => 1).Select(g => new
         {
             Count = g.Count(),
             Minutes = g.Sum(s => s.DurationMinutes),
             First = g.Min(s => s.SessionDate),
             WeekCount = g.Count(s => s.SessionDate >= weekAgo),
             WeekMinutes = g.Where(s => s.SessionDate >= weekAgo).Sum(s => s.DurationMinutes)
-        }).SingleOrDefault();
-        var setTotals = sets.GroupBy(_ => 1).Select(g => new
+        }).SingleOrDefaultAsync(cancellationToken);
+        var setTotals = await sets.GroupBy(_ => 1).Select(g => new
         {
             Count = g.Count(),
             AverageRest = g.Average(s => (double)s.RestSeconds),
@@ -34,19 +34,24 @@ public class StatisticsService(IronMindDbContext db, AthleteCalendars calendars)
             Volume = g.Sum(s => s.WeightKg * s.Reps),
             MonthVolume = g.Where(s => s.PerformedExercise.WorkoutSession.SessionDate >= monthAgo).Sum(s => s.WeightKg * s.Reps),
             WeekVolume = g.Where(s => s.PerformedExercise.WorkoutSession.SessionDate >= weekAgo).Sum(s => s.WeightKg * s.Reps)
-        }).SingleOrDefault();
-        var favorite = performed
+        }).SingleOrDefaultAsync(cancellationToken);
+        var favorite = await performed
             .GroupBy(pe => new { pe.ExerciseId, pe.Exercise.Name, pe.Exercise.NameUk })
             .Select(g => new { g.Key.Name, g.Key.NameUk, Sessions = g.Select(pe => pe.WorkoutSessionId).Distinct().Count() })
             .OrderByDescending(x => x.Sessions).ThenBy(x => x.Name)
-            .FirstOrDefault();
+            .FirstOrDefaultAsync(cancellationToken);
 
-        var sessionDates = sessions.Select(s => s.SessionDate).ToList();
+        var sessionDates = await sessions.Select(s => s.SessionDate).ToListAsync(cancellationToken);
+        var uniqueExercises = await performed.Select(pe => pe.ExerciseId).Distinct().CountAsync(cancellationToken);
+        var exercisesThisMonth = await performed.Where(pe => pe.WorkoutSession.SessionDate >= monthAgo)
+            .Select(pe => pe.ExerciseId).Distinct().CountAsync(cancellationToken);
+        var awards = await db.UserAchievements.CountAsync(ua => ua.UserId == userId, cancellationToken);
+        var records = await RecordsAsync(userId, cancellationToken);
         var workouts = sessionTotals?.Count ?? 0;
         var setCount = setTotals?.Count ?? 0;
         // Weeks since the first workout, at least one, so a new journal is not divided by a fraction.
         var weeksActive = workouts > 0 ? Math.Max(1, (now - sessionTotals!.First).TotalDays / 7) : 1;
-        var bestProgress = BestLoadChange(userId);
+        var bestProgress = await BestLoadChangeAsync(userId, cancellationToken);
 
         return new TrainingStatistics
         {
@@ -63,41 +68,46 @@ public class StatisticsService(IronMindDbContext db, AthleteCalendars calendars)
             WeeklyProgress = Math.Round(setTotals?.WeekVolume ?? 0, 1),
             Last7DaysWorkouts = sessionTotals?.WeekCount ?? 0,
             Last7DaysMinutes = sessionTotals?.WeekMinutes ?? 0,
-            UniqueExercisesCount = performed.Select(pe => pe.ExerciseId).Distinct().Count(),
-            ExercisesThisMonth = performed.Where(pe => pe.WorkoutSession.SessionDate >= monthAgo).Select(pe => pe.ExerciseId).Distinct().Count(),
+            UniqueExercisesCount = uniqueExercises,
+            ExercisesThisMonth = exercisesThisMonth,
             FavoriteExerciseName = favorite is null ? null : Localized.Pick(favorite.Name, favorite.NameUk),
             FavoriteExerciseCount = favorite?.Sessions ?? 0,
             BestProgressExercise = bestProgress.ExerciseName,
             BestProgressPercent = Math.Round(bestProgress.ProgressPercent, 1),
-            TotalAwardsCount = db.UserAchievements.Count(ua => ua.UserId == userId),
-            RecentRecords = Records(userId).OrderByDescending(r => r.AchievedAt).Take(10).ToList()
+            TotalAwardsCount = awards,
+            RecentRecords = records.OrderByDescending(r => r.AchievedAt).Take(10).ToList()
         };
     }
 
-    public List<PersonalRecordItem> Records(int userId) => db.PersonalRecords.AsNoTracking()
-        .Where(pr => pr.UserId == userId)
-        .Select(pr => new PersonalRecordItem
-        {
-            MuscleGroupName = Localized.Pick(pr.Exercise.MuscleSubGroup.MuscleGroup.Name, pr.Exercise.MuscleSubGroup.MuscleGroup.NameUk),
-            MuscleSubGroupName = Localized.Pick(pr.Exercise.MuscleSubGroup.Name, pr.Exercise.MuscleSubGroup.NameUk),
-            ExerciseName = Localized.Pick(pr.Exercise.Name, pr.Exercise.NameUk),
-            MaxWeightKg = pr.MaxWeightKg,
-            AchievedAt = pr.AchievedAt
-        })
-        .AsEnumerable()
-        .OrderBy(pr => pr.MuscleGroupName, Localized.Order)
-        .ThenBy(pr => pr.MuscleSubGroupName, Localized.Order)
-        .ThenBy(pr => pr.ExerciseName, Localized.Order)
-        .ToList();
+    public async Task<List<PersonalRecordItem>> RecordsAsync(int userId, CancellationToken cancellationToken)
+    {
+        var records = await db.PersonalRecords.AsNoTracking()
+            .Where(pr => pr.UserId == userId)
+            .Select(pr => new PersonalRecordItem
+            {
+                MuscleGroupName = Localized.Pick(pr.Exercise.MuscleSubGroup.MuscleGroup.Name, pr.Exercise.MuscleSubGroup.MuscleGroup.NameUk),
+                MuscleSubGroupName = Localized.Pick(pr.Exercise.MuscleSubGroup.Name, pr.Exercise.MuscleSubGroup.NameUk),
+                ExerciseName = Localized.Pick(pr.Exercise.Name, pr.Exercise.NameUk),
+                MaxWeightKg = pr.MaxWeightKg,
+                AchievedAt = pr.AchievedAt
+            })
+            .ToListAsync(cancellationToken);
+        return records
+            .OrderBy(pr => pr.MuscleGroupName, Localized.Order)
+            .ThenBy(pr => pr.MuscleSubGroupName, Localized.Order)
+            .ThenBy(pr => pr.ExerciseName, Localized.Order)
+            .ToList();
+    }
 
     /// <summary>Largest load change between the first and latest logged set at the same repetitions.</summary>
-    private (string? ExerciseName, double ProgressPercent) BestLoadChange(int userId)
+    private async Task<(string? ExerciseName, double ProgressPercent)> BestLoadChangeAsync(int userId, CancellationToken cancellationToken)
     {
-        var best = db.ExerciseProgress.AsNoTracking()
+        var candidates = await db.ExerciseProgress.AsNoTracking()
             .Where(ep => ep.UserId == userId && ep.Exercise.Type == ExerciseType.StrengthTraining
                 && ep.CurrentWeightKg > 0 && ep.InitialWeightKg > 0 && ep.InitialReps > 0 && ep.CurrentReps == ep.InitialReps)
             .Include(ep => ep.Exercise)
-            .ToList()
+            .ToListAsync(cancellationToken);
+        var best = candidates
             .Select(ep => (Name: (string?)Localized.Pick(ep.Exercise.Name, ep.Exercise.NameUk), Progress: ep.WeightChangePercent))
             .OrderByDescending(x => x.Progress)
             .FirstOrDefault();

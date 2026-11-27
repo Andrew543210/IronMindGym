@@ -7,27 +7,30 @@ namespace IronMindGym.Api;
 public class WorkoutsController(WorkoutService workouts, WorkoutSocialService social) : ApiController
 {
     [HttpGet]
-    public WorkoutHistoryResponse History(int page = 1) => workouts.History(UserId, page);
+    public Task<WorkoutHistoryResponse> History(CancellationToken cancellationToken, int page = 1) =>
+        workouts.HistoryAsync(UserId, page, cancellationToken);
 
     [HttpGet("logger")]
-    public WorkoutLoggerResponse Logger() => workouts.LoggerOptions(UserId);
+    public Task<WorkoutLoggerResponse> Logger(CancellationToken cancellationToken) => workouts.LoggerOptionsAsync(UserId, cancellationToken);
 
     [HttpGet("previous-set")]
-    public ActionResult<PreviousSetResponse> PreviousSet(int exerciseId) =>
-        workouts.PreviousSet(UserId, exerciseId) is { } previous ? previous : NoContent();
+    public async Task<ActionResult<PreviousSetResponse>> PreviousSet(int exerciseId, CancellationToken cancellationToken) =>
+        await workouts.PreviousSetAsync(UserId, exerciseId, cancellationToken) is { } previous ? previous : NoContent();
 
     [HttpPost]
     [RequestSizeLimit(150_000)]
-    public SavedWorkoutResponse Save(SaveWorkoutRequest request) => new(workouts.Save(UserId, request));
+    public async Task<SavedWorkoutResponse> Save(SaveWorkoutRequest request, CancellationToken cancellationToken) =>
+        new(await workouts.SaveAsync(UserId, request, cancellationToken));
 
     [HttpGet("{id:int}")]
-    public ActionResult<WorkoutDetailsResponse> Details(int id) =>
-        workouts.Details(UserId, id, UserId) is { } details ? details : NotFound();
+    public async Task<ActionResult<WorkoutDetailsResponse>> Details(int id, CancellationToken cancellationToken) =>
+        await workouts.DetailsAsync(UserId, id, UserId, cancellationToken) is { } details ? details : NotFound();
 
     [HttpDelete("{id:int}")]
-    public ActionResult Delete(int id) => workouts.Delete(UserId, id) ? NoContent() : NotFound();
+    public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken) =>
+        await workouts.DeleteAsync(UserId, id, cancellationToken) ? NoContent() : NotFound();
 
     [HttpPost("{id:int}/comments")]
-    public ActionResult AddComment(int id, CommentRequest request) =>
-        social.AddComment(UserId, UserId, id, request.Text) ? NoContent() : NotFound();
+    public async Task<ActionResult> AddComment(int id, CommentRequest request, CancellationToken cancellationToken) =>
+        await social.AddCommentAsync(UserId, UserId, id, request.Text, cancellationToken) ? NoContent() : NotFound();
 }

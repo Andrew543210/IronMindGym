@@ -7,33 +7,35 @@ namespace IronMindGym.Api;
 public class ProgressController(ExerciseProgressService progress, ExerciseCatalog catalog) : ApiController
 {
     [HttpGet]
-    public List<ExerciseProgressEntry> List() => progress.List(UserId);
+    public Task<List<ExerciseProgressEntry>> List(CancellationToken cancellationToken) => progress.ListAsync(UserId, cancellationToken);
 
     [HttpGet("catalog")]
-    public List<ExerciseCatalogItem> Catalog() => catalog.Items();
+    public Task<List<ExerciseCatalogItem>> Catalog(CancellationToken cancellationToken) => catalog.ItemsAsync(cancellationToken);
 
     [HttpGet("{exerciseId:int}")]
-    public ActionResult<ProgressPair> Results(int exerciseId) => progress.Results(UserId, exerciseId) is { } pair ? pair : NoContent();
+    public async Task<ActionResult<ProgressPair>> Results(int exerciseId, CancellationToken cancellationToken) =>
+        await progress.ResultsAsync(UserId, exerciseId, cancellationToken) is { } pair ? pair : NoContent();
 
     [HttpPut("{exerciseId:int}")]
-    public ActionResult SaveResults(int exerciseId, ProgressResultsRequest request)
+    public async Task<ActionResult> SaveResults(int exerciseId, ProgressResultsRequest request, CancellationToken cancellationToken)
     {
-        progress.SaveResults(UserId, new ProgressPair(exerciseId,
-            request.InitialValue1!.Value, request.InitialValue2!.Value, request.CurrentValue1!.Value, request.CurrentValue2!.Value));
+        await progress.SaveResultsAsync(UserId, new ProgressPair(exerciseId,
+            request.InitialValue1!.Value, request.InitialValue2!.Value, request.CurrentValue1!.Value, request.CurrentValue2!.Value), cancellationToken);
         return NoContent();
     }
 
     [HttpPut("{exerciseId:int}/current")]
-    public ActionResult SaveCurrent(int exerciseId, CurrentResultRequest request)
+    public async Task<ActionResult> SaveCurrent(int exerciseId, CurrentResultRequest request, CancellationToken cancellationToken)
     {
-        progress.SaveCurrent(UserId, exerciseId, request.WeightKg, request.Reps, request.DurationSeconds, request.Intensity);
+        await progress.SaveCurrentAsync(UserId, exerciseId, request.WeightKg, request.Reps, request.DurationSeconds, request.Intensity, cancellationToken);
         return NoContent();
     }
 
     [HttpDelete("{exerciseId:int}")]
-    public ActionResult Delete(int exerciseId) => progress.Delete(UserId, exerciseId) ? NoContent() : NotFound();
+    public async Task<ActionResult> Delete(int exerciseId, CancellationToken cancellationToken) =>
+        await progress.DeleteAsync(UserId, exerciseId, cancellationToken) ? NoContent() : NotFound();
 
     [HttpGet("/api/friends/{friendId:int}/progress")]
-    public ActionResult<FriendProgressResponse> Friend(int friendId) =>
-        progress.OfFriend(UserId, friendId) is { } friend ? friend : NotFound();
+    public async Task<ActionResult<FriendProgressResponse>> Friend(int friendId, CancellationToken cancellationToken) =>
+        await progress.OfFriendAsync(UserId, friendId, cancellationToken) is { } friend ? friend : NotFound();
 }

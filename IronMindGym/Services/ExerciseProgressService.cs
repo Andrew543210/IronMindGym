@@ -12,32 +12,34 @@ namespace IronMindGym.Services;
 /// </summary>
 public class ExerciseProgressService(IronMindDbContext db, TimeProvider clock, FriendshipService friendships, StrengthService strength)
 {
-    public List<ExerciseProgressEntry> List(int userId) => db.ExerciseProgress.AsNoTracking()
-        .Where(p => p.UserId == userId)
-        .Select(p => new ExerciseProgressEntry
-        {
-            ExerciseId = p.ExerciseId,
-            ExerciseName = Localized.Pick(p.Exercise.Name, p.Exercise.NameUk),
-            MuscleSubGroup = Localized.Pick(p.Exercise.MuscleSubGroup.Name, p.Exercise.MuscleSubGroup.NameUk),
-            MuscleGroup = Localized.Pick(p.Exercise.MuscleSubGroup.MuscleGroup.Name, p.Exercise.MuscleSubGroup.MuscleGroup.NameUk),
-            ExerciseType = p.Exercise.Type,
-            InitialWeightKg = p.InitialWeightKg,
-            InitialReps = p.InitialReps,
-            InitialDurationSeconds = p.InitialDurationSeconds,
-            InitialIntensity = p.InitialIntensity,
-            CurrentWeightKg = p.CurrentWeightKg,
-            CurrentReps = p.CurrentReps,
-            CurrentDurationSeconds = p.CurrentDurationSeconds,
-            CurrentIntensity = p.CurrentIntensity
-        })
-        .AsEnumerable()
-        .OrderBy(p => p.ExerciseName, Localized.Order)
-        .ToList();
-
-    public ProgressPair? Results(int userId, int exerciseId)
+    public async Task<List<ExerciseProgressEntry>> ListAsync(int userId, CancellationToken cancellationToken)
     {
-        var saved = db.ExerciseProgress.AsNoTracking().Include(p => p.Exercise)
-            .FirstOrDefault(p => p.UserId == userId && p.ExerciseId == exerciseId);
+        var entries = await db.ExerciseProgress.AsNoTracking()
+            .Where(p => p.UserId == userId)
+            .Select(p => new ExerciseProgressEntry
+            {
+                ExerciseId = p.ExerciseId,
+                ExerciseName = Localized.Pick(p.Exercise.Name, p.Exercise.NameUk),
+                MuscleSubGroup = Localized.Pick(p.Exercise.MuscleSubGroup.Name, p.Exercise.MuscleSubGroup.NameUk),
+                MuscleGroup = Localized.Pick(p.Exercise.MuscleSubGroup.MuscleGroup.Name, p.Exercise.MuscleSubGroup.MuscleGroup.NameUk),
+                ExerciseType = p.Exercise.Type,
+                InitialWeightKg = p.InitialWeightKg,
+                InitialReps = p.InitialReps,
+                InitialDurationSeconds = p.InitialDurationSeconds,
+                InitialIntensity = p.InitialIntensity,
+                CurrentWeightKg = p.CurrentWeightKg,
+                CurrentReps = p.CurrentReps,
+                CurrentDurationSeconds = p.CurrentDurationSeconds,
+                CurrentIntensity = p.CurrentIntensity
+            })
+            .ToListAsync(cancellationToken);
+        return entries.OrderBy(p => p.ExerciseName, Localized.Order).ToList();
+    }
+
+    public async Task<ProgressPair?> ResultsAsync(int userId, int exerciseId, CancellationToken cancellationToken)
+    {
+        var saved = await db.ExerciseProgress.AsNoTracking().Include(p => p.Exercise)
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.ExerciseId == exerciseId, cancellationToken);
         return saved?.Exercise.Type switch
         {
             null => null,
@@ -48,44 +50,51 @@ public class ExerciseProgressService(IronMindDbContext db, TimeProvider clock, F
     }
 
     /// <summary>Saves both results together: when either is invalid, neither changes.</summary>
-    public void SaveResults(int userId, ProgressPair pair)
+    public async Task SaveResultsAsync(int userId, ProgressPair pair, CancellationToken cancellationToken)
     {
-        var exercise = FindExercise(pair.ExerciseId);
-        using var transaction = WriteLock.BeginForAthletes(db, userId);
-        var progress = db.ExerciseProgress.FirstOrDefault(p => p.UserId == userId && p.ExerciseId == exercise.Id);
+        var exercise = await FindExerciseAsync(pair.ExerciseId, cancellationToken);
+        var initial = Result.FromPair(exercise.Type, pair.InitialValue1, pair.InitialValue2);
+        var current = Result.FromPair(exercise.Type, pair.CurrentValue1, pair.CurrentValue2);
+        await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
+        var progress = await db.ExerciseProgress.FirstOrDefaultAsync(p => p.UserId == userId && p.ExerciseId == exercise.Id, cancellationToken);
         if (progress is null)
             db.ExerciseProgress.Add(progress = new ExerciseProgress { UserId = userId, ExerciseId = exercise.Id });
-        Record(progress, initial: true, Result.FromPair(exercise.Type, pair.InitialValue1, pair.InitialValue2), clock.UtcNow());
-        Record(progress, initial: false, Result.FromPair(exercise.Type, pair.CurrentValue1, pair.CurrentValue2), clock.UtcNow());
-        db.SaveChanges();
-        transaction.Commit();
+        var now = clock.UtcNow();
+        Record(progress, initial: true, initial, now);
+        Record(progress, initial: false, current, now);
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
-    public void SaveCurrent(int userId, int exerciseId, double? weight, int? reps, int? duration, int? intensity)
+    public async Task SaveCurrentAsync(int userId, int exerciseId, double? weight, int? reps, int? duration, int? intensity,
+        CancellationToken cancellationToken)
     {
-        var exercise = FindExercise(exerciseId);
+        var exercise = await FindExerciseAsync(exerciseId, cancellationToken);
         var result = TrackingRules.Check(exercise.Type, weight ?? 0, reps ?? 0, duration ?? 0, intensity ?? 0);
-        using var transaction = WriteLock.BeginForAthletes(db, userId);
-        var progress = db.ExerciseProgress.FirstOrDefault(p => p.UserId == userId && p.ExerciseId == exerciseId)
+        await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
+        var progress = await db.ExerciseProgress.FirstOrDefaultAsync(p => p.UserId == userId && p.ExerciseId == exerciseId, cancellationToken)
             ?? throw new DomainValidationException("Save initial results first.");
         Record(progress, initial: false, result, clock.UtcNow());
-        db.SaveChanges();
-        transaction.Commit();
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     /// <summary>A friend's results and strength coefficient; null when the two are not friends.</summary>
-    public FriendProgressResponse? OfFriend(int viewerId, int friendId) => friendships.AreFriends(viewerId, friendId)
-        ? new FriendProgressResponse(
-            db.Users.Where(u => u.Id == friendId).Select(u => u.Username).Single(),
-            strength.Rank(friendId).Coefficient,
-            List(friendId))
-        : null;
+    public async Task<FriendProgressResponse?> OfFriendAsync(int viewerId, int friendId, CancellationToken cancellationToken)
+    {
+        if (!await friendships.AreFriendsAsync(viewerId, friendId, cancellationToken))
+            return null;
+        var username = await db.Users.Where(u => u.Id == friendId).Select(u => u.Username).SingleAsync(cancellationToken);
+        var rank = await strength.RankAsync(friendId, cancellationToken);
+        return new FriendProgressResponse(username, rank.Coefficient, await ListAsync(friendId, cancellationToken));
+    }
 
-    public bool Delete(int userId, int exerciseId) =>
-        db.ExerciseProgress.Where(p => p.UserId == userId && p.ExerciseId == exerciseId).ExecuteDelete() > 0;
+    public async Task<bool> DeleteAsync(int userId, int exerciseId, CancellationToken cancellationToken) =>
+        await db.ExerciseProgress.Where(p => p.UserId == userId && p.ExerciseId == exerciseId).ExecuteDeleteAsync(cancellationToken) > 0;
 
-    private Exercise FindExercise(int exerciseId) =>
-        db.Exercises.AsNoTracking().FirstOrDefault(e => e.Id == exerciseId) ?? throw new DomainValidationException("Choose a valid exercise.", "ExerciseId");
+    private async Task<Exercise> FindExerciseAsync(int exerciseId, CancellationToken cancellationToken) =>
+        await db.Exercises.AsNoTracking().FirstOrDefaultAsync(e => e.Id == exerciseId, cancellationToken)
+        ?? throw new DomainValidationException("Choose a valid exercise.", "ExerciseId");
 
     private static void Record(ExerciseProgress progress, bool initial, TrackedResult result, DateTime now)
     {

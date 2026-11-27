@@ -14,8 +14,8 @@ public class WorkoutRecordTests
         return new(db, TimeProvider.System, calendars, new ExerciseCatalog(db), new PersonalRecordService(db), new AchievementService(db, calendars));
     }
 
-    private static int Save(TestApplication app, params (int Exercise, double Weight, int Reps, int Duration)[] sets) => app.Query(db =>
-        Workouts(db).Save(db.Users.Single().Id, new SaveWorkoutRequest
+    private static Task<int> SaveAsync(TestApplication app, params (int Exercise, double Weight, int Reps, int Duration)[] sets) => app.QueryAsync(db =>
+        Workouts(db).SaveAsync(db.Users.Single().Id, new SaveWorkoutRequest
         {
             DurationMinutes = 45,
             Sets = sets.Select(s => new WorkoutSetInput
@@ -27,7 +27,7 @@ public class WorkoutRecordTests
                 DurationSeconds = s.Duration,
                 Intensity = 5
             }).ToList()
-        }));
+        }, CancellationToken.None));
 
     private static WorkoutSession Load(IronMindDbContext db, int id) => db.WorkoutSessions
         .Include(s => s.PerformedExercises).ThenInclude(p => p.Exercise)
@@ -48,18 +48,19 @@ public class WorkoutRecordTests
         using var app = await WithAthlete();
         var ids = app.Query(db => db.Exercises.Where(e => e.Type == ExerciseType.StrengthTraining).OrderBy(e => e.Id).Take(2).Select(e => e.Id).ToArray());
 
-        var id = Save(app, (ids[0], 20, 8, 0), (ids[1], 30, 10, 0), (ids[0], 25, 6, 0), (ids[1], 35, 8, 0));
+        var id = await SaveAsync(app, (ids[0], 20, 8, 0), (ids[1], 30, 10, 0), (ids[0], 25, 6, 0), (ids[1], 35, 8, 0));
 
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
             var blocks = Load(db, id).PerformedExercises.OrderBy(p => p.OrderInWorkout).ToList();
             Assert.Equal([ids[0], ids[1], ids[0], ids[1]], blocks.Select(p => p.ExerciseId));
             Assert.Equal([1, 1, 2, 2], blocks.SelectMany(p => p.Sets).Select(s => s.SetNumber));
-            var stats = Workouts(db).BuildExerciseStats(Load(db, id));
+            var stats = await Workouts(db).BuildExerciseStatsAsync(Load(db, id), CancellationToken.None);
             Assert.Equal(2, stats.Count);
             Assert.All(stats, s => Assert.Equal(2, s.SetsCount));
             Assert.Equal(2, db.PersonalRecords.Count());
-            Assert.Equal(1, new StatisticsService(db, new AthleteCalendars(db, TimeProvider.System)).Build(db.Users.Single().Id).FavoriteExerciseCount);
+            var statistics = new StatisticsService(db, new AthleteCalendars(db, TimeProvider.System));
+            Assert.Equal(1, (await statistics.BuildAsync(db.Users.Single().Id, CancellationToken.None)).FavoriteExerciseCount);
             return true;
         });
     }
@@ -69,16 +70,16 @@ public class WorkoutRecordTests
     {
         using var app = await WithAthlete();
         var pushUps = app.Query(db => db.Exercises.Single(e => e.Name == "Push-Ups").Id);
-        var bodyweight = Save(app, (pushUps, 0, 20, 0));
-        var weighted = Save(app, (pushUps, 10, 8, 0));
+        var bodyweight = await SaveAsync(app, (pushUps, 0, 20, 0));
+        var weighted = await SaveAsync(app, (pushUps, 10, 8, 0));
 
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
             var service = Workouts(db);
-            Assert.False(service.BuildExerciseStats(Load(db, bodyweight)).Single().IsNewRecord);
-            Assert.True(service.Delete(db.Users.Single().Id, weighted));
+            Assert.False((await service.BuildExerciseStatsAsync(Load(db, bodyweight), CancellationToken.None)).Single().IsNewRecord);
+            Assert.True(await service.DeleteAsync(db.Users.Single().Id, weighted, CancellationToken.None));
             Assert.Empty(db.PersonalRecords);
-            Assert.False(service.Delete(db.Users.Single().Id, weighted));
+            Assert.False(await service.DeleteAsync(db.Users.Single().Id, weighted, CancellationToken.None));
             return true;
         });
     }
@@ -88,17 +89,17 @@ public class WorkoutRecordTests
     {
         using var app = await WithAthlete();
         var bench = app.Query(db => db.Exercises.Single(e => e.Name == "Flat Bench Press").Id);
-        var first = Journal.AddWorkout(app, new DateTime(2026, 9, 1, 18, 0, 0, DateTimeKind.Utc), 45, (bench, 70, 5, 90));
-        Journal.AddWorkout(app, new DateTime(2026, 9, 8, 18, 0, 0, DateTimeKind.Utc), 45, (bench, 70, 6, 90));
-        var heaviest = Save(app, (bench, 80, 3, 0));
+        var first = await Journal.AddWorkoutAsync(app, new DateTime(2026, 9, 1, 18, 0, 0, DateTimeKind.Utc), 45, (bench, 70, 5, 90));
+        await Journal.AddWorkoutAsync(app, new DateTime(2026, 9, 8, 18, 0, 0, DateTimeKind.Utc), 45, (bench, 70, 6, 90));
+        var heaviest = await SaveAsync(app, (bench, 80, 3, 0));
 
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
             Assert.Equal(80, db.PersonalRecords.Single().MaxWeightKg);
-            Assert.True(Workouts(db).Delete(db.Users.Single().Id, heaviest));
+            Assert.True(await Workouts(db).DeleteAsync(db.Users.Single().Id, heaviest, CancellationToken.None));
             var record = db.PersonalRecords.AsNoTracking().Single();
             Assert.Equal((70, new DateTime(2026, 9, 1, 18, 0, 0, DateTimeKind.Utc)), (record.MaxWeightKg, record.AchievedAt));
-            Assert.True(Workouts(db).Delete(db.Users.Single().Id, first));
+            Assert.True(await Workouts(db).DeleteAsync(db.Users.Single().Id, first, CancellationToken.None));
             Assert.Equal(new DateTime(2026, 9, 8, 18, 0, 0, DateTimeKind.Utc), db.PersonalRecords.AsNoTracking().Single().AchievedAt);
             return true;
         });
@@ -109,16 +110,16 @@ public class WorkoutRecordTests
     {
         using var app = await WithAthlete();
         var bench = app.Query(db => db.Exercises.Single(e => e.Name == "Flat Bench Press").Id);
-        Save(app, (bench, 40, 8, 0));
-        var second = Save(app, (bench, 50, 5, 0));
-        Save(app, (bench, 60, 3, 0));
+        await SaveAsync(app, (bench, 40, 8, 0));
+        var second = await SaveAsync(app, (bench, 50, 5, 0));
+        await SaveAsync(app, (bench, 60, 3, 0));
 
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
             foreach (var session in db.WorkoutSessions)
                 session.SessionDate = DateTime.UtcNow.Date;
             db.SaveChanges();
-            var result = Workouts(db).BuildExerciseStats(Load(db, second)).Single();
+            var result = (await Workouts(db).BuildExerciseStatsAsync(Load(db, second), CancellationToken.None)).Single();
             Assert.True(result.IsNewRecord);
             Assert.Equal(125, result.PercentOfPreviousBest);
             return true;
@@ -130,12 +131,12 @@ public class WorkoutRecordTests
     {
         using var app = await WithAthlete();
         var plank = app.Query(db => db.Exercises.Single(e => e.Name == "Weighted Plank").Id);
-        Save(app, (plank, 10, 0, 60));
-        var id = Save(app, (plank, 20, 0, 60));
+        await SaveAsync(app, (plank, 10, 0, 60));
+        var id = await SaveAsync(app, (plank, 20, 0, 60));
 
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
-            var result = Workouts(db).BuildExerciseStats(Load(db, id)).Single();
+            var result = (await Workouts(db).BuildExerciseStatsAsync(Load(db, id), CancellationToken.None)).Single();
             Assert.Null(result.PercentOfPreviousBest);
             Assert.False(result.IsNewRecord);
             Assert.False(result.TracksLoad);

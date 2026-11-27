@@ -8,11 +8,11 @@ namespace IronMindGym.Services;
 
 public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, StrengthService strength, SetupService setup, AchievementService achievements)
 {
-    public ProfileOverview BuildOverview(int userId)
+    public async Task<ProfileOverview> BuildOverviewAsync(int userId, CancellationToken cancellationToken)
     {
-        var user = db.Users.AsNoTracking().Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
-        var weighIn = db.WeightLogs.LatestWeighIn(userId);
-        var rank = strength.Rank(userId);
+        var user = await db.Users.AsNoTracking().Include(u => u.Profile).Include(u => u.Benchmarks).SingleAsync(u => u.Id == userId, cancellationToken);
+        var weighIn = await db.WeightLogs.LatestWeighInAsync(userId, cancellationToken);
+        var rank = await strength.RankAsync(userId, cancellationToken);
         return new ProfileOverview(
             user.Username,
             user.Email,
@@ -25,35 +25,36 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
             user.Benchmarks?.BenchPressKg,
             user.Benchmarks?.SquatKg,
             user.Benchmarks?.DeadliftKg,
-            db.WeightLogs.AsNoTracking().Where(w => w.UserId == userId).OrderByDescending(w => w.Date).Take(30)
-                .Select(w => new WeightEntry(w.Date, w.ValueKg)).ToList(),
-            db.UserAchievements.AsNoTracking().Where(a => a.UserId == userId).OrderByDescending(a => a.AchievedAt)
+            await db.WeightLogs.AsNoTracking().Where(w => w.UserId == userId).OrderByDescending(w => w.Date).Take(30)
+                .Select(w => new WeightEntry(w.Date, w.ValueKg)).ToListAsync(cancellationToken),
+            await db.UserAchievements.AsNoTracking().Where(a => a.UserId == userId).OrderByDescending(a => a.AchievedAt)
                 .Select(a => new ProfileAchievement(
                     Localized.Pick(a.Achievement.Name, a.Achievement.NameUk),
                     Localized.Pick(a.Achievement.ConditionDescription, a.Achievement.ConditionDescriptionUk),
                     a.AchievedAt))
-                .ToList());
+                .ToListAsync(cancellationToken));
     }
 
-    public ProfileSettingsResponse Settings(int userId) => new(BuildEdit(userId), setup.SplitTypes());
+    public async Task<ProfileSettingsResponse> SettingsAsync(int userId, CancellationToken cancellationToken) =>
+        new(await BuildEditAsync(userId, cancellationToken), await setup.SplitTypesAsync(cancellationToken));
 
     /// <summary>The interface language, kept so the athlete sees it again on another device.</summary>
-    public void SaveLanguage(int userId, Language language)
+    public async Task SaveLanguageAsync(int userId, Language language, CancellationToken cancellationToken)
     {
-        using var transaction = WriteLock.BeginForAthletes(db, userId);
-        var profile = db.Profiles.FirstOrDefault(p => p.UserId == userId);
+        await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
+        var profile = await db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
         if (profile is null)
             db.Profiles.Add(profile = new Profile { UserId = userId });
         profile.Language = language;
-        db.SaveChanges();
-        transaction.Commit();
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
-    private ProfileSettings BuildEdit(int userId)
+    private async Task<ProfileSettings> BuildEditAsync(int userId, CancellationToken cancellationToken)
     {
-        var user = db.Users.AsNoTracking().Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
-        var bodyweightKg = db.WeightLogs.LatestWeighIn(userId)?.ValueKg;
-        var plan = db.WorkoutPlans.PlanOf(userId);
+        var user = await db.Users.AsNoTracking().Include(u => u.Profile).Include(u => u.Benchmarks).SingleAsync(u => u.Id == userId, cancellationToken);
+        var bodyweightKg = (await db.WeightLogs.LatestWeighInAsync(userId, cancellationToken))?.ValueKg;
+        var plan = await db.WorkoutPlans.PlanOfAsync(userId, cancellationToken);
         return new ProfileSettings
         {
             Username = user.Username,
@@ -70,22 +71,22 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
             SquatKg = user.Benchmarks?.SquatKg ?? 0,
             DeadliftKg = user.Benchmarks?.DeadliftKg ?? 0,
             WorkoutsPerWeek = plan?.WorkoutsPerWeek ?? 3,
-            SplitTypeId = plan?.SplitTypeId ?? db.SplitTypes.OrderBy(s => s.Id).Select(s => s.Id).First()
+            SplitTypeId = plan?.SplitTypeId ?? await db.SplitTypes.OrderBy(s => s.Id).Select(s => s.Id).FirstAsync(cancellationToken)
         };
     }
 
-    public void Update(int userId, ProfileSettings settings)
+    public async Task UpdateAsync(int userId, ProfileSettings settings, CancellationToken cancellationToken)
     {
-        if (!db.SplitTypes.Any(s => s.Id == settings.SplitTypeId))
+        if (!await db.SplitTypes.AnyAsync(s => s.Id == settings.SplitTypeId, cancellationToken))
             throw new DomainValidationException("Choose a valid training split.", "SplitTypeId");
         var timeZone = string.IsNullOrWhiteSpace(settings.TimeZone) ? null : settings.TimeZone.Trim();
         if (timeZone is not null && !AthleteCalendar.TryFindZone(timeZone, out _))
             throw new DomainValidationException("Enter a time zone such as Europe/Kyiv, or leave it empty to use UTC.", "TimeZone");
         var username = settings.Username.Trim();
-        using var transaction = WriteLock.BeginForAthletes(db, userId);
-        if (db.Users.Any(u => u.Id != userId && u.Username == username))
+        await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
+        if (await db.Users.AnyAsync(u => u.Id != userId && u.Username == username, cancellationToken))
             throw new DomainValidationException("This username is already taken.", "Username");
-        var user = db.Users.Include(u => u.Profile).Include(u => u.Benchmarks).Single(u => u.Id == userId);
+        var user = await db.Users.Include(u => u.Profile).Include(u => u.Benchmarks).SingleAsync(u => u.Id == userId, cancellationToken);
         user.Username = username;
         user.Profile ??= new Profile { UserId = userId };
         user.Profile.Age = settings.Age;
@@ -100,15 +101,15 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
         user.Benchmarks.BenchPressKg = settings.BenchPressKg;
         user.Benchmarks.SquatKg = settings.SquatKg;
         user.Benchmarks.DeadliftKg = settings.DeadliftKg;
-        RecordWeightIfChanged(userId, settings.WeightKg, calendars.InZone(timeZone).Today);
-        var plan = db.WorkoutPlans.Find(userId);
+        await RecordWeightIfChangedAsync(userId, settings.WeightKg, calendars.InZone(timeZone).Today, cancellationToken);
+        var plan = await db.WorkoutPlans.FindAsync([userId], cancellationToken);
         if (plan is null)
             db.WorkoutPlans.Add(plan = new WorkoutPlan { UserId = userId });
         plan.SplitTypeId = settings.SplitTypeId;
         plan.WorkoutsPerWeek = settings.WorkoutsPerWeek;
         try
         {
-            db.SaveChanges();
+            await db.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException ex) when (DbErrors.IsUniqueViolation(ex))
         {
@@ -116,44 +117,45 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
             throw new DomainValidationException("This username is already taken.", "Username");
         }
         calendars.Forget(userId);
-        achievements.AwardEarned(userId);
-        transaction.Commit();
+        await achievements.AwardEarnedAsync(userId, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     /// <summary>A weigh-in for any day in the last five years. The latest one is the current bodyweight.</summary>
-    public void LogWeight(int userId, DateOnly date, double weightKg)
+    public async Task LogWeightAsync(int userId, DateOnly date, double weightKg, CancellationToken cancellationToken)
     {
-        var today = calendars.For(userId).Today;
+        var today = (await calendars.ForAsync(userId, cancellationToken)).Today;
         if (date > today || date < today.AddYears(-5))
             throw new DomainValidationException("Choose a date within the last five years, up to today.", "Date");
-        using var transaction = WriteLock.BeginForAthletes(db, userId);
-        if (!AthleteSetup.IsComplete(db, userId))
+        await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
+        if (!await AthleteSetup.IsCompleteAsync(db, userId, cancellationToken))
             throw new DomainValidationException("Complete your profile first.");
-        UpsertWeight(userId, weightKg, date);
-        db.SaveChanges();
-        transaction.Commit();
+        await UpsertWeightAsync(userId, weightKg, date, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     /// <summary>A new security stamp ends every other session of the account.</summary>
-    public void ChangePassword(int userId, ChangePasswordRequest request)
+    public async Task ChangePasswordAsync(int userId, ChangePasswordRequest request, CancellationToken cancellationToken)
     {
-        var user = db.Users.Single(u => u.Id == userId);
+        var user = await db.Users.SingleAsync(u => u.Id == userId, cancellationToken);
         if (!PasswordHashUtility.Verify(request.CurrentPassword, user.PasswordHash))
             throw new DomainValidationException("Current password is incorrect.", "CurrentPassword");
         user.PasswordHash = PasswordHashUtility.Hash(request.NewPassword);
         user.SecurityStamp = Guid.NewGuid().ToString("N");
-        db.SaveChanges();
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>Everything the athlete recorded, without credentials, for keeping a personal copy.</summary>
-    public DataExport Export(int userId) => new(
-        calendars.For(userId).UtcNow,
-        db.Users.Where(u => u.Id == userId)
-            .Select(u => new ExportedAccount(u.Username, u.Email, u.Profile == null ? 0 : u.Profile.Age, u.Profile == null ? null : u.Profile.HeightCm)).Single(),
-        db.WeightLogs.Where(w => w.UserId == userId).OrderBy(w => w.Date).Select(w => new ExportedWeighIn(w.Date, w.ValueKg)).ToList(),
-        db.DailyNutritions.Where(n => n.UserId == userId).OrderBy(n => n.Date)
-            .Select(n => new ExportedNutritionDay(n.Date, n.CaloriesKcal, n.ProteinG, n.FatG, n.CarbsG)).ToList(),
-        db.WorkoutSessions.Where(w => w.UserId == userId).OrderBy(w => w.SessionDate).Select(w => new ExportedWorkout(
+    public async Task<DataExport> ExportAsync(int userId, CancellationToken cancellationToken) => new(
+        (await calendars.ForAsync(userId, cancellationToken)).UtcNow,
+        await db.Users.Where(u => u.Id == userId)
+            .Select(u => new ExportedAccount(u.Username, u.Email, u.Profile == null ? 0 : u.Profile.Age, u.Profile == null ? null : u.Profile.HeightCm))
+            .SingleAsync(cancellationToken),
+        await db.WeightLogs.Where(w => w.UserId == userId).OrderBy(w => w.Date).Select(w => new ExportedWeighIn(w.Date, w.ValueKg)).ToListAsync(cancellationToken),
+        await db.DailyNutritions.Where(n => n.UserId == userId).OrderBy(n => n.Date)
+            .Select(n => new ExportedNutritionDay(n.Date, n.CaloriesKcal, n.ProteinG, n.FatG, n.CarbsG)).ToListAsync(cancellationToken),
+        await db.WorkoutSessions.Where(w => w.UserId == userId).OrderBy(w => w.SessionDate).Select(w => new ExportedWorkout(
             w.SplitDay == null ? "Training Day" : w.SplitDay.WorkoutName,
             w.SessionDate,
             w.DurationMinutes,
@@ -163,23 +165,24 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
                 e.Exercise.Name,
                 e.Sets.OrderBy(s => s.SetNumber)
                     .Select(s => new ExportedSet(s.SetNumber, s.SetType.Name, s.WeightKg, s.Reps, s.DurationSeconds, s.Intensity, s.RestSeconds))
-                    .ToList())).ToList())).ToList(),
-        db.ExerciseProgress.Where(p => p.UserId == userId).OrderBy(p => p.Exercise.Name).Select(p => new ExportedProgress(
+                    .ToList())).ToList())).ToListAsync(cancellationToken),
+        await db.ExerciseProgress.Where(p => p.UserId == userId).OrderBy(p => p.Exercise.Name).Select(p => new ExportedProgress(
             p.Exercise.Name, p.InitialWeightKg, p.CurrentWeightKg, p.InitialReps, p.CurrentReps,
-            p.InitialDurationSeconds, p.CurrentDurationSeconds, p.InitialIntensity, p.CurrentIntensity)).ToList(),
-        db.UserGoals.Where(g => g.UserId == userId).OrderBy(g => g.Deadline).Select(g => new ExportedGoal(g.Title, g.Deadline, g.IsCompleted)).ToList());
+            p.InitialDurationSeconds, p.CurrentDurationSeconds, p.InitialIntensity, p.CurrentIntensity)).ToListAsync(cancellationToken),
+        await db.UserGoals.Where(g => g.UserId == userId).OrderBy(g => g.Deadline)
+            .Select(g => new ExportedGoal(g.Title, g.Deadline, g.IsCompleted)).ToListAsync(cancellationToken));
 
     /// <summary>The settings form always sends the bodyweight; only a real change is today's weigh-in.</summary>
-    private void RecordWeightIfChanged(int userId, double weightKg, DateOnly today)
+    private async Task RecordWeightIfChangedAsync(int userId, double weightKg, DateOnly today, CancellationToken cancellationToken)
     {
-        var latest = db.WeightLogs.LatestWeighIn(userId);
+        var latest = await db.WeightLogs.LatestWeighInAsync(userId, cancellationToken);
         if (latest is null || Math.Abs(latest.ValueKg - weightKg) > 0.001)
-            UpsertWeight(userId, weightKg, today);
+            await UpsertWeightAsync(userId, weightKg, today, cancellationToken);
     }
 
-    private void UpsertWeight(int userId, double value, DateOnly date)
+    private async Task UpsertWeightAsync(int userId, double value, DateOnly date, CancellationToken cancellationToken)
     {
-        var log = db.WeightLogs.FirstOrDefault(w => w.UserId == userId && w.Date == date);
+        var log = await db.WeightLogs.FirstOrDefaultAsync(w => w.UserId == userId && w.Date == date, cancellationToken);
         if (log is null)
             db.WeightLogs.Add(new WeightLog { UserId = userId, ValueKg = value, Date = date });
         else

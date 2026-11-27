@@ -6,11 +6,11 @@ namespace IronMindGym.Api;
 public class StatisticsController(StatisticsService statistics, AchievementService achievements) : ApiController
 {
     [HttpGet("api/statistics")]
-    public TrainingStatistics Summary() => statistics.Build(UserId);
+    public Task<TrainingStatistics> Summary(CancellationToken cancellationToken) => statistics.BuildAsync(UserId, cancellationToken);
 
     [HttpGet("api/statistics/records")]
-    public List<PersonalRecordItem> Records() => statistics.Records(UserId);
+    public Task<List<PersonalRecordItem>> Records(CancellationToken cancellationToken) => statistics.RecordsAsync(UserId, cancellationToken);
 
     [HttpGet("api/awards")]
-    public List<AwardProgressItem> Awards() => achievements.Progress(UserId);
+    public Task<List<AwardProgressItem>> Awards(CancellationToken cancellationToken) => achievements.ProgressAsync(UserId, cancellationToken);
 }

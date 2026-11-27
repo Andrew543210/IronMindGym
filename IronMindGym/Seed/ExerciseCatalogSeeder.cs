@@ -71,11 +71,12 @@ public static class ExerciseCatalogSeeder
     /// and an existing exercise keeps its type and group, because logged sets point at it.
     /// A description is only translated while it is still the catalog's English text.
     /// </summary>
-    public static void Sync(IronMindDbContext db)
+    public static async Task SyncAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
-        var groups = db.MuscleGroups.ToDictionary(g => g.Name);
-        var subGroups = db.MuscleSubGroups.Include(s => s.MuscleGroup).ToDictionary(s => (Group: s.MuscleGroup.Name, s.Name));
-        var exercises = db.Exercises.ToDictionary(e => e.Name);
+        var groups = await db.MuscleGroups.ToDictionaryAsync(g => g.Name, cancellationToken);
+        var subGroups = await db.MuscleSubGroups.Include(s => s.MuscleGroup)
+            .ToDictionaryAsync(s => (Group: s.MuscleGroup.Name, s.Name), cancellationToken);
+        var exercises = await db.Exercises.ToDictionaryAsync(e => e.Name, cancellationToken);
         foreach (var definition in Definitions())
         {
             if (!groups.TryGetValue(definition.Group, out var group))

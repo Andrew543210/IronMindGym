@@ -36,24 +36,24 @@ public static class DataSeeder
         (SetTypeCode.Failure, "Failure", "До відмови")
     ];
 
-    public static void Seed(IronMindDbContext db, bool includeDemoData = false)
+    public static async Task SeedAsync(IronMindDbContext db, bool includeDemoData, CancellationToken cancellationToken)
     {
-        using var transaction = WriteLock.BeginForSeeding(db);
-        EnsureSplitTypes(db);
-        EnsureSetTypes(db);
-        ExerciseCatalogSeeder.Sync(db);
-        EnsureAvatarLadder(db);
-        db.SaveChanges();
-        EnsureResearchFeed(db);
-        EnsureAchievements(db);
+        await using var transaction = await WriteLock.BeginForSeedingAsync(db, cancellationToken);
+        await EnsureSplitTypesAsync(db, cancellationToken);
+        await EnsureSetTypesAsync(db, cancellationToken);
+        await ExerciseCatalogSeeder.SyncAsync(db, cancellationToken);
+        await EnsureAvatarLadderAsync(db, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        await EnsureResearchFeedAsync(db, cancellationToken);
+        await EnsureAchievementsAsync(db, cancellationToken);
         if (includeDemoData)
-            DemoDataSeeder.Seed(db);
-        transaction.Commit();
+            await DemoDataSeeder.SeedAsync(db, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
-    private static void EnsureAchievements(IronMindDbContext db)
+    private static async Task EnsureAchievementsAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
-        var existing = db.Achievements.ToDictionary(a => a.Code);
+        var existing = await db.Achievements.ToDictionaryAsync(a => a.Code, cancellationToken);
         foreach (var award in AchievementCatalog.All)
         {
             if (!existing.TryGetValue(award.Code, out var achievement))
@@ -63,13 +63,13 @@ public static class DataSeeder
             achievement.ConditionDescription = award.ConditionDescription;
             achievement.ConditionDescriptionUk = award.ConditionDescriptionUk;
         }
-        db.SaveChanges();
+        await db.SaveChangesAsync(cancellationToken);
     }
 
-    private static void EnsureSplitTypes(IronMindDbContext db)
+    private static async Task EnsureSplitTypesAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
-        var existing = db.SplitTypes.ToDictionary(s => s.Code);
-        var existingDays = db.SplitDays.ToDictionary(d => d.Code);
+        var existing = await db.SplitTypes.ToDictionaryAsync(s => s.Code, cancellationToken);
+        var existingDays = await db.SplitDays.ToDictionaryAsync(d => d.Code, cancellationToken);
         foreach (var definition in SplitTypes)
         {
             if (!existing.TryGetValue(definition.Code, out var split))
@@ -87,9 +87,9 @@ public static class DataSeeder
         }
     }
 
-    private static void EnsureSetTypes(IronMindDbContext db)
+    private static async Task EnsureSetTypesAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
-        var existing = db.SetTypes.ToDictionary(s => s.Code);
+        var existing = await db.SetTypes.ToDictionaryAsync(s => s.Code, cancellationToken);
         foreach (var (code, name, nameUk) in SetTypes)
         {
             if (!existing.TryGetValue(code, out var setType))
@@ -113,9 +113,9 @@ public static class DataSeeder
         ("Omnipotent Origin", "Всемогутнє першоджерело", 5.0)
     ];
 
-    private static void EnsureAvatarLadder(IronMindDbContext db)
+    private static async Task EnsureAvatarLadderAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
-        var existing = db.Avatars.ToList();
+        var existing = await db.Avatars.ToListAsync(cancellationToken);
         foreach (var rank in AvatarLadder)
         {
             var avatar = existing.FirstOrDefault(a => a.Name == rank.Name);
@@ -153,11 +153,11 @@ public static class DataSeeder
             "Schoenfeld et al. · Journal of Sports Sciences, 2017", "https://pubmed.ncbi.nlm.nih.gov/27433992/", new DateOnly(2017, 6, 1))
     ];
 
-    private static void EnsureResearchFeed(IronMindDbContext db)
+    private static async Task EnsureResearchFeedAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
         var titles = ResearchNotes.Select(n => n.Title).ToList();
-        db.ResearchItems.Where(r => !titles.Contains(r.Title)).ExecuteDelete();
-        var existing = db.ResearchItems.ToDictionary(r => r.Title);
+        await db.ResearchItems.Where(r => !titles.Contains(r.Title)).ExecuteDeleteAsync(cancellationToken);
+        var existing = await db.ResearchItems.ToDictionaryAsync(r => r.Title, cancellationToken);
         foreach (var note in ResearchNotes)
         {
             if (!existing.TryGetValue(note.Title, out var item))
@@ -165,6 +165,6 @@ public static class DataSeeder
             (item.ThesisText, item.TitleUk, item.ThesisTextUk) = (note.Summary, note.TitleUk, note.SummaryUk);
             (item.SourceName, item.SourceUrl, item.PublishedAt) = (note.SourceName, note.SourceUrl, note.PublishedAt);
         }
-        db.SaveChanges();
+        await db.SaveChangesAsync(cancellationToken);
     }
 }

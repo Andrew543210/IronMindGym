@@ -1,5 +1,6 @@
 using IronMindGym.Data;
 using IronMindGym.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
@@ -11,7 +12,7 @@ namespace IronMindGym.Services;
 public sealed class PersonalRecordService(IronMindDbContext db)
 {
     /// <summary>Brings the records of the given exercises in line with the sets. The caller saves the changes.</summary>
-    public void Recalculate(int userId, IEnumerable<int> exerciseIds)
+    public async Task RecalculateAsync(int userId, IEnumerable<int> exerciseIds, CancellationToken cancellationToken)
     {
         var ids = exerciseIds.Distinct().ToArray();
         var strengthSets = db.Sets.Where(s => s.PerformedExercise.WorkoutSession.UserId == userId
@@ -21,16 +22,16 @@ public sealed class PersonalRecordService(IronMindDbContext db)
         var heaviest = strengthSets
             .GroupBy(s => s.PerformedExercise.ExerciseId)
             .Select(g => new { ExerciseId = g.Key, WeightKg = g.Max(s => s.WeightKg) });
-        var best = strengthSets
+        var best = await strengthSets
             .Join(heaviest,
                 s => new { s.PerformedExercise.ExerciseId, s.WeightKg },
                 h => new { h.ExerciseId, h.WeightKg },
                 (s, h) => new { h.ExerciseId, h.WeightKg, s.PerformedExercise.WorkoutSession.SessionDate })
             .GroupBy(x => new { x.ExerciseId, x.WeightKg })
             .Select(g => new { g.Key.ExerciseId, g.Key.WeightKg, AchievedAt = g.Min(x => x.SessionDate) })
-            .ToDictionary(x => x.ExerciseId);
+            .ToDictionaryAsync(x => x.ExerciseId, cancellationToken);
 
-        var records = db.PersonalRecords.Where(r => r.UserId == userId && ids.Contains(r.ExerciseId)).ToList();
+        var records = await db.PersonalRecords.Where(r => r.UserId == userId && ids.Contains(r.ExerciseId)).ToListAsync(cancellationToken);
         db.PersonalRecords.RemoveRange(records.Where(r => !best.ContainsKey(r.ExerciseId)));
         foreach (var (exerciseId, set) in best)
         {

@@ -13,26 +13,27 @@ namespace IronMindGym.Services;
 public sealed class AchievementService(IronMindDbContext db, AthleteCalendars calendars)
 {
     /// <summary>Adds the awards whose target the athlete has reached since the last check.</summary>
-    public void AwardEarned(int userId)
+    public async Task AwardEarnedAsync(int userId, CancellationToken cancellationToken)
     {
-        var earned = EarnedCodes(userId);
-        var achievementIds = db.Achievements.AsNoTracking().ToDictionary(a => a.Code, a => a.Id);
-        var metrics = Metrics(userId);
+        var earned = await EarnedCodesAsync(userId, cancellationToken);
+        var achievementIds = await db.Achievements.AsNoTracking().ToDictionaryAsync(a => a.Code, a => a.Id, cancellationToken);
+        var metrics = await MetricsAsync(userId, cancellationToken);
+        var now = (await calendars.ForAsync(userId, cancellationToken)).UtcNow;
         foreach (var award in AchievementCatalog.All)
         {
             if (!earned.Contains(award.Code) && metrics[award.MetricType] >= award.TargetValue
                 && achievementIds.TryGetValue(award.Code, out var achievementId))
             {
-                db.UserAchievements.Add(new UserAchievement { UserId = userId, AchievementId = achievementId, AchievedAt = calendars.For(userId).UtcNow });
+                db.UserAchievements.Add(new UserAchievement { UserId = userId, AchievementId = achievementId, AchievedAt = now });
             }
         }
-        db.SaveChanges();
+        await db.SaveChangesAsync(cancellationToken);
     }
 
-    public List<AwardProgressItem> Progress(int userId)
+    public async Task<List<AwardProgressItem>> ProgressAsync(int userId, CancellationToken cancellationToken)
     {
-        var earned = EarnedCodes(userId);
-        var metrics = Metrics(userId);
+        var earned = await EarnedCodesAsync(userId, cancellationToken);
+        var metrics = await MetricsAsync(userId, cancellationToken);
         return AchievementCatalog.All.Select(award =>
         {
             var unlocked = earned.Contains(award.Code);
@@ -51,36 +52,38 @@ public sealed class AchievementService(IronMindDbContext db, AthleteCalendars ca
         }).ToList();
     }
 
-    private HashSet<string> EarnedCodes(int userId) =>
-        db.UserAchievements.Where(x => x.UserId == userId).Select(x => x.Achievement.Code).ToHashSet();
+    private Task<HashSet<string>> EarnedCodesAsync(int userId, CancellationToken cancellationToken) =>
+        db.UserAchievements.Where(x => x.UserId == userId).Select(x => x.Achievement.Code).ToHashSetAsync(cancellationToken);
 
-    private Dictionary<AchievementMetricType, double> Metrics(int userId)
+    private async Task<Dictionary<AchievementMetricType, double>> MetricsAsync(int userId, CancellationToken cancellationToken)
     {
-        var calendar = calendars.For(userId);
+        var calendar = await calendars.ForAsync(userId, cancellationToken);
         var thirtyDaysAgo = calendar.UtcNow.AddDays(-30);
-        var workouts = db.WorkoutSessions.Where(x => x.UserId == userId).Select(x => new { x.SessionDate, x.DurationMinutes }).ToList();
+        var workouts = await db.WorkoutSessions.Where(x => x.UserId == userId)
+            .Select(x => new { x.SessionDate, x.DurationMinutes }).ToListAsync(cancellationToken);
         var sets = db.Sets.Where(x => x.PerformedExercise.WorkoutSession.UserId == userId);
 
         return new Dictionary<AchievementMetricType, double>
         {
-            [AchievementMetricType.ProfileCompleted] = AthleteSetup.IsComplete(db, userId) ? 1 : 0,
-            [AchievementMetricType.ReviewsWritten] = db.WorkoutSessions.Count(s => s.UserId == userId && s.Notes != null),
+            [AchievementMetricType.ProfileCompleted] = await AthleteSetup.IsCompleteAsync(db, userId, cancellationToken) ? 1 : 0,
+            [AchievementMetricType.ReviewsWritten] = await db.WorkoutSessions.CountAsync(s => s.UserId == userId && s.Notes != null, cancellationToken),
             [AchievementMetricType.WorkoutsCompleted] = workouts.Count,
-            [AchievementMetricType.TotalSets] = sets.Count(),
-            [AchievementMetricType.MonthlyTonnage] = sets
+            [AchievementMetricType.TotalSets] = await sets.CountAsync(cancellationToken),
+            [AchievementMetricType.MonthlyTonnage] = await sets
                 .Where(x => x.PerformedExercise.WorkoutSession.SessionDate >= thirtyDaysAgo)
-                .Sum(x => (double?)(x.WeightKg * x.Reps)) ?? 0,
-            [AchievementMetricType.BenchPr] = BestRecord(userId, KeyLift.BenchPress),
-            [AchievementMetricType.SquatPr] = BestRecord(userId, KeyLift.Squat),
-            [AchievementMetricType.DeadliftPr] = BestRecord(userId, KeyLift.Deadlift),
-            [AchievementMetricType.NutritionLogs] = db.DailyNutritions.Count(x => x.UserId == userId),
-            [AchievementMetricType.FriendsCount] = db.Friendships.Count(x =>
-                (x.User1Id == userId || x.User2Id == userId) && x.Status == FriendshipStatus.Accepted),
+                .SumAsync(x => (double?)(x.WeightKg * x.Reps), cancellationToken) ?? 0,
+            [AchievementMetricType.BenchPr] = await BestRecordAsync(userId, KeyLift.BenchPress, cancellationToken),
+            [AchievementMetricType.SquatPr] = await BestRecordAsync(userId, KeyLift.Squat, cancellationToken),
+            [AchievementMetricType.DeadliftPr] = await BestRecordAsync(userId, KeyLift.Deadlift, cancellationToken),
+            [AchievementMetricType.NutritionLogs] = await db.DailyNutritions.CountAsync(x => x.UserId == userId, cancellationToken),
+            [AchievementMetricType.FriendsCount] = await db.Friendships.CountAsync(x =>
+                (x.User1Id == userId || x.User2Id == userId) && x.Status == FriendshipStatus.Accepted, cancellationToken),
             [AchievementMetricType.WorkoutStreakDays] = AthleteCalendar.LongestStreak(workouts.Select(x => calendar.DayOf(x.SessionDate))),
             [AchievementMetricType.LongWorkouts] = workouts.Count(x => x.DurationMinutes >= AchievementCatalog.LongWorkoutMinutes)
         };
     }
 
-    private double BestRecord(int userId, KeyLift lift) =>
-        db.PersonalRecords.Where(x => x.UserId == userId && x.Exercise.KeyLift == lift).Select(x => (double?)x.MaxWeightKg).Max() ?? 0;
+    private async Task<double> BestRecordAsync(int userId, KeyLift lift, CancellationToken cancellationToken) =>
+        await db.PersonalRecords.Where(x => x.UserId == userId && x.Exercise.KeyLift == lift)
+            .MaxAsync(x => (double?)x.MaxWeightKg, cancellationToken) ?? 0;
 }

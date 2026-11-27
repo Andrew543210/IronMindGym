@@ -7,20 +7,21 @@ namespace IronMindGym.Api;
 public class WorkoutDraftController(WorkoutDraftService drafts) : ApiController
 {
     [HttpGet]
-    public ActionResult<WorkoutDraftResponse> Get() => drafts.Get(UserId) is { } draft ? draft : NoContent();
+    public async Task<ActionResult<WorkoutDraftResponse>> Get(CancellationToken cancellationToken) =>
+        await drafts.GetAsync(UserId, cancellationToken) is { } draft ? draft : NoContent();
 
     [HttpPut]
     [RequestSizeLimit(150_000)]
-    public ActionResult Save(WorkoutDraftRequest request)
+    public async Task<ActionResult> Save(WorkoutDraftRequest request, CancellationToken cancellationToken)
     {
-        drafts.Save(UserId, request.DraftId!.Value, request.Content!.Value);
+        await drafts.SaveAsync(UserId, request.DraftId!.Value, request.Content!.Value, cancellationToken);
         return NoContent();
     }
 
     [HttpDelete]
-    public ActionResult Discard(Guid draftId)
+    public async Task<ActionResult> Discard(Guid draftId, CancellationToken cancellationToken)
     {
-        drafts.Discard(UserId, draftId);
+        await drafts.DiscardAsync(UserId, draftId, cancellationToken);
         return NoContent();
     }
 }

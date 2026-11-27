@@ -33,10 +33,10 @@ public class AchievementServiceTests
         var (bench, squat, deadlift) = app.Query(db => (Lift(db, KeyLift.BenchPress), Lift(db, KeyLift.Squat), Lift(db, KeyLift.Deadlift)));
         var now = DateTime.UtcNow;
         // Three days in a row, two of them at least an hour long, and one workout outside the 30-day tonnage window.
-        var oldest = Journal.AddWorkout(app, now.AddDays(-40), 30, (deadlift, 120, 1, 0));
-        Journal.AddWorkout(app, now.AddDays(-2), 60, (bench, 60, 5, 90), (bench, 60, 5, 90));
-        Journal.AddWorkout(app, now.AddDays(-1), 45, (squat, 100, 5, 90));
-        Journal.AddWorkout(app, now, 75, (bench, 40, 10, 60));
+        var oldest = await Journal.AddWorkoutAsync(app, now.AddDays(-40), 30, (deadlift, 120, 1, 0));
+        await Journal.AddWorkoutAsync(app, now.AddDays(-2), 60, (bench, 60, 5, 90), (bench, 60, 5, 90));
+        await Journal.AddWorkoutAsync(app, now.AddDays(-1), 45, (squat, 100, 5, 90));
+        await Journal.AddWorkoutAsync(app, now, 75, (bench, 40, 10, 60));
         app.Query(db =>
         {
             var users = Users(db);
@@ -52,7 +52,7 @@ public class AchievementServiceTests
             return db.SaveChanges();
         });
 
-        var awards = app.Query(db => Awards(db).Progress(Users(db)[0])).ToDictionary(a => a.Code);
+        var awards = (await app.QueryAsync(db => Awards(db).ProgressAsync(Users(db)[0], CancellationToken.None))).ToDictionary(a => a.Code);
 
         Assert.Equal(4, awards["WORKOUT_005"].CurrentValue);
         Assert.Equal(5, awards["SETS_050"].CurrentValue);
@@ -72,20 +72,20 @@ public class AchievementServiceTests
     {
         using var app = await WithAthletes();
         var bench = app.Query(db => Lift(db, KeyLift.BenchPress));
-        var workout = Journal.AddWorkout(app, DateTime.UtcNow, 40, (bench, 40, 5, 90));
+        var workout = await Journal.AddWorkoutAsync(app, DateTime.UtcNow, 40, (bench, 40, 5, 90));
 
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
-            Awards(db).AwardEarned(Users(db)[0]);
+            await Awards(db).AwardEarnedAsync(Users(db)[0], CancellationToken.None);
             return 0;
         });
         Assert.Equal(["BENCH_40", "PROFILE_SETUP", "WORKOUT_001"], Earned(app));
 
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
-            db.WorkoutSessions.Where(s => s.Id == workout).ExecuteDelete();
-            db.PersonalRecords.ExecuteDelete();
-            Awards(db).AwardEarned(Users(db)[0]);
+            await db.WorkoutSessions.Where(s => s.Id == workout).ExecuteDeleteAsync();
+            await db.PersonalRecords.ExecuteDeleteAsync();
+            await Awards(db).AwardEarnedAsync(Users(db)[0], CancellationToken.None);
             return 0;
         });
         Assert.Equal(["BENCH_40", "PROFILE_SETUP", "WORKOUT_001"], Earned(app));
@@ -96,10 +96,10 @@ public class AchievementServiceTests
     {
         using var app = await WithAthletes();
 
-        var awards = app.Query(db =>
+        var awards = await app.QueryAsync(async db =>
         {
-            Awards(db).AwardEarned(Users(db)[0]);
-            return Awards(db).Progress(Users(db)[0]).ToDictionary(a => a.Code);
+            await Awards(db).AwardEarnedAsync(Users(db)[0], CancellationToken.None);
+            return (await Awards(db).ProgressAsync(Users(db)[0], CancellationToken.None)).ToDictionary(a => a.Code);
         });
 
         var setup = awards["PROFILE_SETUP"];

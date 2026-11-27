@@ -26,11 +26,12 @@ builder.Services.AddSessionSecurity(builder.Environment);
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+await using (var scope = app.Services.CreateAsyncScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<IronMindDbContext>();
-    DatabaseMigrations.Apply(db);
-    DataSeeder.Seed(db, app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("Seed:DemoData"));
+    await DatabaseMigrations.ApplyAsync(db, app.Lifetime.ApplicationStopping);
+    var demoData = app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("Seed:DemoData");
+    await DataSeeder.SeedAsync(db, demoData, app.Lifetime.ApplicationStopping);
 }
 
 app.UseForwardedHeaders();

@@ -13,43 +13,43 @@ public class ProfileController(ProfileService profiles) : ApiController
     private static readonly JsonSerializerOptions ExportJson = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
     [HttpGet]
-    public ProfileOverview Overview() => profiles.BuildOverview(UserId);
+    public Task<ProfileOverview> Overview(CancellationToken cancellationToken) => profiles.BuildOverviewAsync(UserId, cancellationToken);
 
     [HttpGet("settings")]
-    public ProfileSettingsResponse Settings() => profiles.Settings(UserId);
+    public Task<ProfileSettingsResponse> Settings(CancellationToken cancellationToken) => profiles.SettingsAsync(UserId, cancellationToken);
 
     [HttpPut("settings")]
-    public ActionResult SaveSettings(ProfileSettings request)
+    public async Task<ActionResult> SaveSettings(ProfileSettings request, CancellationToken cancellationToken)
     {
-        profiles.Update(UserId, request);
+        await profiles.UpdateAsync(UserId, request, cancellationToken);
         return NoContent();
     }
 
     [HttpPut("password")]
     [EnableRateLimiting(RateLimitPolicies.Authentication)]
-    public async Task<ActionResult> ChangePassword(ChangePasswordRequest request)
+    public async Task<ActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
     {
-        profiles.ChangePassword(UserId, request);
+        await profiles.ChangePasswordAsync(UserId, request, cancellationToken);
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return NoContent();
     }
 
     [HttpPut("weights/{date}")]
-    public ActionResult LogWeight(DateOnly date, WeightRequest request)
+    public async Task<ActionResult> LogWeight(DateOnly date, WeightRequest request, CancellationToken cancellationToken)
     {
-        profiles.LogWeight(UserId, date, request.WeightKg);
+        await profiles.LogWeightAsync(UserId, date, request.WeightKg, cancellationToken);
         return NoContent();
     }
 
     [HttpGet("export")]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-    public FileContentResult Export() =>
-        File(JsonSerializer.SerializeToUtf8Bytes(profiles.Export(UserId), ExportJson), "application/json", "ironmind-export.json");
+    public async Task<FileContentResult> Export(CancellationToken cancellationToken) =>
+        File(JsonSerializer.SerializeToUtf8Bytes(await profiles.ExportAsync(UserId, cancellationToken), ExportJson), "application/json", "ironmind-export.json");
 
     [HttpPut("language")]
-    public ActionResult SaveLanguage(LanguageRequest request)
+    public async Task<ActionResult> SaveLanguage(LanguageRequest request, CancellationToken cancellationToken)
     {
-        profiles.SaveLanguage(UserId, request.Language!.Value);
+        await profiles.SaveLanguageAsync(UserId, request.Language!.Value, cancellationToken);
         return NoContent();
     }
 }

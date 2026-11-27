@@ -11,10 +11,10 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
     private const int HistoryPageSize = 20;
 
     /// <summary>The athlete's workouts, newest first, one page at a time.</summary>
-    public WorkoutHistoryResponse History(int userId, int page)
+    public async Task<WorkoutHistoryResponse> HistoryAsync(int userId, int page, CancellationToken cancellationToken)
     {
         page = Math.Clamp(page, 1, 10000);
-        var rows = db.WorkoutSessions.AsNoTracking()
+        var rows = await db.WorkoutSessions.AsNoTracking()
             .Where(s => s.UserId == userId)
             .OrderByDescending(s => s.SessionDate).ThenByDescending(s => s.Id)
             .Skip((page - 1) * HistoryPageSize)
@@ -26,69 +26,77 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
                 Name = SessionName(s.SplitDay!.WorkoutName, s.SplitDay.WorkoutNameUk),
                 DurationMinutes = s.DurationMinutes
             })
-            .ToList();
+            .ToListAsync(cancellationToken);
         return new WorkoutHistoryResponse(rows.Take(HistoryPageSize).ToList(), page, rows.Count > HistoryPageSize);
     }
 
     /// <summary>What the logger offers: the athlete's split with its days, the set types and the exercise catalog.</summary>
-    public WorkoutLoggerResponse LoggerOptions(int userId)
+    public async Task<WorkoutLoggerResponse> LoggerOptionsAsync(int userId, CancellationToken cancellationToken)
     {
-        var activePlan = db.WorkoutPlans.AsNoTracking()
+        var activePlan = await db.WorkoutPlans.AsNoTracking()
             .Where(p => p.UserId == userId)
             .Select(p => new { p.SplitTypeId, Name = Localized.Pick(p.SplitType.Name, p.SplitType.NameUk) })
-            .FirstOrDefault();
-        var splitTypes = db.SplitTypes.AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+        var splits = await db.SplitTypes.AsNoTracking()
             .Where(s => activePlan == null || s.Id == activePlan.SplitTypeId)
             .Select(s => new { s.Id, s.Name, s.NameUk, Days = s.Days.OrderBy(d => d.Position).Select(d => new { d.Id, d.Name, d.NameUk }).ToList() })
-            .AsEnumerable()
-            .Select(s => new SplitTypeOption(s.Id, Localized.Pick(s.Name, s.NameUk),
-                s.Days.Select(d => new SplitDayOption(d.Id, Localized.Pick(d.Name, d.NameUk))).ToList()))
-            .OrderBy(s => s.Name, Localized.Order)
-            .ToList();
-        var setTypes = db.SetTypes.AsNoTracking().Select(s => new { s.Id, s.Code, s.Name, s.NameUk }).ToList();
+            .ToListAsync(cancellationToken);
+        var setTypes = await db.SetTypes.AsNoTracking().Select(s => new { s.Id, s.Code, s.Name, s.NameUk }).ToListAsync(cancellationToken);
         var defaultSetTypeId = setTypes.FirstOrDefault(s => s.Code == SetTypeCode.Working)?.Id ?? setTypes.FirstOrDefault()?.Id ?? 0;
         return new WorkoutLoggerResponse(
             activePlan?.Name,
             activePlan?.SplitTypeId,
-            splitTypes,
+            splits
+                .Select(s => new SplitTypeOption(s.Id, Localized.Pick(s.Name, s.NameUk),
+                    s.Days.Select(d => new SplitDayOption(d.Id, Localized.Pick(d.Name, d.NameUk))).ToList()))
+                .OrderBy(s => s.Name, Localized.Order)
+                .ToList(),
             setTypes.Select(s => new OptionResponse(s.Id, Localized.Pick(s.Name, s.NameUk)))
                 .OrderBy(s => s.Id == defaultSetTypeId ? 0 : 1).ThenBy(s => s.Name, Localized.Order).ToList(),
             defaultSetTypeId,
-            catalog.MuscleGroups(),
-            catalog.Items());
+            await catalog.MuscleGroupsAsync(cancellationToken),
+            await catalog.ItemsAsync(cancellationToken));
     }
 
     /// <summary>The last set the athlete logged for an exercise, to start the next one from.</summary>
-    public PreviousSetResponse? PreviousSet(int userId, int exerciseId)
+    public async Task<PreviousSetResponse?> PreviousSetAsync(int userId, int exerciseId, CancellationToken cancellationToken)
     {
-        var previous = db.Sets.AsNoTracking()
+        var previous = await db.Sets.AsNoTracking()
             .Where(s => s.PerformedExercise.ExerciseId == exerciseId && s.PerformedExercise.WorkoutSession.UserId == userId)
             .OrderByDescending(s => s.PerformedExercise.WorkoutSession.SessionDate)
             .ThenByDescending(s => s.PerformedExercise.WorkoutSessionId)
             .ThenByDescending(s => s.PerformedExercise.OrderInWorkout)
             .ThenByDescending(s => s.SetNumber)
             .Select(s => new { s.WeightKg, s.Reps, s.DurationSeconds, s.Intensity, s.RestSeconds, s.SetTypeId, Date = s.PerformedExercise.WorkoutSession.SessionDate })
-            .FirstOrDefault();
-        return previous is null
-            ? null
-            : new PreviousSetResponse(previous.WeightKg, previous.Reps, previous.DurationSeconds, previous.Intensity,
-                previous.RestSeconds, previous.SetTypeId, calendars.For(userId).DayOf(previous.Date));
+            .FirstOrDefaultAsync(cancellationToken);
+        if (previous is null)
+            return null;
+        var calendar = await calendars.ForAsync(userId, cancellationToken);
+        return new PreviousSetResponse(previous.WeightKg, previous.Reps, previous.DurationSeconds, previous.Intensity,
+            previous.RestSeconds, previous.SetTypeId, calendar.DayOf(previous.Date));
     }
 
     /// <summary>
     /// A saved workout as its owner or a friend sees it. The owner also sees how many planned workouts are
     /// left this week.
     /// </summary>
-    public WorkoutDetailsResponse? Details(int ownerId, int sessionId, int viewerId)
+    public async Task<WorkoutDetailsResponse?> DetailsAsync(int ownerId, int sessionId, int viewerId, CancellationToken cancellationToken)
     {
-        var session = db.WorkoutSessions.AsNoTracking()
+        var session = await db.WorkoutSessions.AsNoTracking()
             .Include(s => s.PerformedExercises).ThenInclude(pe => pe.Exercise)
             .Include(s => s.PerformedExercises).ThenInclude(pe => pe.Sets).ThenInclude(set => set.SetType)
             .Include(s => s.SplitDay)
-            .FirstOrDefault(s => s.Id == sessionId && s.UserId == ownerId);
+            .FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == ownerId, cancellationToken);
         if (session is null)
             return null;
         var isOwner = viewerId == ownerId;
+        int? remainingThisWeek = null;
+        if (isOwner)
+        {
+            var calendar = await calendars.ForAsync(ownerId, cancellationToken);
+            var planned = await db.WorkoutPlans.WorkoutsPerWeekAsync(ownerId, cancellationToken);
+            remainingThisWeek = Math.Max(planned - await db.WorkoutSessions.WorkoutsThisWeekAsync(ownerId, calendar, cancellationToken), 0);
+        }
         var sets = session.PerformedExercises.SelectMany(pe => pe.Sets).ToList();
         return new WorkoutDetailsResponse(
             session.Id,
@@ -105,28 +113,26 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
                         s.WeightKg, s.Reps, s.DurationSeconds, s.Intensity, s.RestSeconds))
                     .ToList())).ToList(),
             sets.Count > 0 ? Math.Round(sets.Average(s => s.RestSeconds), 1) : 0,
-            isOwner
-                ? Math.Max(db.WorkoutPlans.WorkoutsPerWeek(ownerId) - db.WorkoutSessions.WorkoutsThisWeek(ownerId, calendars.For(ownerId)), 0)
-                : null,
-            BuildExerciseStats(session),
+            remainingThisWeek,
+            await BuildExerciseStatsAsync(session, cancellationToken),
             isOwner,
-            db.ActivityLikes.Count(x => x.WorkoutSessionId == sessionId),
-            db.ActivityLikes.Any(x => x.WorkoutSessionId == sessionId && x.UserId == viewerId),
-            db.FriendComments.AsNoTracking()
+            await db.ActivityLikes.CountAsync(x => x.WorkoutSessionId == sessionId, cancellationToken),
+            await db.ActivityLikes.AnyAsync(x => x.WorkoutSessionId == sessionId && x.UserId == viewerId, cancellationToken),
+            await db.FriendComments.AsNoTracking()
                 .Where(x => x.WorkoutSessionId == sessionId)
                 .OrderByDescending(x => x.CreatedAt)
                 .Select(x => new WorkoutComment { AuthorUsername = x.Author.Username, Text = x.Text, CreatedAt = x.CreatedAt })
-                .ToList());
+                .ToListAsync(cancellationToken));
     }
 
     /// <summary>
     /// Heaviest external load per exercise compared with the best load logged before this workout.
     /// Later workouts never change the comparison. Only strength exercises have load records.
     /// </summary>
-    public List<ExerciseWorkoutSummary> BuildExerciseStats(WorkoutSession session)
+    public async Task<List<ExerciseWorkoutSummary>> BuildExerciseStatsAsync(WorkoutSession session, CancellationToken cancellationToken)
     {
         var exerciseIds = session.PerformedExercises.Select(p => p.ExerciseId).Distinct().ToList();
-        var previousRecords = db.Sets.AsNoTracking()
+        var previousRecords = await db.Sets.AsNoTracking()
             .Where(s => s.PerformedExercise.WorkoutSession.UserId == session.UserId
                 && exerciseIds.Contains(s.PerformedExercise.ExerciseId)
                 && s.PerformedExercise.Exercise.Type == ExerciseType.StrengthTraining
@@ -135,7 +141,7 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
                         && s.PerformedExercise.WorkoutSessionId < session.Id)))
             .GroupBy(s => s.PerformedExercise.ExerciseId)
             .Select(g => new { ExerciseId = g.Key, Weight = g.Max(s => s.WeightKg) })
-            .ToDictionary(x => x.ExerciseId, x => x.Weight);
+            .ToDictionaryAsync(x => x.ExerciseId, x => x.Weight, cancellationToken);
         return session.PerformedExercises.OrderBy(p => p.OrderInWorkout).GroupBy(p => p.ExerciseId)
             .Select(group =>
             {
@@ -160,34 +166,36 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
     /// Saves a finished workout and recalculates the personal records and awards it affects.
     /// A retry with the same draft id returns the workout saved by the first request.
     /// </summary>
-    public int Save(int userId, SaveWorkoutRequest workout)
+    public async Task<int> SaveAsync(int userId, SaveWorkoutRequest workout, CancellationToken cancellationToken)
     {
-        var sets = CheckWorkout(workout);
-        using var transaction = WriteLock.BeginForAthletes(db, userId);
+        var sets = await CheckWorkoutAsync(workout, cancellationToken);
+        await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
         if (workout.DraftId is { } draftId)
         {
             // A retried save returns the workout it already made; otherwise the draft is replaced by the workout.
-            var savedId = db.WorkoutSessions.Where(s => s.UserId == userId && s.DraftId == draftId).Select(s => (int?)s.Id).FirstOrDefault();
+            var savedId = await db.WorkoutSessions.Where(s => s.UserId == userId && s.DraftId == draftId)
+                .Select(s => (int?)s.Id).FirstOrDefaultAsync(cancellationToken);
             if (savedId.HasValue)
                 return savedId.Value;
-            db.WorkoutDrafts.Where(d => d.UserId == userId && d.DraftId == draftId).ExecuteDelete();
+            await db.WorkoutDrafts.Where(d => d.UserId == userId && d.DraftId == draftId).ExecuteDeleteAsync(cancellationToken);
         }
         var session = NewSession(userId, workout, sets);
         db.WorkoutSessions.Add(session);
-        db.SaveChanges();
-        records.Recalculate(userId, session.PerformedExercises.Select(p => p.ExerciseId).Distinct());
-        db.SaveChanges();
-        achievements.AwardEarned(userId);
-        transaction.Commit();
+        await db.SaveChangesAsync(cancellationToken);
+        await records.RecalculateAsync(userId, session.PerformedExercises.Select(p => p.ExerciseId), cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        await achievements.AwardEarnedAsync(userId, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return session.Id;
     }
 
-    private List<(WorkoutSetInput Input, TrackedResult Result)> CheckWorkout(SaveWorkoutRequest workout)
+    private async Task<List<(WorkoutSetInput Input, TrackedResult Result)>> CheckWorkoutAsync(SaveWorkoutRequest workout,
+        CancellationToken cancellationToken)
     {
         if (workout.Sets is null || workout.Sets.Count is < 1 or > 200 || workout.Sets.Any(s => s is null))
             throw new DomainValidationException("Add between 1 and 200 sets before saving.", "Sets");
-        var sets = CheckSets(workout.Sets);
-        if (workout.SplitDayId.HasValue && !db.SplitDays.Any(d => d.Id == workout.SplitDayId))
+        var sets = await CheckSetsAsync(workout.Sets, cancellationToken);
+        if (workout.SplitDayId.HasValue && !await db.SplitDays.AnyAsync(d => d.Id == workout.SplitDayId, cancellationToken))
             throw new DomainValidationException("Choose a valid training day.", "SplitDayId");
         return sets;
     }
@@ -233,11 +241,12 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
     }
 
     /// <summary>Checks every set against its exercise and returns the values each one keeps.</summary>
-    private List<(WorkoutSetInput Input, TrackedResult Result)> CheckSets(List<WorkoutSetInput> sets)
+    private async Task<List<(WorkoutSetInput Input, TrackedResult Result)>> CheckSetsAsync(List<WorkoutSetInput> sets,
+        CancellationToken cancellationToken)
     {
         var exerciseIds = sets.Select(s => s.ExerciseId).Distinct().ToList();
-        var types = db.Exercises.AsNoTracking().Where(e => exerciseIds.Contains(e.Id)).ToDictionary(e => e.Id, e => e.Type);
-        var setTypeIds = db.SetTypes.Select(s => s.Id).ToHashSet();
+        var types = await db.Exercises.AsNoTracking().Where(e => exerciseIds.Contains(e.Id)).ToDictionaryAsync(e => e.Id, e => e.Type, cancellationToken);
+        var setTypeIds = await db.SetTypes.Select(s => s.Id).ToHashSetAsync(cancellationToken);
         return sets.Select(set =>
         {
             if (!types.TryGetValue(set.ExerciseId, out var type) || !setTypeIds.Contains(set.SetTypeId))
@@ -253,17 +262,17 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
         : Localized.Pick(workoutName, workoutNameUk);
 
     /// <summary>A repeated delete, such as a double tap, finds nothing to delete and reports false.</summary>
-    public bool Delete(int userId, int sessionId)
+    public async Task<bool> DeleteAsync(int userId, int sessionId, CancellationToken cancellationToken)
     {
-        using var transaction = WriteLock.BeginForAthletes(db, userId);
-        var exerciseIds = db.PerformedExercises
+        await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
+        var exerciseIds = await db.PerformedExercises
             .Where(p => p.WorkoutSessionId == sessionId && p.WorkoutSession.UserId == userId)
-            .Select(p => p.ExerciseId).Distinct().ToList();
-        if (db.WorkoutSessions.Where(s => s.Id == sessionId && s.UserId == userId).ExecuteDelete() == 0)
+            .Select(p => p.ExerciseId).Distinct().ToListAsync(cancellationToken);
+        if (await db.WorkoutSessions.Where(s => s.Id == sessionId && s.UserId == userId).ExecuteDeleteAsync(cancellationToken) == 0)
             return false;
-        records.Recalculate(userId, exerciseIds);
-        db.SaveChanges();
-        transaction.Commit();
+        await records.RecalculateAsync(userId, exerciseIds, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return true;
     }
 }

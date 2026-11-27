@@ -7,5 +7,5 @@ namespace IronMindGym.Api;
 public class ExercisesController(ExerciseCatalog catalog) : ApiController
 {
     [HttpGet]
-    public ExerciseLibraryResponse Library() => catalog.Library();
+    public Task<ExerciseLibraryResponse> Library(CancellationToken cancellationToken) => catalog.LibraryAsync(cancellationToken);
 }

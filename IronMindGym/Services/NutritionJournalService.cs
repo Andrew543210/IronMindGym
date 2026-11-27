@@ -10,14 +10,16 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
 {
     private const int RecentDays = 30;
 
-    public NutritionDay Day(int userId, DateOnly day)
+    /// <summary>The day with its advice and the recent log; without a date, the athlete's today.</summary>
+    public async Task<NutritionDay> DayAsync(int userId, DateOnly? date, CancellationToken cancellationToken)
     {
-        var log = db.DailyNutritions.AsNoTracking().FirstOrDefault(n => n.UserId == userId && n.Date == day)
+        var day = date ?? (await calendars.ForAsync(userId, cancellationToken)).Today;
+        var log = await db.DailyNutritions.AsNoTracking().FirstOrDefaultAsync(n => n.UserId == userId && n.Date == day, cancellationToken)
             ?? new DailyNutrition { UserId = userId, Date = day };
-        var recent = db.DailyNutritions.AsNoTracking().Where(n => n.UserId == userId)
-            .OrderByDescending(n => n.Date).Take(RecentDays).ToList();
-        var week = db.DailyNutritions.AsNoTracking()
-            .Where(n => n.UserId == userId && n.Date <= day && n.Date >= day.AddDays(-6)).ToList();
+        var recent = await db.DailyNutritions.AsNoTracking().Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.Date).Take(RecentDays).ToListAsync(cancellationToken);
+        var week = await db.DailyNutritions.AsNoTracking()
+            .Where(n => n.UserId == userId && n.Date <= day && n.Date >= day.AddDays(-6)).ToListAsync(cancellationToken);
         return new NutritionDay(
             day,
             log.Id != 0,
@@ -25,37 +27,37 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
             log.ProteinG,
             log.FatG,
             log.CarbsG,
-            advice.BuildAdvice(log, Snapshot(userId), week),
+            advice.BuildAdvice(log, await SnapshotAsync(userId, cancellationToken), week),
             recent.Select(n => new NutritionLogEntry(n.Date, n.CaloriesKcal, n.ProteinG, n.FatG, n.CarbsG)).ToList());
     }
 
-    public void Save(int userId, DateOnly day, double caloriesKcal, double proteinG, double fatG, double carbsG)
+    public async Task SaveAsync(int userId, DateOnly day, NutritionEntryRequest entry, CancellationToken cancellationToken)
     {
-        var today = calendars.For(userId).Today;
+        var today = (await calendars.ForAsync(userId, cancellationToken)).Today;
         if (day > today || day < today.AddYears(-5))
             throw new DomainValidationException("Choose a date within the last five years, up to today.", "Date");
-        using var transaction = WriteLock.BeginForAthletes(db, userId);
-        var log = db.DailyNutritions.FirstOrDefault(n => n.UserId == userId && n.Date == day);
+        await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
+        var log = await db.DailyNutritions.FirstOrDefaultAsync(n => n.UserId == userId && n.Date == day, cancellationToken);
         if (log is null)
             db.DailyNutritions.Add(log = new DailyNutrition { UserId = userId, Date = day });
-        log.CaloriesKcal = caloriesKcal;
-        log.ProteinG = proteinG;
-        log.FatG = fatG;
-        log.CarbsG = carbsG;
-        db.SaveChanges();
-        achievements.AwardEarned(userId);
-        transaction.Commit();
+        log.CaloriesKcal = entry.CaloriesKcal;
+        log.ProteinG = entry.ProteinG;
+        log.FatG = entry.FatG;
+        log.CarbsG = entry.CarbsG;
+        await db.SaveChangesAsync(cancellationToken);
+        await achievements.AwardEarnedAsync(userId, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
-    public bool Delete(int userId, DateOnly day) =>
-        db.DailyNutritions.Where(n => n.UserId == userId && n.Date == day).ExecuteDelete() > 0;
+    public async Task<bool> DeleteAsync(int userId, DateOnly day, CancellationToken cancellationToken) =>
+        await db.DailyNutritions.Where(n => n.UserId == userId && n.Date == day).ExecuteDeleteAsync(cancellationToken) > 0;
 
-    private NutritionProfileSnapshot Snapshot(int userId)
+    private async Task<NutritionProfileSnapshot> SnapshotAsync(int userId, CancellationToken cancellationToken)
     {
-        var profile = db.Profiles.AsNoTracking().FirstOrDefault(p => p.UserId == userId);
+        var profile = await db.Profiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
         return new NutritionProfileSnapshot
         {
-            WeightKg = db.WeightLogs.LatestWeighIn(userId)?.ValueKg,
+            WeightKg = (await db.WeightLogs.LatestWeighInAsync(userId, cancellationToken))?.ValueKg,
             HeightCm = profile?.HeightCm,
             Age = profile?.Age,
             CalorieTarget = profile?.CalorieTarget,
@@ -63,7 +65,7 @@ public class NutritionJournalService(IronMindDbContext db, NutritionAdviceServic
             FatTarget = profile?.FatTarget,
             CarbsTarget = profile?.CarbsTarget,
             EnergyEquation = profile?.EnergyEquation ?? EnergyEquation.None,
-            WorkoutsPerWeek = db.WorkoutPlans.WorkoutsPerWeek(userId)
+            WorkoutsPerWeek = await db.WorkoutPlans.WorkoutsPerWeekAsync(userId, cancellationToken)
         };
     }
 }

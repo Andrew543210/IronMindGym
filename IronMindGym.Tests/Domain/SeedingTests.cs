@@ -11,14 +11,14 @@ namespace IronMindGym.Tests.Domain;
 public class SeedingTests
 {
     [Fact]
-    public void SeedingTwiceKeepsOneConsistentCatalog()
+    public async Task SeedingTwiceKeepsOneConsistentCatalog()
     {
         using var app = new TestApplication();
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
             var counts = (db.Exercises.Count(), db.Avatars.Count(), db.ResearchItems.Count(), db.Achievements.Count());
 
-            DataSeeder.Seed(db);
+            await DataSeeder.SeedAsync(db, includeDemoData: false, CancellationToken.None);
 
             Assert.Equal(counts, (db.Exercises.Count(), db.Avatars.Count(), db.ResearchItems.Count(), db.Achievements.Count()));
             Assert.Equal(ExerciseCatalogSeeder.Definitions().Count, db.Exercises.Count());
@@ -39,13 +39,13 @@ public class SeedingTests
     }
 
     [Fact]
-    public void DemoDataAddsTwoConnectedAthletesOnlyToAnEmptyDatabase()
+    public async Task DemoDataAddsTwoConnectedAthletesOnlyToAnEmptyDatabase()
     {
         using var app = new TestApplication();
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
-            DataSeeder.Seed(db, includeDemoData: true);
-            DataSeeder.Seed(db, includeDemoData: true);
+            await DataSeeder.SeedAsync(db, includeDemoData: true, CancellationToken.None);
+            await DataSeeder.SeedAsync(db, includeDemoData: true, CancellationToken.None);
 
             var demo = db.Users.Include(u => u.Profile).Single(u => u.Email == "demo@ironmind.app");
             Assert.Equal(2, db.Users.Count());
@@ -101,10 +101,10 @@ public class SeedingTests
     }
 
     [Fact]
-    public void ReferenceRowsAddedToTheCatalogReachAnExistingDatabase()
+    public async Task ReferenceRowsAddedToTheCatalogReachAnExistingDatabase()
     {
         using var app = new TestApplication();
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
             db.Exercises.Where(e => e.MuscleSubGroup.Name == "Calves").ExecuteDelete();
             db.MuscleSubGroups.Where(s => s.Name == "Calves").ExecuteDelete();
@@ -112,7 +112,7 @@ public class SeedingTests
             db.Avatars.Single(a => a.Name == "Iron Squire").MinStrengthCoefficient = 9;
             db.SaveChanges();
 
-            DataSeeder.Seed(db);
+            await DataSeeder.SeedAsync(db, includeDemoData: false, CancellationToken.None);
 
             var calves = ExerciseCatalogSeeder.Definitions().Where(d => d.Subgroup == "Calves").Select(d => d.Name).Order().ToList();
             Assert.NotEmpty(calves);
@@ -126,10 +126,10 @@ public class SeedingTests
     }
 
     [Fact]
-    public void ReferenceDataGetsTheTranslationsItIsMissing()
+    public async Task ReferenceDataGetsTheTranslationsItIsMissing()
     {
         using var app = new TestApplication();
-        app.Query(db =>
+        await app.QueryAsync(async db =>
         {
             foreach (var exercise in db.Exercises)
                 (exercise.NameUk, exercise.DescriptionUk) = (null, null);
@@ -142,7 +142,7 @@ public class SeedingTests
             db.Exercises.Single(e => e.Name == "Deadlift").Description = "Own notes";
             db.SaveChanges();
 
-            DataSeeder.Seed(db);
+            await DataSeeder.SeedAsync(db, includeDemoData: false, CancellationToken.None);
 
             Assert.Equal(0, db.Exercises.Count(e => e.NameUk == null));
             Assert.Equal("Станова тяга", db.Exercises.Single(e => e.Name == "Deadlift").NameUk);

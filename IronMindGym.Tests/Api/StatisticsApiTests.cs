@@ -18,9 +18,9 @@ public class StatisticsApiTests
             return (strength[0].Id, strength[1].Id);
         });
         var noon = DateTime.UtcNow.Date.AddHours(12);
-        Journal.AddWorkout(app, noon.AddDays(-2), 60, (squat, 100, 5, 120), (squat, 100, 5, 180), (row, 50, 10, 60));
-        Journal.AddWorkout(app, noon.AddDays(-3), 30, (squat, 90, 5, 90));
-        Journal.AddWorkout(app, noon.AddDays(-40), 45, (squat, 40, 10, 60));
+        await Journal.AddWorkoutAsync(app, noon.AddDays(-2), 60, (squat, 100, 5, 120), (squat, 100, 5, 180), (row, 50, 10, 60));
+        await Journal.AddWorkoutAsync(app, noon.AddDays(-3), 30, (squat, 90, 5, 90));
+        await Journal.AddWorkoutAsync(app, noon.AddDays(-40), 45, (squat, 40, 10, 60));
 
         var stats = await api.Get<TrainingStatistics>("/api/statistics");
 

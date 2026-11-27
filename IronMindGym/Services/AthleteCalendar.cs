@@ -79,11 +79,11 @@ public sealed class AthleteCalendars(IronMindDbContext db, TimeProvider clock)
 {
     private readonly Dictionary<int, AthleteCalendar> calendars = [];
 
-    public AthleteCalendar For(int userId)
+    public async Task<AthleteCalendar> ForAsync(int userId, CancellationToken cancellationToken)
     {
         if (!calendars.TryGetValue(userId, out var calendar))
         {
-            var zone = db.Profiles.AsNoTracking().Where(p => p.UserId == userId).Select(p => p.TimeZone).FirstOrDefault();
+            var zone = await db.Profiles.AsNoTracking().Where(p => p.UserId == userId).Select(p => p.TimeZone).FirstOrDefaultAsync(cancellationToken);
             calendars[userId] = calendar = AthleteCalendar.InZone(zone, clock);
         }
         return calendar;

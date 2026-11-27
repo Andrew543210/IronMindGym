@@ -10,12 +10,12 @@ public static class DatabaseMigrations
     /// Applies every pending migration. Migrate() would create the database and the history table anyway;
     /// doing it first keeps the PostgreSQL provider from logging the missing history table of a new database as an error.
     /// </summary>
-    public static void Apply(IronMindDbContext db)
+    public static async Task ApplyAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
         var creator = db.GetService<IRelationalDatabaseCreator>();
-        if (!creator.Exists())
-            creator.Create();
-        db.GetService<IHistoryRepository>().CreateIfNotExists();
-        db.GetService<IMigrator>().Migrate();
+        if (!await creator.ExistsAsync(cancellationToken))
+            await creator.CreateAsync(cancellationToken);
+        await db.GetService<IHistoryRepository>().CreateIfNotExistsAsync(cancellationToken);
+        await db.GetService<IMigrator>().MigrateAsync(cancellationToken: cancellationToken);
     }
 }

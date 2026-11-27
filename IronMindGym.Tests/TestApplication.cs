@@ -40,6 +40,12 @@ public sealed class TestApplication(string? webRoot = null) : WebApplicationFact
         return query(scope.ServiceProvider.GetRequiredService<IronMindDbContext>());
     }
 
+    public async Task<T> QueryAsync<T>(Func<IronMindDbContext, Task<T>> query)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await query(scope.ServiceProvider.GetRequiredService<IronMindDbContext>());
+    }
+
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
