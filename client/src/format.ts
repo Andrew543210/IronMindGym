@@ -11,11 +11,25 @@ export function parseMoment(value: string): Date {
   return new Date(/[zZ]|[+-]\d{2}:\d{2}$/.test(trimmed) ? trimmed : `${trimmed}Z`);
 }
 
+/** Builds each formatter once per locale and options: tables format hundreds of cells per render. */
+function reused<T, O>(create: (locale: string, options: O) => T): (locale: string, options: O) => T {
+  const made = new Map<string, T>();
+  return (locale, options) => {
+    const key = `${locale} ${JSON.stringify(options)}`;
+    let value = made.get(key);
+    if (value === undefined) made.set(key, (value = create(locale, options)));
+    return value;
+  };
+}
+
+const dateFormat = reused((locale, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, options));
+export const numberFormat = reused((locale, options: Intl.NumberFormatOptions) => new Intl.NumberFormat(locale, options));
+
 type Part = 'year' | 'month' | 'day' | 'hour' | 'minute' | 'weekday';
 
 function parts(date: Date, timeZone: string, options: Intl.DateTimeFormatOptions): Partial<Record<Part, string>> {
   const result: Partial<Record<Part, string>> = {};
-  for (const part of new Intl.DateTimeFormat('en-US', { timeZone, ...options }).formatToParts(date))
+  for (const part of dateFormat('en-US', { timeZone, ...options }).formatToParts(date))
     if (part.type !== 'literal') result[part.type as Part] = part.value;
   return result;
 }
@@ -34,22 +48,20 @@ export function localDay(value: string, timeZone: string): string {
 
 export function localFormat(value: string | Date, timeZone: string, options: Intl.DateTimeFormatOptions): string {
   const date = typeof value === 'string' ? parseMoment(value) : value;
-  return new Intl.DateTimeFormat(currentLocale(), { timeZone, ...options }).format(date);
+  return dateFormat(currentLocale(), { timeZone, ...options }).format(date);
 }
 
 export function formatDay(day: string, options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }): string {
   // Noon UTC keeps the same day in every time zone used for formatting.
-  return new Intl.DateTimeFormat(currentLocale(), { timeZone: 'UTC', ...options }).format(new Date(`${day}T12:00:00Z`));
+  return dateFormat(currentLocale(), { timeZone: 'UTC', ...options }).format(new Date(`${day}T12:00:00Z`));
 }
 
 export function formatNumber(value: number, decimals = 1): string {
-  return new Intl.NumberFormat(currentLocale(), { maximumFractionDigits: decimals, useGrouping: false }).format(value);
+  return numberFormat(currentLocale(), { maximumFractionDigits: decimals, useGrouping: false }).format(value);
 }
 
 export function formatFixed(value: number, decimals: number): string {
-  return new Intl.NumberFormat(currentLocale(), {
-    minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: false,
-  }).format(value);
+  return numberFormat(currentLocale(), { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: false }).format(value);
 }
 
 export function deviceTimeZone(): string {

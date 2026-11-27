@@ -1,10 +1,9 @@
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ExerciseType } from '../api/types/common';
 import type { ExerciseLibrary } from '../api/types/exercises';
 import { PageState, ResponsiveTable } from '../components/ui';
 import { useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
-
 
 const typeLabels: Record<ExerciseType, MessageKey> = {
   StrengthTraining: 'exerciseType.StrengthTraining',
@@ -19,7 +18,8 @@ export function ExercisesPage() {
   const [groupId, setGroupId] = useState('');
   const [subGroup, setSubGroup] = useState('');
   const [search, setSearch] = useState('');
-  const query = useDeferredValue(search.trim().toLocaleLowerCase(language));
+  // A filter over the catalog's hundred-odd exercises is cheap enough to run on every keystroke.
+  const query = search.trim().toLocaleLowerCase(language);
 
   const groupNames = useMemo(() => new Map(data?.muscleGroups.map((g) => [g.id, g.name])), [data]);
   const inGroup = useMemo(

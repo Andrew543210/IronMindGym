@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react';
+import { numberFormat } from '../format';
 import { en } from './en';
 import { currentLanguage, LOCALES, setLanguage, subscribeToLanguage, type Language } from './language';
 import { uk } from './uk';
@@ -44,7 +45,7 @@ function pluralForm(language: Language, count: number): keyof UkrainianPlural {
 
 function formatValue(value: string | number, language: Language = currentLanguage()): string {
   return typeof value === 'number'
-    ? new Intl.NumberFormat(LOCALES[language], { maximumFractionDigits: 2, useGrouping: false }).format(value)
+    ? numberFormat(LOCALES[language], { maximumFractionDigits: 2, useGrouping: false }).format(value)
     : value;
 }
 
