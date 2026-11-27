@@ -55,7 +55,6 @@ export interface LoggerOptions {
   splitTypes: (NamedOption & { days: NamedOption[] })[];
   setTypes: NamedOption[];
   defaultSetTypeId: number;
-  muscleGroups: NamedOption[];
   exercises: CatalogExercise[];
 }
 

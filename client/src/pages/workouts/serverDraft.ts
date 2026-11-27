@@ -24,6 +24,8 @@ export interface ServerDraftSync {
   stop(): void;
   /** Sends the waiting change and resolves once the server has answered the last request. */
   settle(): Promise<void>;
+  /** Calls the listener when the server answers that the workout was saved on another device; returns its removal. */
+  whenSavedElsewhere(listener: (draftId: string) => void): () => void;
 }
 
 const open = new Set<ServerDraftSync>();
@@ -48,11 +50,8 @@ export async function settleServerDrafts(): Promise<void> {
  * 409 means the workout was saved elsewhere. A change still waiting when the tab hides goes out with
  * keepalive, because the browser cancels an ordinary request of a closing tab.
  */
-export function serverDraftSync(
-  onSavedElsewhere: (draftId: string) => void,
-  serverDraftId?: string,
-  onSent?: (draft: StoredDraft) => void,
-): ServerDraftSync {
+export function serverDraftSync(serverDraftId?: string, onSent?: (draft: StoredDraft) => void): ServerDraftSync {
+  let onSavedElsewhere: ((draftId: string) => void) | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let pending: StoredDraft | null = null;
   let sending: Promise<void> = Promise.resolve();
@@ -69,7 +68,7 @@ export function serverDraftSync(
     sending = api.put(ROUTE, { draftId: draft.draftId, content: draft }, { keepalive: leaving }).then(
       () => onSent?.(draft),
       (error: unknown) => {
-        if (error instanceof ApiError && error.status === 409 && !stopped) onSavedElsewhere(draft.draftId);
+        if (error instanceof ApiError && error.status === 409 && !stopped) onSavedElsewhere?.(draft.draftId);
       },
     );
   }
@@ -100,6 +99,12 @@ export function serverDraftSync(
     async settle() {
       flush();
       await sending;
+    },
+    whenSavedElsewhere(listener) {
+      onSavedElsewhere = listener;
+      return () => {
+        if (onSavedElsewhere === listener) onSavedElsewhere = undefined;
+      };
     },
   };
 }

@@ -29,7 +29,7 @@ beforeEach(() => {
 
 describe('server copy of the draft', () => {
   it('sends only the last of quick changes', async () => {
-    const sync = serverDraftSync(() => {});
+    const sync = serverDraftSync();
     const draft = withSets(1);
 
     sync.push(draft);
@@ -47,20 +47,20 @@ describe('server copy of the draft', () => {
   });
 
   it('does not replace a workout from another device with an empty one', async () => {
-    serverDraftSync(() => {}).push(freshDraft(settings));
+    serverDraftSync().push(freshDraft(settings));
     await vi.advanceTimersByTimeAsync(2000);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('sends an emptied draft the server already has', async () => {
     const draft = freshDraft(settings);
-    serverDraftSync(() => {}, draft.draftId).push(draft);
+    serverDraftSync(draft.draftId).push(draft);
     await vi.advanceTimersByTimeAsync(1500);
     await vi.waitFor(() => expect(sent('PUT')).toHaveLength(1));
   });
 
   it('lets the last change finish after the tab closes', async () => {
-    const sync = serverDraftSync(() => {});
+    const sync = serverDraftSync();
     sync.push(withSets(1));
     sync.flush();
     await vi.waitFor(() => expect(sent('PUT')).toHaveLength(1));
@@ -73,7 +73,7 @@ describe('server copy of the draft', () => {
 
   it('sends the waiting change of an open logger before a sign-out and reports what the server holds', async () => {
     const onSent = vi.fn();
-    const sync = serverDraftSync(() => {}, undefined, onSent);
+    const sync = serverDraftSync(undefined, onSent);
     const release = holdForSignOut(sync);
     const draft = withSets(2);
 
@@ -91,7 +91,8 @@ describe('server copy of the draft', () => {
   it('reports a workout already saved elsewhere', async () => {
     putStatus = 409;
     const savedElsewhere = vi.fn();
-    const sync = serverDraftSync(savedElsewhere);
+    const sync = serverDraftSync();
+    sync.whenSavedElsewhere(savedElsewhere);
     const draft = withSets(1);
 
     sync.push(draft);
@@ -101,7 +102,7 @@ describe('server copy of the draft', () => {
   });
 
   it('removes a discarded workout and drops its pending change', async () => {
-    const sync = serverDraftSync(() => {});
+    const sync = serverDraftSync();
     const draft = withSets(1);
 
     sync.push(draft);
@@ -114,7 +115,7 @@ describe('server copy of the draft', () => {
   });
 
   it('sends nothing after the workout is saved', async () => {
-    const sync = serverDraftSync(() => {});
+    const sync = serverDraftSync();
     sync.push(withSets(1));
     sync.stop();
     sync.flush();

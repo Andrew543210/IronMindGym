@@ -60,7 +60,7 @@ public partial class LocalizationApiTests
         Assert.Equal("Жим штанги лежачи", bench.ExerciseName);
         Assert.Equal("Груди", bench.MuscleGroupName);
         Assert.Equal("Груди загалом", bench.MuscleSubGroupName);
-        Assert.Contains(logger.MuscleGroups, g => g.Name == "Плечі");
+        Assert.Contains(logger.Exercises, e => e.MuscleGroupName == "Плечі");
         Assert.Equal("Робочий", logger.SetTypes[0].Name);
         var split = Assert.Single(logger.SplitTypes);
         Assert.Equal("Верх / низ", split.Name);

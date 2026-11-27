@@ -85,3 +85,24 @@ export function usePageTitle(title: string) {
     document.title = `${title} · IronMind`;
   }, [title]);
 }
+
+/**
+ * The current time, refreshed every interval and as soon as a hidden tab is shown again.
+ * Only the components that show a clock use it, so the rest of a page does not render on every tick.
+ */
+export function useNow(intervalMs: number): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    const timer = window.setInterval(tick, intervalMs);
+    const onVisible = () => {
+      if (!document.hidden) tick();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [intervalMs]);
+  return now;
+}

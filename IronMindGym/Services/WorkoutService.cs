@@ -54,7 +54,6 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
             setTypes.Select(s => new OptionResponse(s.Id, Localized.Pick(s.Name, s.NameUk)))
                 .OrderBy(s => s.Id == defaultSetTypeId ? 0 : 1).ThenBy(s => s.Name, Localized.Order).ToList(),
             defaultSetTypeId,
-            await catalog.MuscleGroupsAsync(cancellationToken),
             await catalog.ItemsAsync(cancellationToken));
     }
 

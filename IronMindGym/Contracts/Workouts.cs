@@ -77,7 +77,6 @@ public sealed record WorkoutLoggerResponse(
     List<SplitTypeOption> SplitTypes,
     List<OptionResponse> SetTypes,
     int DefaultSetTypeId,
-    List<OptionResponse> MuscleGroups,
     List<ExerciseCatalogItem> Exercises);
 
 public sealed record PreviousSetResponse(double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds, int SetTypeId, DateOnly LocalDate);

@@ -4,6 +4,8 @@ import { api } from '../../api/client';
 import type { ExerciseType } from '../../api/types/common';
 import type { CatalogExercise } from '../../api/types/exercises';
 import type { ResultPair } from '../../api/types/progress';
+import { choiceOf, chosenExercise, type ExerciseChoice } from '../../components/exerciseChoice';
+import { ExercisePicker } from '../../components/ExercisePicker';
 import { ErrorAlert, PageState } from '../../components/ui';
 import { formatSigned } from '../../format';
 import { useAction, useApi, usePageTitle } from '../../hooks';
@@ -60,25 +62,16 @@ function columnTexts(type: ExerciseType): { labels: [MessageKey, MessageKey]; pl
 
 function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercise[]; initialExerciseId: number }) {
   const { t, show } = useI18n();
-  // Ids, not names: names change with the interface language.
-  const [selection, setSelection] = useState(() => {
-    const chosen = catalog.find((e) => e.exerciseId === initialExerciseId);
-    return { groupId: chosen ? String(chosen.muscleGroupId) : '', subGroupId: '', exerciseId: chosen ? String(chosen.exerciseId) : '' };
-  });
+  const [selection, setSelection] = useState(() => choiceOf(catalog.find((e) => e.exerciseId === initialExerciseId)));
   const [edited, setEdited] = useState<{ exerciseId: number; values: Values }>();
   const [message, setMessage] = useState<{ text: Text; error: boolean }>();
   const save = useAction();
 
-  const exercise = catalog.find((e) => e.exerciseId === Number(selection.exerciseId));
+  const exercise = chosenExercise(catalog, selection);
   const saved = useSavedResults(exercise?.exerciseId);
   const values = exercise && edited?.exerciseId === exercise.exerciseId ? edited.values : saved.values;
-  const groups = [...new Map(catalog.map((e) => [e.muscleGroupId, e.muscleGroupName]))]
-    .sort((a, b) => a[1].localeCompare(b[1]));
-  const groupRows = catalog.filter((e) => e.muscleGroupId === Number(selection.groupId));
-  const subGroups = [...new Map(groupRows.map((e) => [e.muscleSubGroupId, e.muscleSubGroupName]))];
-  const exerciseRows = groupRows.filter((e) => !selection.subGroupId || e.muscleSubGroupId === Number(selection.subGroupId));
 
-  function choose(next: typeof selection) {
+  function choose(next: ExerciseChoice) {
     setSelection(next);
     setEdited(undefined);
     setMessage(undefined);
@@ -160,30 +153,7 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
       <div className="card mb-4">
         <div className="card-header">{t('track.select')}</div>
         <div className="card-body"><div className="row g-3">
-          <div className="col-md-4">
-            <label className="form-label" htmlFor="muscleGroupSelect">{t('track.group')}</label>
-            <select className="form-select" id="muscleGroupSelect" value={selection.groupId} disabled={save.busy}
-              onChange={(e) => choose({ groupId: e.target.value, subGroupId: '', exerciseId: '' })}>
-              <option value="">{t('track.chooseGroup')}</option>
-              {groups.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
-            </select>
-          </div>
-          <div className="col-md-4">
-            <label className="form-label" htmlFor="muscleSubgroupSelect">{t('track.subgroup')}</label>
-            <select className="form-select" id="muscleSubgroupSelect" value={selection.subGroupId} disabled={subGroups.length === 0 || save.busy}
-              onChange={(e) => choose({ ...selection, subGroupId: e.target.value, exerciseId: '' })}>
-              <option value="">{t('track.allSubgroups')}</option>
-              {subGroups.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
-            </select>
-          </div>
-          <div className="col-md-4">
-            <label className="form-label" htmlFor="exerciseSelect">{t('common.exercise')}</label>
-            <select className="form-select" id="exerciseSelect" value={selection.exerciseId} disabled={exerciseRows.length === 0 || save.busy}
-              onChange={(e) => choose({ ...selection, exerciseId: e.target.value })}>
-              <option value="">{t('logger.chooseExercise')}</option>
-              {exerciseRows.map((e) => <option key={e.exerciseId} value={e.exerciseId}>{e.exerciseName}</option>)}
-            </select>
-          </div>
+          <ExercisePicker catalog={catalog} choice={selection} onChoose={choose} disabled={save.busy} />
         </div></div>
       </div>
 

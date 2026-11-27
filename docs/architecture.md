@@ -64,6 +64,8 @@ The client sends `Accept-Language: en` or `uk`. The server switches only the wor
 | `hooks.ts` | `useApi` loads a page's data, aborts what is no longer needed and keeps the last answer only when asked; `useAction` runs one change at a time. |
 | `SessionProvider.tsx` | The signed-in user, sign-out and the reason a session ended. |
 | `pages/workouts/draft.ts`, `serverDraft.ts` | The unfinished workout: kept in `localStorage`, shared between tabs and sent to the server 1.5 s after the last change, so another device can continue it. |
+| `pages/workouts/logger/` | The parts of the workout logger: `useWorkoutDraft` restores, keeps and syncs the draft; the search, the set editor, the clocks, the settings and the table of sets each render one area. Only the clocks render on every tick. |
+| `components/ExercisePicker.tsx` | Group, focus area and exercise, shared by the logger and the progress tracker. |
 
 Messages after an action (for example "Workout saved") travel with the navigation and are shown once; a reload does not repeat them.
 

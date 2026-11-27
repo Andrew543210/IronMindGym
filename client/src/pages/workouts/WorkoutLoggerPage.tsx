@@ -1,19 +1,23 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { api } from '../../api/client';
 import type { CatalogExercise } from '../../api/types/exercises';
-import type { LoggerOptions, PreviousSet } from '../../api/types/workouts';
+import type { LoggerOptions } from '../../api/types/workouts';
+import { choiceOf, chosenExercise, type ExerciseChoice } from '../../components/exerciseChoice';
+import { ExercisePicker } from '../../components/ExercisePicker';
 import { ErrorAlert, PageState } from '../../components/ui';
 import { useAction, useApi } from '../../hooks';
 import { useI18n, type Text } from '../../i18n/i18n';
 import { useAthlete } from '../../session';
-import {
-  MAX_SETS, applyStored, clockText, draftStore, elapsedMinutes, fieldsFrom, finishError, freshDraft, isDraftId, newerDraft, readSet,
-  restoreDraft, setCells, startingFields,
-  type DraftSettings, type SetFields, type StoredDraft, type StoredValue,
-} from './draft';
-import { holdForSignOut, readServerDraft, serverDraftSync } from './serverDraft';
+import { MAX_SETS, elapsedMinutes, fieldsFrom, finishError, readSet, startingFields, type SetFields, type StoredValue } from './draft';
+import { RestTimer, SessionClock } from './logger/Clocks';
+import { ExerciseSearch } from './logger/ExerciseSearch';
+import { SessionSets } from './logger/SessionSets';
+import { SessionSettings } from './logger/SessionSettings';
+import { SetEditor } from './logger/SetEditor';
+import { useWorkoutDraft } from './logger/useWorkoutDraft';
+import { readServerDraft } from './serverDraft';
 
 export function WorkoutLoggerPage() {
   const athlete = useAthlete();
@@ -41,38 +45,6 @@ export function WorkoutLoggerPage() {
   );
 }
 
-/** The day ids of a split; a split without days logs a general training day, kept as an empty id. */
-function dayIds(options: LoggerOptions, splitTypeId: string): string[] {
-  const days = options.splitTypes.find((s) => String(s.id) === splitTypeId)?.days ?? [];
-  return days.length > 0 ? days.map((day) => String(day.id)) : [''];
-}
-
-function withValidSplit(draft: StoredDraft, options: LoggerOptions): StoredDraft {
-  const split = options.splitTypes.find((s) => String(s.id) === draft.settings.splitTypeId) ?? options.splitTypes[0];
-  const splitTypeId = split ? String(split.id) : '';
-  const days = dayIds(options, splitTypeId);
-  const day = days.includes(draft.settings.splitDayId) ? draft.settings.splitDayId : days[0];
-  return { ...draft, settings: { ...draft.settings, splitTypeId: splitTypeId, splitDayId: day } };
-}
-
-function storageWorks(): boolean {
-  try {
-    localStorage.setItem('ironmind-storage-check', '1');
-    localStorage.removeItem('ironmind-storage-check');
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/** The athlete's last saved set of an exercise: undefined while it loads, null when there is none. */
-function usePreviousSet(exerciseId: number | undefined): { value?: PreviousSet | null; failed?: boolean } | undefined {
-  const { data, error, loading } = useApi<PreviousSet | undefined>(
-    exerciseId === undefined ? null : `/api/workouts/previous-set?exerciseId=${exerciseId}`);
-  if (exerciseId === undefined || loading) return undefined;
-  return error ? { failed: true } : { value: data ?? null };
-}
-
 interface WorkoutLoggerProps {
   options: LoggerOptions;
   userId: number;
@@ -84,197 +56,38 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
   const navigate = useNavigate();
   const { t, show } = useI18n();
   const catalog = options.exercises;
-  const store = useMemo(() => draftStore(userId), [userId]);
-  const defaults = useMemo<DraftSettings>(() => {
-    const splitTypeId = String(options.activeSplitTypeId ?? options.splitTypes[0]?.id ?? '');
-    return { splitTypeId: splitTypeId, splitDayId: dayIds(options, splitTypeId)[0], durationMinutes: '60', reviewRating: '4', reviewComment: '' };
-  }, [options]);
-
-  const [draft, setDraft] = useState(() => withValidSplit(restoreDraft(newerDraft(store.read(), serverCopy), defaults), options));
-  // Status and errors are kept as text keys, so they follow a change of the interface language.
-  const [status, setStatus] = useState<Text>(() => (draft.sets.length
-    ? { key: 'logger.restored', params: { count: draft.sets.length } }
-    : { key: 'logger.draftSaved' }));
-  const [canStore] = useState(storageWorks);
-  const [now, setNow] = useState(() => Date.now());
-
-  const [selection, setSelection] = useState(() => {
-    const last = catalog.find((e) => e.exerciseId === draft.sets.at(-1)?.exerciseId);
-    return { groupId: last ? String(last.muscleGroupId) : '', subGroupId: '', exerciseId: last ? String(last.exerciseId) : '' };
-  });
-  const [fields, setFields] = useState<SetFields>(() =>
-    startingFields(draft.sets, Number(selection.exerciseId) || undefined, options.defaultSetTypeId));
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [query, setQuery] = useState('');
+  // Errors are kept as text keys, so they follow a change of the interface language.
   const [error, setError] = useState<Text | null>(null);
+  const { draft, status, canStore, update, discard, submit } = useWorkoutDraft({
+    options, userId, serverCopy, syncWithServer,
+    onReplaced: () => {
+      setEditingIndex(null);
+      setError(null);
+    },
+  });
+  const [choice, setChoice] = useState(() => choiceOf(catalog.find((e) => e.exerciseId === draft.sets.at(-1)?.exerciseId)));
+  const [fields, setFields] = useState<SetFields>(() =>
+    startingFields(draft.sets, Number(choice.exerciseId) || undefined, options.defaultSetTypeId));
   const save = useAction();
 
-  const saved = useRef(false);
-  const savedElsewhere = useRef<(draftId: string) => void>(undefined);
-  const [sync] = useState(() => serverDraftSync(
-    (draftId) => savedElsewhere.current?.(draftId),
-    isDraftId(serverCopy?.draftId) ? serverCopy.draftId : undefined,
-    (sent) => store.markSent(sent),
-  ));
-  const changedElsewhere = useRef(false);
-  const restAlerted = useRef(draft.timerEnd <= now);
   const editorRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const exerciseRef = useRef<HTMLSelectElement>(null);
   const weightRef = useRef<HTMLInputElement>(null);
   const durationRef = useRef<HTMLInputElement>(null);
 
-  const item = catalog.find((e) => e.exerciseId === Number(selection.exerciseId));
-  const type = item?.exerciseType ?? 'StrengthTraining';
-  const previous = usePreviousSet(item?.exerciseId);
-
-  const groupRows = catalog.filter((e) => e.muscleGroupId === Number(selection.groupId));
-  const subGroups = [...new Map(groupRows.map((e) => [e.muscleSubGroupId, e.muscleSubGroupName]))];
-  const exerciseRows = groupRows.filter((e) => !selection.subGroupId || e.muscleSubGroupId === Number(selection.subGroupId));
-  const search = query.trim().toLocaleLowerCase();
-  const matches = search
-    ? catalog.filter((e) => e.exerciseName.toLocaleLowerCase().includes(search) || e.englishName.toLowerCase().includes(search)).slice(0, 8)
-    : [];
+  const exercise = chosenExercise(catalog, choice);
   const setTypeName = (id: number | string) => options.setTypes.find((s) => String(s.id) === String(id))?.name;
-  const splitDays = options.splitTypes.find((s) => String(s.id) === draft.settings.splitTypeId)?.days ?? [];
-  const dayOptions = splitDays.length > 0
-    ? splitDays.map((day) => ({ value: String(day.id), label: day.name }))
-    : [{ value: '', label: t('logger.trainingDay') }];
 
-  // Both clocks are derived from timestamps, so a throttled background tab shows the right values when it returns.
-  const remaining = Math.max(0, Math.ceil((draft.timerEnd - now) / 1000));
-  const resting = draft.timerEnd > 0 && remaining > 0;
-  const restDone = draft.timerEnd > 0 && !resting;
-  const elapsed = Math.max(0, Math.floor((now - draft.startedAt) / 1000));
-  const durationMinutes = draft.autoDuration ? elapsedMinutes(draft.startedAt, now) : Number(draft.settings.durationMinutes);
-
-  useEffect(() => {
-    if (saved.current) return;
-    if (changedElsewhere.current) {
-      changedElsewhere.current = false;
-      return;
-    }
-    store.write(draft);
-    if (syncWithServer) sync.push(draft);
-  }, [draft, store, sync, syncWithServer]);
-
-  useEffect(() => {
-    const leave = () => sync.flush(true);
-    const onHidden = () => {
-      if (document.hidden) leave();
-    };
-    document.addEventListener('visibilitychange', onHidden);
-    window.addEventListener('pagehide', leave);
-    const release = holdForSignOut(sync);
-    return () => {
-      document.removeEventListener('visibilitychange', onHidden);
-      window.removeEventListener('pagehide', leave);
-      sync.flush();
-      release();
-    };
-  }, [sync]);
-
-  useEffect(() => {
-    savedElsewhere.current = (draftId) => {
-      if (saved.current || draftId !== draft.draftId) return;
-      store.clear();
-      setEditingIndex(null);
-      setError(null);
-      update({ ...freshDraft(draft.settings), autoDuration: draft.autoDuration }, { key: 'logger.savedElsewhere' });
-    };
-  });
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 500);
-    const onVisible = () => {
-      if (!document.hidden) setNow(Date.now());
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, []);
-
-  const title = resting ? t('logger.restTitle', { time: clockText(remaining) }) : t('workouts.title');
-  useEffect(() => {
-    document.title = `${title} · IronMind`;
-  }, [title]);
-
-  useEffect(() => {
-    if (!restDone || restAlerted.current) return;
-    restAlerted.current = true;
-    navigator.vibrate?.([200, 100, 200]);
-  }, [restDone]);
-
-  useEffect(() => {
-    function onStorage(event: StorageEvent) {
-      if (event.key !== store.key) return;
-      const stored = store.read();
-      changedElsewhere.current = true;
-      setEditingIndex(null);
-      setDraft((current) => (stored
-        ? withValidSplit(applyStored(stored, current), options)
-        : { ...freshDraft(current.settings), autoDuration: current.autoDuration }));
-      setNow(Date.now());
-      setStatus({ key: 'logger.updatedElsewhere' });
-    }
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, [store, options]);
-
-  useEffect(() => {
-    if (draft.sets.length === 0) return;
-    function onBeforeUnload(event: BeforeUnloadEvent) {
-      if (saved.current) return;
-      event.preventDefault();
-      event.returnValue = '';
-    }
-    window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, [draft.sets.length]);
-
-  function update(next: StoredDraft, message: Text = { key: 'logger.draftSaved' }) {
-    setDraft({ ...next, savedAt: Date.now() });
-    setStatus(message);
+  function choose(next: ExerciseChoice) {
+    setChoice(next);
+    setFields(startingFields(draft.sets, Number(next.exerciseId) || undefined, options.defaultSetTypeId));
   }
 
-  function selectGroup(groupId: string) {
-    setSelection({ groupId, subGroupId: '', exerciseId: '' });
-    setFields(startingFields(draft.sets, undefined, options.defaultSetTypeId));
-  }
-
-  function selectSubGroup(subGroupId: string) {
-    setSelection({ ...selection, subGroupId, exerciseId: '' });
-    setFields(startingFields(draft.sets, undefined, options.defaultSetTypeId));
-  }
-
-  function selectExercise(exerciseId: string) {
-    setSelection({ ...selection, exerciseId });
-    setFields(startingFields(draft.sets, Number(exerciseId) || undefined, options.defaultSetTypeId));
-  }
-
-  function chooseExercise(exercise: CatalogExercise) {
-    setSelection({ groupId: String(exercise.muscleGroupId), subGroupId: '', exerciseId: String(exercise.exerciseId) });
-    setFields(startingFields(draft.sets, exercise.exerciseId, options.defaultSetTypeId));
-  }
-
-  function pickSearchResult(exercise: CatalogExercise) {
-    flushSync(() => {
-      chooseExercise(exercise);
-      setQuery('');
-    });
+  function pickSearchResult(found: CatalogExercise) {
+    flushSync(() => choose(choiceOf(found)));
     exerciseRef.current?.focus();
-  }
-
-  function searchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key !== 'Enter') return;
-    event.preventDefault();
-    if (matches[0]) pickSearchResult(matches[0]);
-  }
-
-  function setField(name: keyof SetFields, value: string) {
-    setFields({ ...fields, [name]: value });
   }
 
   function endEdit() {
@@ -283,18 +96,18 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
 
   function editSet(index: number) {
     const set = draft.sets[index];
-    const exercise = catalog.find((e) => e.exerciseId === set.exerciseId);
-    if (!exercise) {
+    const logged = catalog.find((e) => e.exerciseId === set.exerciseId);
+    if (!logged) {
       setError({ key: 'logger.unavailableExercise' });
       return;
     }
     flushSync(() => {
       setEditingIndex(index);
-      setSelection({ groupId: String(exercise.muscleGroupId), subGroupId: '', exerciseId: String(exercise.exerciseId) });
+      setChoice(choiceOf(logged));
       setFields(fieldsFrom(set, options.defaultSetTypeId));
     });
     editorRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
-    (exercise.exerciseType === 'StrengthTraining' ? weightRef : durationRef).current?.focus({ preventScroll: true });
+    (logged.exerciseType === 'StrengthTraining' ? weightRef : durationRef).current?.focus({ preventScroll: true });
   }
 
   function removeSet(index: number) {
@@ -305,8 +118,8 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
     update({ ...draft, sets: draft.sets.filter((_, i) => i !== index) }, { key: 'logger.setRemoved' });
   }
 
-  function addSet() {
-    const { set, error: problem } = readSet(item, fields, setTypeName(fields.setTypeId));
+  function saveSet() {
+    const { set, error: problem } = readSet(exercise, fields, setTypeName(fields.setTypeId));
     if (problem !== undefined) {
       setError({ key: problem });
       return;
@@ -321,296 +134,70 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
       update({ ...draft, sets: draft.sets.map((s, i) => (i === editingIndex ? set : s)) }, { key: 'logger.setUpdated' });
       return;
     }
-    restAlerted.current = set.restSeconds === 0;
-    const started = Date.now();
-    setNow(started);
-    update({ ...draft, sets: [...draft.sets, set], timerEnd: started + set.restSeconds * 1000 }, { key: 'logger.setLogged' });
+    update({ ...draft, sets: [...draft.sets, set], timerEnd: Date.now() + set.restSeconds * 1000 }, { key: 'logger.setLogged' });
   }
 
   function startTimer() {
     const seconds = Number(fields.restSeconds);
     if (!Number.isInteger(seconds) || seconds < 0 || seconds > 3600) return;
-    restAlerted.current = seconds === 0;
-    const started = Date.now();
-    setNow(started);
-    update({ ...draft, timerEnd: started + seconds * 1000 });
+    update({ ...draft, timerEnd: Date.now() + seconds * 1000 });
   }
 
   function skipRest() {
-    restAlerted.current = true;
-    const skipped = Date.now();
-    setNow(skipped);
-    update({ ...draft, timerEnd: skipped });
+    update({ ...draft, timerEnd: Date.now() });
   }
 
   function discardWorkout() {
     const count = draft.sets.length;
     if (count && !window.confirm(t('logger.confirmDiscard', { count }))) return;
-    store.clear();
-    sync.discard(draft.draftId);
-    restAlerted.current = true;
     endEdit();
     setError(null);
-    setNow(Date.now());
-    update({ ...freshDraft(draft.settings), autoDuration: draft.autoDuration }, { key: 'logger.newWorkout' });
-  }
-
-  function setSetting(name: keyof DraftSettings, value: string) {
-    const settings = { ...draft.settings, [name]: value };
-    if (name === 'splitTypeId') settings.splitDayId = dayIds(options, value)[0];
-    update({ ...draft, settings, autoDuration: name === 'durationMinutes' ? false : draft.autoDuration });
-  }
-
-  function setAutoDuration(on: boolean) {
-    const settings = on ? draft.settings : { ...draft.settings, durationMinutes: String(durationMinutes) };
-    update({ ...draft, autoDuration: on, settings });
+    discard();
   }
 
   function finish(event: FormEvent) {
     event.preventDefault();
+    const durationMinutes = draft.autoDuration ? elapsedMinutes(draft.startedAt, Date.now()) : Number(draft.settings.durationMinutes);
     const problem = finishError(draft, durationMinutes, editingIndex !== null);
     if (problem) {
       flushSync(() => setError({ key: problem }));
       errorRef.current?.scrollIntoView?.({ block: 'center' });
       return;
     }
-    sync.cancel();
     void save.run(async () => {
-      let result: { id: number };
-      try {
-        result = await api.post<{ id: number }>('/api/workouts', {
-          splitDayId: draft.settings.splitDayId ? Number(draft.settings.splitDayId) : null,
-          durationMinutes,
-          draftId: draft.draftId,
-          reviewRating: Number(draft.settings.reviewRating),
-          reviewComment: draft.settings.reviewComment,
-          sets: draft.sets,
-        });
-      } catch (failure) {
-        if (syncWithServer) sync.push(draft);
-        throw failure;
-      }
-      saved.current = true;
-      sync.stop();
-      store.clear();
+      const result = await submit(() => api.post<{ id: number }>('/api/workouts', {
+        splitDayId: draft.settings.splitDayId ? Number(draft.settings.splitDayId) : null,
+        durationMinutes,
+        draftId: draft.draftId,
+        reviewRating: Number(draft.settings.reviewRating),
+        reviewComment: draft.settings.reviewComment,
+        sets: draft.sets,
+      }));
       navigate(`/workouts/${result.id}`, { state: { message: t('logger.saved') } });
     });
   }
-
-  function previousText(): string {
-    if (!item) return t('logger.previousChoose');
-    if (!previous) return t('logger.previousLoading');
-    if (previous.failed) return t('logger.previousFailed');
-    const last = previous.value;
-    if (!last) return t('logger.previousNone');
-    const value = type === 'StrengthTraining'
-      ? t('logger.previousStrength', { weight: last.weightKg, reps: t('count.reps', { count: last.reps }) })
-      : type === 'Cardio'
-        ? t('logger.previousCardio', { seconds: last.durationSeconds, effort: last.intensity })
-        : t('logger.previousTimed', { seconds: last.durationSeconds, weight: last.weightKg });
-    return t('logger.previous', { date: last.localDate, value });
-  }
-  const previousValue = previous?.value;
-  // On a phone the table becomes a card per set, which names the rest column from its header.
-  const columns = [t('common.exercise'), t('workout.type'), t('logger.loadOrDuration'), t('logger.repsOrEffort'), t('workout.rest')];
 
   return (
     <form className="row g-3 mb-4 workout-logger" noValidate onSubmit={finish}>
       <div className="col-12">
         <div className="workout-toolbar d-flex justify-content-between align-items-center gap-3">
-          <span>{t('logger.sessionTime')} <strong className="metric">{clockText(elapsed)}</strong></span>
+          <span>{t('logger.sessionTime')} <SessionClock startedAt={draft.startedAt} /></span>
           <span className="small text-muted draft-status" role="status">{canStore ? show(status) : t('logger.storageUnavailable')}</span>
         </div>
       </div>
 
-      <div className="col-12">
-        <div className="card border-secondary">
-          <details>
-            <summary className="card-header">{t('logger.settings')}{options.activeSplitTypeName ? ` · ${options.activeSplitTypeName}` : ''}</summary>
-            <div className="card-body row g-3">
-              <div className="col-md-4">
-                <label htmlFor="splitType" className="form-label">{t('setup.splitType')}</label>
-                <select id="splitType" className="form-select" value={draft.settings.splitTypeId}
-                  disabled={options.activeSplitTypeId !== null} onChange={(e) => setSetting('splitTypeId', e.target.value)}>
-                  {options.splitTypes.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="splitDay" className="form-label">{t('logger.splitDay')}</label>
-                <select id="splitDay" className="form-select" value={draft.settings.splitDayId}
-                  onChange={(e) => setSetting('splitDayId', e.target.value)}>
-                  {dayOptions.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}
-                </select>
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="durationMinutes" className="form-label">{t('logger.durationMinutes')}</label>
-                <input id="durationMinutes" type="number" className="form-control" min={1} max={600} inputMode="numeric"
-                  value={draft.autoDuration ? String(durationMinutes) : draft.settings.durationMinutes}
-                  onChange={(e) => setSetting('durationMinutes', e.target.value)} />
-                <label className="small mt-2">
-                  <input type="checkbox" checked={draft.autoDuration} onChange={(e) => setAutoDuration(e.target.checked)} /> {t('logger.useElapsed')}
-                </label>
-              </div>
-            </div>
-          </details>
-        </div>
-      </div>
+      <SessionSettings options={options} draft={draft} onChange={(next) => update(next)} />
 
       <div className="col-12">
         <div className="card border-secondary">
           <div className="card-header">{t('logger.addHeader')}</div>
           <div className="card-body row g-3 set-editor" ref={editorRef}>
-            <div className="col-12">
-              <label htmlFor="exerciseSearch" className="form-label">{t('logger.find')}</label>
-              <input type="search" id="exerciseSearch" className="form-control" placeholder={t('logger.searchPlaceholder')}
-                autoComplete="off" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={searchKeyDown} />
-              <div className="exercise-search-results" aria-live="polite">
-                {search && matches.length === 0 && t('logger.noMatches')}
-                {matches.map((match) => (
-                  <button type="button" key={match.exerciseId} className="exercise-search-result" onClick={() => pickSearchResult(match)}>
-                    {match.exerciseName} · {match.muscleGroupName}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="col-12">
-              <details className="exercise-browser">
-                <summary>{t('logger.browse')}</summary>
-                <div className="row g-3 mt-1">
-                  <div className="col-md-6">
-                    <label htmlFor="muscleGroupFilter" className="form-label">{t('logger.muscleGroup')}</label>
-                    <select id="muscleGroupFilter" className="form-select" value={selection.groupId} onChange={(e) => selectGroup(e.target.value)}>
-                      <option value="">{t('logger.selectGroup')}</option>
-                      {options.muscleGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="muscleSubGroupFilter" className="form-label">{t('logger.focusArea')}</label>
-                    <select id="muscleSubGroupFilter" className="form-select" value={selection.subGroupId}
-                      disabled={subGroups.length === 0} onChange={(e) => selectSubGroup(e.target.value)}>
-                      <option value="">{t('logger.allFocusAreas')}</option>
-                      {subGroups.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </details>
-            </div>
-            <div className="col-12">
-              <label htmlFor="exerciseSelect" className="form-label">{t('common.exercise')}</label>
-              <select id="exerciseSelect" ref={exerciseRef} className="form-select" value={selection.exerciseId}
-                disabled={exerciseRows.length === 0} onChange={(e) => selectExercise(e.target.value)}>
-                <option value="">{t('logger.chooseExercise')}</option>
-                {exerciseRows.map((e) => <option key={e.exerciseId} value={e.exerciseId}>{e.exerciseName}</option>)}
-              </select>
-            </div>
-
-            <div className="col-12">
-              <div className="previous-set">
-                <span className="small text-muted" role="status">{previousText()}</span>
-                {previousValue && (
-                  <button type="button" className="btn btn-outline-secondary btn-sm"
-                    onClick={() => setFields(fieldsFrom(previousValue, options.defaultSetTypeId))}>{t('logger.useValues')}</button>
-                )}
-              </div>
-            </div>
-            <div className="col-md-3">
-              <label htmlFor="setTypeSelect" className="form-label">{t('logger.setType')}</label>
-              <select id="setTypeSelect" className="form-select" value={fields.setTypeId} onChange={(e) => setField('setTypeId', e.target.value)}>
-                {options.setTypes.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-            {type !== 'Cardio' && (
-              <div className="col-md-3">
-                <label htmlFor="weightInput" className="form-label">{t('logger.load')}</label>
-                <input id="weightInput" ref={weightRef} className="form-control" type="number" inputMode="decimal" min={0} max={500} step={0.5}
-                  value={fields.weightKg} onChange={(e) => setField('weightKg', e.target.value)} />
-              </div>
-            )}
-            {type === 'StrengthTraining' && (
-              <div className="col-md-3">
-                <label htmlFor="repsInput" className="form-label">{t('logger.reps')}</label>
-                <input id="repsInput" className="form-control" type="number" inputMode="numeric" min={1} max={500}
-                  value={fields.reps} onChange={(e) => setField('reps', e.target.value)} />
-              </div>
-            )}
-            {type !== 'StrengthTraining' && (
-              <div className="col-md-3">
-                <label htmlFor="durationInput" className="form-label">{t('logger.durationSeconds')}</label>
-                <input id="durationInput" ref={durationRef} className="form-control" type="number" inputMode="numeric" min={1} max={86400}
-                  value={fields.durationSeconds} onChange={(e) => setField('durationSeconds', e.target.value)} />
-              </div>
-            )}
-            {type === 'Cardio' && (
-              <div className="col-md-3">
-                <label htmlFor="intensityInput" className="form-label">{t('logger.effort')}</label>
-                <input id="intensityInput" className="form-control" type="number" inputMode="numeric" min={1} max={10}
-                  value={fields.intensity} onChange={(e) => setField('intensity', e.target.value)} />
-              </div>
-            )}
-            <div className="col-md-3">
-              <label htmlFor="restInput" className="form-label">{t('logger.rest')}</label>
-              <input id="restInput" className="form-control" type="number" inputMode="numeric" min={0} max={3600}
-                value={fields.restSeconds} onChange={(e) => setField('restSeconds', e.target.value)} />
-            </div>
-
-            <div className="col-12">
-              <div ref={errorRef} className="alert alert-danger" role="alert" hidden={!error}>{error ? show(error) : ''}</div>
-              <div className="d-flex gap-2">
-                <button type="button" className="btn btn-primary flex-grow-1" onClick={addSet}>
-                  {editingIndex === null ? t('logger.logSet') : t('logger.saveSet', { number: editingIndex + 1 })}
-                </button>
-                {editingIndex !== null && <button type="button" className="btn btn-outline-secondary" onClick={endEdit}>{t('logger.cancelEdit')}</button>}
-              </div>
-              <details className="small text-muted mt-2">
-                <summary>{t('logger.howTo')}</summary>
-                <p className="mt-2 mb-0">{t('logger.howToText')}</p>
-              </details>
-            </div>
-
-            <div className="col-12">
-              <div className={`workout-toolbar rest-timer d-flex flex-wrap gap-3 align-items-center justify-content-between${restDone ? ' rest-done' : ''}`}>
-                <span>{t('logger.restTimer')} <strong className="metric rest-timer-value">{clockText(remaining)}</strong></span>
-                <div>
-                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={startTimer}>{t('logger.startTimer')}</button>{' '}
-                  <button type="button" className="btn btn-outline-warning btn-sm" onClick={skipRest}>{t('logger.skipRest')}</button>
-                </div>
-              </div>
-              <div className="mt-2 rest-ready" role="status">{restDone ? t('logger.restDone') : ''}</div>
-            </div>
-
-            <div className="col-12">
-              <div className="section-heading">
-                <h5 className="mb-0">{t('logger.thisSession')}</h5>
-                <span className="small text-muted">{t('logger.logged', { sets: t('count.sets', { count: draft.sets.length }) })}</span>
-              </div>
-              {draft.sets.length === 0 && <p className="text-muted small">{t('logger.firstSet')}</p>}
-              <div className="table-responsive">
-                <table className="table table-sm session-sets">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      {columns.map((column) => <th key={column}>{column}</th>)}
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {draft.sets.map((set, index) => (
-                      <tr key={index}>
-                        <td>{index + 1}</td>
-                        {setCells(set, catalog.find((e) => e.exerciseId === set.exerciseId), t, setTypeName(set.setTypeId))
-                          .map((cell, i) => <td key={i} data-label={columns[i]}>{cell}</td>)}
-                        <td className="text-nowrap">
-                          <button type="button" className="btn btn-sm btn-outline-secondary" aria-label={t('logger.editSet', { number: index + 1 })}
-                            onClick={() => editSet(index)}>{t('common.edit')}</button>{' '}
-                          <button type="button" className="btn btn-sm btn-outline-danger" aria-label={t('logger.removeSet', { number: index + 1 })}
-                            onClick={() => removeSet(index)}>×</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <ExerciseSearch catalog={catalog} onPick={pickSearchResult} />
+            <ExercisePicker catalog={catalog} choice={choice} onChoose={choose} foldFiltersUnder={t('logger.browse')} exerciseRef={exerciseRef} />
+            <SetEditor options={options} exercise={exercise} fields={fields} onFields={setFields} editingIndex={editingIndex} error={error}
+              onSave={saveSet} onCancel={endEdit} weightRef={weightRef} durationRef={durationRef} errorRef={errorRef} />
+            <RestTimer key={draft.timerEnd} timerEnd={draft.timerEnd} onStart={startTimer} onSkip={skipRest} />
+            <SessionSets sets={draft.sets} catalog={catalog} setTypeName={setTypeName} onEdit={editSet} onRemove={removeSet} />
           </div>
         </div>
       </div>
@@ -618,12 +205,12 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
       <div className="col-md-2">
         <label htmlFor="reviewRating" className="form-label">{t('logger.rating')}</label>
         <input id="reviewRating" type="number" className="form-control" min={1} max={5} inputMode="numeric"
-          value={draft.settings.reviewRating} onChange={(e) => setSetting('reviewRating', e.target.value)} />
+          value={draft.settings.reviewRating} onChange={(e) => update({ ...draft, settings: { ...draft.settings, reviewRating: e.target.value } })} />
       </div>
       <div className="col-md-10">
         <label htmlFor="reviewComment" className="form-label">{t('logger.review')}</label>
         <input id="reviewComment" className="form-control" maxLength={800} placeholder={t('logger.reviewPlaceholder')}
-          value={draft.settings.reviewComment} onChange={(e) => setSetting('reviewComment', e.target.value)} />
+          value={draft.settings.reviewComment} onChange={(e) => update({ ...draft, settings: { ...draft.settings, reviewComment: e.target.value } })} />
       </div>
 
       <div className="col-12 d-grid gap-2">

@@ -15,16 +15,17 @@ const options: LoggerOptions = {
   splitTypes: [{ id: 2, name: 'Upper-Lower', days: [{ id: 3, name: 'Upper' }, { id: 4, name: 'Lower' }] }],
   setTypes: [{ id: 1, name: 'Working' }, { id: 2, name: 'Warm-up' }],
   defaultSetTypeId: 1,
-  muscleGroups: [{ id: 1, name: 'Chest' }],
   exercises: [{
     exerciseId: 7, exerciseName: 'Flat Bench Press', englishName: 'Flat Bench Press', description: '', exerciseType: 'StrengthTraining',
     muscleGroupId: 1, muscleGroupName: 'Chest', muscleSubGroupId: 3, muscleSubGroupName: 'Middle Chest',
+  }, {
+    exerciseId: 9, exerciseName: 'Rowing Machine', englishName: 'Rowing Machine', description: '', exerciseType: 'Cardio',
+    muscleGroupId: 2, muscleGroupName: 'Cardio', muscleSubGroupId: 5, muscleSubGroupName: 'Machines',
   }],
 };
 
 const ukrainianOptions: LoggerOptions = {
   ...options,
-  muscleGroups: [{ id: 1, name: 'Груди' }],
   exercises: [{ ...options.exercises[0], exerciseName: 'Жим лежачи на горизонтальній лаві', muscleGroupName: 'Груди', muscleSubGroupName: 'Середина грудей' }],
 };
 
@@ -76,6 +77,9 @@ beforeEach(() => {
       const ukrainian = (init?.headers as Record<string, string> | undefined)?.['Accept-Language'] === 'uk';
       return respond(200, ukrainian ? ukrainianOptions : options);
     }
+    if (url === '/api/workouts/previous-set?exerciseId=9') {
+      return respond(200, { weightKg: 0, reps: 0, durationSeconds: 900, intensity: 7, restSeconds: 60, setTypeId: 2, localDate: '2026-11-20' });
+    }
     if (url.startsWith('/api/workouts/previous-set')) return respond(204);
     if (url === '/api/session/csrf') return respond(200, { token: 'token' });
     if (url === '/api/workouts' && init?.method === 'POST') {
@@ -87,6 +91,26 @@ beforeEach(() => {
 });
 
 describe('workout logger', () => {
+  it('starts a cardio set from the last one and logs its duration and effort', async () => {
+    const user = userEvent.setup();
+    renderLogger();
+    await user.type(await screen.findByLabelText('Find an exercise'), 'rowing{Enter}');
+
+    expect(await screen.findByText('Last recorded set (2026-11-20): 900 sec · effort 7/10. Reference only — adjust for today.')).toBeInTheDocument();
+    expect(screen.queryByLabelText('External load (kg)')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Use these values' }));
+    expect(screen.getByLabelText('Duration (sec)')).toHaveValue(900);
+    expect(screen.getByLabelText('Set type')).toHaveValue('2');
+
+    await user.selectOptions(screen.getByLabelText('Set type'), 'Working');
+    await user.clear(screen.getByLabelText('Perceived effort (1–10)'));
+    await user.type(screen.getByLabelText('Perceived effort (1–10)'), '8');
+    await user.click(screen.getByRole('button', { name: /Log completed set/ }));
+
+    expect(await screen.findByRole('cell', { name: 'Rowing Machine' })).toBeInTheDocument();
+    expect(storedSets()).toEqual([expect.objectContaining({ exerciseId: 9, setTypeId: 1, durationSeconds: 900, intensity: 8, restSeconds: 60 })]);
+  });
+
   it('logs a set, keeps it on the device and starts the rest timer', async () => {
     const user = userEvent.setup();
     renderLogger();
