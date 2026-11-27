@@ -30,9 +30,10 @@ export function GoalsPage() {
 
   function submit(event: FormEvent) {
     event.preventDefault();
+    const sent = form;
     void create.run(async () => {
-      await api.post('/api/goals', form);
-      setForm({ title: '', deadline: form.deadline });
+      await api.post('/api/goals', sent);
+      setForm((current) => (current.title === sent.title ? { ...current, title: '' } : current));
       reload();
     });
   }

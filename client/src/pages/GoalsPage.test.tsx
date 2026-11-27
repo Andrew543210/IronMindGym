@@ -57,3 +57,23 @@ it('keeps the goals when the athlete cancels a delete and invites a first goal',
   expect(await screen.findByText('Make your next step clear.')).toBeInTheDocument();
   expect(calls).toHaveLength(1);
 });
+
+it('keeps a title typed while the previous goal was being added', async () => {
+  let release = () => {};
+  const added = new Promise<null>((resolve) => {
+    release = () => resolve(null);
+  });
+  mockApi({ 'GET /api/goals': [], 'POST /api/goals': () => added });
+  renderPage('/goals', <GoalsPage />);
+  const user = userEvent.setup();
+  const title = await screen.findByLabelText('What are you working toward?');
+
+  await user.type(title, 'Bench 100 kg');
+  await user.click(screen.getByRole('button', { name: 'Add goal ＋' }));
+  await user.clear(title);
+  await user.type(title, 'Squat 140 kg');
+  release();
+
+  await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Add goal ＋' })).toBeEnabled());
+  expect(title).toHaveValue('Squat 140 kg');
+});

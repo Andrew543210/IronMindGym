@@ -135,10 +135,11 @@ function WeightForm({ onSaved }: { onSaved: () => void }) {
   function submit(event: FormEvent) {
     event.preventDefault();
     setSaved(undefined);
+    const sent = form;
     void run(async () => {
-      await api.put(`/api/profile/weights/${form.date}`, { weightKg: Number(form.weightKg) });
-      setSaved(t('profile.weightSaved', { date: formatDay(form.date) }));
-      setForm({ ...form, weightKg: '' });
+      await api.put(`/api/profile/weights/${sent.date}`, { weightKg: Number(sent.weightKg) });
+      setSaved(t('profile.weightSaved', { date: formatDay(sent.date) }));
+      setForm((current) => (current.weightKg === sent.weightKg ? { ...current, weightKg: '' } : current));
       onSaved();
     });
   }
