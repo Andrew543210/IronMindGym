@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, StrengthService strength, SetupService setup, AchievementService achievements)
+public class ProfileService(IronMindDbContext db, TimeProvider clock, AthleteCalendars calendars, StrengthService strength, SetupService setup, AchievementService achievements)
 {
     public async Task<ProfileOverview> BuildOverviewAsync(int userId, CancellationToken cancellationToken)
     {
@@ -148,7 +148,7 @@ public class ProfileService(IronMindDbContext db, AthleteCalendars calendars, St
 
     /// <summary>Everything the athlete recorded, without credentials, for keeping a personal copy.</summary>
     public async Task<DataExport> ExportAsync(int userId, CancellationToken cancellationToken) => new(
-        (await calendars.ForAsync(userId, cancellationToken)).UtcNow,
+        clock.UtcNow(),
         await db.Users.Where(u => u.Id == userId)
             .Select(u => new ExportedAccount(u.Username, u.Email, u.Profile == null ? 0 : u.Profile.Age, u.Profile == null ? null : u.Profile.HeightCm))
             .SingleAsync(cancellationToken),
