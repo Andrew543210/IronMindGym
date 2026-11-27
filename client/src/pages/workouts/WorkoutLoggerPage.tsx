@@ -436,13 +436,15 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
     return t('logger.previous', { date: last.localDate, value });
   }
   const previousValue = previous?.value;
+  // On a phone the table becomes a card per set, which names the rest column from its header.
+  const columns = [t('common.exercise'), t('workout.type'), t('logger.loadOrDuration'), t('logger.repsOrEffort'), t('workout.rest')];
 
   return (
-    <form className="row g-3 mb-4" noValidate onSubmit={finish}>
+    <form className="row g-3 mb-4 workout-logger" noValidate onSubmit={finish}>
       <div className="col-12">
         <div className="workout-toolbar d-flex justify-content-between align-items-center gap-3">
           <span>{t('logger.sessionTime')} <strong className="metric">{clockText(elapsed)}</strong></span>
-          <span className="small text-muted" role="status">{canStore ? show(status) : t('logger.storageUnavailable')}</span>
+          <span className="small text-muted draft-status" role="status">{canStore ? show(status) : t('logger.storageUnavailable')}</span>
         </div>
       </div>
 
@@ -482,7 +484,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
       <div className="col-12">
         <div className="card border-secondary">
           <div className="card-header">{t('logger.addHeader')}</div>
-          <div className="card-body row g-3" ref={editorRef}>
+          <div className="card-body row g-3 set-editor" ref={editorRef}>
             <div className="col-12">
               <label htmlFor="exerciseSearch" className="form-label">{t('logger.find')}</label>
               <input type="search" id="exerciseSearch" className="form-control" placeholder={t('logger.searchPlaceholder')}
@@ -591,14 +593,14 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
             </div>
 
             <div className="col-12">
-              <div className={`workout-toolbar d-flex flex-wrap gap-3 align-items-center justify-content-between${restDone ? ' rest-done' : ''}`}>
-                <span>{t('logger.restTimer')} <strong className="metric">{clockText(remaining)}</strong></span>
+              <div className={`workout-toolbar rest-timer d-flex flex-wrap gap-3 align-items-center justify-content-between${restDone ? ' rest-done' : ''}`}>
+                <span>{t('logger.restTimer')} <strong className="metric rest-timer-value">{clockText(remaining)}</strong></span>
                 <div>
                   <button type="button" className="btn btn-outline-secondary btn-sm" onClick={startTimer}>{t('logger.startTimer')}</button>{' '}
                   <button type="button" className="btn btn-outline-warning btn-sm" onClick={skipRest}>{t('logger.skipRest')}</button>
                 </div>
               </div>
-              <div className="mt-2" role="status">{restDone ? t('logger.restDone') : ''}</div>
+              <div className="mt-2 rest-ready" role="status">{restDone ? t('logger.restDone') : ''}</div>
             </div>
 
             <div className="col-12">
@@ -608,15 +610,11 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
               </div>
               {draft.sets.length === 0 && <p className="text-muted small">{t('logger.firstSet')}</p>}
               <div className="table-responsive">
-                <table className="table table-sm">
+                <table className="table table-sm session-sets">
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>{t('common.exercise')}</th>
-                      <th>{t('workout.type')}</th>
-                      <th>{t('logger.loadOrDuration')}</th>
-                      <th>{t('logger.repsOrEffort')}</th>
-                      <th>{t('workout.rest')}</th>
+                      {columns.map((column) => <th key={column}>{column}</th>)}
                       <th></th>
                     </tr>
                   </thead>
@@ -625,7 +623,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
                       <tr key={index}>
                         <td>{index + 1}</td>
                         {setCells(set, catalog.find((e) => e.exerciseId === set.exerciseId), t, setTypeName(set.setTypeId))
-                          .map((cell, i) => <td key={i}>{cell}</td>)}
+                          .map((cell, i) => <td key={i} data-label={columns[i]}>{cell}</td>)}
                         <td className="text-nowrap">
                           <button type="button" className="btn btn-sm btn-outline-secondary" aria-label={t('logger.editSet', { number: index + 1 })}
                             onClick={() => editSet(index)}>{t('common.edit')}</button>{' '}
@@ -655,7 +653,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
 
       <div className="col-12 d-grid gap-2">
         <ErrorAlert error={save.error} />
-        <button type="submit" className="btn btn-success" disabled={save.busy}>{save.busy ? t('logger.finishing') : t('logger.finish')}</button>
+        <button type="submit" className="btn btn-success finish-workout" disabled={save.busy}>{save.busy ? t('logger.finishing') : t('logger.finish')}</button>
         <button type="button" className="btn btn-outline-danger" disabled={save.busy} onClick={discardWorkout}>{t('logger.discard')}</button>
       </div>
     </form>

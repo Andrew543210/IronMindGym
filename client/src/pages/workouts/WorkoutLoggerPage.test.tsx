@@ -81,6 +81,8 @@ describe('workout logger', () => {
     expect(screen.getByText('Set logged · draft saved')).toBeInTheDocument();
     expect(screen.getByText('1 set logged')).toBeInTheDocument();
     expect(screen.getByText(/Rest timer:/).textContent).toMatch(/0[12]:\d\d/);
+    // On a phone each set becomes a card that names the rest from the column header.
+    expect(screen.getByRole('cell', { name: '120 sec' })).toHaveAttribute('data-label', 'Rest');
     const stored = JSON.parse(localStorage.getItem('ironmind-workout-5')!);
     expect(stored.sets).toEqual([{ exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 80, reps: 8, durationSeconds: 0, intensity: 0, restSeconds: 120 }]);
     expect(stored.settings).toMatchObject({ splitTypeId: '2', splitDayId: '3' });
