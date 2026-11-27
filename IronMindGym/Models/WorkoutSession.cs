@@ -7,7 +7,7 @@ public class WorkoutSession
     public int Id { get; set; }
     public int UserId { get; set; }
     public User User { get; set; } = null!;
-    public DateTime SessionDate { get; set; } = DateTime.UtcNow;
+    public DateTime SessionDate { get; set; }
 
     /// <summary>The logger draft the workout was saved from, so a repeated save finds the first one.</summary>
     public Guid? DraftId { get; set; }

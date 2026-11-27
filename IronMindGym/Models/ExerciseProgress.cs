@@ -16,8 +16,8 @@ public class ExerciseProgress
     public int CurrentReps { get; set; }
     public int CurrentDurationSeconds { get; set; }
     public int CurrentIntensity { get; set; }
-    public DateTime InitialRecordedAt { get; set; } = DateTime.UtcNow;
-    public DateTime CurrentRecordedAt { get; set; } = DateTime.UtcNow;
+    public DateTime InitialRecordedAt { get; set; }
+    public DateTime CurrentRecordedAt { get; set; }
 
     public double WeightChangePercent => InitialWeightKg > 0 ? (CurrentWeightKg - InitialWeightKg) / InitialWeightKg * 100 : 0;
 }

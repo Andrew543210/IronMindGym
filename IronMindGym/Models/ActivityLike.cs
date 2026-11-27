@@ -7,5 +7,5 @@ public class ActivityLike
     public User User { get; set; } = null!;
     public int WorkoutSessionId { get; set; }
     public WorkoutSession WorkoutSession { get; set; } = null!;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; }
 }

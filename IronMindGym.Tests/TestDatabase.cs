@@ -55,7 +55,7 @@ internal static class TestDatabase
         {
             await using var db = new IronMindDbContext(options);
             await DatabaseMigrations.ApplyAsync(db, CancellationToken.None);
-            await DataSeeder.SeedAsync(db, includeDemoData: false, CancellationToken.None);
+            await DataSeeder.SeedAsync(db, includeDemoData: false, TimeProvider.System, CancellationToken.None);
         }).GetAwaiter().GetResult();
         return server;
     }

@@ -17,7 +17,7 @@ public class User
 
     public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; }
 
     public Profile? Profile { get; set; }
     public InitialBenchmarks? Benchmarks { get; set; }

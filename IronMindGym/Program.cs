@@ -31,7 +31,7 @@ await using (var scope = app.Services.CreateAsyncScope())
     var db = scope.ServiceProvider.GetRequiredService<IronMindDbContext>();
     await DatabaseMigrations.ApplyAsync(db, app.Lifetime.ApplicationStopping);
     var demoData = app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("Seed:DemoData");
-    await DataSeeder.SeedAsync(db, demoData, app.Lifetime.ApplicationStopping);
+    await DataSeeder.SeedAsync(db, demoData, app.Services.GetRequiredService<TimeProvider>(), app.Lifetime.ApplicationStopping);
 }
 
 app.UseForwardedHeaders();

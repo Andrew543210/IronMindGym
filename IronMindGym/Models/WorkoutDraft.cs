@@ -7,5 +7,5 @@ public class WorkoutDraft
     public User User { get; set; } = null!;
     public Guid DraftId { get; set; }
     public string Content { get; set; } = "{}";
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; }
 }

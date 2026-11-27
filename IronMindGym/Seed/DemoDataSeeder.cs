@@ -10,7 +10,7 @@ namespace IronMindGym.Seed;
 /// </summary>
 public static class DemoDataSeeder
 {
-    public static async Task SeedAsync(IronMindDbContext db, CancellationToken cancellationToken)
+    public static async Task SeedAsync(IronMindDbContext db, TimeProvider clock, CancellationToken cancellationToken)
     {
         if (await db.Users.AnyAsync(cancellationToken))
             return;
@@ -19,6 +19,7 @@ public static class DemoDataSeeder
         var lower = await db.SplitDays.SingleAsync(d => d.Code == "LOWER", cancellationToken);
         var working = await db.SetTypes.SingleAsync(s => s.Code == SetTypeCode.Working, cancellationToken);
         var exercises = await db.Exercises.ToDictionaryAsync(e => e.Name, cancellationToken);
+        var now = clock.UtcNow();
         Exercise Find(string name) => exercises.TryGetValue(name, out var exercise)
             ? exercise
             : throw new InvalidOperationException($"The demo data needs the catalog exercise \"{name}\".");
@@ -28,7 +29,7 @@ public static class DemoDataSeeder
             Username = "demo_athlete",
             Email = "demo@ironmind.app",
             PasswordHash = PasswordHashUtility.Hash("DemoTraining123!"),
-            CreatedAt = DateTime.UtcNow.AddDays(-40),
+            CreatedAt = now.AddDays(-40),
             Profile = new Profile { Age = 24, HeightCm = 180 },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 90, SquatKg = 130, DeadliftKg = 160 }
         };
@@ -37,12 +38,12 @@ public static class DemoDataSeeder
             Username = "fit_friend",
             Email = "friend@ironmind.app",
             PasswordHash = PasswordHashUtility.Hash("FriendTraining123!"),
-            CreatedAt = DateTime.UtcNow.AddDays(-20),
+            CreatedAt = now.AddDays(-20),
             Profile = new Profile { Age = 23, HeightCm = 168 },
             Benchmarks = new InitialBenchmarks { BenchPressKg = 65, SquatKg = 95, DeadliftKg = 120 }
         };
         db.Users.AddRange(athlete, friend);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(now);
         db.WeightLogs.AddRange(
             new WeightLog { User = athlete, Date = today.AddDays(-40), ValueKg = 83 },
             new WeightLog { User = athlete, Date = today.AddDays(-10), ValueKg = 82 },
@@ -80,7 +81,7 @@ public static class DemoDataSeeder
         foreach (var user in new[] { athlete, friend })
             await records.RecalculateAsync(user.Id, exercises.Values.Select(e => e.Id), cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        var achievements = new AchievementService(db, new AthleteCalendars(db, TimeProvider.System));
+        var achievements = new AchievementService(db, new AthleteCalendars(db, clock));
         await achievements.AwardEarnedAsync(athlete.Id, cancellationToken);
         await achievements.AwardEarnedAsync(friend.Id, cancellationToken);
 
@@ -91,7 +92,7 @@ public static class DemoDataSeeder
             {
                 User = user,
                 SplitDay = day,
-                SessionDate = DateTime.UtcNow.AddDays(-daysAgo),
+                SessionDate = now.AddDays(-daysAgo),
                 DurationMinutes = minutes,
                 Rating = 5,
                 Notes = daysAgo == 1 ? "Strong training session" : null

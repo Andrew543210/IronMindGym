@@ -36,7 +36,8 @@ public static class DataSeeder
         (SetTypeCode.Failure, "Failure", "До відмови")
     ];
 
-    public static async Task SeedAsync(IronMindDbContext db, bool includeDemoData, CancellationToken cancellationToken)
+    /// <summary>Brings the reference catalog up to date; in development it can also add two demo athletes.</summary>
+    public static async Task SeedAsync(IronMindDbContext db, bool includeDemoData, TimeProvider clock, CancellationToken cancellationToken)
     {
         await using var transaction = await WriteLock.BeginForSeedingAsync(db, cancellationToken);
         await EnsureSplitTypesAsync(db, cancellationToken);
@@ -47,7 +48,7 @@ public static class DataSeeder
         await EnsureResearchFeedAsync(db, cancellationToken);
         await EnsureAchievementsAsync(db, cancellationToken);
         if (includeDemoData)
-            await DemoDataSeeder.SeedAsync(db, cancellationToken);
+            await DemoDataSeeder.SeedAsync(db, clock, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 
