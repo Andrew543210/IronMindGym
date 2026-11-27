@@ -77,6 +77,29 @@ public class GoalsApiTests
         await ApiClient.Ok(await api.Put($"/api/goals/{first}/completed", new { completed = true }));
         await ApiClient.Ok(await api.Post("/api/goals", new { title = "One more goal", deadline = InTwoMonths() }));
         Assert.Equal(21, app.Query(db => db.UserGoals.Count()));
+
+        // Reopening the finished goal would make 21 active goals.
+        var reopened = await api.Put($"/api/goals/{first}/completed", new { completed = false });
+        Assert.Contains("Finish or remove an existing goal before adding more. You can have 20 active goals.", await ApiClient.Errors(reopened));
+        Assert.Equal(20, app.Query(db => db.UserGoals.Count(g => !g.IsCompleted)));
+    }
+
+    [Fact]
+    public async Task ParallelRequestsCannotPassTheGoalLimit()
+    {
+        using var app = new TestApplication();
+        using var api = app.Api();
+        await api.Register();
+        app.Query(db =>
+        {
+            var userId = db.Users.Single().Id;
+            db.UserGoals.AddRange(Enumerable.Range(1, 19).Select(n => new UserGoal { UserId = userId, Title = $"Goal {n}", Deadline = DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(1) }));
+            return db.SaveChanges();
+        });
+
+        await Task.WhenAll(Enumerable.Range(1, 4).Select(n => api.Post("/api/goals", new { title = $"Parallel goal {n}", deadline = InTwoMonths() })));
+
+        Assert.Equal(20, app.Query(db => db.UserGoals.Count(g => !g.IsCompleted)));
     }
 
     [Fact]
