@@ -50,10 +50,10 @@ export function NutritionPage() {
   const [params, setParams] = useSearchParams();
   const date = params.get('date') ?? athlete.today;
   const { data, error, loading, reload } = useApi<NutritionDay>(`/api/nutrition?date=${encodeURIComponent(date)}`);
-  const [message, setMessage] = useState<string>();
+  const [change, setChange] = useState<DayChange>();
 
   function choose(day: string) {
-    setMessage(undefined);
+    setChange(undefined);
     setParams(day === athlete.today ? {} : { date: day }, { replace: true });
   }
 
@@ -62,12 +62,16 @@ export function NutritionPage() {
       <p className="eyebrow">{t('nutrition.eyebrow')}</p>
       <h2>{t('nutrition.heading')}</h2>
       <p className="text-muted">{t('nutrition.intro')}</p>
-      {message && <div className="alert alert-success" role="status">{message}</div>}
+      {change && (
+        <div className="alert alert-success" role="status">
+          {change.deleted ? t('nutrition.deleted') : t('nutrition.saved', { date: formatDay(change.day) })}
+        </div>
+      )}
       {!data && <PageState error={error} loading={loading} />}
       {data && (
         <>
           <DayForm key={data.date} day={data} chosenDate={date} onChoose={choose}
-            onChanged={(text) => { setMessage(text); reload(); }} />
+            onChanged={(next) => { setChange(next); reload(); }} />
           <Targets advice={data.advice} />
           {data.isLogged && (
             <div className="alert alert-info mt-4">
@@ -91,11 +95,17 @@ export function NutritionPage() {
   );
 }
 
+/** What the last change did; the message is worded when shown, so it follows a change of the interface language. */
+interface DayChange {
+  day: string;
+  deleted: boolean;
+}
+
 function DayForm({ day, chosenDate, onChoose, onChanged }: {
   day: NutritionDay;
   chosenDate: string;
   onChoose: (date: string) => void;
-  onChanged: (message: string) => void;
+  onChanged: (change: DayChange) => void;
 }) {
   const { t } = useI18n();
   const athlete = useAthlete();
@@ -109,7 +119,7 @@ function DayForm({ day, chosenDate, onChoose, onChanged }: {
     event.preventDefault();
     void run(async () => {
       await api.put(`/api/nutrition/days/${dayKey}`, Object.fromEntries(macros.map((m) => [m.field, Number(form[m.field])])));
-      onChanged(t('nutrition.saved', { date: formatDay(dayKey) }));
+      onChanged({ day: dayKey, deleted: false });
     });
   }
 
@@ -117,7 +127,7 @@ function DayForm({ day, chosenDate, onChoose, onChanged }: {
     if (!window.confirm(t('nutrition.confirmDelete', { date: formatDay(dayKey) }))) return;
     void run(async () => {
       await api.delete(`/api/nutrition/days/${dayKey}`);
-      onChanged(t('nutrition.deleted'));
+      onChanged({ day: dayKey, deleted: true });
     });
   }
 

@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import type { FriendCard } from '../../api/types/friends';
+import { Phrase } from '../../components/Phrase';
 import { ResponsiveTable } from '../../components/ui';
 import { formatNumber, localDateTime, localDay } from '../../format';
 import { useI18n, type MessageKey } from '../../i18n/i18n';
@@ -30,7 +31,7 @@ export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: Frien
         <div className="small text-muted">{t('friends.status', { status: t(statusOf(friend)) })}</div>
         {friend.isFriend && (
           <div className="small text-muted">
-            {t('friends.avgKcal')} <span className="metric">{formatNumber(friend.averageKcal)}</span> {t('unit.kcalShort')}
+            <Phrase text="friends.avgKcal" parts={{ kcal: <span className="metric">{formatNumber(friend.averageKcal)}</span> }} />
           </div>
         )}
       </div>
@@ -56,8 +57,11 @@ export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: Frien
             <ul className="mb-0 mt-1">
               {friend.lastFiveWorkouts.map((workout) => (
                 <li key={workout.workoutSessionId} className="mb-1">
-                  <span className="metric">{localDateTime(workout.sessionDate, athlete.timeZone).slice(5)}</span>
-                  {' - '}{workout.name} (<span className="metric">{t('unit.min', { value: workout.durationMinutes })}</span>)
+                  <Phrase text="workouts.entry" parts={{
+                    date: <span className="metric">{localDateTime(workout.sessionDate, athlete.timeZone).slice(5)}</span>,
+                    name: workout.name,
+                    duration: <span className="metric">{t('unit.min', { value: workout.durationMinutes })}</span>,
+                  }} />
                   <Link className="btn btn-outline-light btn-sm ms-2" to={`/friends/${friend.userId}/workouts/${workout.workoutSessionId}`}>{t('common.details')}</Link>
                 </li>
               ))}
@@ -97,7 +101,11 @@ export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: Frien
             <ul className="mb-0 mt-1">
               {friend.personalRecords.map((record) => (
                 <li key={record.exerciseName}>
-                  {record.exerciseName}: <span className="metric">{t('unit.kg', { value: record.maxWeightKg })}</span> (<span className="metric">{localDay(record.achievedAt, athlete.timeZone)}</span>)
+                  <Phrase text="friends.record" parts={{
+                    exercise: record.exerciseName,
+                    weight: <span className="metric">{t('unit.kg', { value: record.maxWeightKg })}</span>,
+                    date: <span className="metric">{localDay(record.achievedAt, athlete.timeZone)}</span>,
+                  }} />
                 </li>
               ))}
             </ul>
@@ -109,8 +117,11 @@ export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: Frien
             <ul className="mb-0 mt-1">
               {friend.achievements.map((award) => (
                 <li key={award.name}>
-                  <strong>{award.name}</strong>
-                  <span className="small text-muted"> - {award.conditionDescription} ({localDay(award.achievedAt, athlete.timeZone)})</span>
+                  <Phrase text="friends.award" parts={{
+                    name: <strong>{award.name}</strong>,
+                    condition: <span className="small text-muted">{award.conditionDescription}</span>,
+                    date: <span className="small text-muted">{localDay(award.achievedAt, athlete.timeZone)}</span>,
+                  }} />
                 </li>
               ))}
             </ul>

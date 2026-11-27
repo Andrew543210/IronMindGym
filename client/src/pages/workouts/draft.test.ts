@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { CatalogExercise } from '../../api/types/exercises';
-import { translate, type MessageKey, type Params } from '../../i18n/i18n';
+import { translateIn, type MessageKey, type Translate } from '../../i18n/i18n';
 import {
   EMPTY_DRAFT_LIFETIME_MS, applyStored, draftStore, elapsedMinutes, finishError, freshDraft, isDraftId, newDraftId,
   newerDraft, readSet, restoreDraft, setCells, startingFields, validSets, type DraftSet, type DraftSettings,
 } from './draft';
 
-const t = (key: MessageKey, params?: Params) => translate(key, params, 'en');
+const t: Translate = (key, ...params) => translateIn('en', key, ...params);
 const english = (key: MessageKey | null | undefined) => (key ? t(key) : '');
 
 const defaults: DraftSettings = { splitTypeId: '2', splitDayId: '3', durationMinutes: '60', reviewRating: '4', reviewComment: '' };

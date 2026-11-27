@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { api, FormError } from '../../api/client';
 import type { ProgressEntry } from '../../api/types/progress';
 import { ErrorAlert, PageState } from '../../components/ui';
+import { flash } from '../../flash';
 import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n } from '../../i18n/i18n';
 import { ProgressGroups } from './ProgressCards';
@@ -61,7 +62,7 @@ export function ProgressPage() {
     if (!window.confirm(t('progress.confirmDelete', { name: entry.exerciseName }))) return;
     void remove.run(async () => {
       await api.delete(`/api/progress/${entry.exerciseId}`);
-      navigate(location.pathname, { replace: true, state: { message: t('progress.deleted') } });
+      navigate(location.pathname, { replace: true, state: flash({ key: 'progress.deleted' }) });
       reload();
     });
   }

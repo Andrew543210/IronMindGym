@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api } from '../../api/client';
 import type { WorkoutDetails, WorkoutHistory } from '../../api/types/workouts';
+import { Phrase } from '../../components/Phrase';
 import { ErrorAlert, PageState } from '../../components/ui';
+import { flash } from '../../flash';
 import { localDateTime } from '../../format';
 import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n } from '../../i18n/i18n';
@@ -49,7 +51,11 @@ export function WorkoutHistoryPage() {
         {data?.sessions.map((s) => (
           <li key={s.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
             <span>
-              <span className="metric">{localDateTime(s.sessionDate, athlete.timeZone)}</span> - {s.name} (<span className="metric">{t('unit.min', { value: s.durationMinutes })}</span>)
+              <Phrase text="workouts.entry" parts={{
+                date: <span className="metric">{localDateTime(s.sessionDate, athlete.timeZone)}</span>,
+                name: s.name,
+                duration: <span className="metric">{t('unit.min', { value: s.durationMinutes })}</span>,
+              }} />
             </span>
             <Link className="btn btn-outline-primary btn-sm" to={`/workouts/${s.id}`}>{t('common.details')}</Link>
           </li>
@@ -77,7 +83,7 @@ export function WorkoutDetailsPage() {
     if (!window.confirm(t('workoutDetails.confirmDelete'))) return;
     void remove.run(async () => {
       await api.delete(`/api/workouts/${id}`);
-      navigate('/workouts', { state: { message: t('workoutDetails.deleted') } });
+      navigate('/workouts', { state: flash({ key: 'workoutDetails.deleted' }) });
     });
   }
 

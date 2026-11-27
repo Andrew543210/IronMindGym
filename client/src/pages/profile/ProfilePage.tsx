@@ -92,6 +92,7 @@ function WeightForm({ onSaved }: { onSaved: () => void }) {
   const { t } = useI18n();
   const athlete = useAthlete();
   const [form, setForm] = useState({ weightKg: '', date: athlete.today });
+  // The day, not the sentence: the sentence follows a change of the interface language.
   const [saved, setSaved] = useState<string>();
   const { busy, error, run } = useAction();
 
@@ -101,7 +102,7 @@ function WeightForm({ onSaved }: { onSaved: () => void }) {
     const sent = form;
     void run(async () => {
       await api.put(`/api/profile/weights/${sent.date}`, { weightKg: Number(sent.weightKg) });
-      setSaved(t('profile.weightSaved', { date: formatDay(sent.date) }));
+      setSaved(sent.date);
       setForm((current) => (current.weightKg === sent.weightKg ? { ...current, weightKg: '' } : current));
       onSaved();
     });
@@ -114,7 +115,7 @@ function WeightForm({ onSaved }: { onSaved: () => void }) {
       <p className="text-muted small">{t('profile.logHint')}</p>
       <form className="row g-3" onSubmit={submit}>
         <ErrorAlert error={error} />
-        {saved && <div className="alert alert-success" role="status">{saved}</div>}
+        {saved && <div className="alert alert-success" role="status">{t('profile.weightSaved', { date: formatDay(saved) })}</div>}
         <div className="col-6">
           <label htmlFor="weightKg" className="form-label">{t('field.weightKg')}</label>
           <input id="weightKg" type="number" inputMode="decimal" step="0.1" min={30} max={250} required className="form-control"

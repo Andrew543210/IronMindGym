@@ -3,10 +3,11 @@ import { Link, Navigate, useLocation } from 'react-router';
 import { api, FormError } from '../../api/client';
 import type { Session } from '../../api/types/session';
 import { ErrorAlert } from '../../components/ui';
+import { flash } from '../../flash';
 import { deviceTimeZone } from '../../format';
 import { textFields } from '../../forms';
 import { useAction, usePageTitle } from '../../hooks';
-import { useI18n, type MessageKey } from '../../i18n/i18n';
+import { useI18n, type MessageKey, type Text } from '../../i18n/i18n';
 import { useSession, type SessionEnd } from '../../session';
 
 const farewells: Record<SessionEnd, { text: MessageKey; style: string }> = {
@@ -40,11 +41,11 @@ export function LoginPage() {
   const { session, endedBy, signedIn } = useSession();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '', rememberMe: false });
-  const [welcome, setWelcome] = useState<string>();
+  const [welcome, setWelcome] = useState<Text>();
   const { busy, error, run } = useAction();
   const returnTo = (location.state as { from?: string } | null)?.from;
   if (session) {
-    return <Navigate to={session.setupComplete ? (returnTo ?? '/') : '/setup'} replace state={welcome ? { message: welcome } : undefined} />;
+    return <Navigate to={session.setupComplete ? (returnTo ?? '/') : '/setup'} replace state={welcome ? flash(welcome) : undefined} />;
   }
   const notice = endedBy ? farewells[endedBy] : undefined;
 
@@ -52,7 +53,7 @@ export function LoginPage() {
     event.preventDefault();
     void run(async () => {
       const signedInSession = await api.post<Session>('/api/session/login', form);
-      setWelcome(t('login.welcome', { name: signedInSession.username }));
+      setWelcome({ key: 'login.welcome', params: { name: signedInSession.username } });
       signedIn(signedInSession);
     });
   }
@@ -94,7 +95,7 @@ export function RegisterPage() {
   const [created, setCreated] = useState(false);
   const { busy, error, run, setError } = useAction();
   if (session) {
-    return <Navigate to={session.setupComplete ? '/' : '/setup'} replace state={created ? { message: t('register.done') } : undefined} />;
+    return <Navigate to={session.setupComplete ? '/' : '/setup'} replace state={created ? flash({ key: 'register.done' }) : undefined} />;
   }
 
   function submit(event: FormEvent) {

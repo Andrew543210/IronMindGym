@@ -4,6 +4,8 @@ import { createMemoryRouter, useLocation } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LoggerOptions } from '../../api/types/workouts';
+import type { FlashState } from '../../flash';
+import { useI18n } from '../../i18n/i18n';
 import { setLanguage } from '../../i18n/language';
 import { SessionContext } from '../../session';
 import { respond, sessionContext } from '../../test/harness';
@@ -53,7 +55,9 @@ function storedSets() {
 
 function SavedPage() {
   const location = useLocation();
-  return <p>{location.pathname} {(location.state as { message?: string } | null)?.message}</p>;
+  const { show } = useI18n();
+  const message = (location.state as FlashState | null)?.message;
+  return <p>{location.pathname} {message && show(message)}</p>;
 }
 
 function renderLogger() {

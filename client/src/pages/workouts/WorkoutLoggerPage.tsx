@@ -7,6 +7,7 @@ import type { LoggerOptions } from '../../api/types/workouts';
 import { choiceOf, chosenExercise, type ExerciseChoice } from '../../components/exerciseChoice';
 import { ExercisePicker } from '../../components/ExercisePicker';
 import { ErrorAlert, PageState } from '../../components/ui';
+import { flash } from '../../flash';
 import { useAction, useApi } from '../../hooks';
 import { useI18n, type Text } from '../../i18n/i18n';
 import { useAthlete } from '../../session';
@@ -173,7 +174,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
         reviewComment: draft.settings.reviewComment,
         sets: draft.sets,
       }));
-      navigate(`/workouts/${result.id}`, { state: { message: t('logger.saved') } });
+      navigate(`/workouts/${result.id}`, { state: flash({ key: 'logger.saved' }) });
     });
   }
 

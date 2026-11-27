@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router';
 import { api } from '../api/client';
 import type { SetupForm } from '../api/types/profile';
 import { ErrorAlert, PageState } from '../components/ui';
+import { flash } from '../flash';
 import { deviceTimeZone } from '../format';
 import { textFields } from '../forms';
 import { useAction, useApi, usePageTitle } from '../hooks';
@@ -46,7 +47,7 @@ export function SetupPage() {
         timeZone: deviceTimeZone() || null,
       });
       await refresh();
-      navigate('/', { replace: true, state: { message: t('setup.saved') } });
+      navigate('/', { replace: true, state: flash({ key: 'setup.saved' }) });
     });
   }
 

@@ -28,6 +28,21 @@ export type Translation = { [K in MessageKey]: (typeof en)[K] extends string ? s
 
 export type Params = Record<string, string | number>;
 
+type Template<K extends MessageKey> = (typeof en)[K] extends string ? (typeof en)[K] : (typeof en)[K][keyof (typeof en)[K]];
+type Placeholders<S> = S extends `${string}{${infer Name}}${infer Rest}` ? Name | Placeholders<Rest> : never;
+/** The {names} of the English template; plural forms are chosen by count even where they do not show it. */
+type ParamNames<K extends MessageKey> = Placeholders<Template<K>> | ((typeof en)[K] extends string ? never : 'count');
+
+/** The parameters a text needs. */
+export type ParamsOf<K extends MessageKey> = { [Name in ParamNames<K>]: string | number };
+
+/** No argument for a text without parameters, otherwise exactly its parameters. */
+export type ParamArgs<K extends MessageKey> = K extends MessageKey
+  ? [ParamNames<K>] extends [never] ? [] : [params: ParamsOf<K>]
+  : never;
+
+export type Translate = <K extends MessageKey>(key: K, ...params: ParamArgs<K>) => string;
+
 export interface Text {
   key: MessageKey;
   params?: Params;
@@ -43,13 +58,13 @@ function pluralForm(language: Language, count: number): keyof UkrainianPlural {
   return rules.select(count) as keyof UkrainianPlural;
 }
 
-function formatValue(value: string | number, language: Language = currentLanguage()): string {
+function formatValue(value: string | number, language: Language): string {
   return typeof value === 'number'
     ? numberFormat(LOCALES[language], { maximumFractionDigits: 2, useGrouping: false }).format(value)
     : value;
 }
 
-export function translate(key: MessageKey, params?: Params, language: Language = currentLanguage()): string {
+function render(language: Language, key: MessageKey, params?: Params): string {
   const message = dictionaries[language][key];
   let text: string;
   if (typeof message === 'string') {
@@ -62,11 +77,18 @@ export function translate(key: MessageKey, params?: Params, language: Language =
   return text.replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? formatValue(params[name], language) : match));
 }
 
-export function useI18n() {
-  const language = useSyncExternalStore(subscribeToLanguage, currentLanguage, currentLanguage);
-  const t = useCallback((key: MessageKey, params?: Params) => translate(key, params, language), [language]);
-  const show = useCallback((text: Text) => translate(text.key, text.params, language), [language]);
-  return { language, t, show, setLanguage };
+export function translateIn<K extends MessageKey>(language: Language, key: K, ...params: ParamArgs<K>): string {
+  return render(language, key, (params as [Params?])[0]);
 }
 
-export type Translate = ReturnType<typeof useI18n>['t'];
+/** Translates outside of components, in the language chosen now; components use useI18n, which follows a change. */
+export function translate<K extends MessageKey>(key: K, ...params: ParamArgs<K>): string {
+  return render(currentLanguage(), key, (params as [Params?])[0]);
+}
+
+export function useI18n() {
+  const language = useSyncExternalStore(subscribeToLanguage, currentLanguage, currentLanguage);
+  const t = useCallback<Translate>((key, ...params) => render(language, key, (params as [Params?])[0]), [language]);
+  const show = useCallback((text: Text) => render(language, text.key, text.params), [language]);
+  return { language, t, show, setLanguage };
+}

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { api } from '../../api/client';
 import type { ProfileSettings, SettingsPage } from '../../api/types/profile';
 import { ErrorAlert, PageState } from '../../components/ui';
+import { flash } from '../../flash';
 import { deviceTimeZone } from '../../format';
 import { textFields } from '../../forms';
 import { useAction, useApi, usePageTitle } from '../../hooks';
@@ -49,7 +50,7 @@ export function ProfileSettingsPage() {
         ...optional,
       });
       await refresh();
-      navigate('/profile', { state: { message: t('settings.saved') } });
+      navigate('/profile', { state: flash({ key: 'settings.saved' }) });
     });
   }
 

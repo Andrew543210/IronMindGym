@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { errorMessages } from '../api/client';
+import type { FlashState } from '../flash';
 import { useAction } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
 import { useSession } from '../session';
@@ -25,11 +26,6 @@ const quickLinks: { to: string; label: MessageKey; icon: string }[] = [
   { to: '/nutrition', label: 'nav.nutrition', icon: '◉' },
 ];
 
-interface FlashState {
-  message?: string;
-  error?: string;
-}
-
 /**
  * Shows the message passed with a navigation until the athlete moves to another page. The message is taken out of
  * the history entry, so reloading the page or coming back to it later does not show it again.
@@ -37,13 +33,13 @@ interface FlashState {
 function useFlash(): FlashState {
   const location = useLocation();
   const navigate = useNavigate();
-  const { message, error, ...rest } = (location.state ?? {}) as FlashState & Record<string, unknown>;
-  const incoming = message !== undefined || error !== undefined;
+  const { message, ...rest } = (location.state ?? {}) as FlashState & Record<string, unknown>;
+  const incoming = message !== undefined;
   const page = location.pathname + location.search;
   const [flash, setFlash] = useState<FlashState & { page?: string }>({});
 
-  if (incoming && (message !== flash.message || error !== flash.error || page !== flash.page)) {
-    setFlash({ message, error, page });
+  if (incoming && (message !== flash.message || page !== flash.page)) {
+    setFlash({ message, page });
   } else if (!incoming && flash.page !== undefined && flash.page !== page) {
     setFlash({});
   }
@@ -59,7 +55,7 @@ function useFlash(): FlashState {
 
 export function Layout() {
   const { session, signOut } = useSession();
-  const { t } = useI18n();
+  const { t, show } = useI18n();
   const [moreOpen, setMoreOpen] = useState(false);
   const flash = useFlash();
   const leaving = useAction();
@@ -112,8 +108,7 @@ export function Layout() {
           </div>
         </header>
         <main id="main" className="main-content">
-          {flash.message && <div className="alert alert-success" role="status">{flash.message}</div>}
-          {flash.error && <div className="alert alert-danger" role="alert">{flash.error}</div>}
+          {flash.message && <div className="alert alert-success" role="status">{show(flash.message)}</div>}
           {signedIn && leaving.error !== undefined && (
             <div className="alert alert-danger" role="alert">{t('nav.signOutFailed')} {errorMessages(leaving.error).join(' ')}</div>
           )}

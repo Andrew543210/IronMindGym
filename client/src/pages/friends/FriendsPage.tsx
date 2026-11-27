@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../../api/client';
 import type { FriendCard, FriendIndex, FriendRequestResult } from '../../api/types/friends';
 import { ErrorAlert, PageState } from '../../components/ui';
+import { flash } from '../../flash';
 import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n, type MessageKey } from '../../i18n/i18n';
 import { FriendSummary } from './FriendSummary';
@@ -34,7 +35,7 @@ export function FriendsPage() {
   function act(action: () => Promise<MessageKey>) {
     void change.run(async () => {
       const message = await action();
-      navigate(location.pathname + location.search, { replace: true, state: { message: t(message) } });
+      navigate(location.pathname + location.search, { replace: true, state: flash({ key: message }) });
       reload();
     });
   }

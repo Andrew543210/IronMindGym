@@ -4,6 +4,8 @@ import { createMemoryRouter, useLocation, type RouteObject } from 'react-router'
 import { RouterProvider } from 'react-router/dom';
 import { vi } from 'vitest';
 import type { Session } from '../api/types/session';
+import type { FlashState } from '../flash';
+import { useI18n } from '../i18n/i18n';
 import { SessionContext, type SessionContextValue } from '../session';
 
 export const athlete: Session = {
@@ -61,8 +63,9 @@ export function mockApi(routes: Record<string, Reply>) {
 
 function CurrentLocation() {
   const location = useLocation();
-  const state = location.state as { message?: string } | null;
-  return <p data-testid="location">{location.pathname}{location.search}{state?.message ? ` ${state.message}` : ''}</p>;
+  const { show } = useI18n();
+  const state = location.state as FlashState | null;
+  return <p data-testid="location">{location.pathname}{location.search}{state?.message ? ` ${show(state.message)}` : ''}</p>;
 }
 
 /** Renders the given routes in memory; any other path shows where the page navigated and its flash message. */

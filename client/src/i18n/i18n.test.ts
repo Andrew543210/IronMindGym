@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { api } from '../api/client';
 import { en } from './en';
-import { translate, type MessageKey } from './i18n';
+import { translate, translateIn, type MessageKey } from './i18n';
 import { currentLanguage, setLanguage } from './language';
 import { uk } from './uk';
 
@@ -36,20 +36,20 @@ describe('dictionaries', () => {
 
 describe('translate', () => {
   it('picks the Ukrainian plural form by the number', () => {
-    expect(translate('count.sets', { count: 1 }, 'uk')).toBe('1 підхід');
-    expect(translate('count.sets', { count: 3 }, 'uk')).toBe('3 підходи');
-    expect(translate('count.sets', { count: 5 }, 'uk')).toBe('5 підходів');
-    expect(translate('count.sets', { count: 11 }, 'uk')).toBe('11 підходів');
-    expect(translate('count.sets', { count: 21 }, 'uk')).toBe('21 підхід');
-    expect(translate('count.sets', { count: 22 }, 'uk')).toBe('22 підходи');
-    expect(translate('count.sets', { count: 1 }, 'en')).toBe('1 set');
-    expect(translate('count.sets', { count: 2 }, 'en')).toBe('2 sets');
+    expect(translateIn('uk', 'count.sets', { count: 1 })).toBe('1 підхід');
+    expect(translateIn('uk', 'count.sets', { count: 3 })).toBe('3 підходи');
+    expect(translateIn('uk', 'count.sets', { count: 5 })).toBe('5 підходів');
+    expect(translateIn('uk', 'count.sets', { count: 11 })).toBe('11 підходів');
+    expect(translateIn('uk', 'count.sets', { count: 21 })).toBe('21 підхід');
+    expect(translateIn('uk', 'count.sets', { count: 22 })).toBe('22 підходи');
+    expect(translateIn('en', 'count.sets', { count: 1 })).toBe('1 set');
+    expect(translateIn('en', 'count.sets', { count: 2 })).toBe('2 sets');
   });
 
   it('writes numbers with the decimal sign of the language', () => {
-    expect(translate('unit.kg', { value: 62.5 }, 'uk')).toBe('62,5 кг');
-    expect(translate('unit.kg', { value: 62.5 }, 'en')).toBe('62.5 kg');
-    expect(translate('unit.kg', { value: 1200 }, 'uk')).toBe('1200 кг');
+    expect(translateIn('uk', 'unit.kg', { value: 62.5 })).toBe('62,5 кг');
+    expect(translateIn('en', 'unit.kg', { value: 62.5 })).toBe('62.5 kg');
+    expect(translateIn('uk', 'unit.kg', { value: 1200 })).toBe('1200 кг');
   });
 
   it('follows the chosen language', () => {
@@ -75,6 +75,6 @@ describe('requests', () => {
   it('show connection errors in the interface language', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
     setLanguage('uk');
-    await expect(api.get('/api/dashboard')).rejects.toThrow(translate('errors.offline', undefined, 'uk'));
+    await expect(api.get('/api/dashboard')).rejects.toThrow(translateIn('uk', 'errors.offline'));
   });
 });
