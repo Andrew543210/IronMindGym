@@ -53,7 +53,7 @@ describe('nutrition journal', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Edit' }));
     expect(await screen.findByText('Nothing logged for this day yet.')).toBeInTheDocument();
-    for (const [label, value] of [['Calories (kcal)', '1900'], ['Protein (g)', '120'], ['Fat (g)', '60'], ['Carbs (g)', '210.5']])
+    for (const [label, value] of [['Calories (kcal)', '1900'], ['Protein (g)', '120'], ['Fat (g)', '60'], ['Carbs (g)', '210.5']] as const)
       await user.type(screen.getByLabelText(label), value);
     await user.click(screen.getByRole('button', { name: 'Save' }));
 

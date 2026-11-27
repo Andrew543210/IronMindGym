@@ -1,7 +1,12 @@
 /** Answers of the API as pages receive them; typed, so a changed contract fails the tests that use them. */
-import type { Overview } from '../api/types/dashboard';
+import type { Overview, ResearchNote } from '../api/types/dashboard';
 import type { ProgressEntry } from '../api/types/progress';
 import type { WorkoutDetails } from '../api/types/workouts';
+
+export const researchNote: ResearchNote = {
+  id: 7, publishedAt: '2021-05-01', title: 'Rest periods', thesisText: 'Longer rest helps strength.', source: 'Journal of Strength',
+  sourceUrl: 'https://example.org/rest',
+};
 
 export const overview: Overview = {
   username: 'athlete',
@@ -20,10 +25,7 @@ export const overview: Overview = {
   ],
   plannedWorkoutsPerWeek: 3,
   completedThisWeek: 2,
-  feedItems: [{
-    id: 7, publishedAt: '2021-05-01', title: 'Rest periods', thesisText: 'Longer rest helps strength.', source: 'Journal of Strength',
-    sourceUrl: 'https://example.org/rest',
-  }],
+  feedItems: [researchNote],
 };
 
 export const workout: WorkoutDetails = {

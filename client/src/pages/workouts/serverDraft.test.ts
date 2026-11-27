@@ -39,7 +39,7 @@ describe('server copy of the draft', () => {
     await vi.advanceTimersByTimeAsync(600);
 
     await vi.waitFor(() => expect(sent('PUT')).toHaveLength(1));
-    const [url, init] = sent('PUT')[0];
+    const [url, init] = sent('PUT')[0] ?? ['', {}];
     expect(url).toBe('/api/workouts/draft');
     const body = JSON.parse(String(init.body));
     expect(body.draftId).toBe(draft.draftId);
@@ -110,7 +110,7 @@ describe('server copy of the draft', () => {
     await vi.advanceTimersByTimeAsync(2000);
 
     await vi.waitFor(() => expect(sent('DELETE')).toHaveLength(1));
-    expect(sent('DELETE')[0][0]).toBe(`/api/workouts/draft?draftId=${draft.draftId}`);
+    expect(sent('DELETE')[0]?.[0]).toBe(`/api/workouts/draft?draftId=${draft.draftId}`);
     expect(sent('PUT')).toHaveLength(0);
   });
 

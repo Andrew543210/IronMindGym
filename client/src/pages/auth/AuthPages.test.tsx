@@ -22,7 +22,7 @@ describe('login', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Invalid email or password.');
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Welcome back');
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(calls[0].body).toEqual({ email: 'athlete@example.com', password: 'wrong-password', rememberMe: true });
+    expect(calls[0]?.body).toEqual({ email: 'athlete@example.com', password: 'wrong-password', rememberMe: true });
   });
 
   it('sends a signed-in athlete who has not finished the setup to it', () => {
@@ -84,7 +84,7 @@ describe('registration', () => {
     await fill('TrainingPassword123!');
 
     await vi.waitFor(() => expect(signedIn).toHaveBeenCalledWith({ ...athlete, setupComplete: false }));
-    expect(calls[0].body).toEqual({
+    expect(calls[0]?.body).toEqual({
       username: 'new_athlete', email: 'new@example.com', age: 30, password: 'TrainingPassword123!', confirmPassword: 'TrainingPassword123!', timeZone: 'Europe/Kyiv',
     });
   });

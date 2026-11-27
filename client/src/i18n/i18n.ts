@@ -74,7 +74,10 @@ function render(language: Language, key: MessageKey, params?: Params): string {
     text = (message as Partial<UkrainianPlural>)[pluralForm(language, count)] ?? message.other;
   }
   if (!params) return text;
-  return text.replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? formatValue(params[name], language) : match));
+  return text.replace(/\{(\w+)\}/g, (match, name: string) => {
+    const value = params[name];
+    return value === undefined ? match : formatValue(value, language);
+  });
 }
 
 export function translateIn<K extends MessageKey>(language: Language, key: K, ...params: ParamArgs<K>): string {

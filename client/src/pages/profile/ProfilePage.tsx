@@ -140,11 +140,13 @@ function WeightHistory({ entries }: { entries: Profile['weightHistory'] }) {
   const minimum = Math.min(...ordered.map((e) => e.valueKg)) - 2;
   const range = Math.max(4, Math.max(...ordered.map((e) => e.valueKg)) - minimum);
   const short = { month: 'short', day: 'numeric' } as const;
+  const first = ordered[0];
+  const last = ordered.at(-1);
 
   return (
     <div className="card h-100"><div className="card-body">
       <h2 className="h4">{t('profile.history')}</h2>
-      {ordered.length === 0 ? <p className="text-muted mb-0">{t('profile.historyEmpty')}</p> : (
+      {!first || !last ? <p className="text-muted mb-0">{t('profile.historyEmpty')}</p> : (
         <>
           <div className="weight-bars" role="img" aria-label={t('profile.historyChart', { count: ordered.length })}>
             {ordered.map((entry) => (
@@ -153,8 +155,8 @@ function WeightHistory({ entries }: { entries: Profile['weightHistory'] }) {
             ))}
           </div>
           <div className="d-flex justify-content-between small text-muted mt-2">
-            <span>{formatDay(ordered[0].date, short)}</span>
-            <span>{formatDay(ordered[ordered.length - 1].date, short)}</span>
+            <span>{formatDay(first.date, short)}</span>
+            <span>{formatDay(last.date, short)}</span>
           </div>
           <details className="mt-3">
             <summary>{t('profile.entries')}</summary>

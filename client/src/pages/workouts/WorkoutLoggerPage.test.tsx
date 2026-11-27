@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, useLocation } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CatalogExercise } from '../../api/types/exercises';
 import type { LoggerOptions } from '../../api/types/workouts';
 import type { FlashState } from '../../flash';
 import { useI18n } from '../../i18n/i18n';
@@ -11,24 +12,28 @@ import { SessionContext } from '../../session';
 import { respond, sessionContext } from '../../test/harness';
 import { WorkoutLoggerPage } from './WorkoutLoggerPage';
 
+const benchPress: CatalogExercise = {
+  exerciseId: 7, exerciseName: 'Flat Bench Press', englishName: 'Flat Bench Press', description: '', exerciseType: 'StrengthTraining',
+  muscleGroupId: 1, muscleGroupName: 'Chest', muscleSubGroupId: 3, muscleSubGroupName: 'Middle Chest',
+};
+
+const rowingMachine: CatalogExercise = {
+  exerciseId: 9, exerciseName: 'Rowing Machine', englishName: 'Rowing Machine', description: '', exerciseType: 'Cardio',
+  muscleGroupId: 2, muscleGroupName: 'Cardio', muscleSubGroupId: 5, muscleSubGroupName: 'Machines',
+};
+
 const options: LoggerOptions = {
   activeSplitTypeName: 'Upper-Lower',
   activeSplitTypeId: 2,
   splitTypes: [{ id: 2, name: 'Upper-Lower', days: [{ id: 3, name: 'Upper' }, { id: 4, name: 'Lower' }] }],
   setTypes: [{ id: 1, name: 'Working' }, { id: 2, name: 'Warm-up' }],
   defaultSetTypeId: 1,
-  exercises: [{
-    exerciseId: 7, exerciseName: 'Flat Bench Press', englishName: 'Flat Bench Press', description: '', exerciseType: 'StrengthTraining',
-    muscleGroupId: 1, muscleGroupName: 'Chest', muscleSubGroupId: 3, muscleSubGroupName: 'Middle Chest',
-  }, {
-    exerciseId: 9, exerciseName: 'Rowing Machine', englishName: 'Rowing Machine', description: '', exerciseType: 'Cardio',
-    muscleGroupId: 2, muscleGroupName: 'Cardio', muscleSubGroupId: 5, muscleSubGroupName: 'Machines',
-  }],
+  exercises: [benchPress, rowingMachine],
 };
 
 const ukrainianOptions: LoggerOptions = {
   ...options,
-  exercises: [{ ...options.exercises[0], exerciseName: 'Жим лежачи на горизонтальній лаві', muscleGroupName: 'Груди', muscleSubGroupName: 'Середина грудей' }],
+  exercises: [{ ...benchPress, exerciseName: 'Жим лежачи на горизонтальній лаві', muscleGroupName: 'Груди', muscleSubGroupName: 'Середина грудей' }],
 };
 
 const posted: unknown[] = [];

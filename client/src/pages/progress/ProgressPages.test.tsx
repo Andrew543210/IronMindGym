@@ -31,7 +31,7 @@ it('loads the saved results, compares them while typing and saves both columns',
   const user = userEvent.setup();
 
   expect(await screen.findByText('+15 sec duration; 0 kg load. Compare under similar conditions.')).toBeInTheDocument();
-  const currentLoad = screen.getAllByLabelText('External load (kg)')[1];
+  const currentLoad = within(screen.getByRole('group', { name: 'Current results' })).getByLabelText('External load (kg)');
   await user.clear(currentLoad);
   await user.type(currentLoad, '12.5');
   expect(screen.getByText('+15 sec duration; +2.5 kg load. Compare under similar conditions.')).toBeInTheDocument();

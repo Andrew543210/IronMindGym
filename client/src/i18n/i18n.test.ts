@@ -9,7 +9,7 @@ const keys = Object.keys(en) as MessageKey[];
 
 function parameters(message: string | object): string[] {
   const forms = typeof message === 'string' ? [message] : Object.values(message as Record<string, string>);
-  return [...new Set(forms.flatMap((form) => [...form.matchAll(/\{(\w+)\}/g)].map((match) => match[1])))].sort();
+  return [...new Set(forms.flatMap((form) => [...form.matchAll(/\{(\w+)\}/g)].flatMap((match) => (match[1] ? [match[1]] : []))))].sort();
 }
 
 describe('dictionaries', () => {

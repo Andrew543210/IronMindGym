@@ -97,6 +97,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
 
   function editSet(index: number) {
     const set = draft.sets[index];
+    if (!set) return;
     const logged = catalog.find((e) => e.exerciseId === set.exerciseId);
     if (!logged) {
       setError({ key: 'logger.unavailableExercise' });
@@ -113,6 +114,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
 
   function removeSet(index: number) {
     const set = draft.sets[index];
+    if (!set) return;
     const name = catalog.find((e) => e.exerciseId === set.exerciseId)?.exerciseName || t('common.exercise');
     if (!window.confirm(t('logger.confirmRemove', { number: index + 1, name }))) return;
     endEdit();

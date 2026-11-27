@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, it } from 'vitest';
 import { mockApi, renderRoutes } from '../test/harness';
-import { overview } from '../test/fixtures';
+import { overview, researchNote } from '../test/fixtures';
 import { DashboardPage, FeedNotePage } from './DashboardPage';
 
 const routes = [{ path: '/', element: <DashboardPage /> }, { path: '/feed/:id', element: <FeedNotePage /> }];
@@ -10,7 +10,7 @@ const routes = [{ path: '/', element: <DashboardPage /> }, { path: '/feed/:id', 
 it('brings the week, rank, sessions, nutrition, goals and research together and opens a note', async () => {
   mockApi({
     'GET /api/dashboard': overview,
-    'GET /api/feed/7': overview.feedItems[0],
+    'GET /api/feed/7': researchNote,
   });
   renderRoutes(routes, '/');
   const user = userEvent.setup();

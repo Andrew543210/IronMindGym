@@ -93,12 +93,12 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
   if (saved.failed) display = t('track.unavailable');
   else if (!values) display = t('track.loading');
   else if (valid && values) {
-    const [i1, i2, c1, c2] = values.map(Number);
-    const first = type === 'StrengthTraining'
-      ? t('track.kgLoad', { value: formatSigned(c1 - i1) })
-      : t('track.secDuration', { value: formatSigned(c1 - i1) });
-    const second = type === 'StrengthTraining' ? t('track.repsUnit', { value: formatSigned(c2 - i2) })
-      : type === 'Cardio' ? t('track.effortPoints', { value: formatSigned(c2 - i2) }) : t('track.kgLoad', { value: formatSigned(c2 - i2) });
+    const [initial1, initial2, current1, current2] = values;
+    const change1 = formatSigned(Number(current1) - Number(initial1));
+    const change2 = formatSigned(Number(current2) - Number(initial2));
+    const first = type === 'StrengthTraining' ? t('track.kgLoad', { value: change1 }) : t('track.secDuration', { value: change1 });
+    const second = type === 'StrengthTraining' ? t('track.repsUnit', { value: change2 })
+      : type === 'Cardio' ? t('track.effortPoints', { value: change2 }) : t('track.kgLoad', { value: change2 });
     display = t('track.compare', { first, second });
   }
 
@@ -122,8 +122,8 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
     const secondPlaceholder = texts.placeholders[1];
     return (
       <div className="col-md-4">
-        <div className={`card border-${border}`}>
-          <div className={`card-header bg-${border} text-dark`}><h2 className="h6 mb-0 text-uppercase">{title}</h2></div>
+        <fieldset className={`card border-${border}`}>
+          <legend className={`card-header bg-${border} text-dark h6 mb-0 text-uppercase`}>{title}</legend>
           <div className="card-body">
             <div className="mb-3">
               <label className="form-label fw-bold" htmlFor={`${prefix}Value1`}>{t(texts.labels[0])}</label>
@@ -139,7 +139,7 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
             </div>
             {button}
           </div>
-        </div>
+        </fieldset>
       </div>
     );
   }

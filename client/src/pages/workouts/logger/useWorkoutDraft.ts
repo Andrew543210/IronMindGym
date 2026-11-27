@@ -5,9 +5,9 @@ import { applyStored, draftStore, freshDraft, isDraftId, newerDraft, restoreDraf
 import { holdForSignOut, serverDraftSync } from '../serverDraft';
 
 /** The day ids of a split; a split without days logs a general training day, kept as an empty id. */
-export function dayIds(options: LoggerOptions, splitTypeId: string): string[] {
-  const days = options.splitTypes.find((s) => String(s.id) === splitTypeId)?.days ?? [];
-  return days.length > 0 ? days.map((day) => String(day.id)) : [''];
+export function dayIds(options: LoggerOptions, splitTypeId: string): [string, ...string[]] {
+  const [first, ...rest] = (options.splitTypes.find((s) => String(s.id) === splitTypeId)?.days ?? []).map((day) => String(day.id));
+  return first === undefined ? [''] : [first, ...rest];
 }
 
 function withValidSplit(draft: StoredDraft, options: LoggerOptions): StoredDraft {
