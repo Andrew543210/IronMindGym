@@ -79,6 +79,11 @@ export const en = {
   'notFound.title': 'Not found',
   'notFound.text': 'This page does not exist.',
   'notFound.back': 'Back to the overview',
+  'routeError.title': 'Something went wrong',
+  'routeError.unexpected': 'This page could not be shown. Reload it or go back to the overview.',
+  'routeError.updatedTitle': 'IronMind was updated',
+  'routeError.updated': 'IronMind has been updated since this tab was opened. Reload the page to get the new version.',
+  'routeError.reload': 'Reload the page',
 
   'auth.eyebrow': 'BUILT ONE SESSION AT A TIME',
   'auth.story1': 'Show up.',

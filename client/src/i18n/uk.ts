@@ -81,6 +81,11 @@ export const uk: Translation = {
   'notFound.title': 'Не знайдено',
   'notFound.text': 'Такої сторінки немає.',
   'notFound.back': 'Повернутися до огляду',
+  'routeError.title': 'Щось пішло не так',
+  'routeError.unexpected': 'Не вдалося показати цю сторінку. Перезавантажте її або поверніться до огляду.',
+  'routeError.updatedTitle': 'IronMind оновлено',
+  'routeError.updated': 'Відколи відкрито цю вкладку, IronMind оновився. Перезавантажте сторінку, щоб отримати нову версію.',
+  'routeError.reload': 'Перезавантажити сторінку',
 
   'auth.eyebrow': 'ТРЕНУВАННЯ ЗА ТРЕНУВАННЯМ',
   'auth.story1': 'Приходьте.',
