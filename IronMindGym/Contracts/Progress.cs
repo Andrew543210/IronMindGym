@@ -31,10 +31,10 @@ public sealed record ExerciseProgressEntry
 }
 
 public sealed record ProgressResultsRequest(
-    [Required] double? InitialValue1,
-    [Required] double? InitialValue2,
-    [Required] double? CurrentValue1,
-    [Required] double? CurrentValue2);
+    [Required(ErrorMessage = "Enter the starting and the latest result.")] double? InitialValue1,
+    [Required(ErrorMessage = "Enter the starting and the latest result.")] double? InitialValue2,
+    [Required(ErrorMessage = "Enter the starting and the latest result.")] double? CurrentValue1,
+    [Required(ErrorMessage = "Enter the starting and the latest result.")] double? CurrentValue2);
 
 public sealed record CurrentResultRequest(double? WeightKg, int? Reps, int? DurationSeconds, int? Intensity);
 

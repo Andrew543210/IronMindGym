@@ -2,7 +2,10 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using IronMindGym.Contracts;
+using IronMindGym.Localization;
 using IronMindGym.Models;
 
 namespace IronMindGym.Tests.Api;
@@ -126,5 +129,45 @@ public partial class LocalizationApiTests
         var response = await api.Put("/api/profile/language", new { language = "uk" });
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public void EveryValidationRuleOfTheApiHasAMessageWithAUkrainianTranslation()
+    {
+        var rules = typeof(SessionResponse).Assembly.GetTypes()
+            .Where(t => t.Namespace == typeof(SessionResponse).Namespace)
+            .SelectMany(t => t.GetProperties().Select(p => (Member: $"{t.Name}.{p.Name}", Attributes: p.GetCustomAttributes<ValidationAttribute>(true)))
+                .Concat(t.GetConstructors().SelectMany(c => c.GetParameters())
+                    .Select(p => (Member: $"{t.Name}({p.Name})", Attributes: p.GetCustomAttributes<ValidationAttribute>(true)))))
+            .SelectMany(m => m.Attributes.Select(a => (m.Member, a.ErrorMessage)))
+            .ToList();
+
+        Assert.NotEmpty(rules);
+        var missing = rules.Where(r => r.ErrorMessage is null || !ServerMessages.English.Contains(r.ErrorMessage)).Select(r => r.Member).Distinct().ToList();
+        Assert.True(missing.Count == 0, $"Rules without a translated message: {string.Join(", ", missing)}");
+    }
+
+    [Fact]
+    public async Task RefusalsAreWordedInTheRequestLanguage()
+    {
+        using var app = new TestApplication();
+        using var api = app.Api();
+        api.Http.DefaultRequestHeaders.AcceptLanguage.ParseAdd("uk");
+
+        var invalid = await ApiClient.Errors(await api.Post("/api/session/register", new
+        {
+            username = "a",
+            email = "athlete@example.com",
+            age = 30,
+            password = "TrainingPass123!",
+            confirmPassword = "TrainingPass123!"
+        }));
+        var refused = await ApiClient.Errors(await api.Post("/api/session/login", new { email = "nobody@example.com", password = "TrainingPass123!" }));
+        var malformed = await ApiClient.Errors(await api.Post("/api/session/login", new { email = 5, password = "x" }));
+
+        Assert.Equal(["Використовуйте 2–50 латинських літер, цифр, підкреслень, крапок або дефісів."], invalid.Distinct());
+        Assert.Equal(["Неправильна пошта або пароль."], refused);
+        Assert.All(malformed, message => Assert.Matches(Cyrillic(), message));
+        Assert.DoesNotContain(malformed, message => message.Contains("System.", StringComparison.Ordinal));
     }
 }

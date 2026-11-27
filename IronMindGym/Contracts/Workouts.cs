@@ -6,7 +6,7 @@ namespace IronMindGym.Contracts;
 
 public sealed record SaveWorkoutRequest
 {
-    [Range(1, 600)]
+    [Range(1, 600, ErrorMessage = "A workout must last between 1 and 600 minutes.")]
     public int DurationMinutes { get; init; } = 60;
 
     /// <summary>The split day trained; empty for a general training day.</summary>
@@ -14,10 +14,10 @@ public sealed record SaveWorkoutRequest
 
     public Guid? DraftId { get; init; }
 
-    [Range(1, 5)]
+    [Range(1, 5, ErrorMessage = "Rate the workout from 1 to 5.")]
     public int ReviewRating { get; init; } = 4;
 
-    [MaxLength(800)]
+    [MaxLength(800, ErrorMessage = "Reviews are limited to 800 characters.")]
     public string? ReviewComment { get; init; }
 
     public List<WorkoutSetInput> Sets { get; init; } = [];
@@ -61,7 +61,9 @@ public sealed record WorkoutComment
     public DateTime CreatedAt { get; init; }
 }
 
-public sealed record WorkoutDraftRequest([Required] Guid? DraftId, [Required] JsonElement? Content);
+public sealed record WorkoutDraftRequest(
+    [Required(ErrorMessage = "The draft has no id.")] Guid? DraftId,
+    [Required(ErrorMessage = "Send the unfinished workout as a JSON object.")] JsonElement? Content);
 
 public sealed record WorkoutDraftResponse(Guid DraftId, JsonElement Content, DateTime UpdatedAt);
 

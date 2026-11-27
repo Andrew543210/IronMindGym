@@ -1,3 +1,4 @@
+using IronMindGym.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -16,12 +17,12 @@ public sealed class DomainExceptionFilter(ProblemDetailsFactory problems) : IExc
         switch (context.Exception)
         {
             case DomainValidationException refused:
-                context.ModelState.AddModelError(refused.Field, refused.Message);
+                context.ModelState.AddModelError(refused.Field, ServerMessages.Translate(refused.Message));
                 context.Result = new BadRequestObjectResult(problems.CreateValidationProblemDetails(context.HttpContext, context.ModelState));
                 break;
             case DomainConflictException conflict:
                 context.Result = new ConflictObjectResult(problems.CreateProblemDetails(
-                    context.HttpContext, StatusCodes.Status409Conflict, conflict.Message));
+                    context.HttpContext, StatusCodes.Status409Conflict, ServerMessages.Translate(conflict.Message)));
                 break;
             default:
                 return;

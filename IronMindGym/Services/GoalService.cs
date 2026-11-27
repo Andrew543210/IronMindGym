@@ -7,7 +7,7 @@ namespace IronMindGym.Services;
 
 public class GoalService(IronMindDbContext db, AthleteCalendars calendars)
 {
-    private const int MaxActiveGoals = 20;
+    public const int MaxActiveGoals = 20;
 
     public Task<List<GoalResponse>> ListAsync(int userId, CancellationToken cancellationToken) => db.UserGoals.AsNoTracking()
         .Where(g => g.UserId == userId)

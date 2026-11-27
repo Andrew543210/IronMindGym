@@ -29,12 +29,12 @@ public static class TrackingRules
             case ExerciseType.StrengthTraining:
                 CheckLoad(weightKg);
                 if (reps is < 1 or > MaxReps)
-                    throw new DomainValidationException("Reps must be between 1 and 500.");
+                    throw new DomainValidationException($"Reps must be between 1 and {MaxReps}.");
                 return new(weightKg, reps, 0, 0);
             case ExerciseType.Cardio:
                 CheckDuration(durationSeconds);
                 if (intensity is < 1 or > MaxIntensity)
-                    throw new DomainValidationException("Intensity must be between 1 and 10.");
+                    throw new DomainValidationException($"Intensity must be between 1 and {MaxIntensity}.");
                 return new(0, 0, durationSeconds, intensity);
             default:
                 CheckDuration(durationSeconds);
@@ -46,18 +46,18 @@ public static class TrackingRules
     public static void CheckRest(int restSeconds)
     {
         if (restSeconds is < 0 or > MaxRestSeconds)
-            throw new DomainValidationException("Rest must be between 0 and 3600 seconds.");
+            throw new DomainValidationException($"Rest must be between 0 and {MaxRestSeconds} seconds.");
     }
 
     private static void CheckLoad(double weightKg)
     {
         if (!double.IsFinite(weightKg) || weightKg is < 0 or > MaxLoadKg)
-            throw new DomainValidationException("Weight must be between 0 and 500 kg.");
+            throw new DomainValidationException($"Weight must be between 0 and {MaxLoadKg} kg.");
     }
 
     private static void CheckDuration(int durationSeconds)
     {
         if (durationSeconds is < 1 or > MaxDurationSeconds)
-            throw new DomainValidationException("Duration must be between 1 and 86400 seconds.");
+            throw new DomainValidationException($"Duration must be between 1 and {MaxDurationSeconds} seconds.");
     }
 }

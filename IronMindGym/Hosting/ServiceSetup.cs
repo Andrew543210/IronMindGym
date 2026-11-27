@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using IronMindGym.Api;
 using IronMindGym.Data;
+using IronMindGym.Localization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -17,9 +18,26 @@ public static class ServiceSetup
             {
                 options.Filters.Add<CsrfProtectionFilter>();
                 options.Filters.Add<DomainExceptionFilter>();
+                // Every contract states [Required] with its own message. The implicit one would only repeat an
+                // unreadable body as "The request field is required." in English.
+                options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
             })
-            // Choices travel as their names; a number is refused instead of becoming an undefined value.
-            .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
+            .AddJsonOptions(options =>
+            {
+                // Choices travel as their names; a number is refused instead of becoming an undefined value.
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
+                // The serializer's own messages name .NET types; the athlete gets the generic, translated one.
+                options.AllowInputFormatterExceptionMessages = false;
+            })
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                var refuse = options.InvalidModelStateResponseFactory;
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    ServerMessages.TranslateErrors(context.ModelState);
+                    return refuse(context);
+                };
+            });
         services.AddProblemDetails();
         services.AddDbContext<IronMindDbContext>(options => options.UseNpgsql(
             configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException(

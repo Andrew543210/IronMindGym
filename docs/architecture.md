@@ -18,7 +18,7 @@ ASP.NET Core ── controllers ── services ── EF Core ── PostgreSQL
 | `Data/` | `IronMindDbContext`, constraints and indexes, migrations and the advisory locks used for writes. |
 | `Models/` | Entities with small domain rules, for example the weight change of a tracked exercise. |
 | `Contracts/` | Request and response records of the API. |
-| `Localization/` | Picks the English or Ukrainian text of reference data for the current request. |
+| `Localization/` | Picks the English or Ukrainian text of reference data and refusal messages for the current request. |
 | `Seed/` | Reference data (set types, splits with their training days, ranks, awards, research notes), the exercise catalog from `exercises.json` and the opt-in demo data. |
 
 Services use `DbContext` directly. A repository layer would only repeat EF Core's own abstractions.
@@ -51,7 +51,7 @@ Services and controllers report a refusal by throwing `DomainValidationException
 
 ### Localization
 
-The client sends `Accept-Language: en` or `uk`. The server switches only the wording: names of exercises, groups, ranks, awards and validation messages. Numbers and dates are always parsed in the invariant form. Reference tables store both names, and neither is a key the code matches on: split types, their training days and set types have a code, the bench press, squat and deadlift used for the rank are marked as key lifts, and the remaining rows are found by their unique English name.
+The client sends `Accept-Language: en` or `uk`. The server switches only the wording: names of exercises, groups, ranks, awards and every refusal message. Services and contracts write their messages in English, and `ServerMessages` translates them where the response is built, in the domain exception filter and in the invalid-model response; a test checks that every validation rule of the contracts has a translation. Numbers and dates are always parsed in the invariant form. Reference tables store both names, and neither is a key the code matches on: split types, their training days and set types have a code, the bench press, squat and deadlift used for the rank are marked as key lifts, and the remaining rows are found by their unique English name.
 
 ## Client
 
