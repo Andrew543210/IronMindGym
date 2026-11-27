@@ -192,7 +192,7 @@ export function FeedNotePage() {
         <h2 className="h4 mb-3">{data.title}</h2>
         <p>{data.thesisText}</p>
         <p className="mb-3"><strong>{t('feed.source')}</strong> {data.source}</p>
-        {data.sourceUrl && <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-light text-dark">{t('feed.read')}</a>}
+        {data.sourceUrl && <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-light">{t('feed.read')}</a>}
       </div></div>
       <div className="mt-3"><Link to="/" className="btn btn-outline-light">{t('feed.back')}</Link></div>
     </>

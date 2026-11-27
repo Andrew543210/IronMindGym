@@ -192,7 +192,7 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
       <SessionSettings options={options} draft={draft} onChange={(next) => update(next)} />
 
       <div className="col-12">
-        <div className="card border-secondary">
+        <div className="card">
           <div className="card-header">{t('logger.addHeader')}</div>
           <div className="card-body row g-3 set-editor" ref={editorRef}>
             <ExerciseSearch catalog={catalog} onPick={pickSearchResult} />

@@ -49,7 +49,7 @@ export function WorkoutHistoryPage() {
       )}
       <ul className="list-group mb-4">
         {data?.sessions.map((s) => (
-          <li key={s.id} className="list-group-item d-flex justify-content-between align-items-center gap-2">
+          <li key={s.id} className="list-group-item d-flex justify-content-between align-items-start align-items-sm-center gap-2">
             <span>
               <Phrase text="workouts.entry" parts={{
                 date: <span className="metric">{localDateTime(s.sessionDate, athlete.timeZone)}</span>,

@@ -20,7 +20,7 @@ export function FriendProgressPage() {
           <h1 className="h2 text-break">{t('friendProgress.heading', { name: data.friendUsername })}</h1>
           <p className="small text-muted">{t('progress.note')}</p>
           <div className="row mb-4"><div className="col-md-6">
-            <div className="card border border-light"><div className="card-body">
+            <div className="card"><div className="card-body">
               <h2 className="h6 text-muted small mb-2 text-uppercase">{t('friendProgress.strength')}</h2>
               <p className="h3 mb-0">{formatFixed(data.currentStrengthCoefficient, 2)}</p>
             </div></div>

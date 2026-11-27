@@ -117,13 +117,13 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
     });
   }
 
-  function column(title: string, border: string, offset: 0 | 2, button?: ReactNode) {
+  function column(title: string, offset: 0 | 2, button?: ReactNode) {
     const prefix = offset === 0 ? 'initial' : 'current';
     const secondPlaceholder = texts.placeholders[1];
     return (
       <div className="col-md-4">
-        <fieldset className={`card border-${border}`}>
-          <legend className={`card-header bg-${border} text-dark h6 mb-0 text-uppercase`}>{title}</legend>
+        <fieldset className="card">
+          <legend className="card-header h6 mb-0 text-uppercase">{title}</legend>
           <div className="card-body">
             <div className="mb-3">
               <label className="form-label fw-bold" htmlFor={`${prefix}Value1`}>{t(texts.labels[0])}</label>
@@ -159,14 +159,14 @@ function TrackExercise({ catalog, initialExerciseId }: { catalog: CatalogExercis
 
       {exercise && (
         <form className="row g-3" onSubmit={submit} noValidate>
-          {column(t('track.initial'), 'info', 0)}
+          {column(t('track.initial'), 0)}
           <div className="col-md-4">
-            <div className="card border-success">
-              <div className="card-header bg-success text-dark"><h2 className="h6 mb-0 text-uppercase">{t('track.progress')}</h2></div>
+            <div className="card">
+              <div className="card-header"><h2 className="h6 mb-0 text-uppercase">{t('track.progress')}</h2></div>
               <div className="card-body text-center" role="status">{display}</div>
             </div>
           </div>
-          {column(t('track.current'), 'warning', 2,
+          {column(t('track.current'), 2,
             <button type="submit" className="btn btn-primary w-100" disabled={!values || save.busy}>{t('track.setResult')}</button>)}
         </form>
       )}

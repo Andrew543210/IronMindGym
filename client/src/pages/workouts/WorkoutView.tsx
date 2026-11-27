@@ -59,7 +59,7 @@ export function WorkoutSessionView({ workout, timeZone }: { workout: WorkoutDeta
         );
       })}
 
-      <div className="card border-success mb-3"><div className="card-body">
+      <div className="card mb-3"><div className="card-body">
         <h2 className="h5">{t('workout.summary')}</h2>
         <p className="mb-1">{t('workout.averageRest')} <strong className="metric">{sec(workout.averageRestSeconds)}</strong></p>
         {workout.remainingWorkoutsThisWeek !== null && (
@@ -126,7 +126,7 @@ export function WorkoutReactions({ workout, timeZone, onComment, onLike }: React
         </div>
         {onLike && !workout.isOwner && (
           <button type="button" disabled={like.busy} aria-pressed={workout.isLikedByCurrentUser}
-            className={`btn ${workout.isLikedByCurrentUser ? 'btn-light text-dark' : 'btn-outline-light'} btn-sm`}
+            className={`btn ${workout.isLikedByCurrentUser ? 'btn-light' : 'btn-outline-light'} btn-sm`}
             onClick={() => void like.run(() => onLike(!workout.isLikedByCurrentUser))}>
             {workout.isLikedByCurrentUser ? t('workout.unlike') : t('workout.like')}
           </button>

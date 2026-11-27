@@ -137,14 +137,14 @@ export function AwardsPage() {
           const percent = Math.round(award.progressPercent);
           return (
             <div key={award.code} className="col-md-6 col-lg-4">
-              <div className={`card h-100${award.isUnlocked ? ' border border-light' : ''}`}><div className="card-body d-flex flex-column">
+              <div className="card h-100"><div className="card-body d-flex flex-column">
                 <div className="d-flex justify-content-between align-items-start mb-2 gap-2">
                   <h2 className="h5 mb-0">{award.name}</h2>
-                  {award.isUnlocked && <span className="badge bg-light text-dark" title={t('awards.unlocked')}>✓<span className="visually-hidden"> {t('awards.unlocked')}</span></span>}
+                  {award.isUnlocked && <span className="badge text-bg-light" title={t('awards.unlocked')}>✓<span className="visually-hidden"> {t('awards.unlocked')}</span></span>}
                 </div>
                 <div className="small text-muted mb-3">{award.conditionDescription}</div>
                 <div className="progress mb-2" role="progressbar" aria-label={award.name} aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-                  <div className={`progress-bar ${award.isUnlocked ? 'bg-light text-dark' : 'bg-secondary'}`} style={{ width: `${percent}%` }}></div>
+                  <div className={`progress-bar ${award.isUnlocked ? 'bg-light' : 'bg-secondary'}`} style={{ width: `${percent}%` }}></div>
                 </div>
                 <div className={`small mt-auto${award.isNumeric ? '' : ' text-muted'}`}>
                   {award.isNumeric

@@ -38,7 +38,7 @@ export function RestTimer({ timerEnd, onStart, onSkip }: RestTimerProps) {
 
   return (
     <div className="col-12">
-      <div className={`workout-toolbar rest-timer d-flex flex-wrap gap-3 align-items-center justify-content-between${done ? ' rest-done' : ''}`}>
+      <div className={`workout-toolbar rest-timer d-flex flex-wrap gap-2 gap-sm-3 align-items-center justify-content-between${done ? ' rest-done' : ''}`}>
         <span>{t('logger.restTimer')} <strong className="metric rest-timer-value">{clockText(remaining)}</strong></span>
         <div>
           <button type="button" className="btn btn-outline-secondary btn-sm" onClick={onStart}>{t('logger.startTimer')}</button>{' '}

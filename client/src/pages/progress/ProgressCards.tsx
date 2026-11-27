@@ -58,8 +58,8 @@ function ProgressCard({ entry, children }: { entry: ProgressEntry; children?: Re
   const { t } = useI18n();
   return (
     <div className="col-md-6 col-lg-4">
-      <div className="card h-100 border border-light d-flex flex-column">
-        <div className="card-header bg-dark text-white">
+      <div className="card h-100 d-flex flex-column">
+        <div className="card-header">
           <h3 className="fs-6 fw-bold mb-0">{entry.exerciseName}</h3>
           <small className="text-muted">{entry.muscleSubGroup}</small>
         </div>

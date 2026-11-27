@@ -7,6 +7,11 @@
     --muted: #979fa8;
     --white: #f3f4f5;
     --green: #b4d6bb;
+    /* Bootstrap reads its text colours from these, so its utilities keep their meaning in this theme. */
+    --bs-secondary-color: var(--muted);
+    --bs-success-rgb: 180, 214, 187;
+    --bs-info-rgb: 185, 203, 217;
+    --bs-danger-rgb: 239, 172, 168;
 }
 * {
     box-sizing: border-box;
@@ -79,31 +84,6 @@ h6,
 .h6 {
     font-size: 0.85rem;
     letter-spacing: 0.015em;
-}
-.text-muted,
-.form-text {
-    color: var(--muted) !important;
-}
-.text-success {
-    color: var(--green) !important;
-}
-.text-info {
-    color: #b9cbd9 !important;
-}
-.text-danger {
-    color: #efaca8 !important;
-}
-.text-dark {
-    color: #e8ecef !important;
-}
-.btn-light.text-dark {
-    color: #15191c !important;
-}
-.bg-info,
-.bg-success,
-.bg-warning,
-.bg-dark {
-    background: var(--panel) !important;
 }
 .sidebar {
     width: 238px;
@@ -247,11 +227,11 @@ h6,
     letter-spacing: 0.12em;
 }
 .card {
-    background: var(--panel);
-    border: 1px solid var(--line) !important;
-    border-radius: 13px;
+    --bs-card-bg: var(--panel);
+    --bs-card-border-color: var(--line);
+    --bs-card-border-radius: 13px;
+    --bs-card-inner-border-radius: 12px;
     color: var(--white);
-    box-shadow: none;
     overflow: hidden;
 }
 .card-body {
@@ -268,14 +248,6 @@ h6,
 }
 .card-header .h6 {
     margin: 0;
-}
-.border-light,
-.border-info,
-.border-success,
-.border-warning,
-.border-secondary,
-.border {
-    border-color: var(--line) !important;
 }
 .btn {
     border-radius: 8px;
@@ -303,46 +275,51 @@ h6,
 }
 .btn-primary,
 .btn-success,
-.btn-light,
-.btn-dark {
-    background: #eceff1;
-    color: #111518;
-    border-color: #eceff1;
-}
-.btn-primary:hover,
-.btn-success:hover,
-.btn-light:hover,
-.btn-dark:hover {
-    background: #ced4d9;
-    color: #111518;
-    border-color: #ced4d9;
+.btn-light {
+    --bs-btn-color: #111518;
+    --bs-btn-bg: #eceff1;
+    --bs-btn-border-color: #eceff1;
+    --bs-btn-hover-color: #111518;
+    --bs-btn-hover-bg: #ced4d9;
+    --bs-btn-hover-border-color: #ced4d9;
+    --bs-btn-active-color: #111518;
+    --bs-btn-active-bg: #ced4d9;
+    --bs-btn-active-border-color: #ced4d9;
+    --bs-btn-disabled-color: #111518;
+    --bs-btn-disabled-bg: #eceff1;
+    --bs-btn-disabled-border-color: #eceff1;
+    --bs-btn-focus-shadow-rgb: 236, 239, 241;
 }
 .btn-outline-primary,
 .btn-outline-secondary,
-.btn-outline-success,
 .btn-outline-warning,
 .btn-outline-light {
-    border-color: #3b444c;
-    color: #d1d8de;
-    background: transparent;
-}
-.btn-outline-primary:hover,
-.btn-outline-secondary:hover,
-.btn-outline-success:hover,
-.btn-outline-warning:hover,
-.btn-outline-light:hover {
-    background: #292f35;
-    border-color: #59656e;
-    color: #fff;
+    --bs-btn-color: #d1d8de;
+    --bs-btn-border-color: #3b444c;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #292f35;
+    --bs-btn-hover-border-color: #59656e;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #292f35;
+    --bs-btn-active-border-color: #59656e;
+    --bs-btn-disabled-color: #d1d8de;
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-disabled-border-color: #3b444c;
+    --bs-btn-focus-shadow-rgb: 209, 216, 222;
 }
 .btn-outline-danger {
-    border-color: #62403f;
-    color: #e8aaa6;
-}
-.btn-outline-danger:hover {
-    background: #3c2626;
-    color: #fff;
-    border-color: #98615d;
+    --bs-btn-color: #e8aaa6;
+    --bs-btn-border-color: #62403f;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #3c2626;
+    --bs-btn-hover-border-color: #98615d;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #3c2626;
+    --bs-btn-active-border-color: #98615d;
+    --bs-btn-disabled-color: #e8aaa6;
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-disabled-border-color: #62403f;
+    --bs-btn-focus-shadow-rgb: 232, 170, 166;
 }
 .form-label {
     color: #bfc8cf;
@@ -976,10 +953,6 @@ hr {
     .table td {
         padding: 12px 8px;
     }
-    .list-group-item {
-        align-items: flex-start !important;
-        gap: 10px;
-    }
     .stat-card .card-body {
         padding: 18px;
     }
@@ -1106,7 +1079,6 @@ hr {
     }
     .rest-timer {
         padding: 12px;
-        gap: 8px !important;
     }
     .rest-timer > span {
         font-size: 0.72rem;

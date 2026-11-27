@@ -33,7 +33,7 @@ export function SessionSettings({ options, draft, onChange }: SessionSettingsPro
 
   return (
     <div className="col-12">
-      <div className="card border-secondary">
+      <div className="card">
         <details>
           <summary className="card-header">{t('logger.settings')}{options.activeSplitTypeName ? ` · ${options.activeSplitTypeName}` : ''}</summary>
           <div className="card-body row g-3">
