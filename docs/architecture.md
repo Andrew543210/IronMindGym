@@ -61,6 +61,7 @@ The client sends `Accept-Language: en` or `uk`. The server switches only the wor
 | `src/components/` | Layout with the sidebar and the mobile navigation, the session guard and shared UI pieces. |
 | `src/i18n/` | English and Ukrainian dictionaries. The compiler checks that every English key has a Ukrainian text and the plural forms Ukrainian needs. |
 | `src/api/` | `client.ts` is the fetch wrapper (CSRF token, language, `ProblemDetails` errors, abort and keepalive); `types/` declares every request and answer of the API once, by area, for pages and test fixtures alike. |
+| `src/styles/` | The monochrome theme on top of Bootstrap, one file per part of the app, loaded in order by `index.css`. Bootstrap's own variables carry the theme's colours, so its classes keep their meaning. |
 | `hooks.ts` | `useApi` loads a page's data, aborts what is no longer needed and keeps the last answer only when asked; `useAction` runs one change at a time. |
 | `SessionProvider.tsx` | The signed-in user, sign-out and the reason a session ended. |
 | `pages/workouts/draft.ts`, `serverDraft.ts` | The unfinished workout: kept in `localStorage`, shared between tabs and sent to the server 1.5 s after the last change, so another device can continue it. |

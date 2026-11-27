@@ -21,6 +21,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 20000,
+    // Without this a stylesheet imported in a test is empty, so the stylesheet tests would read nothing.
+    css: { include: [/src\/styles\/.+\.css/] },
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],

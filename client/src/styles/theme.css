@@ -1,0 +1,87 @@
+/* Colours of the theme, the Bootstrap variables that follow them, and the plain elements. */
+:root {
+    --page: #0b0d0f;
+    --panel: #131619;
+    --panel-hover: #191d21;
+    --line: #282d32;
+    --muted: #979fa8;
+    --white: #f3f4f5;
+    --green: #b4d6bb;
+    /* Bootstrap reads its text colours from these, so its utilities keep their meaning in this theme. */
+    --bs-secondary-color: var(--muted);
+    --bs-success-rgb: 180, 214, 187;
+    --bs-info-rgb: 185, 203, 217;
+    --bs-danger-rgb: 239, 172, 168;
+}
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    background: var(--page);
+    color: var(--white);
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+a {
+    color: inherit;
+    text-underline-offset: 4px;
+}
+a:hover {
+    color: #fff;
+}
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+:focus-visible {
+    outline: 2px solid #d5ddde;
+    outline-offset: 4px;
+}
+::selection {
+    background: #d8e0df;
+    color: #101214;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+    color: var(--white);
+    font-weight: 650;
+    line-height: 1.2;
+    letter-spacing: -0.035em;
+}
+.h2 {
+    font-size: clamp(1.7rem, 3.2vw, 2.5rem);
+    margin-bottom: 1.7rem;
+    text-transform: none;
+}
+.h4 {
+    font-size: 1.15rem;
+    letter-spacing: -0.015em;
+    margin-bottom: 1rem;
+}
+.h5 {
+    font-size: 1.05rem;
+}
+.h6 {
+    font-size: 0.85rem;
+    letter-spacing: 0.015em;
+}

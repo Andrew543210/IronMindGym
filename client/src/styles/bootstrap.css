@@ -1,0 +1,181 @@
+/* Bootstrap components in the theme: cards, buttons, forms, alerts, tables and lists. */
+.card {
+    --bs-card-bg: var(--panel);
+    --bs-card-border-color: var(--line);
+    --bs-card-border-radius: 13px;
+    --bs-card-inner-border-radius: 12px;
+    color: var(--white);
+    overflow: hidden;
+}
+.card-body {
+    padding: 24px;
+}
+.card-header,
+.card-footer {
+    padding: 16px 24px;
+    border-color: var(--line);
+    background: #161a1e;
+    color: #cbd1d7;
+    font-size: 0.78rem;
+    letter-spacing: 0.035em;
+}
+.card-header .h6 {
+    margin: 0;
+}
+.btn {
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 0.8rem;
+    font-weight: 650;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition:
+        background 0.15s,
+        transform 0.15s;
+    letter-spacing: 0;
+    touch-action: manipulation;
+}
+.btn:active {
+    transform: translateY(1px);
+}
+.btn-sm {
+    padding: 7px 13px;
+    min-height: 38px;
+    font-size: 0.72rem;
+}
+.btn-primary,
+.btn-success,
+.btn-light {
+    --bs-btn-color: #111518;
+    --bs-btn-bg: #eceff1;
+    --bs-btn-border-color: #eceff1;
+    --bs-btn-hover-color: #111518;
+    --bs-btn-hover-bg: #ced4d9;
+    --bs-btn-hover-border-color: #ced4d9;
+    --bs-btn-active-color: #111518;
+    --bs-btn-active-bg: #ced4d9;
+    --bs-btn-active-border-color: #ced4d9;
+    --bs-btn-disabled-color: #111518;
+    --bs-btn-disabled-bg: #eceff1;
+    --bs-btn-disabled-border-color: #eceff1;
+    --bs-btn-focus-shadow-rgb: 236, 239, 241;
+}
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-warning,
+.btn-outline-light {
+    --bs-btn-color: #d1d8de;
+    --bs-btn-border-color: #3b444c;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #292f35;
+    --bs-btn-hover-border-color: #59656e;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #292f35;
+    --bs-btn-active-border-color: #59656e;
+    --bs-btn-disabled-color: #d1d8de;
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-disabled-border-color: #3b444c;
+    --bs-btn-focus-shadow-rgb: 209, 216, 222;
+}
+.btn-outline-danger {
+    --bs-btn-color: #e8aaa6;
+    --bs-btn-border-color: #62403f;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #3c2626;
+    --bs-btn-hover-border-color: #98615d;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #3c2626;
+    --bs-btn-active-border-color: #98615d;
+    --bs-btn-disabled-color: #e8aaa6;
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-disabled-border-color: #62403f;
+    --bs-btn-focus-shadow-rgb: 232, 170, 166;
+}
+.form-label {
+    color: #bfc8cf;
+    font-size: 0.76rem;
+    font-weight: 550;
+    margin-bottom: 8px;
+}
+.form-control,
+.form-select,
+.input-group-text {
+    background: #0d1013;
+    border: 1px solid #343c44;
+    color: #edf0f2;
+    border-radius: 8px;
+    min-height: 46px;
+    font-size: 0.88rem;
+}
+.form-control:focus,
+.form-select:focus {
+    background: #101418;
+    border-color: #91a0ad;
+    color: #fff;
+    box-shadow: 0 0 0 3px #8492a018;
+}
+.form-control::placeholder {
+    color: #687581;
+}
+.form-control:disabled {
+    background: #1b2025;
+    color: #8f9ba5;
+}
+.form-check-input:checked {
+    background-color: #aab4bb;
+    border-color: #aab4bb;
+}
+input[type="number"] {
+    font-variant-numeric: tabular-nums;
+}
+.alert {
+    background: #18231e;
+    color: #c2d9c7;
+    border: 1px solid #314b3c;
+    border-radius: 9px;
+    font-size: 0.85rem;
+}
+.alert-info,
+.alert-secondary,
+.alert-warning {
+    background: #191f25;
+    border-color: #35414c;
+    color: #bac8d4;
+}
+.alert-danger {
+    background: #2b1c1d;
+    border-color: #634044;
+    color: #efb4b6;
+}
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #d2d8de;
+    --bs-table-border-color: var(--line);
+    font-size: 0.83rem;
+    vertical-align: middle;
+    margin: 0;
+}
+.table th {
+    color: #82909b;
+    font-weight: 500;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    padding: 14px 12px;
+    white-space: nowrap;
+}
+.table td {
+    padding: 14px 12px;
+}
+.table-responsive {
+    border-radius: 8px;
+}
+.list-group-item {
+    background: var(--panel);
+    color: #d3dae1;
+    border-color: var(--line);
+    padding: 18px 20px;
+    font-size: 0.85rem;
+}
