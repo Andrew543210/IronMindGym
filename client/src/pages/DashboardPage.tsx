@@ -1,43 +1,11 @@
 import { Link, useParams } from 'react-router';
+import type { WorkoutListItem } from '../api/types/common';
+import type { Overview, ResearchNote } from '../api/types/dashboard';
 import { EmptyState, PageState } from '../components/ui';
 import { formatDay, formatFixed, formatNumber, localFormat } from '../format';
 import { useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
 import { useAthlete } from '../session';
-import type { GoalItem } from './GoalsPage';
-
-export interface WorkoutListItem {
-  id: number;
-  name: string;
-  sessionDate: string;
-  durationMinutes: number;
-}
-
-interface ResearchNote {
-  id: number;
-  publishedAt: string;
-  title: string;
-  thesisText: string;
-  source: string;
-  sourceUrl: string;
-}
-
-interface Overview {
-  username: string;
-  needsSetup: boolean;
-  weightKg: number | null;
-  totalWorkouts: number;
-  todayNutrition: { caloriesKcal: number; proteinG: number; fatG: number; carbsG: number } | null;
-  goals: GoalItem[];
-  recentWorkouts: WorkoutListItem[];
-  avatarName: string;
-  strengthCoefficient: number;
-  currentAvatarPositionPercent: number;
-  avatarScalePoints: { name: string; minStrengthCoefficient: number; isCurrent: boolean }[];
-  plannedWorkoutsPerWeek: number;
-  completedThisWeek: number;
-  feedItems: ResearchNote[];
-}
 
 const whole = (value: number | undefined) => (value === undefined ? '—' : formatNumber(value, 0));
 

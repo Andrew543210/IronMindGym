@@ -1,5 +1,5 @@
-import { translate } from './i18n/i18n';
-import { currentLanguage } from './i18n/language';
+import { translate } from '../i18n/i18n';
+import { currentLanguage } from '../i18n/language';
 
 /**
  * Talks to the .NET API. The session is an HttpOnly cookie the browser sends by itself;

@@ -1,20 +1,7 @@
 /** The unsaved workout lives in the browser, so a closed tab or a lost connection does not lose sets. */
 
+import type { CatalogExercise } from '../../api/types/exercises';
 import type { MessageKey, Translate } from '../../i18n/i18n';
-
-export type ExerciseType = 'StrengthTraining' | 'Cardio' | 'Timed';
-
-export interface CatalogExercise {
-  exerciseId: number;
-  exerciseName: string;
-  englishName: string;
-  description: string;
-  exerciseType: ExerciseType;
-  muscleGroupId: number;
-  muscleGroupName: string;
-  muscleSubGroupId: number;
-  muscleSubGroupName: string;
-}
 
 export interface DraftSet {
   exerciseId: number;

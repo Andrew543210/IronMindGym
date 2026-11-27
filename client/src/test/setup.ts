@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, configure } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
-import { forgetCsrfToken } from '../api';
+import { forgetCsrfToken } from '../api/client';
 import { setLanguage } from '../i18n/language';
 import { unmocked } from './harness';
 

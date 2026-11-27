@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api } from './api';
+import { api } from './api/client';
 import { useI18n } from './i18n/i18n';
 
 interface Loaded<T> {

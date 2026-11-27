@@ -30,6 +30,7 @@ export default defineConfig({
       thresholds: {
         lines: 80, statements: 80, functions: 80, branches: 80,
         'src/*.{ts,tsx}': { lines: 80, statements: 80, functions: 80, branches: 80 },
+        'src/api/**': { lines: 80, statements: 80, functions: 80, branches: 80 },
         'src/components/**': { lines: 80, statements: 80, functions: 80, branches: 80 },
         'src/i18n/**': { lines: 80, statements: 80, functions: 80, branches: 80 },
         'src/pages/**': { lines: 80, statements: 80, functions: 80, branches: 80 },

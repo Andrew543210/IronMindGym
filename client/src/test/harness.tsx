@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import { createMemoryRouter, useLocation, type RouteObject } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { vi } from 'vitest';
-import { SessionContext, type Session, type SessionContextValue } from '../session';
+import type { Session } from '../api/types/session';
+import { SessionContext, type SessionContextValue } from '../session';
 
 export const athlete: Session = {
   id: 5, username: 'athlete', email: 'athlete@example.com', timeZone: 'Europe/Kyiv', today: '2026-11-20', setupComplete: true, language: 'en',

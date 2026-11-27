@@ -1,11 +1,12 @@
 import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { Link, Navigate, useLocation } from 'react-router';
-import { api, FormError } from '../../api';
+import { api, FormError } from '../../api/client';
+import type { Session } from '../../api/types/session';
 import { ErrorAlert } from '../../components/ui';
 import { deviceTimeZone } from '../../format';
 import { useAction, usePageTitle } from '../../hooks';
 import { useI18n, type MessageKey } from '../../i18n/i18n';
-import { useSession, type Session, type SessionEnd } from '../../session';
+import { useSession, type SessionEnd } from '../../session';
 
 const farewells: Record<SessionEnd, { text: MessageKey; style: string }> = {
   expired: { text: 'errors.sessionEnded', style: 'alert-warning' },

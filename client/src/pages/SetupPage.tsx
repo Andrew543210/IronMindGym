@@ -1,16 +1,12 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router';
-import { api } from '../api';
+import { api } from '../api/client';
+import type { SetupForm } from '../api/types/profile';
 import { ErrorAlert, PageState } from '../components/ui';
 import { deviceTimeZone } from '../format';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
 import { useSession } from '../session';
-
-interface SetupForm {
-  splitTypes: { id: number; name: string }[];
-  alreadyCompleted: boolean;
-}
 
 const lifts: { name: 'benchPressKg' | 'squatKg' | 'deadliftKg'; label: MessageKey }[] = [
   { name: 'benchPressKg', label: 'setup.bench' },

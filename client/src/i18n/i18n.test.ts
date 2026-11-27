@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { api } from '../api';
+import { api } from '../api/client';
 import { en } from './en';
 import { translate, type MessageKey } from './i18n';
 import { currentLanguage, setLanguage } from './language';

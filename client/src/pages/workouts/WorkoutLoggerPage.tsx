@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router';
-import { api } from '../../api';
+import { api } from '../../api/client';
+import type { CatalogExercise } from '../../api/types/exercises';
+import type { LoggerOptions, PreviousSet } from '../../api/types/workouts';
 import { ErrorAlert, PageState } from '../../components/ui';
 import { useAction, useApi } from '../../hooks';
 import { useI18n, type Text } from '../../i18n/i18n';
@@ -9,39 +11,9 @@ import { useAthlete } from '../../session';
 import {
   MAX_SETS, applyStored, clockText, draftStore, elapsedMinutes, fieldsFrom, finishError, freshDraft, isDraftId, newerDraft, readSet,
   restoreDraft, setCells, startingFields,
-  type CatalogExercise, type DraftSettings, type SetFields, type StoredDraft, type StoredValue,
+  type DraftSettings, type SetFields, type StoredDraft, type StoredValue,
 } from './draft';
 import { holdForSignOut, readServerDraft, serverDraftSync } from './serverDraft';
-
-interface Option {
-  id: number;
-  name: string;
-}
-
-interface SplitDay {
-  id: number;
-  name: string;
-}
-
-export interface LoggerOptions {
-  activeSplitTypeName: string | null;
-  activeSplitTypeId: number | null;
-  splitTypes: (Option & { days: SplitDay[] })[];
-  setTypes: Option[];
-  defaultSetTypeId: number;
-  muscleGroups: Option[];
-  exercises: CatalogExercise[];
-}
-
-interface PreviousSet {
-  weightKg: number;
-  reps: number;
-  durationSeconds: number;
-  intensity: number;
-  restSeconds: number;
-  setTypeId: number;
-  localDate: string;
-}
 
 export function WorkoutLoggerPage() {
   const athlete = useAthlete();

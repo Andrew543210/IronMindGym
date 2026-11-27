@@ -1,17 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { api } from '../api';
+import { api } from '../api/client';
+import type { Goal } from '../api/types/goals';
 import { EmptyState, ErrorAlert, PageState } from '../components/ui';
 import { formatDay } from '../format';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
 import { useAthlete } from '../session';
-
-export interface GoalItem {
-  id: number;
-  title: string;
-  deadline: string;
-  isCompleted: boolean;
-}
 
 function inOneMonth(today: string): string {
   const date = new Date(`${today}T12:00:00Z`);
@@ -23,7 +17,7 @@ export function GoalsPage() {
   const { t } = useI18n();
   usePageTitle(t('goals.title'));
   const athlete = useAthlete();
-  const { data: goals, error: loadError, loading, reload } = useApi<GoalItem[]>('/api/goals');
+  const { data: goals, error: loadError, loading, reload } = useApi<Goal[]>('/api/goals');
   const [form, setForm] = useState(() => ({ title: '', deadline: inOneMonth(athlete.today) }));
   const create = useAction();
   const change = useAction();
@@ -38,14 +32,14 @@ export function GoalsPage() {
     });
   }
 
-  function setCompleted(goal: GoalItem) {
+  function setCompleted(goal: Goal) {
     void change.run(async () => {
       await api.put(`/api/goals/${goal.id}/completed`, { completed: !goal.isCompleted });
       reload();
     });
   }
 
-  function remove(goal: GoalItem) {
+  function remove(goal: Goal) {
     if (!window.confirm(t('goals.confirmDelete', { title: goal.title }))) return;
     void change.run(async () => {
       await api.delete(`/api/goals/${goal.id}`);

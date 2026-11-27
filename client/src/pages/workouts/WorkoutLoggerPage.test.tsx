@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, useLocation } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { LoggerOptions } from '../../api/types/workouts';
 import { setLanguage } from '../../i18n/language';
 import { SessionContext } from '../../session';
 import { respond, sessionContext } from '../../test/harness';
-import { WorkoutLoggerPage, type LoggerOptions } from './WorkoutLoggerPage';
+import { WorkoutLoggerPage } from './WorkoutLoggerPage';
 
 const options: LoggerOptions = {
   activeSplitTypeName: 'Upper-Lower',

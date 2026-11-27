@@ -1,51 +1,9 @@
 import { useState, type FormEvent } from 'react';
+import type { ExerciseStat, WorkoutDetails } from '../../api/types/workouts';
 import { ErrorAlert, ResponsiveTable } from '../../components/ui';
 import { formatNumber, localDateTime } from '../../format';
 import { useAction } from '../../hooks';
 import { useI18n, type MessageKey } from '../../i18n/i18n';
-import type { ExerciseType } from './draft';
-
-interface WorkoutSet {
-  setNumber: number;
-  setTypeName: string | null;
-  weightKg: number;
-  reps: number;
-  durationSeconds: number;
-  intensity: number;
-  restSeconds: number;
-}
-
-interface ExerciseStat {
-  exerciseName: string;
-  setsCount: number;
-  tracksLoad: boolean;
-  heaviestLoadKg: number;
-  percentOfPreviousBest: number | null;
-  isNewRecord: boolean;
-}
-
-interface WorkoutComment {
-  authorUsername: string;
-  text: string;
-  createdAt: string;
-}
-
-export interface WorkoutDetails {
-  id: number;
-  name: string;
-  sessionDate: string;
-  durationMinutes: number;
-  rating: number | null;
-  notes: string | null;
-  exercises: { exerciseName: string; exerciseType: ExerciseType; sets: WorkoutSet[] }[];
-  averageRestSeconds: number;
-  remainingWorkoutsThisWeek: number | null;
-  exerciseStats: ExerciseStat[];
-  isOwner: boolean;
-  likesCount: number;
-  isLikedByCurrentUser: boolean;
-  comments: WorkoutComment[];
-}
 
 const MAX_COMMENT_LENGTH = 500;
 

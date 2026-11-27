@@ -1,57 +1,20 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { api } from '../api';
+import { api } from '../api/client';
+import type { Intake } from '../api/types/common';
+import type { NutritionAdvice, NutritionDay, Target } from '../api/types/nutrition';
 import { ErrorAlert, PageState, ResponsiveTable } from '../components/ui';
 import { formatDay, formatFixed, formatNumber } from '../format';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey, type Translate } from '../i18n/i18n';
 import { useAthlete } from '../session';
 
-type TargetSource = 'NotSet' | 'Personal' | 'Estimate' | 'Remainder';
-
-interface Target {
-  value: number;
-  source: TargetSource;
-}
-
-interface Advice {
-  calories: Target;
-  protein: Target;
-  fat: Target;
-  carbs: Target;
-  energyEquation: 'Male' | 'Female' | null;
-  basalMetabolicRate: number;
-  activityMultiplier: number;
-  targetsSet: number;
-  targetsMatched: number;
-  score: number;
-  targetsExceedEnergy: boolean;
-  macroEnergyKcal: number;
-  macrosDisagreeWithEnergy: boolean;
-  weekDaysLogged: number;
-  weekAverageKcal: number;
-}
-
-interface Intake {
-  caloriesKcal: number;
-  proteinG: number;
-  fatG: number;
-  carbsG: number;
-}
-
-interface NutritionDay extends Intake {
-  date: string;
-  isLogged: boolean;
-  advice: Advice;
-  recentLogs: (Intake & { date: string })[];
-}
-
 const macros = [
   { field: 'caloriesKcal', target: 'calories', label: 'field.caloriesKcal', name: 'nutrition.energy', title: 'nutrition.caloriesTarget', unit: 'unit.kcalShort', max: 10000, estimate: 'nutrition.caloriesEstimate' },
   { field: 'proteinG', target: 'protein', label: 'field.proteinG', name: 'macro.protein', title: 'nutrition.proteinTarget', unit: 'unit.gShort', max: 500, estimate: 'nutrition.proteinEstimate' },
   { field: 'fatG', target: 'fat', label: 'field.fatG', name: 'macro.fat', title: 'nutrition.fatTarget', unit: 'unit.gShort', max: 300, estimate: 'nutrition.fatEstimate' },
   { field: 'carbsG', target: 'carbs', label: 'field.carbsG', name: 'macro.carbs', title: 'nutrition.carbsTarget', unit: 'unit.gShort', max: 1000, estimate: 'nutrition.carbsRemainder' },
-] as const satisfies readonly { field: keyof Intake; target: keyof Advice; label: MessageKey; name: MessageKey; title: MessageKey; unit: MessageKey; max: number; estimate: MessageKey }[];
+] as const satisfies readonly { field: keyof Intake; target: keyof NutritionAdvice; label: MessageKey; name: MessageKey; title: MessageKey; unit: MessageKey; max: number; estimate: MessageKey }[];
 
 function targetText(t: Translate, target: Target, unit: MessageKey) {
   return target.source === 'NotSet' ? '—' : `${formatNumber(target.value, 0)} ${t(unit)}`;
@@ -182,7 +145,7 @@ function DayForm({ day, chosenDate, onChoose, onChanged }: {
   );
 }
 
-function Targets({ advice }: { advice: Advice }) {
+function Targets({ advice }: { advice: NutritionAdvice }) {
   const { t } = useI18n();
   const estimating = advice.energyEquation !== null;
   const tiles: { label: string; value: string; hint: string }[] = [

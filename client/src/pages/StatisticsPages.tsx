@@ -1,53 +1,11 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
+import type { AwardProgress, PersonalRecord, Statistics } from '../api/types/statistics';
 import { EmptyState, PageState, ResponsiveTable } from '../components/ui';
 import { formatNumber, localDay } from '../format';
 import { useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
 import { useAthlete } from '../session';
-
-interface PersonalRecord {
-  muscleGroupName: string;
-  muscleSubGroupName: string;
-  exerciseName: string;
-  maxWeightKg: number;
-  achievedAt: string;
-}
-
-interface Statistics {
-  workoutsCompleted: number;
-  totalWorkoutMinutes: number;
-  avgWorkoutDurationMinutes: number;
-  longestStreak: number;
-  avgWeeklyWorkouts: number;
-  totalSetsCount: number;
-  avgSetsPerWorkout: number;
-  avgRestSeconds: number;
-  totalVolume: number;
-  monthlyTotalTonnage: number;
-  weeklyProgress: number;
-  last7DaysWorkouts: number;
-  last7DaysMinutes: number;
-  uniqueExercisesCount: number;
-  exercisesThisMonth: number;
-  favoriteExerciseName: string | null;
-  favoriteExerciseCount: number;
-  bestProgressPercent: number;
-  bestProgressExercise: string | null;
-  totalAwardsCount: number;
-  recentRecords: PersonalRecord[];
-}
-
-interface Award {
-  code: string;
-  name: string;
-  conditionDescription: string;
-  isUnlocked: boolean;
-  isNumeric: boolean;
-  currentValue: number;
-  targetValue: number;
-  progressPercent: number;
-}
 
 function Stat({ label, value, unit, note }: { label: string; value: ReactNode; unit?: string; note?: ReactNode }) {
   return (
@@ -173,7 +131,7 @@ export function RecordsPage() {
 export function AwardsPage() {
   const { t } = useI18n();
   usePageTitle(t('awards.title'));
-  const { data, error, loading } = useApi<Award[]>('/api/awards');
+  const { data, error, loading } = useApi<AwardProgress[]>('/api/awards');
   if (!data) return <PageState error={error} loading={loading} />;
 
   return (

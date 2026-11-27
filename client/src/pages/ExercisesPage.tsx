@@ -1,14 +1,10 @@
 import { useDeferredValue, useMemo, useState } from 'react';
+import type { ExerciseType } from '../api/types/common';
+import type { ExerciseLibrary } from '../api/types/exercises';
 import { PageState, ResponsiveTable } from '../components/ui';
 import { useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
-import type { CatalogExercise, ExerciseType } from './workouts/draft';
 
-
-interface Library {
-  muscleGroups: { id: number; name: string }[];
-  exercises: CatalogExercise[];
-}
 
 const typeLabels: Record<ExerciseType, MessageKey> = {
   StrengthTraining: 'exerciseType.StrengthTraining',
@@ -19,7 +15,7 @@ const typeLabels: Record<ExerciseType, MessageKey> = {
 export function ExercisesPage() {
   const { t, language } = useI18n();
   usePageTitle(t('exercises.title'));
-  const { data, error, loading } = useApi<Library>('/api/exercises');
+  const { data, error, loading } = useApi<ExerciseLibrary>('/api/exercises');
   const [groupId, setGroupId] = useState('');
   const [subGroup, setSubGroup] = useState('');
   const [search, setSearch] = useState('');

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, CSRF_PROBLEM, api } from './api';
+import { ApiError, CSRF_PROBLEM, api } from './client';
 
 function json(status: number, body: unknown, contentType = 'application/json') {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': contentType } });

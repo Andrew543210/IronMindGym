@@ -1,21 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
-import { api } from '../../api';
+import { api } from '../../api/client';
+import type { WorkoutDetails, WorkoutHistory } from '../../api/types/workouts';
 import { ErrorAlert, PageState } from '../../components/ui';
 import { localDateTime } from '../../format';
 import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n } from '../../i18n/i18n';
 import { useAthlete } from '../../session';
-import type { WorkoutListItem } from '../DashboardPage';
 import { draftStore, newerDraft, validSets, type StoredValue } from './draft';
 import { readServerDraft } from './serverDraft';
-import { WorkoutReactions, WorkoutSessionView, type WorkoutDetails } from './WorkoutView';
-
-interface WorkoutHistory {
-  sessions: WorkoutListItem[];
-  page: number;
-  hasOlderSessions: boolean;
-}
+import { WorkoutReactions, WorkoutSessionView } from './WorkoutView';
 
 export function WorkoutHistoryPage() {
   const { t } = useI18n();

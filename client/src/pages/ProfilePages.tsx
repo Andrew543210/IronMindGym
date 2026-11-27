@@ -1,47 +1,14 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { api, FormError } from '../api';
+import { api, FormError } from '../api/client';
+import type { Profile, ProfileSettings, SettingsPage } from '../api/types/profile';
 import { ErrorAlert, PageState, ResponsiveTable } from '../components/ui';
 import { deviceTimeZone, formatDay, formatFixed, localDay } from '../format';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n } from '../i18n/i18n';
 import { useAthlete, useSession } from '../session';
 
-interface Profile {
-  username: string;
-  email: string;
-  age: number;
-  avatarName: string;
-  strengthCoefficient: number;
-  weightKg: number | null;
-  heightCm: number | null;
-  weighedOn: string | null;
-  benchPressKg: number | null;
-  squatKg: number | null;
-  deadliftKg: number | null;
-  weightHistory: { date: string; valueKg: number }[];
-  achievements: { name: string; conditionDescription: string; achievedAt: string }[];
-}
-
-interface Settings {
-  username: string;
-  age: number;
-  timeZone: string | null;
-  weightKg: number;
-  heightCm: number;
-  benchPressKg: number;
-  squatKg: number;
-  deadliftKg: number;
-  workoutsPerWeek: number;
-  splitTypeId: number;
-  energyEquation: 'None' | 'Male' | 'Female';
-  calorieTarget: number | null;
-  proteinTarget: number | null;
-  fatTarget: number | null;
-  carbsTarget: number | null;
-}
-
-type SettingsForm = Record<keyof Settings, string>;
+type SettingsForm = Record<keyof ProfileSettings, string>;
 
 const optionalNumbers = ['calorieTarget', 'proteinTarget', 'fatTarget', 'carbsTarget'] as const;
 
@@ -209,7 +176,7 @@ function WeightHistory({ entries }: { entries: Profile['weightHistory'] }) {
   );
 }
 
-function toForm(settings: Settings): SettingsForm {
+function toForm(settings: ProfileSettings): SettingsForm {
   return Object.fromEntries(Object.entries(settings).map(([key, value]) => [key, value === null ? '' : String(value)])) as SettingsForm;
 }
 
@@ -218,13 +185,13 @@ export function ProfileSettingsPage() {
   usePageTitle(t('settings.title'));
   const { refresh } = useSession();
   const navigate = useNavigate();
-  const { data, error: loadError, loading } = useApi<{ settings: Settings; splitTypes: { id: number; name: string }[] }>('/api/profile/settings');
+  const { data, error: loadError, loading } = useApi<SettingsPage>('/api/profile/settings');
   const [edited, setEdited] = useState<SettingsForm>();
   const { busy, error, run } = useAction();
   if (!data) return <PageState error={loadError} loading={loading} />;
   const form = edited ?? toForm(data.settings);
 
-  const field = (name: keyof Settings) => ({
+  const field = (name: keyof ProfileSettings) => ({
     id: name,
     value: form[name],
     onChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setEdited({ ...form, [name]: e.target.value }),
@@ -253,7 +220,7 @@ export function ProfileSettingsPage() {
     });
   }
 
-  const number = (name: keyof Settings, label: string, min: number, max: number, step = 1, className = 'col-6') => (
+  const number = (name: keyof ProfileSettings, label: string, min: number, max: number, step = 1, className = 'col-6') => (
     <div className={className}>
       <label htmlFor={name} className="form-label">{label}</label>
       <input {...field(name)} type="number" inputMode={step < 1 ? 'decimal' : 'numeric'} min={min} max={max} step={step}

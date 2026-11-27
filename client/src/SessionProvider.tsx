@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api, ApiError, forgetCsrfToken, whenSessionEnds } from './api';
+import { api, ApiError, forgetCsrfToken, whenSessionEnds } from './api/client';
+import type { Session } from './api/types/session';
 import { currentLanguage, setLanguage } from './i18n/language';
 import { draftStore } from './pages/workouts/draft';
 import { settleServerDrafts } from './pages/workouts/serverDraft';
-import { SessionContext, type Session, type SessionContextValue, type SessionEnd, type SessionState } from './session';
+import { SessionContext, type SessionContextValue, type SessionEnd, type SessionState } from './session';
 
 /**
  * The account's saved language wins after sign-in, so every device shows the same one.

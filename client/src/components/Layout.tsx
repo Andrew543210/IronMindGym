@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
-import { errorMessages } from '../api';
+import { errorMessages } from '../api/client';
 import { useAction } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
 import { useSession } from '../session';

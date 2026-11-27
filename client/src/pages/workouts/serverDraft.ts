@@ -1,4 +1,4 @@
-import { api, ApiError } from '../../api';
+import { api, ApiError } from '../../api/client';
 import type { StoredDraft, StoredValue } from './draft';
 
 const ROUTE = '/api/workouts/draft';

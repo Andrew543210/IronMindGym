@@ -1,29 +1,15 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
-import { api } from '../api';
+import { api } from '../api/client';
+import type { FriendCard, FriendIndex, FriendRequestResult, FriendWorkout } from '../api/types/friends';
 import { ErrorAlert, PageState, ResponsiveTable } from '../components/ui';
 import { formatNumber, localDateTime, localDay } from '../format';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
 import { useAthlete } from '../session';
-import { WorkoutReactions, WorkoutSessionView, type WorkoutDetails } from './workouts/WorkoutView';
+import { WorkoutReactions, WorkoutSessionView } from './workouts/WorkoutView';
 
-interface FriendCard {
-  userId: number;
-  username: string;
-  isFriend: boolean;
-  requestSent: boolean;
-  requestReceived: boolean;
-  averageKcal: number;
-  lastFiveWorkouts: { workoutSessionId: number; name: string; sessionDate: string; durationMinutes: number }[];
-  lastNutritionLogs: { date: string; caloriesKcal: number; proteinG: number; fatG: number; carbsG: number }[];
-  personalRecords: { exerciseName: string; maxWeightKg: number; achievedAt: string }[];
-  achievements: { name: string; conditionDescription: string; achievedAt: string }[];
-}
-
-type RequestResult = 'Sent' | 'AlreadyRequested' | 'Connected' | 'AlreadyConnected';
-
-const requestMessages: Record<RequestResult, MessageKey> = {
+const requestMessages: Record<FriendRequestResult, MessageKey> = {
   Connected: 'friends.connected',
   AlreadyConnected: 'friends.alreadyConnected',
   AlreadyRequested: 'friends.alreadyRequested',
@@ -45,7 +31,7 @@ export function FriendsPage() {
   const [params, setParams] = useSearchParams();
   const search = params.get('search') ?? '';
   const [query, setQuery] = useState(search);
-  const { data, error, loading, reload } = useApi<{ friends: FriendCard[] }>(
+  const { data, error, loading, reload } = useApi<FriendIndex>(
     `/api/friends?search=${encodeURIComponent(search)}`, { keepPrevious: true });
   const change = useAction();
 
@@ -63,7 +49,7 @@ export function FriendsPage() {
   }
 
   const sendRequest = (card: FriendCard) => act(async () => {
-    const { result } = await api.post<{ result: RequestResult }>(`/api/friends/${card.userId}/request`);
+    const { result } = await api.post<{ result: FriendRequestResult }>(`/api/friends/${card.userId}/request`);
     return requestMessages[result];
   });
   const accept = (card: FriendCard) => act(async () => {
@@ -210,7 +196,7 @@ export function FriendWorkoutPage() {
   const friendId = Number(params.friendId);
   const sessionId = Number(params.sessionId);
   const route = `/api/friends/${friendId}/workouts/${sessionId}`;
-  const { data, error, loading, reload } = useApi<{ friendUsername: string; workout: WorkoutDetails }>(route);
+  const { data, error, loading, reload } = useApi<FriendWorkout>(route);
 
   return (
     <>

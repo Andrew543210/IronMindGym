@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import type { CatalogExercise } from '../../api/types/exercises';
 import { translate, type MessageKey, type Params } from '../../i18n/i18n';
 import {
   EMPTY_DRAFT_LIFETIME_MS, applyStored, draftStore, elapsedMinutes, finishError, freshDraft, isDraftId, newDraftId,
-  newerDraft, readSet, restoreDraft, setCells, startingFields, validSets, type CatalogExercise, type DraftSet, type DraftSettings,
+  newerDraft, readSet, restoreDraft, setCells, startingFields, validSets, type DraftSet, type DraftSettings,
 } from './draft';
 
 const t = (key: MessageKey, params?: Params) => translate(key, params, 'en');

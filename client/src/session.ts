@@ -1,15 +1,5 @@
-import type { Language } from './i18n/language';
 import { createContext, useContext } from 'react';
-
-export interface Session {
-  id: number;
-  username: string;
-  email: string;
-  timeZone: string;
-  today: string;
-  setupComplete: boolean;
-  language: Language | null;
-}
+import type { Session } from './api/types/session';
 
 /** Why the last session closed; the login page explains it once. */
 export type SessionEnd = 'expired' | 'signedOut' | 'passwordChanged';

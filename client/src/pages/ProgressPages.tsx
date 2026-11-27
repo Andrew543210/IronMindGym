@@ -1,39 +1,13 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
-import { api, FormError } from '../api';
+import { api, FormError } from '../api/client';
+import type { ExerciseType } from '../api/types/common';
+import type { CatalogExercise } from '../api/types/exercises';
+import type { FriendProgress, ProgressEntry, ResultPair } from '../api/types/progress';
 import { ErrorAlert, PageState } from '../components/ui';
 import { formatFixed, formatNumber } from '../format';
 import { useAction, useApi, usePageTitle } from '../hooks';
 import { useI18n, type MessageKey, type Text } from '../i18n/i18n';
-import type { CatalogExercise, ExerciseType } from './workouts/draft';
-
-interface ProgressEntry {
-  exerciseId: number;
-  exerciseName: string;
-  muscleGroup: string;
-  muscleSubGroup: string;
-  exerciseType: ExerciseType;
-  hasCurrentResult: boolean;
-  initialWeightKg: number;
-  initialReps: number;
-  initialDurationSeconds: number;
-  initialIntensity: number;
-  currentWeightKg: number;
-  currentReps: number;
-  currentDurationSeconds: number;
-  currentIntensity: number;
-  weightProgressKg: number;
-  repsProgressCount: number;
-  cardioDurationProgressSeconds: number;
-  cardioIntensityProgressCount: number;
-}
-
-interface ResultPair {
-  initialValue1: number;
-  initialValue2: number;
-  currentValue1: number;
-  currentValue2: number;
-}
 
 function signed(value: number, decimals = 1): string {
   const rounded = Number(value.toFixed(decimals));
@@ -434,7 +408,7 @@ export function FriendProgressPage() {
   const { t } = useI18n();
   usePageTitle(t('friendProgress.title'));
   const friendId = Number(useParams().friendId);
-  const { data, error, loading } = useApi<{ friendUsername: string; currentStrengthCoefficient: number; exercises: ProgressEntry[] }>(
+  const { data, error, loading } = useApi<FriendProgress>(
     `/api/friends/${friendId}/progress`);
 
   return (

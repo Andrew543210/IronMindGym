@@ -1,4 +1,9 @@
-export const overview = {
+/** Answers of the API as pages receive them; typed, so a changed contract fails the tests that use them. */
+import type { Overview } from '../api/types/dashboard';
+import type { ProgressEntry } from '../api/types/progress';
+import type { WorkoutDetails } from '../api/types/workouts';
+
+export const overview: Overview = {
   username: 'athlete',
   needsSetup: false,
   weightKg: 80,
@@ -21,7 +26,7 @@ export const overview = {
   }],
 };
 
-export const workout = {
+export const workout: WorkoutDetails = {
   id: 4,
   name: 'Legs day',
   sessionDate: '2026-11-19T17:00:00Z',
@@ -52,7 +57,7 @@ export const workout = {
   comments: [{ authorUsername: 'partner', text: 'Great depth!', createdAt: '2026-11-19T18:00:00Z' }],
 };
 
-export function progressEntry(overrides: object = {}) {
+export function progressEntry(overrides: Partial<ProgressEntry> = {}): ProgressEntry {
   return {
     exerciseId: 7, exerciseName: 'Flat Bench Press', muscleGroup: 'Chest', muscleSubGroup: 'Middle Chest', exerciseType: 'StrengthTraining',
     hasCurrentResult: true, initialWeightKg: 60, initialReps: 8, initialDurationSeconds: 0, initialIntensity: 0,
