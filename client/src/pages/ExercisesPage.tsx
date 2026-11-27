@@ -16,7 +16,8 @@ export function ExercisesPage() {
   usePageTitle(t('exercises.title'));
   const { data, error, loading } = useApi<ExerciseLibrary>('/api/exercises');
   const [groupId, setGroupId] = useState('');
-  const [subGroup, setSubGroup] = useState('');
+  // The subgroup is kept by id: its name changes with the interface language.
+  const [subGroupId, setSubGroupId] = useState('');
   const [search, setSearch] = useState('');
   // A filter over the catalog's hundred-odd exercises is cheap enough to run on every keystroke.
   const query = search.trim().toLocaleLowerCase(language);
@@ -27,10 +28,10 @@ export function ExercisesPage() {
     [data, groupId],
   );
   const subGroups = useMemo(
-    () => [...new Set(inGroup.map((e) => e.muscleSubGroupName))].sort((a, b) => a.localeCompare(b, language)),
+    () => [...new Map(inGroup.map((e) => [e.muscleSubGroupId, e.muscleSubGroupName]))].sort(([, a], [, b]) => a.localeCompare(b, language)),
     [inGroup, language],
   );
-  const shown = inGroup.filter((e) => (subGroup === '' || e.muscleSubGroupName === subGroup)
+  const shown = inGroup.filter((e) => (subGroupId === '' || e.muscleSubGroupId === Number(subGroupId))
     && (query === '' || `${e.exerciseName}\n${e.description}`.toLocaleLowerCase(language).includes(query)));
 
   if (!data) return <PageState error={error} loading={loading} />;
@@ -42,16 +43,16 @@ export function ExercisesPage() {
       <div className="row g-2 mb-4" role="search">
         <div className="col-md-3">
           <label htmlFor="group" className="visually-hidden">{t('exercises.group')}</label>
-          <select id="group" className="form-select" value={groupId} onChange={(e) => { setGroupId(e.target.value); setSubGroup(''); }}>
+          <select id="group" className="form-select" value={groupId} onChange={(e) => { setGroupId(e.target.value); setSubGroupId(''); }}>
             <option value="">{t('exercises.allGroups')}</option>
             {data.muscleGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
           </select>
         </div>
         <div className="col-md-3">
           <label htmlFor="subGroup" className="visually-hidden">{t('exercises.subgroup')}</label>
-          <select id="subGroup" className="form-select" value={subGroup} onChange={(e) => setSubGroup(e.target.value)}>
+          <select id="subGroup" className="form-select" value={subGroupId} onChange={(e) => setSubGroupId(e.target.value)}>
             <option value="">{t('exercises.allSubgroups')}</option>
-            {subGroups.map((name) => <option key={name} value={name}>{name}</option>)}
+            {subGroups.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
           </select>
         </div>
         <div className="col-md-6">
