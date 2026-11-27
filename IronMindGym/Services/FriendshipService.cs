@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class FriendshipService(IronMindDbContext db, AthleteCalendars calendars, AchievementService achievements)
+public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars calendars, AchievementService achievements)
 {
     public Task<bool> AreFriendsAsync(int userId, int otherId, CancellationToken cancellationToken) => db.Friendships.AsNoTracking().AnyAsync(f =>
         f.User1Id == Math.Min(userId, otherId) && f.User2Id == Math.Max(userId, otherId) && f.Status == FriendshipStatus.Accepted, cancellationToken);

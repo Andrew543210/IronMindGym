@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class ProfileService(IronMindDbContext db, TimeProvider clock, AthleteCalendars calendars, StrengthService strength, SetupService setup, AchievementService achievements)
+public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, AthleteCalendars calendars, StrengthService strength, SetupService setup, AchievementService achievements)
 {
     public async Task<ProfileOverview> BuildOverviewAsync(int userId, CancellationToken cancellationToken)
     {

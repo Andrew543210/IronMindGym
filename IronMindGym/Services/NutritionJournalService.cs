@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IronMindGym.Services;
 
 /// <summary>One entry per calendar day. Saving a day again replaces it, so a missed day can be filled in later.</summary>
-public class NutritionJournalService(IronMindDbContext db, NutritionAdviceService advice, AthleteCalendars calendars, AchievementService achievements)
+public sealed class NutritionJournalService(IronMindDbContext db, NutritionAdviceService advice, AthleteCalendars calendars, AchievementService achievements)
 {
     private const int RecentDays = 30;
 

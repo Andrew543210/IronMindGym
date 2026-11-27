@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class GoalService(IronMindDbContext db, AthleteCalendars calendars)
+public sealed class GoalService(IronMindDbContext db, AthleteCalendars calendars)
 {
     public const int MaxActiveGoals = 20;
 

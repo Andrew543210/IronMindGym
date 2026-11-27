@@ -48,7 +48,7 @@ public sealed record NutritionAdvice(
 /// times an activity factor from the weekly plan, 1.6 g/kg protein, 0.8 g/kg fat and carbohydrates from the
 /// remaining energy. A target counts as matched within 10%.
 /// </summary>
-public class NutritionAdviceService
+public sealed class NutritionAdviceService
 {
     private const double MatchTolerance = 0.1;
     private const double MacroEnergyTolerance = 150;

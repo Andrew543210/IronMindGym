@@ -10,7 +10,7 @@ namespace IronMindGym.Services;
 /// Keeps a starting and a latest result per exercise. What the two numbers of a result mean depends on the
 /// exercise: weight and repetitions for strength, duration and effort for cardio, duration and load for timed holds.
 /// </summary>
-public class ExerciseProgressService(IronMindDbContext db, TimeProvider clock, FriendshipService friendships, StrengthService strength)
+public sealed class ExerciseProgressService(IronMindDbContext db, TimeProvider clock, FriendshipService friendships, StrengthService strength)
 {
     public async Task<List<ExerciseProgressEntry>> ListAsync(int userId, CancellationToken cancellationToken)
     {

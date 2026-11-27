@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class WorkoutSocialService(IronMindDbContext db, TimeProvider clock, FriendshipService friendships, WorkoutService workouts)
+public sealed class WorkoutSocialService(IronMindDbContext db, TimeProvider clock, FriendshipService friendships, WorkoutService workouts)
 {
     public const int MaxCommentLength = 500;
 

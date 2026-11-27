@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCalendars calendars, ExerciseCatalog catalog, PersonalRecordService records, AchievementService achievements)
+public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCalendars calendars, ExerciseCatalog catalog, PersonalRecordService records, AchievementService achievements)
 {
     private const int HistoryPageSize = 20;
 

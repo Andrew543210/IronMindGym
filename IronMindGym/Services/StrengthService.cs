@@ -7,7 +7,7 @@ namespace IronMindGym.Services;
 /// <summary>An athlete's current lifts, bodyweight, strength coefficient and rank, with the whole ladder.</summary>
 public sealed record StrengthRank(double? BodyweightKg, double Coefficient, Avatar Rank, IReadOnlyList<Avatar> Ladder);
 
-public class StrengthService(IronMindDbContext db)
+public sealed class StrengthService(IronMindDbContext db)
 {
     /// <summary>
     /// The rank counts each key lift at the higher of the setup result and the personal record, against the

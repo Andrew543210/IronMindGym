@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-public class StatisticsService(IronMindDbContext db, AthleteCalendars calendars)
+public sealed class StatisticsService(IronMindDbContext db, AthleteCalendars calendars)
 {
     public async Task<TrainingStatistics> BuildAsync(int userId, CancellationToken cancellationToken)
     {
