@@ -54,6 +54,16 @@ describe('registration', () => {
     await user.click(screen.getByRole('button', { name: 'Create account' }));
   }
 
+  it('sends an athlete who is already signed in to the overview or to the setup', () => {
+    renderPage('/register', <RegisterPage />, undefined, sessionContext(athlete));
+    expect(screen.getByTestId('location')).toHaveTextContent('/');
+  });
+
+  it('sends a signed-in athlete without a finished setup from registration to the setup', () => {
+    renderPage('/register', <RegisterPage />, undefined, sessionContext({ ...athlete, setupComplete: false }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/setup');
+  });
+
   it('checks the confirmation before creating the account', async () => {
     const calls = mockApi({});
     renderPage('/register', <RegisterPage />, undefined, sessionContext(null));

@@ -26,7 +26,14 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**', 'src/main.tsx'],
       reporter: ['text-summary', 'text', 'cobertura'],
-      thresholds: { lines: 80, statements: 80, functions: 80, branches: 80 },
+      // Each folder keeps the bar on its own, so a well-tested folder cannot hide one that is not.
+      thresholds: {
+        lines: 80, statements: 80, functions: 80, branches: 80,
+        'src/*.{ts,tsx}': { lines: 80, statements: 80, functions: 80, branches: 80 },
+        'src/components/**': { lines: 80, statements: 80, functions: 80, branches: 80 },
+        'src/i18n/**': { lines: 80, statements: 80, functions: 80, branches: 80 },
+        'src/pages/**': { lines: 80, statements: 80, functions: 80, branches: 80 },
+      },
     },
   },
 });
