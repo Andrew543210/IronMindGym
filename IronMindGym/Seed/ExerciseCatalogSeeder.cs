@@ -67,9 +67,8 @@ public static class ExerciseCatalogSeeder
 
     /// <summary>
     /// Applies exercises.json on every start. Rows are matched by their English name: missing groups, subgroups
-    /// and exercises are added, and the Ukrainian names and key-lift markers are refreshed. Nothing is deleted,
-    /// and an existing exercise keeps its type and group, because logged sets point at it.
-    /// A description is only translated while it is still the catalog's English text.
+    /// and exercises are added, and the Ukrainian names, descriptions and key-lift markers are refreshed. Nothing
+    /// is deleted, and an existing exercise keeps its type and group, because logged sets point at it.
     /// </summary>
     public static async Task SyncAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
@@ -97,7 +96,7 @@ public static class ExerciseCatalogSeeder
             }
             exercise.NameUk = definition.NameUk;
             exercise.KeyLift = definition.KeyLift;
-            exercise.DescriptionUk = exercise.Description == definition.Description ? definition.DescriptionUk : null;
+            (exercise.Description, exercise.DescriptionUk) = (definition.Description, definition.DescriptionUk);
         }
     }
 

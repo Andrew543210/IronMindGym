@@ -110,6 +110,7 @@ public class SeedingTests
             db.MuscleSubGroups.Where(s => s.Name == "Calves").ExecuteDelete();
             db.SplitDays.Where(d => d.Code == "CHEST").ExecuteDelete();
             db.Avatars.Single(a => a.Name == "Iron Squire").MinStrengthCoefficient = 9;
+            db.Avatars.Add(new Avatar { Name = "Retired Rank", MinStrengthCoefficient = 2 });
             db.SaveChanges();
 
             await DataSeeder.SeedAsync(db, includeDemoData: false, TimeProvider.System, CancellationToken.None);
@@ -121,6 +122,7 @@ public class SeedingTests
             Assert.Equal("Литки", db.MuscleSubGroups.Single(s => s.Name == "Calves").NameUk);
             Assert.Equal(3, db.SplitDays.Single(d => d.Code == "CHEST").Position);
             Assert.Equal(2, db.Avatars.Single(a => a.Name == "Iron Squire").MinStrengthCoefficient);
+            Assert.Equal(DataSeeder.AvatarLadder.Select(r => r.Name), db.Avatars.OrderBy(a => a.MinStrengthCoefficient).Select(a => a.Name));
             return true;
         });
     }
@@ -139,14 +141,17 @@ public class SeedingTests
                 setType.NameUk = null;
             foreach (var avatar in db.Avatars)
                 avatar.NameUk = null;
-            db.Exercises.Single(e => e.Name == "Deadlift").Description = "Own notes";
+            db.Exercises.Single(e => e.Name == "Deadlift").Description = "An older English text";
             db.SaveChanges();
 
             await DataSeeder.SeedAsync(db, includeDemoData: false, TimeProvider.System, CancellationToken.None);
 
             Assert.Equal(0, db.Exercises.Count(e => e.NameUk == null));
             Assert.Equal("Станова тяга", db.Exercises.Single(e => e.Name == "Deadlift").NameUk);
-            Assert.Null(db.Exercises.Single(e => e.Name == "Deadlift").DescriptionUk);
+            // A catalog that rewords a description brings both languages up to date.
+            var deadlift = ExerciseCatalogSeeder.Definitions().Single(d => d.Name == "Deadlift");
+            var stored = db.Exercises.Single(e => e.Name == "Deadlift");
+            Assert.Equal((deadlift.Description, deadlift.DescriptionUk), (stored.Description, stored.DescriptionUk));
             Assert.Equal("Груди", db.MuscleGroups.Single(g => g.Name == "Chest").NameUk);
             Assert.Equal("Робочий", db.SetTypes.Single(s => s.Code == SetTypeCode.Working).NameUk);
             Assert.Equal(0, db.Avatars.Count(a => a.NameUk == null));

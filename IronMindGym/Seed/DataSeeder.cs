@@ -114,9 +114,14 @@ public static class DataSeeder
         ("Omnipotent Origin", "Всемогутнє першоджерело", 5.0)
     ];
 
+    /// <summary>
+    /// Nothing points at a rank, so the table follows the ladder exactly: a rank renamed or left out of it is removed,
+    /// and the ladder never has two steps at one threshold.
+    /// </summary>
     private static async Task EnsureAvatarLadderAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
         var existing = await db.Avatars.ToListAsync(cancellationToken);
+        db.Avatars.RemoveRange(existing.Where(a => !AvatarLadder.Any(rank => rank.Name == a.Name)));
         foreach (var rank in AvatarLadder)
         {
             var avatar = existing.FirstOrDefault(a => a.Name == rank.Name);
