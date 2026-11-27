@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using IronMindGym.Contracts;
 using IronMindGym.Models;
 using IronMindGym.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Tests.Api;
 
@@ -124,6 +125,31 @@ public class FriendsApiTests
         await ApiClient.Ok(await owner.Delete($"/api/friends/{UserId(app, "partner")}"));
         Assert.Equal(HttpStatusCode.NotFound, (await partner.Post($"{route}/comments", new { text = "Still here?" })).StatusCode);
         Assert.Equal(1, app.Query(db => db.FriendComments.Count()));
+    }
+
+    [Fact]
+    public async Task RemovingAnAthleteTakesTheirFriendshipsLikesCommentsAndWorkoutsWithThem()
+    {
+        using var app = new TestApplication();
+        using var owner = app.Api();
+        using var partner = app.Api();
+        using var third = app.Api();
+        await owner.Register("owner");
+        await partner.Register("partner");
+        await third.Register("third");
+        await Connect(app, owner, partner);
+        // The partner is the second athlete of one pair and the requester of the other.
+        Assert.Equal(FriendshipService.RequestResult.Sent, await Request(partner, UserId(app, "third")));
+        var (ownerId, partnerId) = (UserId(app, "owner"), UserId(app, "partner"));
+        var ownerWorkout = $"/api/friends/{ownerId}/workouts/{AddWorkout(app, ownerId)}";
+        AddWorkout(app, partnerId);
+        await ApiClient.Ok(await partner.Put($"{ownerWorkout}/like", new { liked = true }));
+        await ApiClient.Ok(await partner.Post($"{ownerWorkout}/comments", new { text = "Strong session" }));
+
+        app.Query(db => db.Users.Where(u => u.Id == partnerId).ExecuteDelete());
+
+        Assert.Equal((0, 0, 0, 0, 1), app.Query(db => (db.Friendships.Count(), db.ActivityLikes.Count(), db.FriendComments.Count(),
+            db.WorkoutSessions.Count(s => s.UserId == partnerId), db.WorkoutSessions.Count())));
     }
 
     private static async Task Connect(TestApplication app, ApiClient owner, ApiClient partner)
