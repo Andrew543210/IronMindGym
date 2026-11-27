@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IronMindGym.Services;
 
 /// <summary>An athlete's current lifts, bodyweight, strength coefficient and rank, with the whole ladder.</summary>
-public sealed record StrengthRank(InitialBenchmarks Lifts, double? BodyweightKg, double Coefficient, Avatar Rank, IReadOnlyList<Avatar> Ladder);
+public sealed record StrengthRank(double? BodyweightKg, double Coefficient, Avatar Rank, IReadOnlyList<Avatar> Ladder);
 
 public class StrengthService(IronMindDbContext db)
 {
@@ -20,7 +20,7 @@ public class StrengthService(IronMindDbContext db)
         var bodyweightKg = (await db.WeightLogs.LatestWeighInAsync(userId, cancellationToken))?.ValueKg;
         var coefficient = StrengthRanks.Coefficient(lifts, bodyweightKg);
         var ladder = await db.Avatars.AsNoTracking().OrderBy(a => a.MinStrengthCoefficient).ToListAsync(cancellationToken);
-        return new StrengthRank(lifts, bodyweightKg, coefficient, StrengthRanks.RankOf(ladder, coefficient), ladder);
+        return new StrengthRank(bodyweightKg, coefficient, StrengthRanks.RankOf(ladder, coefficient), ladder);
     }
 
     private async Task<InitialBenchmarks> CurrentAsync(int userId, InitialBenchmarks? baseline, CancellationToken cancellationToken)

@@ -29,7 +29,6 @@ export function WorkoutSessionView({ workout, timeZone }: { workout: WorkoutDeta
 
       {workout.exercises.map((performed, index) => {
         const type = performed.exerciseType;
-        const hasSetType = performed.sets.some((s) => s.setTypeName?.trim());
         return (
           <div className="card mb-3" key={index}><div className="card-body">
             <h3 className="h6">{performed.exerciseName}</h3>
@@ -37,7 +36,7 @@ export function WorkoutSessionView({ workout, timeZone }: { workout: WorkoutDeta
               <thead>
                 <tr>
                   <th>{t('workout.set')}</th>
-                  {hasSetType && <th>{t('workout.type')}</th>}
+                  <th>{t('workout.type')}</th>
                   <th>{type === 'StrengthTraining' ? t('workout.load') : t('workout.durationColumn')}</th>
                   <th>{type === 'StrengthTraining' ? t('workout.reps') : type === 'Cardio' ? t('workout.effort') : t('workout.load')}</th>
                   <th>{t('workout.rest')}</th>
@@ -47,7 +46,7 @@ export function WorkoutSessionView({ workout, timeZone }: { workout: WorkoutDeta
                 {performed.sets.map((set) => (
                   <tr key={set.setNumber}>
                     <td>{set.setNumber}</td>
-                    {hasSetType && <td>{set.setTypeName ?? ''}</td>}
+                    <td>{set.setTypeName}</td>
                     <td className="metric">{type === 'StrengthTraining' ? kg(set.weightKg) : sec(set.durationSeconds)}</td>
                     <td className="metric">{type === 'StrengthTraining' ? set.reps : type === 'Cardio' ? `${set.intensity}/10` : kg(set.weightKg)}</td>
                     <td className="metric">{sec(set.restSeconds)}</td>

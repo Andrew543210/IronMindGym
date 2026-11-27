@@ -1,4 +1,3 @@
-using System.Globalization;
 using IronMindGym.Models;
 
 namespace IronMindGym.Services;
@@ -44,13 +43,5 @@ public static class StrengthRanks
             }
         }
         return 100;
-    }
-
-    /// <summary>The coefficient range of the step at <paramref name="index"/>, such as "1.5–1.9".</summary>
-    public static string RangeLabel(IReadOnlyList<Avatar> ladder, int index)
-    {
-        var start = ladder[index].MinStrengthCoefficient;
-        var end = index == ladder.Count - 1 ? ScaleTop : Math.Round(ladder[index + 1].MinStrengthCoefficient - 0.1, 1);
-        return string.Format(CultureInfo.InvariantCulture, "{0:0.0}–{1:0.0}", start, end);
     }
 }

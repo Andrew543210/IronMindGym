@@ -7,7 +7,6 @@ public sealed record FriendCard
     public bool RequestReceived { get; init; }
     public int UserId { get; init; }
     public string Username { get; init; } = string.Empty;
-    public int LastFiveWorkoutsCount { get; init; }
     public double AverageKcal { get; init; }
     public List<FriendWorkoutPreview> LastFiveWorkouts { get; init; } = new();
     public List<FriendNutritionPreview> LastNutritionLogs { get; init; } = new();

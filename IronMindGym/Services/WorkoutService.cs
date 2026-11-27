@@ -108,7 +108,7 @@ public class WorkoutService(IronMindDbContext db, TimeProvider clock, AthleteCal
                 Localized.Pick(p.Exercise.Name, p.Exercise.NameUk),
                 p.Exercise.Type,
                 p.Sets.OrderBy(s => s.SetNumber)
-                    .Select(s => new WorkoutSetResponse(s.SetNumber, s.SetType is null ? null : Localized.Pick(s.SetType.Name, s.SetType.NameUk),
+                    .Select(s => new WorkoutSetResponse(s.SetNumber, Localized.Pick(s.SetType.Name, s.SetType.NameUk),
                         s.WeightKg, s.Reps, s.DurationSeconds, s.Intensity, s.RestSeconds))
                     .ToList())).ToList(),
             sets.Count > 0 ? Math.Round(sets.Average(s => s.RestSeconds), 1) : 0,

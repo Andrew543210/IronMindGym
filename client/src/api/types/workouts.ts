@@ -9,7 +9,7 @@ export interface WorkoutHistory {
 
 export interface WorkoutSet {
   setNumber: number;
-  setTypeName: string | null;
+  setTypeName: string;
   weightKg: number;
   reps: number;
   durationSeconds: number;

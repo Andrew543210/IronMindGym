@@ -55,12 +55,4 @@ public class StrengthTests
         Assert.Equal(75, StrengthRanks.ScalePosition(1.75, uneven), 6);
         Assert.Equal(0, StrengthRanks.ScalePosition(2, [new() { MinStrengthCoefficient = 0 }]));
     }
-
-    [Fact]
-    public void EachStepIsLabelledWithItsRange()
-    {
-        Assert.Equal("0.0–1.9", StrengthRanks.RangeLabel(Ladder, 0));
-        Assert.Equal("2.0–3.9", StrengthRanks.RangeLabel(Ladder, 1));
-        Assert.Equal("4.0–5.0", StrengthRanks.RangeLabel(Ladder, 2));
-    }
 }

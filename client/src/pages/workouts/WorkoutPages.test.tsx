@@ -49,7 +49,7 @@ describe('workout details', () => {
     expect(within(squat).getByText('100 kg')).toBeInTheDocument();
     const rowing = screen.getByRole('heading', { name: 'Rowing Machine' }).parentElement!;
     expect(within(rowing).getByText('6/10')).toBeInTheDocument();
-    expect(within(rowing).queryByRole('columnheader', { name: 'Type' })).not.toBeInTheDocument();
+    expect(within(rowing).getByRole('columnheader', { name: 'Type' })).toBeInTheDocument();
     expect(within(screen.getByRole('heading', { name: 'Weighted Plank' }).parentElement!).getByText('10 kg')).toBeInTheDocument();
     expect(screen.getByText('New record')).toBeInTheDocument();
     expect(screen.getByText('No added load')).toBeInTheDocument();

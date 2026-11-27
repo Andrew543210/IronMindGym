@@ -71,7 +71,6 @@ public class FriendshipService(IronMindDbContext db, AthleteCalendars calendars,
         return card with
         {
             LastFiveWorkouts = workouts,
-            LastFiveWorkoutsCount = workouts.Count,
             LastNutritionLogs = nutrition,
             AverageKcal = nutrition.Select(n => n.CaloriesKcal).DefaultIfEmpty(0).Average(),
             PersonalRecords = records,

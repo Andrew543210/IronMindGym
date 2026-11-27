@@ -14,12 +14,10 @@ public class DashboardService(IronMindDbContext db, AthleteCalendars calendars, 
         var calendar = await calendars.ForAsync(userId, cancellationToken);
         var today = calendar.Today;
         var rank = await strength.RankAsync(userId, cancellationToken);
-        var scale = rank.Ladder.Select((step, index) => new AvatarScalePoint
+        var scale = rank.Ladder.Select(step => new AvatarScalePoint
         {
             Name = Localized.Pick(step.Name, step.NameUk),
             MinStrengthCoefficient = step.MinStrengthCoefficient,
-            PositionPercent = rank.Ladder.Count == 1 ? 0 : index * 100.0 / (rank.Ladder.Count - 1),
-            RangeLabel = StrengthRanks.RangeLabel(rank.Ladder, index),
             IsCurrent = step.Name == rank.Rank.Name
         }).ToList();
 

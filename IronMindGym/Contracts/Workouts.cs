@@ -85,7 +85,7 @@ public sealed record SavedWorkoutResponse(int Id);
 
 public sealed record CommentRequest(string? Text);
 
-public sealed record WorkoutSetResponse(int SetNumber, string? SetTypeName, double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds);
+public sealed record WorkoutSetResponse(int SetNumber, string SetTypeName, double WeightKg, int Reps, int DurationSeconds, int Intensity, int RestSeconds);
 
 public sealed record PerformedExerciseResponse(string ExerciseName, ExerciseType ExerciseType, List<WorkoutSetResponse> Sets);
 

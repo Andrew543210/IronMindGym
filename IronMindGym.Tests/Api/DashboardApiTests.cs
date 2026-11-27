@@ -36,9 +36,9 @@ public class DashboardApiTests
         Assert.Equal(3, overview.StrengthCoefficient);
         var current = Assert.Single(overview.AvatarScalePoints, p => p.IsCurrent);
         Assert.Equal(overview.AvatarName, current.Name);
-        Assert.InRange(overview.CurrentAvatarPositionPercent, current.PositionPercent, 100);
-        Assert.Equal(0, overview.AvatarScalePoints[0].PositionPercent);
-        Assert.Equal(100, overview.AvatarScalePoints[^1].PositionPercent);
+        Assert.InRange(overview.CurrentAvatarPositionPercent, 0, 100);
+        Assert.Equal(0, overview.AvatarScalePoints[0].MinStrengthCoefficient);
+        Assert.Equal(5, overview.AvatarScalePoints[^1].MinStrengthCoefficient);
         Assert.Equal((3, 1), (overview.PlannedWorkoutsPerWeek, overview.CompletedThisWeek));
     }
 

@@ -4,8 +4,6 @@ public sealed record AvatarScalePoint
 {
     public string Name { get; init; } = string.Empty;
     public double MinStrengthCoefficient { get; init; }
-    public double PositionPercent { get; init; }
-    public string RangeLabel { get; init; } = string.Empty;
     public bool IsCurrent { get; init; }
 }
 
