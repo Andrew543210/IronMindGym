@@ -1,4 +1,5 @@
 using System.Net;
+using IronMindGym.Hosting;
 using IronMindGym.Services;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,6 +66,16 @@ public sealed class HostingTests : IDisposable
         Assert.Equal("DENY", Assert.Single(response.Headers.GetValues("X-Frame-Options")));
         Assert.Contains("frame-ancestors 'none'", Assert.Single(response.Headers.GetValues("Content-Security-Policy")), StringComparison.Ordinal);
     }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("*", null)]
+    [InlineData("ironmind.app;*", null)]
+    [InlineData(" ironmind.app ; localhost", "ironmind.app")]
+    [InlineData("*.ironmind.app;gym.example.com", "gym.example.com")]
+    [InlineData("*.ironmind.app", "health.ironmind.app")]
+    public void TheHealthProbePresentsAnAllowedHost(string? allowedHosts, string? host) =>
+        Assert.Equal(host, HealthProbe.HostFor(allowedHosts));
 
     [Fact]
     public async Task TheHealthEndpointReportsTheDatabaseWithoutASession()

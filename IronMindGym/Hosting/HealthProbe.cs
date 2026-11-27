@@ -26,11 +26,9 @@ public static class HealthProbe
         var port = Environment.GetEnvironmentVariable("ASPNETCORE_HTTP_PORTS")?.Split(';', ',')[0] ?? "8080";
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
         using var request = new HttpRequestMessage(HttpMethod.Get, new Uri($"http://127.0.0.1:{port}{Path}"));
-        // Host filtering refuses an unknown host, so the probe presents the first allowed one.
-        var allowedHost = Environment.GetEnvironmentVariable("AllowedHosts")?.Split(';')
-            .FirstOrDefault(host => !string.IsNullOrWhiteSpace(host) && !host.Contains('*', StringComparison.Ordinal));
-        if (allowedHost is not null)
-            request.Headers.Host = allowedHost.Trim();
+        // Host filtering refuses an unknown host, so the probe presents one the application allows.
+        if (HostFor(Configuration()["AllowedHosts"]) is { } host)
+            request.Headers.Host = host;
         try
         {
             using var response = await http.SendAsync(request);
@@ -40,5 +38,32 @@ public static class HealthProbe
         {
             return 1;
         }
+    }
+
+    /// <summary>
+    /// A host the AllowedHosts setting accepts: its first plain name, or a name under its first wildcard domain.
+    /// Null when every host is allowed or the setting is empty.
+    /// </summary>
+    public static string? HostFor(string? allowedHosts)
+    {
+        var hosts = (allowedHosts ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (hosts.Length == 0 || hosts.Contains("*"))
+            return null;
+        return hosts.FirstOrDefault(host => !host.StartsWith("*.", StringComparison.Ordinal))
+            ?? "health" + hosts[0][1..];
+    }
+
+    /// <summary>The setting comes from the same sources as the application's: its settings files and the environment.</summary>
+    private static IConfiguration Configuration()
+    {
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+            ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? Environments.Production;
+        return new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddJsonFile($"appsettings.{environment}.json", optional: true)
+            .AddEnvironmentVariables("ASPNETCORE_")
+            .AddEnvironmentVariables()
+            .Build();
     }
 }
