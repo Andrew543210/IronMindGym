@@ -103,7 +103,7 @@
 .form-control,
 .form-select,
 .input-group-text {
-    background: #0d1013;
+    background-color: #0d1013;
     border: 1px solid #343c44;
     color: #edf0f2;
     border-radius: 8px;
@@ -112,7 +112,7 @@
 }
 .form-control:focus,
 .form-select:focus {
-    background: #101418;
+    background-color: #101418;
     border-color: #91a0ad;
     color: #fff;
     box-shadow: 0 0 0 3px #8492a018;
@@ -121,7 +121,7 @@
     color: #687581;
 }
 .form-control:disabled {
-    background: #1b2025;
+    background-color: #1b2025;
     color: #8f9ba5;
 }
 .form-check-input:checked {

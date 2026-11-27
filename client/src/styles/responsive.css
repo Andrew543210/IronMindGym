@@ -127,7 +127,7 @@
     .dashboard-hero img {
         object-position: 65% center;
     }
-    .hero-copy p {
+    .hero-copy p:not(.hero-title) {
         max-width: 240px;
     }
     .dashboard-greeting .date-label {
@@ -166,7 +166,7 @@
     .auth-story .story-title {
         font-size: 2rem;
     }
-    .auth-story p {
+    .auth-story p:not(.story-title) {
         display: none;
     }
     .auth-form {

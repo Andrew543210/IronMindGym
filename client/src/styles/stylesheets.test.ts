@@ -25,6 +25,15 @@ describe('stylesheets', () => {
     expect(imported.sort()).toEqual(Object.keys(sheets).sort());
   });
 
+  // The background shorthand also clears background-image, which draws the arrow of every select.
+  it('colour form fields without clearing the select arrow', () => {
+    const shorthand = Object.entries(sheets).flatMap(([file, css]) =>
+      [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+        .filter(([, selector, body]) => /\.form-(control|select)/.test(selector ?? '') && /(^|[;\s])background\s*:/.test(body ?? ''))
+        .map(([, selector]) => `${file}: ${(selector ?? '').trim()}`));
+    expect(shorthand).toEqual([]);
+  });
+
   // Bootstrap is themed through its variables; overriding its classes with !important turned their meaning around.
   it('leave !important to the reduced motion rule', () => {
     const important = Object.entries(sheets).flatMap(([file, css]) => (css.match(/^.*!important.*$/gm) ?? []).map((line) => `${file}: ${line.trim()}`));
