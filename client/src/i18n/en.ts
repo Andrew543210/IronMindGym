@@ -150,6 +150,7 @@ export const en = {
   'dashboard.rank': 'CURRENT RANK',
   'dashboard.rankNote': 'Your starting benchmarks and logged records shape your rank.',
   'dashboard.allRanks': 'Explore all ranks',
+  'dashboard.rankScale': 'Position on the rank scale',
   'dashboard.rankThreshold': '{value} × bodyweight',
   'dashboard.recent': 'Recent sessions',
   'dashboard.history': 'View history ↗',

@@ -152,6 +152,7 @@ export const uk: Translation = {
   'dashboard.rank': 'ПОТОЧНИЙ РАНГ',
   'dashboard.rankNote': 'Ранг визначають ваші стартові показники й записані рекорди.',
   'dashboard.allRanks': 'Усі ранги',
+  'dashboard.rankScale': 'Позиція на шкалі рангів',
   'dashboard.rankThreshold': '{value} × вага тіла',
   'dashboard.recent': 'Останні тренування',
   'dashboard.history': 'Уся історія ↗',

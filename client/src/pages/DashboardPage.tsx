@@ -121,12 +121,15 @@ export function DashboardPage() {
           </div>
           <span className="stat-value">{coefficient}<small> / {formatFixed(5, 1)}</small></span>
         </div>
-        <div className="rank-meter"><span style={{ width: `${data.currentAvatarPositionPercent.toFixed(1)}%` }}></span></div>
+        <div className="rank-meter" role="meter" aria-label={t('dashboard.rankScale')} aria-valuemin={0} aria-valuemax={100}
+          aria-valuenow={Math.round(data.currentAvatarPositionPercent)}>
+          <span style={{ width: `${data.currentAvatarPositionPercent.toFixed(1)}%` }}></span>
+        </div>
         <details className="mt-3">
           <summary className="small text-muted">{t('dashboard.allRanks')}</summary>
           <div className="rank-grid">
             {data.avatarScalePoints.map((rank) => (
-              <div key={rank.name} className={`rank-item${rank.isCurrent ? ' current' : ''}`}>
+              <div key={rank.name} className={`rank-item${rank.isCurrent ? ' current' : ''}`} aria-current={rank.isCurrent || undefined}>
                 {t('dashboard.rankThreshold', { value: formatFixed(rank.minStrengthCoefficient, 1) })}<strong>{rank.name}</strong>
               </div>
             ))}

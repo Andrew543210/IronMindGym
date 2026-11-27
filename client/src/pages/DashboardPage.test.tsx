@@ -18,6 +18,9 @@ it('brings the week, rank, sessions, nutrition, goals and research together and 
   expect(await screen.findByText("Let's build, athlete.")).toBeInTheDocument();
   expect(screen.getByRole('img', { name: 'Weekly completion 66%' })).toBeInTheDocument();
   expect(screen.getAllByText('Gym Centurion')).toHaveLength(2);
+  expect(screen.getByRole('meter', { name: 'Position on the rank scale' })).toHaveAttribute('aria-valuenow', '60');
+  expect(screen.getAllByText('Gym Centurion')[1]?.closest('.rank-item')).toHaveAttribute('aria-current', 'true');
+  expect(screen.getByText('Noodle Nomad').closest('.rank-item')).not.toHaveAttribute('aria-current');
   expect(screen.getByRole('link', { name: /Legs day/ })).toHaveAttribute('href', '/workouts/4');
   expect(screen.getByText('2100')).toBeInTheDocument();
   expect(screen.getByText('Squat 120 kg')).toBeInTheDocument();
