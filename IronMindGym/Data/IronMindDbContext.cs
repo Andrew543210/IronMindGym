@@ -152,6 +152,8 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             ("SetNumber", "\"SetNumber\" >= 1"),
             ("Values", "\"WeightKg\" >= 0 AND \"Reps\" >= 0 AND \"DurationSeconds\" >= 0 AND \"RestSeconds\" >= 0"),
             ("Intensity", "\"Intensity\" BETWEEN 0 AND 10"));
+        Checks<PerformedExercise>(modelBuilder, "PerformedExercises", ("OrderInWorkout", "\"OrderInWorkout\" >= 1"));
+        Checks<Exercise>(modelBuilder, "Exercises", ("KeyLift", "\"KeyLift\" IN ('BenchPress', 'Squat', 'Deadlift')"));
         Checks<PersonalRecord>(modelBuilder, "PersonalRecords", ("MaxWeightKg", "\"MaxWeightKg\" > 0"));
         Checks<ExerciseProgress>(modelBuilder, "ExerciseProgress",
             ("Values", "\"InitialWeightKg\" >= 0 AND \"InitialReps\" >= 0 AND \"InitialDurationSeconds\" >= 0 AND " +

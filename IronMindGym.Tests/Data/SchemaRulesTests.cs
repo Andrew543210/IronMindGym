@@ -42,6 +42,11 @@ public class SchemaRulesTests
     [InlineData("""INSERT INTO "Users" ("Username", "Email", "PasswordHash", "SecurityStamp", "CreatedAt") VALUES (repeat('a', 51), 'long@example.com', 'hash', 'stamp', now())""")]
     [InlineData("""INSERT INTO "Users" ("Username", "Email", "PasswordHash", "SecurityStamp", "CreatedAt") VALUES ('long', repeat('a', 110) || '@example.com', 'hash', 'stamp', now())""")]
     [InlineData("""INSERT INTO "WorkoutSessions" ("UserId", "SessionDate", "DurationMinutes", "Rating") VALUES (1, now(), 40, 6)""")]
+    [InlineData("""
+        WITH session AS (INSERT INTO "WorkoutSessions" ("UserId", "SessionDate", "DurationMinutes", "Rating") VALUES (1, now(), 40, 4) RETURNING "Id")
+        INSERT INTO "PerformedExercises" ("WorkoutSessionId", "ExerciseId", "OrderInWorkout") SELECT "Id", (SELECT min("Id") FROM "Exercises"), 0 FROM session
+        """)]
+    [InlineData("""UPDATE "Exercises" SET "KeyLift" = 'Snatch' WHERE "Id" = (SELECT min("Id") FROM "Exercises" WHERE "KeyLift" IS NULL)""")]
     public void AthleteValuesStayWithinTheirDomain(string sql)
     {
         using var app = new TestApplication();

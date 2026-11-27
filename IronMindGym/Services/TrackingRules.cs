@@ -8,7 +8,8 @@ public readonly record struct TrackedResult(double WeightKg, int Reps, int Durat
 /// <summary>
 /// What a result of each exercise type records and the allowed range of each value. The workout journal and the
 /// progress page both check results here, so a value is refused with the same message wherever it is entered.
-/// The database holds the same limits as check constraints.
+/// These limits are the athlete's rules; the database only refuses values no result can have, such as a negative
+/// load or an effort above 10.
 /// </summary>
 public static class TrackingRules
 {

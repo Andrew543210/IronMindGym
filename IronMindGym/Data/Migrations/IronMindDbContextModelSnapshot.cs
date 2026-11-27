@@ -203,7 +203,10 @@ namespace IronMindGym.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Exercises");
+                    b.ToTable("Exercises", t =>
+                        {
+                            t.HasCheckConstraint("CK_Exercises_KeyLift", "\"KeyLift\" IN ('BenchPress', 'Squat', 'Deadlift')");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.ExerciseProgress", b =>
@@ -435,7 +438,10 @@ namespace IronMindGym.Data.Migrations
 
                     b.HasIndex("ExerciseId", "WorkoutSessionId");
 
-                    b.ToTable("PerformedExercises");
+                    b.ToTable("PerformedExercises", t =>
+                        {
+                            t.HasCheckConstraint("CK_PerformedExercises_OrderInWorkout", "\"OrderInWorkout\" >= 1");
+                        });
                 });
 
             modelBuilder.Entity("IronMindGym.Models.PersonalRecord", b =>
