@@ -19,15 +19,14 @@ public class ProgressController(ExerciseProgressService progress, ExerciseCatalo
     [HttpPut("{exerciseId:int}")]
     public async Task<ActionResult> SaveResults(int exerciseId, ProgressResultsRequest request, CancellationToken cancellationToken)
     {
-        await progress.SaveResultsAsync(UserId, new ProgressPair(exerciseId,
-            request.InitialValue1!.Value, request.InitialValue2!.Value, request.CurrentValue1!.Value, request.CurrentValue2!.Value), cancellationToken);
+        await progress.SaveResultsAsync(UserId, exerciseId, request, cancellationToken);
         return NoContent();
     }
 
     [HttpPut("{exerciseId:int}/current")]
     public async Task<ActionResult> SaveCurrent(int exerciseId, CurrentResultRequest request, CancellationToken cancellationToken)
     {
-        await progress.SaveCurrentAsync(UserId, exerciseId, request.WeightKg, request.Reps, request.DurationSeconds, request.Intensity, cancellationToken);
+        await progress.SaveCurrentAsync(UserId, exerciseId, request, cancellationToken);
         return NoContent();
     }
 

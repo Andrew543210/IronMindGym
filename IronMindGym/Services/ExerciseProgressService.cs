@@ -50,11 +50,12 @@ public sealed class ExerciseProgressService(IronMindDbContext db, TimeProvider c
     }
 
     /// <summary>Saves both results together: when either is invalid, neither changes.</summary>
-    public async Task SaveResultsAsync(int userId, ProgressPair pair, CancellationToken cancellationToken)
+    /// <summary>The request has passed validation, so each of its values is present.</summary>
+    public async Task SaveResultsAsync(int userId, int exerciseId, ProgressResultsRequest request, CancellationToken cancellationToken)
     {
-        var exercise = await FindExerciseAsync(pair.ExerciseId, cancellationToken);
-        var initial = Result.FromPair(exercise.Type, pair.InitialValue1, pair.InitialValue2);
-        var current = Result.FromPair(exercise.Type, pair.CurrentValue1, pair.CurrentValue2);
+        var exercise = await FindExerciseAsync(exerciseId, cancellationToken);
+        var initial = Result.FromPair(exercise.Type, request.InitialValue1!.Value, request.InitialValue2!.Value);
+        var current = Result.FromPair(exercise.Type, request.CurrentValue1!.Value, request.CurrentValue2!.Value);
         await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
         var progress = await db.ExerciseProgress.FirstOrDefaultAsync(p => p.UserId == userId && p.ExerciseId == exercise.Id, cancellationToken);
         if (progress is null)
@@ -66,11 +67,11 @@ public sealed class ExerciseProgressService(IronMindDbContext db, TimeProvider c
         await transaction.CommitAsync(cancellationToken);
     }
 
-    public async Task SaveCurrentAsync(int userId, int exerciseId, double? weight, int? reps, int? duration, int? intensity,
-        CancellationToken cancellationToken)
+    /// <summary>The values the exercise type does not record may be left out.</summary>
+    public async Task SaveCurrentAsync(int userId, int exerciseId, CurrentResultRequest request, CancellationToken cancellationToken)
     {
         var exercise = await FindExerciseAsync(exerciseId, cancellationToken);
-        var result = TrackingRules.Check(exercise.Type, weight ?? 0, reps ?? 0, duration ?? 0, intensity ?? 0);
+        var result = TrackingRules.Check(exercise.Type, request.WeightKg ?? 0, request.Reps ?? 0, request.DurationSeconds ?? 0, request.Intensity ?? 0);
         await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
         var progress = await db.ExerciseProgress.FirstOrDefaultAsync(p => p.UserId == userId && p.ExerciseId == exerciseId, cancellationToken)
             ?? throw new DomainValidationException("Save initial results first.");
