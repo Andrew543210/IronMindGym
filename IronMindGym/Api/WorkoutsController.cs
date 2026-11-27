@@ -7,7 +7,7 @@ namespace IronMindGym.Api;
 public class WorkoutsController(WorkoutService workouts, WorkoutSocialService social) : ApiController
 {
     [HttpGet]
-    public Task<WorkoutHistoryResponse> History(CancellationToken cancellationToken, int page = 1) =>
+    public Task<WorkoutHistoryResponse> History(int page = 1, CancellationToken cancellationToken = default) =>
         workouts.HistoryAsync(UserId, page, cancellationToken);
 
     [HttpGet("logger")]
