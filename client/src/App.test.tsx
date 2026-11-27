@@ -81,6 +81,40 @@ describe('app', () => {
     expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
   });
 
+  it('says so when the sign-out fails and keeps the athlete signed in', async () => {
+    let online = false;
+    mockApi({
+      'GET /api/session': athlete,
+      'GET /api/dashboard': overview,
+      'POST /api/session/logout': () => (online ? null : respond(503)),
+    });
+    open('/');
+    const user = userEvent.setup();
+
+    await screen.findByText("Let's build, athlete.");
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Sign-out failed, so you are still signed in. The server could not complete this. Please try again.');
+    expect(screen.getByText("Let's build, athlete.")).toBeInTheDocument();
+    online = true;
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+    expect(await screen.findByText('You have logged out.')).toBeInTheDocument();
+    expect(screen.queryByText(/Sign-out failed/)).not.toBeInTheDocument();
+  });
+
+  it('treats a session that already ended as signed out', async () => {
+    mockApi({ 'GET /api/session': athlete, 'GET /api/dashboard': overview, 'POST /api/session/logout': () => respond(401) });
+    open('/');
+    const user = userEvent.setup();
+
+    await screen.findByText("Let's build, athlete.");
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+
+    expect(await screen.findByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
+    expect(screen.queryByText(/Sign-out failed/)).not.toBeInTheDocument();
+  });
+
   it('saves the device language on an account that has none and shows unknown pages', async () => {
     const calls = mockApi({ 'GET /api/session': { ...athlete, language: null }, 'PUT /api/profile/language': null });
     open('/nowhere');

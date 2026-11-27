@@ -65,6 +65,7 @@ export const uk: Translation = {
   'nav.profile': 'Мій профіль',
   'nav.account': 'Мій акаунт ↗',
   'nav.signOut': 'Вийти',
+  'nav.signOutFailed': 'Не вдалося вийти, тож ви досі в системі.',
   'nav.signedOut': 'Ви вийшли з акаунта.',
   'nav.skip': 'Перейти до вмісту',
   'nav.main': 'Головна навігація',

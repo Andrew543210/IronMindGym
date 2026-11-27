@@ -63,6 +63,7 @@ export const en = {
   'nav.profile': 'My profile',
   'nav.account': 'My account ↗',
   'nav.signOut': 'Sign out',
+  'nav.signOutFailed': 'Sign-out failed, so you are still signed in.',
   'nav.signedOut': 'You have logged out.',
   'nav.skip': 'Skip to content',
   'nav.main': 'Main navigation',

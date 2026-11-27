@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api, forgetCsrfToken, whenSessionEnds } from './api';
+import { api, ApiError, forgetCsrfToken, whenSessionEnds } from './api';
 import { currentLanguage, setLanguage } from './i18n/language';
 import { SessionContext, type Session, type SessionContextValue, type SessionEnd, type SessionState } from './session';
 
@@ -54,7 +54,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       signedOut,
       async signOut() {
-        await api.post('/api/session/logout');
+        try {
+          await api.post('/api/session/logout');
+        } catch (failure) {
+          // A session that has already ended needs no sign-out; any other failure leaves the athlete signed in.
+          if (!(failure instanceof ApiError && failure.status === 401)) throw failure;
+        }
         signedOut('signedOut');
       },
       refresh,

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { errorMessages } from '../api';
+import { useAction } from '../hooks';
 import { useI18n, type MessageKey } from '../i18n/i18n';
 import { useSession } from '../session';
 import { LanguageSwitch } from './LanguageSwitch';
@@ -60,6 +62,7 @@ export function Layout() {
   const { t } = useI18n();
   const [moreOpen, setMoreOpen] = useState(false);
   const flash = useFlash();
+  const leaving = useAction();
   const signedIn = session !== null;
 
   return (
@@ -102,7 +105,8 @@ export function Layout() {
             {signedIn ? (
               <>
                 <Link className="profile-link" to="/profile">{t('nav.account')}</Link>
-                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void signOut()}>{t('nav.signOut')}</button>
+                <button type="button" className="btn btn-sm btn-outline-secondary" disabled={leaving.busy}
+                  onClick={() => void leaving.run(signOut)}>{t('nav.signOut')}</button>
               </>
             ) : <span className="text-muted small topbar-motto">{t('topbar.public')}</span>}
           </div>
@@ -110,6 +114,9 @@ export function Layout() {
         <main id="main" className="main-content">
           {flash.message && <div className="alert alert-success" role="status">{flash.message}</div>}
           {flash.error && <div className="alert alert-danger" role="alert">{flash.error}</div>}
+          {signedIn && leaving.error !== undefined && (
+            <div className="alert alert-danger" role="alert">{t('nav.signOutFailed')} {errorMessages(leaving.error).join(' ')}</div>
+          )}
           <Outlet />
         </main>
         <footer className="page-footer"><span>IRONMIND</span><span>{t('footer.motto')}</span></footer>
