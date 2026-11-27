@@ -77,8 +77,7 @@ public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, Ath
 
     public async Task UpdateAsync(int userId, ProfileSettings settings, CancellationToken cancellationToken)
     {
-        if (!await db.SplitTypes.AnyAsync(s => s.Id == settings.SplitTypeId, cancellationToken))
-            throw new DomainValidationException("Choose a valid training split.", nameof(settings.SplitTypeId));
+        await AthleteSetup.EnsureSplitExistsAsync(db, settings.SplitTypeId, cancellationToken);
         var timeZone = string.IsNullOrWhiteSpace(settings.TimeZone) ? null : settings.TimeZone.Trim();
         if (timeZone is not null && !AthleteCalendar.TryFindZone(timeZone, out _))
             throw new DomainValidationException("Enter a time zone such as Europe/Kyiv, or leave it empty to use UTC.", nameof(settings.TimeZone));
@@ -88,25 +87,15 @@ public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, Ath
             throw new DomainValidationException("This username is already taken.", nameof(ProfileSettings.Username));
         var user = await db.Users.Include(u => u.Profile).Include(u => u.Benchmarks).SingleAsync(u => u.Id == userId, cancellationToken);
         user.Username = username;
-        user.Profile ??= new Profile { UserId = userId };
-        user.Profile.Age = settings.Age;
+        await AthleteSetup.ApplyAsync(db, user, settings, cancellationToken);
+        user.Profile!.Age = settings.Age;
         user.Profile.TimeZone = timeZone;
         user.Profile.CalorieTarget = settings.CalorieTarget;
         user.Profile.ProteinTarget = settings.ProteinTarget;
         user.Profile.FatTarget = settings.FatTarget;
         user.Profile.CarbsTarget = settings.CarbsTarget;
         user.Profile.EnergyEquation = settings.EnergyEquation;
-        user.Profile.HeightCm = settings.HeightCm;
-        user.Benchmarks ??= new InitialBenchmarks { UserId = userId };
-        user.Benchmarks.BenchPressKg = settings.BenchPressKg;
-        user.Benchmarks.SquatKg = settings.SquatKg;
-        user.Benchmarks.DeadliftKg = settings.DeadliftKg;
         await RecordWeightIfChangedAsync(userId, settings.WeightKg, calendars.InZone(timeZone).Today, cancellationToken);
-        var plan = await db.WorkoutPlans.FindAsync([userId], cancellationToken);
-        if (plan is null)
-            db.WorkoutPlans.Add(plan = new WorkoutPlan { UserId = userId });
-        plan.SplitTypeId = settings.SplitTypeId;
-        plan.WorkoutsPerWeek = settings.WorkoutsPerWeek;
         try
         {
             await db.SaveChangesAsync(cancellationToken);
@@ -124,13 +113,11 @@ public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, Ath
     /// <summary>A weigh-in for any day in the last five years. The latest one is the current bodyweight.</summary>
     public async Task LogWeightAsync(int userId, DateOnly date, double weightKg, CancellationToken cancellationToken)
     {
-        var today = (await calendars.ForAsync(userId, cancellationToken)).Today;
-        if (date > today || date < today.AddYears(-5))
-            throw new DomainValidationException("Choose a date within the last five years, up to today.", "Date");
+        (await calendars.ForAsync(userId, cancellationToken)).EnsureJournalDay(date);
         await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
         if (!await AthleteSetup.IsCompleteAsync(db, userId, cancellationToken))
             throw new DomainValidationException("Complete your profile first.");
-        await UpsertWeightAsync(userId, weightKg, date, cancellationToken);
+        await AthleteSetup.SaveWeighInAsync(db, userId, weightKg, date, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
@@ -177,15 +164,6 @@ public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, Ath
     {
         var latest = await db.WeightLogs.LatestWeighInAsync(userId, cancellationToken);
         if (latest is null || Math.Abs(latest.ValueKg - weightKg) > 0.001)
-            await UpsertWeightAsync(userId, weightKg, today, cancellationToken);
-    }
-
-    private async Task UpsertWeightAsync(int userId, double value, DateOnly date, CancellationToken cancellationToken)
-    {
-        var log = await db.WeightLogs.FirstOrDefaultAsync(w => w.UserId == userId && w.Date == date, cancellationToken);
-        if (log is null)
-            db.WeightLogs.Add(new WeightLog { UserId = userId, ValueKg = value, Date = date });
-        else
-            log.ValueKg = value;
+            await AthleteSetup.SaveWeighInAsync(db, userId, weightKg, today, cancellationToken);
     }
 }

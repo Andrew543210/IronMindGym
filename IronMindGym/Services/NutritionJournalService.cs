@@ -33,9 +33,7 @@ public sealed class NutritionJournalService(IronMindDbContext db, NutritionAdvic
 
     public async Task SaveAsync(int userId, DateOnly day, NutritionEntryRequest entry, CancellationToken cancellationToken)
     {
-        var today = (await calendars.ForAsync(userId, cancellationToken)).Today;
-        if (day > today || day < today.AddYears(-5))
-            throw new DomainValidationException("Choose a date within the last five years, up to today.", "Date");
+        (await calendars.ForAsync(userId, cancellationToken)).EnsureJournalDay(day);
         await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
         var log = await db.DailyNutritions.FirstOrDefaultAsync(n => n.UserId == userId && n.Date == day, cancellationToken);
         if (log is null)

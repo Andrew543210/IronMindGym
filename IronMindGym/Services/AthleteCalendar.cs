@@ -15,6 +15,13 @@ public sealed class AthleteCalendar(TimeZoneInfo zone, TimeProvider clock)
 
     public DateOnly Today => DayOf(UtcNow);
 
+    /// <summary>Weigh-ins and nutrition days can be entered for the last five years, up to today.</summary>
+    public void EnsureJournalDay(DateOnly day)
+    {
+        if (day > Today || day < Today.AddYears(-5))
+            throw new DomainValidationException("Choose a date within the last five years, up to today.", "Date");
+    }
+
     /// <summary>The start of the current Monday-based week, in UTC.</summary>
     public DateTime CurrentWeekStartUtc => WeekStartUtc(UtcNow);
 

@@ -3,7 +3,7 @@ using IronMindGym.Models;
 
 namespace IronMindGym.Contracts;
 
-public sealed record ProfileSettings : SetupRequest
+public sealed record ProfileSettings : AthleteBasics
 {
     [Required(ErrorMessage = "Enter a username."), StringLength(50, MinimumLength = 2, ErrorMessage = "Use 2–50 letters, numbers, underscores, dots or hyphens.")]
     [RegularExpression("^[A-Za-z0-9_.-]{2,50}$", ErrorMessage = "Use 2–50 letters, numbers, underscores, dots or hyphens.")]

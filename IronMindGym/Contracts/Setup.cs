@@ -2,7 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Contracts;
 
-public record SetupRequest
+/// <summary>The body, starting lifts and plan that the first setup asks for and the settings form can change.</summary>
+public abstract record AthleteBasics
 {
     [Range(30, 250, ErrorMessage = "Enter a weight between 30 and 250 kg.")]
     public double WeightKg { get; init; }
@@ -27,5 +28,7 @@ public record SetupRequest
     [MaxLength(64, ErrorMessage = "Time zone names are limited to 64 characters.")]
     public string? TimeZone { get; init; }
 }
+
+public sealed record SetupRequest : AthleteBasics;
 
 public sealed record SetupFormResponse(List<OptionResponse> SplitTypes, bool AlreadyCompleted);
