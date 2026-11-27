@@ -30,6 +30,24 @@ const ukrainianOptions: LoggerOptions = {
 const posted: unknown[] = [];
 const requests: { method: string; url: string }[] = [];
 let serverDraft: unknown;
+let draftPutStatus = 204;
+
+const DRAFT_ID = '0f8fad5b-d9cb-469f-a165-70867728950e';
+const bench = { exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 60, reps: 5, durationSeconds: 0, intensity: 0, restSeconds: 120 };
+
+/** Puts an unfinished workout in this browser, as an earlier visit to the logger would have left it. */
+function storeDraft(overrides: object = {}) {
+  const draft = {
+    draftId: DRAFT_ID, sets: [bench], timerEnd: 0, startedAt: Date.now() - 600_000, savedAt: Date.now() - 60_000, autoDuration: true,
+    settings: { splitTypeId: '2', splitDayId: '3', durationMinutes: '60', reviewRating: '4', reviewComment: '' }, ...overrides,
+  };
+  localStorage.setItem('ironmind-workout-5', JSON.stringify(draft));
+  return draft;
+}
+
+function storedSets() {
+  return (JSON.parse(localStorage.getItem('ironmind-workout-5') ?? '{}') as { sets?: typeof bench[] }).sets;
+}
 
 function SavedPage() {
   const location = useLocation();
@@ -48,10 +66,11 @@ beforeEach(() => {
   posted.length = 0;
   requests.length = 0;
   serverDraft = undefined;
+  draftPutStatus = 204;
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
     requests.push({ method: init?.method ?? 'GET', url });
     if (url === '/api/workouts/draft' && (init?.method ?? 'GET') === 'GET') return serverDraft ? respond(200, serverDraft) : respond(204);
-    if (url.startsWith('/api/workouts/draft')) return respond(204);
+    if (url.startsWith('/api/workouts/draft')) return respond(init?.method === 'PUT' ? draftPutStatus : 204);
     if (url === '/api/workouts/logger') {
       const ukrainian = (init?.headers as Record<string, string> | undefined)?.['Accept-Language'] === 'uk';
       return respond(200, ukrainian ? ukrainianOptions : options);
@@ -164,5 +183,113 @@ describe('workout logger', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Enter 1–500 reps.');
     expect(await screen.findByRole('option', { name: 'Flat Bench Press' })).toBeInTheDocument();
     expect(screen.getByLabelText('Exercise')).toHaveValue('7');
+  });
+
+  it('edits a logged set, cancels an edit and removes a set after confirmation', async () => {
+    storeDraft({ sets: [bench, { ...bench, weightKg: 65 }] });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const user = userEvent.setup();
+    renderLogger();
+
+    await user.click(await screen.findByRole('button', { name: 'Edit set 2' }));
+    expect(screen.getByLabelText('External load (kg)')).toHaveValue(65);
+    expect(screen.getByLabelText('External load (kg)')).toHaveFocus();
+    await user.clear(screen.getByLabelText('External load (kg)'));
+    await user.type(screen.getByLabelText('External load (kg)'), '70');
+    await user.click(screen.getByRole('button', { name: 'Save changes to set 2' }));
+
+    expect(screen.getByText('Set updated · draft saved')).toBeInTheDocument();
+    expect(storedSets()?.map((s) => s.weightKg)).toEqual([60, 70]);
+    expect(screen.getByText('2 sets logged')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Edit set 1' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel edit' }));
+    expect(screen.getByRole('button', { name: 'Log completed set ＋' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Remove set 1' }));
+    expect(window.confirm).toHaveBeenCalledWith('Remove set 1 (Flat Bench Press)?');
+    expect(screen.getByText('Set removed · draft saved')).toBeInTheDocument();
+    expect(storedSets()?.map((s) => s.weightKg)).toEqual([70]);
+  });
+
+  it('keeps a set when the athlete cancels its removal', async () => {
+    storeDraft();
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const user = userEvent.setup();
+    renderLogger();
+
+    await user.click(await screen.findByRole('button', { name: 'Remove set 1' }));
+
+    expect(screen.getByText('1 set logged')).toBeInTheDocument();
+    expect(storedSets()).toHaveLength(1);
+  });
+
+  it('counts the rest down in the tab title, lets the athlete skip it and starts it again', async () => {
+    storeDraft({ timerEnd: Date.now() + 90_000 });
+    const user = userEvent.setup();
+    renderLogger();
+
+    await screen.findByText('Unsaved workout restored · 1 set');
+    await waitFor(() => expect(document.title).toMatch(/^Rest 01:(29|30) · IronMind$/));
+    await user.click(screen.getByRole('button', { name: 'Skip rest' }));
+
+    expect(await screen.findByText('Rest complete. Start your next set when ready.')).toBeInTheDocument();
+    await waitFor(() => expect(document.title).toBe('Workout Logger · IronMind'));
+    await user.click(screen.getByRole('button', { name: 'Start timer' }));
+    await waitFor(() => expect(document.title).toMatch(/^Rest 0[12]:\d\d · IronMind$/));
+    expect(screen.queryByText('Rest complete. Start your next set when ready.')).not.toBeInTheDocument();
+  });
+
+  it('vibrates once when the rest is over', async () => {
+    const vibrate = vi.fn();
+    Object.defineProperty(navigator, 'vibrate', { value: vibrate, configurable: true });
+    storeDraft();
+    const user = userEvent.setup();
+    renderLogger();
+
+    // The timer starts once the logger is shown, so a slow first load cannot use up the rest.
+    await user.clear(await screen.findByLabelText('Rest (sec)'));
+    await user.type(screen.getByLabelText('Rest (sec)'), '1');
+    await user.click(screen.getByRole('button', { name: 'Start timer' }));
+    expect(await screen.findByText('Rest complete. Start your next set when ready.', {}, { timeout: 10_000 })).toBeInTheDocument();
+    // The vibration is an effect of the render that shows the text, so it may follow it a moment later.
+    await waitFor(() => expect(vibrate).toHaveBeenCalledTimes(1));
+    Reflect.deleteProperty(navigator, 'vibrate');
+  });
+
+  it('follows a change made to the same workout in another tab', async () => {
+    const draft = storeDraft();
+    renderLogger();
+    await screen.findByText('1 set logged');
+
+    act(() => {
+      localStorage.setItem('ironmind-workout-5', JSON.stringify({ ...draft, sets: [bench, bench], savedAt: Date.now() }));
+      window.dispatchEvent(new StorageEvent('storage', { key: 'ironmind-workout-5' }));
+    });
+    expect(screen.getByText('Draft updated in another tab')).toBeInTheDocument();
+    expect(screen.getByText('2 sets logged')).toBeInTheDocument();
+
+    act(() => {
+      localStorage.removeItem('ironmind-workout-5');
+      window.dispatchEvent(new StorageEvent('storage', { key: 'ironmind-workout-5' }));
+    });
+    expect(screen.getByText('0 sets logged')).toBeInTheDocument();
+    act(() => window.dispatchEvent(new StorageEvent('storage', { key: 'another-key' })));
+    expect(screen.getByText('0 sets logged')).toBeInTheDocument();
+  });
+
+  it('starts a new workout when the server says this one was saved on another device', async () => {
+    storeDraft();
+    draftPutStatus = 409;
+    const user = userEvent.setup();
+    renderLogger();
+
+    await user.type(await screen.findByLabelText('Find an exercise'), 'bench');
+    await user.click(screen.getByRole('button', { name: 'Flat Bench Press · Chest' }));
+    await user.click(screen.getByRole('button', { name: 'Log completed set ＋' }));
+
+    expect(await screen.findByText('This workout was already saved on another device. A new one has started.', {}, { timeout: 10_000 })).toBeInTheDocument();
+    expect(screen.getByText('0 sets logged')).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('ironmind-workout-5') ?? '{}').draftId).not.toBe(DRAFT_ID);
   });
 });
