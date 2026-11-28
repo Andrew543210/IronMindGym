@@ -1,41 +1,50 @@
 # IronMind
 
-Особистий тренувальний щоденник: силові вправи, кардіо, прогрес, харчування та цілі в одному місці. ASP.NET Core Web API · React · PostgreSQL · Docker.
+A personal training journal for strength work, cardio and timed holds, with progress, records, nutrition, goals and friends in one place. Built with an ASP.NET Core Web API, a React client and PostgreSQL, and shipped as one Docker image.
 
 ![Build and test](https://github.com/Andrew543210/IronMindGym/actions/workflows/ci.yml/badge.svg)
 
-![IronMind dashboard](docs/images/desktop.jpg)
+![IronMind overview](docs/images/desktop.jpg)
 
-[Мобільний вигляд](docs/images/mobile.jpg) · [Журнал тренування на телефоні](docs/images/workout-mobile.jpg)
+[Phone layout](docs/images/mobile.jpg) · [Workout logger on a phone](docs/images/workout-mobile.jpg)
 
-## Можливості
+## Features
 
-- Журнал тренувань із силовими, кардіо та часовими підходами, оцінкою сесії, коментарями й історією.
-- Пошук вправ, редагування підходів, попередній результат, таймери сесії й відпочинку. Незавершене тренування зберігається в браузері та на сервері, тож його можна продовжити на іншому пристрої.
-- Суперсети й колові тренування зберігають порядок виконання; прогрес показує окремо зміну навантаження, повторень, тривалості та зусилля.
-- 123 вправи у восьми групах: Arms, Back, Chest, Conditioning, Core, Legs, Mobility, Shoulders.
-- Особисті рекорди, статистика, нагороди й ранг аватара за силовим коефіцієнтом.
-- Журнал харчування за будь-яку дату, власні цілі КБЖВ та необов'язкові розрахункові орієнтири для дорослих.
-- Профіль і план тренувань, журнал ваги, особисті цілі, зміна пароля й експорт даних у JSON.
-- Друзі з підтвердженням запиту: тренування, харчування й прогрес видно лише після прийняття.
-- Інтерфейс англійською та українською; вибір мови зберігається в обліковому записі.
-- Стрічка з перевіреними першоджерелами WHO, CDC та наукових публікацій.
+**Training log**
+- Log strength, cardio and timed sets with set types (working, warm-up, failure), rest, a session rating and a comment.
+- Find an exercise by name or by muscle group, see the last set you logged for it, edit or remove sets, and run the session and rest timers.
+- An unfinished workout survives a reload or a closed tab and continues on another device. Saving it twice, for example after a double tap, never creates a duplicate.
+- Supersets and circuits keep the order in which the sets were done.
 
-## Стек
+**Progress and records**
+- 123 exercises in eight groups: Arms, Back, Chest, Conditioning, Core, Legs, Mobility and Shoulders.
+- Personal load records, training statistics, awards and a rank based on the bench press, squat and deadlift relative to bodyweight.
+- A progress tracker that compares a starting and a current result for any exercise, showing the change in each value separately.
 
-| Частина | Технології |
+**Nutrition, body and goals**
+- A nutrition entry for any day, with personal calorie and macro targets, or optional estimates for adults.
+- A weigh-in log, a weekly training plan, personal goals with deadlines, and a JSON export of your data.
+
+**People and language**
+- Friends with confirmed requests. Workouts, nutrition and progress are visible only after a request is accepted, and friends can like and comment on workouts.
+- The interface is in English and Ukrainian; the choice is saved with the account.
+- A small feed of research notes, each linked to its primary source (WHO, CDC and peer-reviewed papers).
+
+## Tech stack
+
+| Part | Technology |
 | --- | --- |
 | API | ASP.NET Core 10 Web API, EF Core 10, Npgsql |
-| База даних | PostgreSQL 18 (`citext`, `jsonb`, advisory locks) |
-| Клієнт | React 19, TypeScript, Vite, React Router, Bootstrap 5 |
-| Тести | xUnit, WebApplicationFactory, Testcontainers; Vitest, Testing Library |
-| Доставка | Docker (багатоетапна збірка), Docker Compose, Caddy, GitHub Actions |
+| Database | PostgreSQL 18 (`citext`, `jsonb`, check constraints, advisory locks) |
+| Client | React 19, TypeScript, Vite, React Router, Bootstrap 5 |
+| Tests | xUnit, WebApplicationFactory, Testcontainers; Vitest, Testing Library |
+| Delivery | Multi-stage Docker build, Docker Compose, Caddy, GitHub Actions |
 
-## Запуск
+## Getting started
 
-Потрібні **Docker** (з Compose), а для розробки — **.NET 10 SDK** і **Node.js 24**.
+You need **Docker** with Compose. For development you also need the **.NET 10 SDK** and **Node.js 24**.
 
-### Усе в контейнерах
+### Run everything in Docker
 
 ```sh
 git clone https://github.com/Andrew543210/IronMindGym.git
@@ -43,16 +52,24 @@ cd IronMindGym
 docker compose up --build
 ```
 
-Відкрийте [localhost:8080](http://localhost:8080). Образ збирає React-клієнт і віддає його разом з API з одного контейнера. Дані PostgreSQL зберігаються в томі `db-data` і переживають перезапуск контейнерів.
+Open [localhost:8080](http://localhost:8080) and create an account. The image builds the React client and serves it together with the API from one container. The database lives in the `db-data` volume, so your data survives a restart; `docker compose down` keeps it, while `docker compose down --volumes` deletes it.
 
-### Розробка
+To start a clean copy without touching an existing database, give it its own project name. Run `docker compose down` for the other copy first (its data stays in its volume), since both use the same ports and network:
+
+```sh
+docker compose -p ironmind-trial up --build
+```
+
+### Develop with live reload
+
+Start the database, then the API:
 
 ```sh
 docker compose up -d db
 dotnet run --project IronMindGym --launch-profile http
 ```
 
-В іншому терміналі:
+In a second terminal, start the client:
 
 ```sh
 cd client
@@ -60,66 +77,79 @@ npm ci
 npm run dev
 ```
 
-Відкрийте [localhost:5173](http://localhost:5173), створіть обліковий запис і заповніть початкові параметри. Vite оновлює сторінку після кожної зміни й передає запити `/api` до API на порту 5270, тому браузер бачить одне джерело, як у продакшні. Міграції створюють схему автоматично під час запуску API.
+Open [localhost:5173](http://localhost:5173). Vite reloads the page after every change and forwards `/api` to the API on port 5270, so the browser sees one origin, as in production. The API applies the migrations and the reference data when it starts.
 
-Локальна база слухає лише `127.0.0.1:5432` з обліковими даними `ironmind` / `ironmind-local` з `appsettings.Development.json`. Цей пароль призначений лише для бази на вашому комп'ютері; продакшн вимагає власного (див. [розгортання](docs/deployment.md)).
+The local database listens only on `127.0.0.1:5432`, with the user `ironmind` and the password `ironmind-local` from `appsettings.Development.json`. That password is meant for a database on your own computer; production requires its own (see [Deployment](docs/deployment.md)).
 
-### Демо
+### Try it with demo data
 
-Використовуйте окрему базу, щоб не змішувати приклади зі своїми записами:
+Use a separate database so the examples do not mix with your own records:
 
 ```sh
 dotnet run --project IronMindGym --launch-profile http -- --Seed:DemoData=true --ConnectionStrings:DefaultConnection="Host=localhost;Port=5432;Database=ironmind_demo;Username=ironmind;Password=ironmind-local"
 ```
 
-| Email | Пароль |
-| --- | --- |
-| demo@ironmind.app | DemoTraining123! |
-| friend@ironmind.app | FriendTraining123! |
+| Email | Password | Account |
+| --- | --- | --- |
+| demo@ironmind.app | DemoTraining123! | An athlete with a few weeks of workouts, nutrition, goals and records |
+| friend@ironmind.app | FriendTraining123! | A friend of the demo athlete, to see what friends share |
 
-Демодані додаються лише в Development, з явним прапорцем і лише в базу без користувачів. У Production вони вимкнені незалежно від прапорця.
+Demo data is added only in Development, only with the flag, and only to a database without users. Production never creates it.
 
-## Телефон у залі
+### Use it on your phone
 
-Для щоденного використання розгорніть застосунок на власному сервері з HTTPS за [інструкцією](docs/deployment.md). Інтерфейс розрахований на вузький екран і нижню навігацію.
+For everyday use, deploy the application to your own server with HTTPS by following [Deployment](docs/deployment.md). The interface is designed for a narrow screen with a bottom navigation bar.
 
-Для перевірки в одній довіреній Wi-Fi мережі зберіть клієнт у `wwwroot` API і запустіть один процес:
+To try it on a phone in a trusted Wi-Fi network, build the client into the API and run one process:
 
 ```sh
 cd client && npm run build && cd ..
 dotnet run --project IronMindGym --launch-profile http -- --urls http://0.0.0.0:5270
 ```
 
-Відкрийте `http://<IP-адреса-комп'ютера>:5270` на телефоні. Development і HTTP призначені лише для локальної перевірки.
+Then open `http://<your-computer's-IP>:5270` on the phone. Development mode over plain HTTP is for local checks only.
 
-Незавершене тренування зберігається в `localStorage` окремо для кожного користувача, а його копія надсилається на сервер через 1,5 с після останньої зміни. Воно переживає перезавантаження, закриття вкладки й вивантаження вкладки телефоном, синхронізується між відкритими вкладками, продовжується на іншому пристрої й видаляється після збереження або кнопкою **Discard workout**. Повторне надсилання того самого тренування (подвійний тап, повтор після втраченої відповіді) не створює дубліката. Для збереження потрібне з'єднання із сервером; це не офлайн-застосунок. [Правила запису й порівнянь](docs/athlete-workflows.md).
+## A first tour
 
-## Архітектура
+1. **Register** with a username, email, age and password. The browser suggests your time zone.
+2. **Initial setup** asks for your weight, height, starting bench press, squat and deadlift, a training split (for example Full-body or Upper-Lower) and how many workouts you plan per week.
+3. **Overview** shows your rank on the strength scale, the workouts done against this week's plan, today's nutrition, recent workouts, goals and the research notes.
+4. **Workout** opens the logger: find an exercise, log a set, let the rest timer run, and choose the split day and the duration in **Session settings**. **Finish workout** saves it, and **Discard workout** throws the draft away.
+5. Workout history lists the saved sessions; a session's page compares every exercise with your earlier sessions and marks new records.
+6. **Progress** keeps a starting and a current result per exercise; **Exercises** is the full catalog with a description of each movement.
+7. **Nutrition** records calories, protein, fat and carbohydrates for a day and compares them with your targets.
+8. **Statistics**, **Personal Records** and **Awards** summarise what you have logged so far.
+9. **Goals** keeps up to 20 active goals, each with a deadline, and lets you mark them done or reopen them.
+10. **Friends** finds athletes by username and sends requests. Once a request is accepted, you can open each other's workouts, progress and nutrition, like workouts and leave comments.
+11. **My profile** holds the weigh-in log, **Edit profile** (body, plan, targets, time zone), **Change password** and **Export my data**.
 
-Один ASP.NET Core застосунок віддає JSON API під `/api` і зібраний React-клієнт з `wwwroot`. Шар репозиторіїв поверх EF Core не потрібен: сервіси працюють з `DbContext` напряму.
+## How it is built
+
+One ASP.NET Core application serves the JSON API under `/api` and the built React client from `wwwroot`.
 
 ```text
 IronMindGym/              ASP.NET Core Web API
-  Api/                    Контролери: маршрути, валідація запиту, коди відповіді
-  Services/               Операції журналу, профілю, дружби, статистики й нагород
-  Data/                   DbContext, обмеження, міграції, блокування записів
-  Models/                 Сутності та правила предметної області
-  Contracts/              Запити й відповіді API
-  Security/               Паролі, cookie сесії та поточний користувач
-  Hosting/                Реєстрація сервісів, заголовки безпеки, перевірка стану
-  Localization/           Вибір англійського чи українського тексту й перекладів повідомлень
-  Seed/                   Довідники, каталог вправ, перевірені матеріали, демодані
-IronMindGym.Tests/        Інтеграційні тести API та юніт-тести правил
-client/                   React-клієнт (Vite, TypeScript)
-  src/pages/              Сторінки за розділами
-  src/components/         Макет, навігація, спільні елементи
-  src/i18n/               Тексти інтерфейсу англійською та українською
-  src/test/               Спільні засоби для тестів
+  Api/                    Controllers: routes, request validation, status codes
+  Services/               Workouts, records, awards, progress, nutrition, profile, friends, statistics
+  Data/                   DbContext, constraints, migrations, write locks
+  Models/                 Entities and their small domain rules
+  Contracts/              Request and response records of the API
+  Security/               Passwords, the session cookie and the current user
+  Hosting/                Service setup, security headers, health probe
+  Localization/           English and Ukrainian wording of names and messages
+  Seed/                   Reference data, the exercise catalog, research notes, demo data
+IronMindGym.Tests/        API integration tests and domain unit tests
+client/                   React client (Vite, TypeScript)
+  src/api/                Fetch wrapper and the API's types
+  src/pages/              One folder or module per section
+  src/components/         Layout, navigation and shared pieces
+  src/i18n/               English and Ukrainian texts
+  src/styles/             The theme on top of Bootstrap
 ```
 
-Сесія — HttpOnly cookie; кожна зміна додатково несе antiforgery-токен у заголовку `X-CSRF-TOKEN`. Контролер передає сервісу `userId` поточного користувача, і сервіс обмежує операцію цим власником. Час зберігається в UTC, а «сьогодні», тиждень (з понеділка) і серії рахуються в часовому поясі профілю. Докладніше — в [описі архітектури](docs/architecture.md).
+The session is an HttpOnly cookie, and every change also carries an antiforgery token in the `X-CSRF-TOKEN` header. Every service operation is limited to the signed-in owner. Moments are stored in UTC, while "today", the Monday-based week and streaks follow the time zone in the profile. [Architecture](docs/architecture.md) describes the design in detail.
 
-## Перевірка змін
+## Checking a change
 
 API:
 
@@ -132,7 +162,7 @@ dotnet ef migrations has-pending-model-changes --project IronMindGym
 dotnet list package --vulnerable --include-transitive
 ```
 
-Клієнт:
+Client:
 
 ```sh
 cd client
@@ -142,20 +172,27 @@ npm run coverage
 npm run build
 ```
 
-Тести API запускають справжній PostgreSQL 18 у Docker (Testcontainers): кожен тест отримує власну базу, скопійовану з мігрованого шаблону, тож робоча база не використовується. Щоб узяти наявний сервер замість Docker, задайте `IRONMIND_TEST_POSTGRES` (рядок підключення до сервера з правом створювати бази). Тести клієнта працюють у jsdom з підміненим API.
+The API tests start a real PostgreSQL 18 in Docker through Testcontainers. Each test gets its own database copied from a migrated template, so your working database is never touched. To use an existing server instead of Docker, set `IRONMIND_TEST_POSTGRES` to a connection string with the right to create databases. The client tests run in jsdom against a mocked API.
 
-CI на кожен push у `master` і pull request збирає обидві частини, запускає тести, вимагає щонайменше 80% покриття рядків і гілок, перевіряє узгодженість схеми, відомі вразливості залежностей і збірку Docker-образу.
+On every push to `master` and every pull request, CI builds both parts, runs the tests, requires at least 80% line and branch coverage, checks that the schema matches the migrations, looks for known vulnerable packages and builds the Docker image.
 
-## Дані та резервні копії
+## Data and backups
 
-Бази, cookies, ключі, секрети, `.env` та артефакти збірки не належать до Git. Підключення задається через `ConnectionStrings:DefaultConnection`.
+Databases, cookies, keys, secrets, `.env` files and build output are never committed. The connection string comes from `ConnectionStrings:DefaultConnection`.
 
-Резервна копія працюючої бази (узгоджений знімок без зупинки):
+Back up the running database with a consistent snapshot, without stopping it:
 
 ```sh
 docker compose exec -T db pg_dump -U ironmind -Fc ironmind > ironmind.dump
 ```
 
-Відновлення — у порожню базу через `pg_restore`; спершу перевірте копію на окремому екземплярі. JSON-експорт у профілі зручний для перегляду власних записів, але не є форматом повного відновлення сервера.
+Restore into an empty database with `pg_restore`, and try the backup on a separate instance first. The JSON export in the profile is meant for reading your own records; it is not a format for restoring a server.
 
-Додатково: [архітектура](docs/architecture.md), [тренувальні сценарії](docs/athlete-workflows.md), [каталог вправ](docs/exercises.md), [джерела стрічки](docs/sources.md), [розгортання](docs/deployment.md), [безпека](SECURITY.md).
+## Documentation
+
+- [Architecture](docs/architecture.md): server layers, request pipeline, security, data and the client
+- [Training workflows](docs/athlete-workflows.md): how sets, drafts, records, days and nutrition behave
+- [Exercise catalog](docs/exercises.md): tracking modes, grouping and how the catalog is applied
+- [Research feed sources](docs/sources.md): the notes and their primary sources
+- [Deployment](docs/deployment.md): HTTPS with Docker Compose and Caddy, upgrades, backups
+- [Security](SECURITY.md): reporting a problem and the security model

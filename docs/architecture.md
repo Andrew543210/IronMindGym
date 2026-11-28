@@ -18,6 +18,8 @@ ASP.NET Core ── controllers ── services ── EF Core ── PostgreSQL
 | `Data/` | `IronMindDbContext`, constraints and indexes, migrations and the advisory locks used for writes. |
 | `Models/` | Entities with small domain rules, for example the weight change of a tracked exercise. |
 | `Contracts/` | Request and response records of the API. |
+| `Security/` | Password hashing, the session cookie and its security stamp, and the current user of a request. |
+| `Hosting/` | Service registration, the security headers, the rate limits and the health probe. |
 | `Localization/` | Picks the English or Ukrainian text of reference data and refusal messages for the current request. |
 | `Seed/` | Reference data (set types, splits with their training days, ranks, awards, research notes), the exercise catalog from `exercises.json` and the opt-in demo data. |
 
@@ -25,7 +27,7 @@ Services use `DbContext` directly. A repository layer would only repeat EF Core'
 
 ### Request pipeline
 
-Forwarded headers (only from the configured proxy) → exception handler and HSTS in Production → request localization → security headers (`nosniff`, `DENY` framing, referrer policy, a Content-Security-Policy limited to the site's own scripts, styles and connections) → static client files → routing → rate limiter → authentication → authorization → controllers. Unknown `/api` paths return `404`; every other unknown path returns `index.html`, so client routes survive a reload. Hashed bundles under `/assets` are cached for a year, while `index.html` is revalidated on every visit.
+Forwarded headers (only from the configured proxy) → security headers (`nosniff`, `DENY` framing, referrer policy, a Content-Security-Policy limited to the site's own scripts, styles and connections) → exception handler and HSTS in Production → request localization → static client files → routing → rate limiter → authentication → authorization → controllers. The security headers are added as the response starts, so an error page carries them too. Unknown `/api` paths return `404`; every other unknown path returns `index.html`, so client routes survive a reload. Hashed bundles under `/assets` are cached for a year, while `index.html` is revalidated on every visit. `/healthz` answers `Healthy` once the database is reachable.
 
 ### Authentication and CSRF
 
@@ -51,7 +53,7 @@ Services and controllers report a refusal by throwing `DomainValidationException
 
 ### Localization
 
-The client sends `Accept-Language: en` or `uk`. The server switches only the wording: names of exercises, groups, ranks, awards and every refusal message. Services and contracts write their messages in English, and `ServerMessages` translates them where the response is built, in the domain exception filter and in the invalid-model response; a test checks that every validation rule of the contracts has a translation. Numbers and dates are always parsed in the invariant form. Reference tables store both names, and neither is a key the code matches on: split types, their training days and set types have a code, the bench press, squat and deadlift used for the rank are marked as key lifts, and the remaining rows are found by their unique English name.
+The client sends `Accept-Language: en` or `uk`. The server switches only the wording: names of exercises, groups, ranks, awards and every refusal message. Services and contracts write their messages in English, and `ServerMessages` translates them where the response is built, in the domain exception filter and in the invalid-model response; a test checks that every validation rule of the contracts has a translation. Numbers and dates are always parsed in the invariant form. The client keeps its own messages, such as a lost connection, as text keys and words them when they are shown, so a message on screen follows a change of language. Reference tables store both names, and neither is a key the code matches on: split types, their training days and set types have a code, the bench press, squat and deadlift used for the rank are marked as key lifts, and the remaining rows are found by their unique English name.
 
 ## Client
 
@@ -62,10 +64,11 @@ The client sends `Accept-Language: en` or `uk`. The server switches only the wor
 | `src/i18n/` | English and Ukrainian dictionaries. The compiler checks that every English key has a Ukrainian text and the plural forms Ukrainian needs. |
 | `src/api/` | `client.ts` is the fetch wrapper (CSRF token, language, `ProblemDetails` errors, abort and keepalive); `types/` declares every request and answer of the API once, by area, for pages and test fixtures alike. |
 | `src/styles/` | The monochrome theme on top of Bootstrap, one file per part of the app, loaded in order by `index.css`. Bootstrap's own variables carry the theme's colours, so its classes keep their meaning. |
-| `hooks.ts` | `useApi` loads a page's data, aborts what is no longer needed and keeps the last answer only when asked; `useAction` runs one change at a time. |
+| `hooks.ts` | `useApi` loads a page's data and aborts what is no longer needed; a new address starts without data unless the page asks to keep the last answer, so a form never shows another record. `useAction` runs one change at a time. |
+| `forms.ts` | Binds the text fields of a form kept as one object. |
 | `SessionProvider.tsx` | The signed-in user, sign-out and the reason a session ended. |
 | `pages/workouts/draft.ts`, `serverDraft.ts` | The unfinished workout: kept in `localStorage`, shared between tabs and sent to the server 1.5 s after the last change, so another device can continue it. |
-| `pages/workouts/logger/` | The parts of the workout logger: `useWorkoutDraft` restores, keeps and syncs the draft; the search, the set editor, the clocks, the settings and the table of sets each render one area. Only the clocks render on every tick. |
+| `pages/workouts/logger/` | The parts of the workout logger: `useWorkoutDraft` restores, keeps and syncs the draft; the search, the set editor, the clocks, the settings and the table of sets each render one area. Only the clocks and the elapsed duration render on every tick. |
 | `components/ExercisePicker.tsx` | Group, focus area and exercise, shared by the logger and the progress tracker. |
 
 Messages after an action (for example "Workout saved") travel with the navigation and are shown once; a reload does not repeat them.
@@ -76,7 +79,7 @@ Messages after an action (for example "Workout saved") travel with the navigatio
 - **Domain unit tests** (`IronMindGym.Tests/Domain`) cover calendar boundaries across time zones and daylight saving, nutrition estimates, strength coefficients, record rules and seeding.
 - **Client tests** render pages with React Testing Library against a mocked API and cover forms, validation errors, navigation, language switching and the draft logic.
 
-CI requires at least 80% line and branch coverage for both the API and the client. Migrations are excluded from the API measurement.
+CI requires at least 80% line and branch coverage for the API and for every folder of the client, so a well-tested folder cannot hide one that is not. Migrations are excluded from the API measurement.
 
 ## Deliberate limits
 

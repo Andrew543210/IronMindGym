@@ -26,7 +26,7 @@ Groups are navigation aids based on a practical primary emphasis. Compound movem
 
 The catalog was checked against the movement and body-part descriptions in the [ACE exercise library](https://www.acefitness.org/resources/everyone/exercise-library/) and the exercise patterns in [NSCA Foundations of Fitness Programming](https://www.nsca.com/contentassets/8323553f698a466a98220b21d9eb9a65/foundationsoffitnessprogramming_201508.pdf). Descriptions are short original navigation notes, not copied exercise instructions.
 
-Every startup applies the catalog. Rows are matched by their English name, which never changes: missing groups, subgroups and exercises are added, and the Ukrainian names and key-lift markers are refreshed. Startup never deletes or recreates exercise IDs and keeps the type and group of an existing exercise, because saved sets reference them. To reclassify or remove an exercise after people have logged it, write a migration that updates the rows in place.
+Every startup applies the catalog. Rows are matched by their English name, which never changes: missing groups, subgroups and exercises are added, and the Ukrainian names, the descriptions in both languages and the key-lift markers are refreshed. Startup never deletes or recreates exercise IDs and keeps the type and group of an existing exercise, because saved sets reference them. To reclassify or remove an exercise after people have logged it, write a migration that updates the rows in place.
 
 ## Recording and comparisons
 
