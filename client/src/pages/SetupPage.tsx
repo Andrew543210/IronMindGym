@@ -27,7 +27,7 @@ export function SetupPage() {
   });
   const { busy, error, run } = useAction();
 
-  if (!data) return <PageState error={loadError} loading={loading} />;
+  if (!data) return <PageState error={loadError} loading={loading} title={t('setup.title')} />;
   if (data.alreadyCompleted) return <Navigate to="/" replace />;
   const splitTypeId = form.splitTypeId || String(data.splitTypes[0]?.id ?? '');
 

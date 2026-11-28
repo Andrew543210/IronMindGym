@@ -21,10 +21,19 @@ export function PageLoading() {
   return <p className="text-muted" role="status">{t('common.loading')}</p>;
 }
 
-export function PageState({ error, loading }: { error: unknown; loading: boolean }) {
-  if (error) return <ErrorAlert error={error} />;
-  if (loading) return <PageLoading />;
-  return null;
+/**
+ * What a page shows before its data: the error or the loading note. A page that has no heading of its own
+ * until the data comes passes its `title`, so the page always has its h1.
+ */
+export function PageState({ error, loading, title }: { error: unknown; loading: boolean; title?: string }) {
+  const state = error ? <ErrorAlert error={error} /> : loading ? <PageLoading /> : null;
+  if (title === undefined) return state;
+  return (
+    <>
+      <h1 className="h2">{title}</h1>
+      {state}
+    </>
+  );
 }
 
 export function EmptyState({ title, children }: { title: string; children: ReactNode }) {

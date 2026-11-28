@@ -49,7 +49,7 @@ describe('app', () => {
     const user = userEvent.setup();
 
     expect(await screen.findByRole('heading', { name: 'Initial Setup' })).toBeInTheDocument();
-    await user.type(screen.getByLabelText('Weight (kg)'), '80');
+    await user.type(await screen.findByLabelText('Weight (kg)'), '80');
     await user.type(screen.getByLabelText('Height (cm)'), '180');
     await user.selectOptions(screen.getByLabelText('Split type'), 'Upper-Lower');
     await user.click(screen.getByRole('button', { name: 'Save' }));

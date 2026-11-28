@@ -42,7 +42,7 @@ export function StatisticsPage() {
   const { t } = useI18n();
   usePageTitle(t('statistics.title'));
   const { data, error, loading } = useApi<Statistics>('/api/statistics');
-  if (!data) return <PageState error={error} loading={loading} />;
+  if (!data) return <PageState error={error} loading={loading} title={t('statistics.heading')} />;
   const volume = t('statistics.volumeUnit');
   const minutes = t('unit.minShort');
 
@@ -123,7 +123,7 @@ export function AwardsPage() {
   const { t } = useI18n();
   usePageTitle(t('awards.title'));
   const { data, error, loading } = useApi<AwardProgress[]>('/api/awards');
-  if (!data) return <PageState error={error} loading={loading} />;
+  if (!data) return <PageState error={error} loading={loading} title={t('awards.title')} />;
 
   return (
     <>

@@ -13,7 +13,7 @@ export function ProfilePage() {
   usePageTitle(t('profile.title'));
   const athlete = useAthlete();
   const { data, error, loading, reload } = useApi<Profile>('/api/profile');
-  if (!data) return <PageState error={error} loading={loading} />;
+  if (!data) return <PageState error={error} loading={loading} title={t('profile.heading')} />;
 
   const kg = (value: number | null) => (value === null ? '—' : t('unit.kg', { value: formatFixed(value, 1) }));
   const facts: [string, string][] = [

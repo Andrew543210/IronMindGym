@@ -50,7 +50,7 @@ export function TrackExercisePage() {
   usePageTitle(t('track.title'));
   const [params] = useSearchParams();
   const { data: catalog, error, loading } = useApi<CatalogExercise[]>('/api/progress/catalog');
-  if (!catalog) return <PageState error={error} loading={loading} />;
+  if (!catalog) return <PageState error={error} loading={loading} title={t('track.heading')} />;
   return <TrackExercise catalog={catalog} initialExerciseId={Number(params.get('exerciseId')) || 0} />;
 }
 

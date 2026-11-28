@@ -34,7 +34,7 @@ export function ExercisesPage() {
   const shown = inGroup.filter((e) => (subGroupId === '' || e.muscleSubGroupId === Number(subGroupId))
     && (query === '' || `${e.exerciseName}\n${e.description}`.toLocaleLowerCase(language).includes(query)));
 
-  if (!data) return <PageState error={error} loading={loading} />;
+  if (!data) return <PageState error={error} loading={loading} title={t('exercises.title')} />;
 
   return (
     <>

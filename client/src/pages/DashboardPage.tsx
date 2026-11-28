@@ -15,7 +15,7 @@ export function DashboardPage() {
   usePageTitle(t('nav.overview'));
   const athlete = useAthlete();
   const { data, error, loading } = useApi<Overview>('/api/dashboard');
-  if (!data) return <PageState error={error} loading={loading} />;
+  if (!data) return <PageState error={error} loading={loading} title={t('nav.overview')} />;
 
   const weeklyPercent = data.plannedWorkoutsPerWeek === 0
     ? 0
@@ -183,7 +183,8 @@ export function FeedNotePage() {
   usePageTitle(t('feed.title'));
   const { id } = useParams();
   const { data, error, loading } = useApi<ResearchNote>(`/api/feed/${Number(id)}`);
-  if (!data || loading) return <PageState error={error} loading={loading} />;
+  // A change of language reloads the note; the one on screen stays until the translation comes.
+  if (!data) return <PageState error={error} loading={loading} title={t('feed.title')} />;
   return (
     <>
       <h1 className="h2">{t('feed.title')}</h1>

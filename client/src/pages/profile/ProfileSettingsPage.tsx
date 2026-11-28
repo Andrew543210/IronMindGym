@@ -26,7 +26,7 @@ export function ProfileSettingsPage() {
   const { data, error: loadError, loading } = useApi<SettingsPage>('/api/profile/settings');
   const [edited, setEdited] = useState<SettingsForm>();
   const { busy, error, run } = useAction();
-  if (!data) return <PageState error={loadError} loading={loading} />;
+  if (!data) return <PageState error={loadError} loading={loading} title={t('settings.title')} />;
   const form = edited ?? toForm(data.settings);
 
   const field = textFields(form, setEdited);

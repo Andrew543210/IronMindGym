@@ -1,7 +1,8 @@
-import { screen } from '@testing-library/react';
+import { act, cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, it } from 'vitest';
-import { mockApi, renderRoutes } from '../test/harness';
+import { currentLanguage, setLanguage } from '../i18n/language';
+import { mockApi, renderRoutes, respond } from '../test/harness';
 import { overview, researchNote } from '../test/fixtures';
 import { DashboardPage, FeedNotePage } from './DashboardPage';
 
@@ -47,4 +48,25 @@ it('greets a new athlete with empty sections', async () => {
   expect(screen.getByText('Your journal is ready.')).toBeInTheDocument();
   expect(screen.getByText('Give your next session a direction.')).toBeInTheDocument();
   expect(screen.getByRole('img', { name: 'Weekly completion 0%' })).toBeInTheDocument();
+});
+
+it('heads the page while it loads or fails and keeps a note on screen while its translation loads', async () => {
+  let translated = () => {};
+  mockApi({
+    'GET /api/dashboard': () => respond(500),
+    'GET /api/feed/7': () => (currentLanguage() === 'uk'
+      ? new Promise((resolve) => { translated = () => resolve({ ...researchNote, title: 'Українська назва' }); })
+      : researchNote),
+  });
+  renderRoutes(routes, '/');
+  expect(await screen.findByRole('alert')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Overview');
+  cleanup();
+
+  renderRoutes(routes, '/feed/7');
+  expect(await screen.findByText(researchNote.title)).toBeInTheDocument();
+  act(() => setLanguage('uk'));
+  expect(screen.getByText(researchNote.title)).toBeInTheDocument();
+  act(() => translated());
+  expect(await screen.findByText('Українська назва')).toBeInTheDocument();
 });
