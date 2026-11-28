@@ -26,8 +26,9 @@ function QuickUpdate({ entry, onSaved }: { entry: ProgressEntry; onSaved: () => 
     const body = strength ? { weightKg: a, reps: b } : cardio ? { durationSeconds: a, intensity: b } : { durationSeconds: a, weightKg: b };
     void save.run(async () => {
       await api.put(`/api/progress/${entry.exerciseId}/current`, body);
-      setFirst('');
-      setSecond('');
+      // A value typed while the request was out is the next one; only the values that were sent are cleared.
+      setFirst((value) => (value === first ? '' : value));
+      setSecond((value) => (value === second ? '' : value));
       onSaved();
     });
   }

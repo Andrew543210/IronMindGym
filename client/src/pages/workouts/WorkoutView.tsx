@@ -110,9 +110,11 @@ export function WorkoutReactions({ workout, timeZone, onComment, onLike }: React
 
   function submit(event: FormEvent) {
     event.preventDefault();
+    const sent = text;
     void comment.run(async () => {
-      await onComment(text);
-      setText('');
+      await onComment(sent);
+      // Text typed while the comment was being posted stays in the field.
+      setText((value) => (value === sent ? '' : value));
     });
   }
 

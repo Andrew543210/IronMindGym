@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
@@ -73,6 +73,27 @@ describe('progress tracker', () => {
     await user.click(within(plank).getByRole('button', { name: 'Delete' }));
     expect(await screen.findByText('Progress tracker deleted.')).toBeInTheDocument();
     await vi.waitFor(() => expect(screen.queryByText('Weighted Plank')).not.toBeInTheDocument());
+  });
+
+  it('keeps a value typed while the latest result was being saved', async () => {
+    let finish = () => {};
+    mockApi({
+      'GET /api/progress': [progressEntry()],
+      'PUT /api/progress/7/current': () => new Promise((resolve) => { finish = () => resolve(null); }),
+    });
+    renderRoutes([{ element: <Layout />, children: [{ path: '/progress', element: <ProgressPage /> }] }], '/progress');
+    const user = userEvent.setup();
+
+    const bench = (await screen.findByText('Flat Bench Press')).closest('.card') as HTMLElement;
+    await user.type(within(bench).getByLabelText('New weight in kg'), '72.5');
+    await user.type(within(bench).getByLabelText('New reps'), '6');
+    await user.click(within(bench).getByRole('button', { name: 'Set Result' }));
+    await user.clear(within(bench).getByLabelText('New weight in kg'));
+    await user.type(within(bench).getByLabelText('New weight in kg'), '75');
+    act(() => finish());
+
+    await vi.waitFor(() => expect(within(bench).getByLabelText('New reps')).toHaveValue(null));
+    expect(within(bench).getByLabelText('New weight in kg')).toHaveValue(75);
   });
 
   it('invites the first tracker', async () => {

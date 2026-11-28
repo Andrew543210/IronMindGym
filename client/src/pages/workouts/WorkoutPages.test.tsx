@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { athlete, mockApi, renderPage, renderRoutes, respond } from '../../test/harness';
@@ -80,6 +80,24 @@ describe('workout details', () => {
     await user.click(screen.getByRole('button', { name: 'Delete workout' }));
     expect(await screen.findByTestId('location')).toHaveTextContent('/workouts Workout deleted.');
     expect(calls.filter((c) => c.method !== 'GET').map((c) => c.method)).toEqual(['POST', 'DELETE']);
+  });
+
+  it('keeps what was typed while a comment was being posted', async () => {
+    let finish = () => {};
+    mockApi({
+      'GET /api/workouts/4': workout,
+      'POST /api/workouts/4/comments': () => new Promise((resolve) => { finish = () => resolve(null); }),
+    });
+    renderPage('/workouts/:id', <WorkoutDetailsPage />, '/workouts/4');
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText('Comment'), 'Next time 105');
+    await user.click(screen.getByRole('button', { name: 'Post' }));
+    await user.type(screen.getByLabelText('Comment'), ' for five');
+    act(() => finish());
+
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Post' })).toBeEnabled());
+    expect(screen.getByLabelText('Comment')).toHaveValue('Next time 105 for five');
   });
 
   it('shows that a workout does not exist', async () => {
