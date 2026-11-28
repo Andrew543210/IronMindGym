@@ -5,10 +5,10 @@ import type { FriendCard, FriendIndex, FriendRequestResult } from '../../api/typ
 import { ErrorAlert, PageState } from '../../components/ui';
 import { flash } from '../../flash';
 import { useAction, useApi, usePageTitle } from '../../hooks';
-import { useI18n, type MessageKey } from '../../i18n/i18n';
+import { useI18n, type PlainKey } from '../../i18n/i18n';
 import { FriendSummary } from './FriendSummary';
 
-const requestMessages: Record<FriendRequestResult, MessageKey> = {
+const requestMessages: Record<FriendRequestResult, PlainKey> = {
   Connected: 'friends.connected',
   AlreadyConnected: 'friends.alreadyConnected',
   AlreadyRequested: 'friends.alreadyRequested',
@@ -32,7 +32,7 @@ export function FriendsPage() {
     setParams(query.trim() ? { search: query.trim() } : {});
   }
 
-  function act(action: () => Promise<MessageKey>) {
+  function act(action: () => Promise<PlainKey>) {
     void change.run(async () => {
       const message = await action();
       void navigate(location.pathname + location.search, { replace: true, state: flash({ key: message }) });

@@ -19,7 +19,7 @@ function QuickUpdate({ entry, onSaved }: { entry: ProgressEntry; onSaved: () => 
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!first || !second) {
-      save.setError(new FormError(t('progress.bothValues')));
+      save.setError(new FormError({ key: 'progress.bothValues' }));
       return;
     }
     const [a, b] = [Number(first), Number(second)];

@@ -1,7 +1,7 @@
 /** The unsaved workout lives in the browser, so a closed tab or a lost connection does not lose sets. */
 
 import type { CatalogExercise } from '../../api/types/exercises';
-import type { MessageKey, Translate } from '../../i18n/i18n';
+import type { PlainKey, Translate } from '../../i18n/i18n';
 
 export interface DraftSet {
   exerciseId: number;
@@ -201,7 +201,7 @@ export function readSet(
   item: CatalogExercise | undefined,
   fields: SetFields,
   setTypeName: string | undefined,
-): { set: DraftSet; error?: undefined } | { set?: undefined; error: MessageKey } {
+): { set: DraftSet; error?: undefined } | { set?: undefined; error: PlainKey } {
   if (!item || !fields.setTypeId || setTypeName === undefined) return { error: 'draft.chooseFirst' };
   const type = item.exerciseType;
   const weightText = fields.weightKg.trim();
@@ -255,7 +255,7 @@ export function elapsedMinutes(startedAt: number, now: number): number {
   return Math.max(1, Math.ceil(Math.max(0, Math.floor((now - startedAt) / 1000)) / 60));
 }
 
-export function finishError(draft: StoredDraft, durationMinutes: number, editing: boolean): MessageKey | null {
+export function finishError(draft: StoredDraft, durationMinutes: number, editing: boolean): PlainKey | null {
   if (editing) return 'draft.editing';
   if (draft.sets.length === 0) return 'draft.noSets';
   if (!Number.isInteger(durationMinutes) || durationMinutes < 1 || durationMinutes > 600) return 'draft.durationMinutes';

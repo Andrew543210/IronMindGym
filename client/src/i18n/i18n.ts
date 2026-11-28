@@ -43,10 +43,13 @@ export type ParamArgs<K extends MessageKey> = K extends MessageKey
 
 export type Translate = <K extends MessageKey>(key: K, ...params: ParamArgs<K>) => string;
 
-export interface Text {
-  key: MessageKey;
-  params?: Params;
-}
+/** The texts without parameters. */
+export type PlainKey = { [K in MessageKey]: [ParamNames<K>] extends [never] ? K : never }[MessageKey];
+
+/** A text to show later, in the language of that moment: a key with exactly the parameters it needs. */
+export type Text =
+  | { key: PlainKey; params?: undefined }
+  | { [K in Exclude<MessageKey, PlainKey>]: { key: K; params: ParamsOf<K> } }[Exclude<MessageKey, PlainKey>];
 
 const dictionaries: Record<Language, Record<MessageKey, string | EnglishPlural | UkrainianPlural>> = { en, uk };
 
@@ -82,6 +85,11 @@ function render(language: Language, key: MessageKey, params?: Params): string {
 
 export function translateIn<K extends MessageKey>(language: Language, key: K, ...params: ParamArgs<K>): string {
   return render(language, key, (params as [Params?])[0]);
+}
+
+/** Words a kept text in the language chosen now, for code that is not a component. */
+export function translateText(text: Text): string {
+  return render(currentLanguage(), text.key, text.params);
 }
 
 /** Translates outside of components, in the language chosen now; components use useI18n, which follows a change. */

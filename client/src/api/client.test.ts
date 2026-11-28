@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, CSRF_PROBLEM, api, prefetchCsrfToken } from './client';
+import { translateIn } from '../i18n/i18n';
+import { setLanguage } from '../i18n/language';
+import { ApiError, CSRF_PROBLEM, FormError, api, errorMessages, prefetchCsrfToken } from './client';
 
 function json(status: number, body: unknown, contentType = 'application/json') {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': contentType } });
@@ -73,5 +75,16 @@ describe('api', () => {
     await api.put('/api/workouts/draft', { note: 'short' }, { keepalive: true });
 
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(['/api/session/csrf', '/api/workouts/draft']);
+  });
+
+  it('words its own messages when they are shown, so they follow a change of language', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    const offline = await api.get('/api/dashboard').catch((e: unknown) => e);
+    const mismatch = new FormError({ key: 'register.mismatch' });
+
+    setLanguage('uk');
+
+    expect(errorMessages(offline)).toEqual([translateIn('uk', 'errors.offline')]);
+    expect(errorMessages(mismatch)).toEqual([translateIn('uk', 'register.mismatch')]);
   });
 });

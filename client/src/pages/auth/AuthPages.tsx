@@ -101,7 +101,7 @@ export function RegisterPage() {
   function submit(event: FormEvent) {
     event.preventDefault();
     if (form.password !== form.confirmPassword) {
-      setError(new FormError(t('register.mismatch')));
+      setError(new FormError({ key: 'register.mismatch' }));
       return;
     }
     void run(async () => {

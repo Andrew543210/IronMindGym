@@ -1,4 +1,4 @@
-import { translate } from '../i18n/i18n';
+import { translateText, type Text } from '../i18n/i18n';
 import { currentLanguage } from '../i18n/language';
 
 /**
@@ -7,18 +7,38 @@ import { currentLanguage } from '../i18n/language';
  * Accept-Language asks for names and messages in the interface language.
  */
 
+/**
+ * A refused or failed request. The server words its messages in the request language; the client's own
+ * message is kept as a text and worded when it is shown, so it follows a change of language.
+ */
 export class ApiError extends Error {
   readonly status: number;
-  readonly messages: string[];
+  private readonly worded: string[];
+  private readonly text: Text;
 
-  constructor(status: number, messages: string[]) {
-    super(messages[0] ?? translate('errors.requestFailed', { status: String(status) }));
+  constructor(status: number, messages: string[] | Text) {
+    const worded = Array.isArray(messages) ? messages : [];
+    const text: Text = Array.isArray(messages) ? { key: 'errors.requestFailed', params: { status: String(status) } } : messages;
+    super(worded[0] ?? translateText(text));
     this.status = status;
-    this.messages = messages.length > 0 ? messages : [this.message];
+    this.worded = worded;
+    this.text = text;
+  }
+
+  get messages(): string[] {
+    return this.worded.length > 0 ? this.worded : [translateText(this.text)];
   }
 }
 
-export class FormError extends Error {}
+/** A form the client refuses before sending it; its text is worded when it is shown. */
+export class FormError extends Error {
+  readonly text: Text;
+
+  constructor(text: Text) {
+    super(translateText(text));
+    this.text = text;
+  }
+}
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -81,7 +101,7 @@ export async function request<T>(method: Method, url: string, body?: unknown, op
   }
   if (response.status === 401) {
     onSessionEnded?.();
-    throw new ApiError(401, [translate('errors.sessionEnded')]);
+    throw new ApiError(401, { key: 'errors.sessionEnded' });
   }
   if (!response.ok) throw await toApiError(response);
   if (response.status === 204) return undefined as T;
@@ -97,8 +117,8 @@ export const api = {
 
 export function errorMessages(error: unknown): string[] {
   if (error instanceof ApiError) return error.messages;
-  if (error instanceof FormError) return [error.message];
-  return [translate('errors.generic')];
+  if (error instanceof FormError) return [translateText(error.text)];
+  return [translateText({ key: 'errors.generic' })];
 }
 
 async function fetchCsrfToken(): Promise<string> {
@@ -117,7 +137,7 @@ async function send(method: Method, url: string, body?: unknown, token?: string,
     return await fetch(url, { method, headers, credentials: 'same-origin', body: json, signal: options.signal, keepalive });
   } catch (failure) {
     if (options.signal?.aborted) throw failure;
-    throw new ApiError(0, [translate('errors.offline')]);
+    throw new ApiError(0, { key: 'errors.offline' });
   }
 }
 
@@ -136,8 +156,8 @@ async function problemType(response: Response): Promise<string | undefined> {
 }
 
 async function toApiError(response: Response): Promise<ApiError> {
-  if (response.status === 429) return new ApiError(429, [translate('errors.tooMany')]);
-  if (response.status === 404) return new ApiError(404, [translate('errors.notFound')]);
+  if (response.status === 429) return new ApiError(429, { key: 'errors.tooMany' });
+  if (response.status === 404) return new ApiError(404, { key: 'errors.notFound' });
   let problem: ProblemDetails = {};
   if (isJson(response)) {
     try {
@@ -148,7 +168,6 @@ async function toApiError(response: Response): Promise<ApiError> {
   }
   const messages = Object.values(problem.errors ?? {}).flat();
   if (messages.length === 0 && response.status < 500 && problem.title) messages.push(problem.title);
-  if (messages.length === 0)
-    messages.push(translate(response.status >= 500 ? 'errors.server' : 'errors.request'));
+  if (messages.length === 0) return new ApiError(response.status, { key: response.status >= 500 ? 'errors.server' : 'errors.request' });
   return new ApiError(response.status, messages);
 }
