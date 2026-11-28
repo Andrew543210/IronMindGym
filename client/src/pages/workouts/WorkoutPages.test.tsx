@@ -7,6 +7,7 @@ import { WorkoutDetailsPage, WorkoutHistoryPage } from './WorkoutPages';
 
 describe('workout history', () => {
   it('pages through the sessions and offers to resume an unsaved workout', async () => {
+    let showPageTwo = () => {};
     localStorage.setItem(`ironmind-workout-${athlete.id}`, JSON.stringify({
       draftId: '0f8fad5b-d9cb-469f-a165-70867728950e', startedAt: Date.now(), savedAt: Date.now(), settings: {},
       sets: [{ exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 80, reps: 5, durationSeconds: 0, intensity: 0, restSeconds: 90 }],
@@ -15,7 +16,7 @@ describe('workout history', () => {
     mockApi({
       'GET /api/workouts/draft': null,
       'GET /api/workouts?page=1': { sessions: [session(1)], page: 1, hasOlderSessions: true },
-      'GET /api/workouts?page=2': { sessions: [session(2)], page: 2, hasOlderSessions: false },
+      'GET /api/workouts?page=2': () => new Promise((resolve) => { showPageTwo = () => resolve({ sessions: [session(2)], page: 2, hasOlderSessions: false }); }),
     });
     renderPage('/workouts', <WorkoutHistoryPage />);
     const user = userEvent.setup();
@@ -24,6 +25,10 @@ describe('workout history', () => {
     expect(await screen.findByText(/Session 1/)).toBeInTheDocument();
     expect(screen.getByText('2026-11-19 19:00')).toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: 'Older' }));
+    // Page 2 is on its way: the pager still belongs to page 1 on screen.
+    expect(await screen.findByText('Loading…')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Older' })).toHaveAttribute('href', '/workouts?page=2');
+    act(() => showPageTwo());
 
     expect(await screen.findByText(/Session 2/)).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Older' })).not.toBeInTheDocument();

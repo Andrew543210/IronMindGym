@@ -19,7 +19,9 @@ export function WorkoutHistoryPage() {
   const athlete = useAthlete();
   const [params] = useSearchParams();
   const page = Math.max(1, Math.floor(Number(params.get('page'))) || 1);
-  const { data, error, loading } = useApi<WorkoutHistory>(`/api/workouts?page=${page}`, { keepPrevious: true });
+  const { data, error, loading, isStale } = useApi<WorkoutHistory>(`/api/workouts?page=${page}`, { keepPrevious: true });
+  // While the next page loads, the previous one stays on screen and the pager belongs to it.
+  const shownPage = data?.page ?? page;
   const [localDraft] = useState(() => draftStore(athlete.id).read());
   const [serverDraft, setServerDraft] = useState<StoredValue | null>(null);
   useEffect(() => {
@@ -44,10 +46,11 @@ export function WorkoutHistoryPage() {
 
       <h2 className="h4">{t('workouts.history')}</h2>
       {!data && <PageState error={error} loading={loading} />}
+      {isStale && <p className="small text-muted" role="status">{t('common.loading')}</p>}
       {data?.sessions.length === 0 && (
-        <p className="text-muted">{page > 1 ? t('workouts.noOlder') : t('workouts.none')}</p>
+        <p className="text-muted">{shownPage > 1 ? t('workouts.noOlder') : t('workouts.none')}</p>
       )}
-      <ul className="list-group mb-4">
+      <ul className="list-group mb-4" aria-busy={isStale}>
         {data?.sessions.map((s) => (
           <li key={s.id} className="list-group-item d-flex justify-content-between align-items-start align-items-sm-center gap-2">
             <span>
@@ -63,8 +66,8 @@ export function WorkoutHistoryPage() {
       </ul>
 
       <div className="d-flex gap-2 mb-4">
-        {page > 1 && <Link className="btn btn-outline-secondary btn-sm" to={page === 2 ? '/workouts' : `/workouts?page=${page - 1}`}><Glyph>←</Glyph> {t('workouts.newer')}</Link>}
-        {data?.hasOlderSessions && <Link className="btn btn-outline-secondary btn-sm" to={`/workouts?page=${page + 1}`}>{t('workouts.older')} <Glyph>→</Glyph></Link>}
+        {shownPage > 1 && <Link className="btn btn-outline-secondary btn-sm" to={shownPage === 2 ? '/workouts' : `/workouts?page=${shownPage - 1}`}><Glyph>←</Glyph> {t('workouts.newer')}</Link>}
+        {data?.hasOlderSessions && <Link className="btn btn-outline-secondary btn-sm" to={`/workouts?page=${shownPage + 1}`}>{t('workouts.older')} <Glyph>→</Glyph></Link>}
       </div>
     </>
   );

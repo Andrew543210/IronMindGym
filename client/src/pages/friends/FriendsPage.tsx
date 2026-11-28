@@ -23,7 +23,7 @@ export function FriendsPage() {
   const [params, setParams] = useSearchParams();
   const search = params.get('search') ?? '';
   const [query, setQuery] = useState(search);
-  const { data, error, loading, reload } = useApi<FriendIndex>(
+  const { data, error, loading, isStale, reload } = useApi<FriendIndex>(
     `/api/friends?search=${encodeURIComponent(search)}`, { keepPrevious: true });
   const change = useAction();
 
@@ -73,13 +73,17 @@ export function FriendsPage() {
 
       <ErrorAlert error={change.error} />
       {!data && <PageState error={error} loading={loading} />}
-      {data?.friends.length === 0 && (
+      {/* The cards of the previous search stay until the new answer comes, without acting on them. */}
+      {isStale && <p className="small text-muted" role="status">{t('common.loading')}</p>}
+      {data?.friends.length === 0 && !isStale && (
         <div className="alert alert-secondary">{search ? t('friends.noMatch', { search }) : t('friends.none')}</div>
       )}
 
-      {data?.friends.map((friend) => (
-        <FriendSummary key={friend.userId} friend={friend} busy={change.busy} onAccept={accept} onAdd={sendRequest} onRemove={remove} />
-      ))}
+      <div aria-busy={isStale}>
+        {data?.friends.map((friend) => (
+          <FriendSummary key={friend.userId} friend={friend} busy={change.busy || isStale} onAccept={accept} onAdd={sendRequest} onRemove={remove} />
+        ))}
+      </div>
     </>
   );
 }
