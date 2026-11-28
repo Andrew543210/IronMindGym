@@ -90,7 +90,7 @@ export function Layout() {
   }, [moreOpen]);
 
   return (
-    <div className={signedIn ? 'app-shell' : 'public-shell'}>
+    <div className={signedIn ? undefined : 'public-shell'}>
       <a href="#main" className="skip-link">{t('nav.skip')}</a>
       {signedIn && (
         <aside className="sidebar" aria-label={t('nav.main')}>

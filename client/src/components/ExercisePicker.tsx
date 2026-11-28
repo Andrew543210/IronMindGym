@@ -58,7 +58,7 @@ export function ExercisePicker({ catalog, choice, onChoose, disabled = false, fo
   return (
     <>
       <div className="col-12">
-        <details className="exercise-browser">
+        <details>
           <summary>{foldFiltersUnder}</summary>
           <div className="row g-3 mt-1">{filters}</div>
         </details>

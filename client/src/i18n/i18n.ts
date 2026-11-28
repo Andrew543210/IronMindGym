@@ -83,10 +83,6 @@ function render(language: Language, key: MessageKey, params?: Params): string {
   });
 }
 
-export function translateIn<K extends MessageKey>(language: Language, key: K, ...params: ParamArgs<K>): string {
-  return render(language, key, (params as [Params?])[0]);
-}
-
 /** Words a kept text in the language chosen now, for code that is not a component. */
 export function translateText(text: Text): string {
   return render(currentLanguage(), text.key, text.params);

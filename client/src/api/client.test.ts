@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { translateIn } from '../i18n/i18n';
 import { setLanguage } from '../i18n/language';
+import { uk } from '../i18n/uk';
 import { ApiError, CSRF_PROBLEM, FormError, api, errorMessages, prefetchCsrfToken } from './client';
 
 function json(status: number, body: unknown, contentType = 'application/json') {
@@ -84,7 +84,7 @@ describe('api', () => {
 
     setLanguage('uk');
 
-    expect(errorMessages(offline)).toEqual([translateIn('uk', 'errors.offline')]);
-    expect(errorMessages(mismatch)).toEqual([translateIn('uk', 'register.mismatch')]);
+    expect(errorMessages(offline)).toEqual([uk['errors.offline']]);
+    expect(errorMessages(mismatch)).toEqual([uk['register.mismatch']]);
   });
 });

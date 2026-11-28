@@ -10,8 +10,7 @@
 .card-body {
     padding: 24px;
 }
-.card-header,
-.card-footer {
+.card-header {
     padding: 16px 24px;
     border-color: var(--line);
     background: #161a1e;
@@ -101,8 +100,7 @@
     margin-bottom: 8px;
 }
 .form-control,
-.form-select,
-.input-group-text {
+.form-select {
     background-color: #0d1013;
     border: 1px solid #343c44;
     color: #edf0f2;

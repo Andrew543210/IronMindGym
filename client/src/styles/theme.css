@@ -2,16 +2,13 @@
 :root {
     --page: #0b0d0f;
     --panel: #131619;
-    --panel-hover: #191d21;
     --line: #282d32;
     --muted: #979fa8;
     --white: #f3f4f5;
     --green: #b4d6bb;
     /* Bootstrap reads its text colours from these, so its utilities keep their meaning in this theme. */
     --bs-secondary-color: var(--muted);
-    --bs-success-rgb: 180, 214, 187;
     --bs-info-rgb: 185, 203, 217;
-    --bs-danger-rgb: 239, 172, 168;
 }
 * {
     box-sizing: border-box;
@@ -57,7 +54,6 @@ h3,
 h4,
 h5,
 h6,
-.h1,
 .h2,
 .h3,
 .h4,
