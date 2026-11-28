@@ -74,6 +74,10 @@ export function Layout() {
   const flash = useFlash();
   const main = useFocusAfterNavigation();
   const leaving = useAction();
+  // A failed sign-out is reported on the page it was tried from, like a flash message.
+  const location = useLocation();
+  const page = location.pathname + location.search;
+  const [leftFrom, setLeftFrom] = useState<string>();
   const signedIn = session !== null;
 
   useEffect(() => {
@@ -121,14 +125,17 @@ export function Layout() {
               <>
                 <Link className="profile-link" to="/profile">{t('nav.account')} <Glyph>↗</Glyph></Link>
                 <button type="button" className="btn btn-sm btn-outline-secondary" disabled={leaving.busy}
-                  onClick={() => void leaving.run(signOut)}>{t('nav.signOut')}</button>
+                  onClick={() => {
+                    setLeftFrom(page);
+                    void leaving.run(signOut);
+                  }}>{t('nav.signOut')}</button>
               </>
             ) : <span className="text-muted small topbar-motto">{t('topbar.public')}</span>}
           </div>
         </header>
         <main id="main" ref={main} tabIndex={-1} className="main-content">
           {flash.message && <div className="alert alert-success" role="status">{show(flash.message)}</div>}
-          {signedIn && leaving.error !== undefined && (
+          {signedIn && leaving.error !== undefined && leftFrom === page && (
             <div className="alert alert-danger" role="alert">{t('nav.signOutFailed')} {errorMessages(leaving.error).join(' ')}</div>
           )}
           <Outlet />

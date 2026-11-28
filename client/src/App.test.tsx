@@ -121,6 +121,7 @@ describe('app', () => {
       'GET /api/session': athlete,
       'GET /api/dashboard': overview,
       'POST /api/session/logout': () => (online ? null : respond(503)),
+      'GET /api/goals': [],
     });
     open('/');
     const user = userEvent.setup();
@@ -131,6 +132,9 @@ describe('app', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Sign-out failed, so you are still signed in. The server could not complete this. Please try again.');
     expect(screen.getByText("Let's build, athlete.")).toBeInTheDocument();
+    await user.click(within(screen.getByRole('complementary', { name: 'Main navigation' })).getByRole('link', { name: /Goals/ }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'One goal at a time' })).toBeInTheDocument();
+    expect(screen.queryByText(/Sign-out failed/)).not.toBeInTheDocument();
     online = true;
     await user.click(screen.getByRole('button', { name: 'Sign out' }));
     expect(await screen.findByText('You have logged out.')).toBeInTheDocument();
