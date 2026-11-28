@@ -13,8 +13,6 @@ interface SessionSettingsProps {
 /** The split, its day and the duration, folded away: most sessions keep the defaults. */
 export function SessionSettings({ options, draft, onChange }: SessionSettingsProps) {
   const { t } = useI18n();
-  const now = useNow(1000);
-  const elapsed = elapsedMinutes(draft.startedAt, now);
   const splitDays = options.splitTypes.find((s) => String(s.id) === draft.settings.splitTypeId)?.days ?? [];
   const dayOptions = splitDays.length > 0
     ? splitDays.map((day) => ({ value: String(day.id), label: day.name }))
@@ -53,9 +51,8 @@ export function SessionSettings({ options, draft, onChange }: SessionSettingsPro
             </div>
             <div className="col-md-4">
               <label htmlFor="durationMinutes" className="form-label">{t('logger.durationMinutes')}</label>
-              <input id="durationMinutes" type="number" className="form-control" min={1} max={600} inputMode="numeric"
-                value={draft.autoDuration ? String(elapsed) : draft.settings.durationMinutes}
-                onChange={(e) => setSetting('durationMinutes', e.target.value)} />
+              <DurationInput startedAt={draft.startedAt} auto={draft.autoDuration} value={draft.settings.durationMinutes}
+                onChange={(value) => setSetting('durationMinutes', value)} />
               <label className="small mt-2">
                 <input type="checkbox" checked={draft.autoDuration} onChange={(e) => setAutoDuration(e.target.checked)} /> {t('logger.useElapsed')}
               </label>
@@ -64,5 +61,21 @@ export function SessionSettings({ options, draft, onChange }: SessionSettingsPro
         </details>
       </div>
     </div>
+  );
+}
+
+interface DurationInputProps {
+  startedAt: number;
+  auto: boolean;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+/** The duration; while it follows the elapsed time, only this field renders again every second. */
+function DurationInput({ startedAt, auto, value, onChange }: DurationInputProps) {
+  const now = useNow(1000);
+  return (
+    <input id="durationMinutes" type="number" className="form-control" min={1} max={600} inputMode="numeric"
+      value={auto ? String(elapsedMinutes(startedAt, now)) : value} onChange={(e) => onChange(e.target.value)} />
   );
 }
