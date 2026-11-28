@@ -188,6 +188,14 @@ describe('workout logger', () => {
     await waitFor(() => expect(localStorage.getItem('ironmind-workout-5')).toBeNull());
   });
 
+  it('fetches the change token as it opens, so a change can still go out as the tab closes', async () => {
+    renderLogger();
+
+    await screen.findByRole('button', { name: 'Finish workout' });
+    await waitFor(() => expect(requests.map((r) => r.url)).toContain('/api/session/csrf'));
+    expect(requests.some((r) => r.method === 'PUT')).toBe(false);
+  });
+
   it('locks the logger while the workout is being saved and opens it again when that fails', async () => {
     storeDraft();
     let fail = () => {};

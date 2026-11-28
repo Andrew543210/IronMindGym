@@ -52,6 +52,19 @@ export function forgetCsrfToken() {
   csrfToken = null;
 }
 
+/**
+ * Fetches the token ahead of a change that may have to go out as the tab closes. Such a keepalive request
+ * cannot wait for the token: the browser cancels the ordinary request that would fetch it first.
+ */
+export async function prefetchCsrfToken(): Promise<void> {
+  if (csrfToken) return;
+  try {
+    csrfToken = await fetchCsrfToken();
+  } catch {
+    // The change fetches the token itself when it goes out.
+  }
+}
+
 export async function request<T>(method: Method, url: string, body?: unknown, options: RequestOptions = {}): Promise<T> {
   let response: Response;
   if (method === 'GET') {

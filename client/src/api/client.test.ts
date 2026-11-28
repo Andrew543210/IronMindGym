@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, CSRF_PROBLEM, api } from './client';
+import { ApiError, CSRF_PROBLEM, api, prefetchCsrfToken } from './client';
 
 function json(status: number, body: unknown, contentType = 'application/json') {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': contentType } });
@@ -61,5 +61,17 @@ describe('api', () => {
 
     const sent = fetchMock.mock.calls.slice(1).map(([, init]) => init?.keepalive);
     expect(sent).toEqual([true, false]);
+  });
+
+  it('can fetch the token ahead, so a change sent as the tab closes goes out at once', async () => {
+    const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (url) =>
+      (url === '/api/session/csrf' ? json(200, { token: 't' }) : new Response(null, { status: 204 })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await prefetchCsrfToken();
+    await prefetchCsrfToken();
+    await api.put('/api/workouts/draft', { note: 'short' }, { keepalive: true });
+
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(['/api/session/csrf', '/api/workouts/draft']);
   });
 });

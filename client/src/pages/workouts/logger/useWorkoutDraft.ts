@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { prefetchCsrfToken } from '../../../api/client';
 import type { LoggerOptions } from '../../../api/types/workouts';
 import type { Text } from '../../../i18n/i18n';
 import { applyStored, draftStore, freshDraft, isDraftId, newerDraft, restoreDraft, type DraftSettings, type StoredDraft, type StoredValue } from '../draft';
@@ -88,6 +89,10 @@ export function useWorkoutDraft({ options, userId, serverCopy, syncWithServer, o
     store.write(draft);
     if (syncWithServer) sync.push(draft);
   }, [draft, store, sync, syncWithServer]);
+
+  useEffect(() => {
+    if (syncWithServer) void prefetchCsrfToken();
+  }, [syncWithServer]);
 
   useEffect(() => {
     const leave = () => sync.flush(true);
