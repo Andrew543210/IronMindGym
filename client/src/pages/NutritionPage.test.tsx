@@ -106,5 +106,6 @@ describe('nutrition journal', () => {
     expect(await screen.findByText('Entry deleted.')).toBeInTheDocument();
     expect(window.confirm).toHaveBeenCalledWith('Delete the nutrition entry for Nov 20, 2026?');
     expect(await screen.findByText('Nothing logged for this day yet.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Calories (kcal)')).toHaveValue(null);
   });
 });

@@ -70,7 +70,8 @@ export function NutritionPage() {
       {!data && <PageState error={error} loading={loading} />}
       {data && (
         <>
-          <DayForm key={data.date} day={data} chosenDate={date} onChoose={choose}
+          {/* A day that is logged or deleted starts the form again from what the server now holds. */}
+          <DayForm key={`${data.date}:${data.isLogged}`} day={data} chosenDate={date} onChoose={choose}
             onChanged={(next) => { setChange(next); reload(); }} />
           <Targets advice={data.advice} />
           {data.isLogged && (
