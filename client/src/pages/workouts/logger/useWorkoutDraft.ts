@@ -62,12 +62,17 @@ export function useWorkoutDraft({ options, userId, serverCopy, syncWithServer, o
   const [canStore] = useState(storageWorks);
 
   const saved = useRef(false);
+  const latest = useRef(draft);
   const changedElsewhere = useRef(false);
   const replaced = useRef(onReplaced);
   const [sync] = useState(() => serverDraftSync(
     isDraftId(serverCopy?.draftId) ? serverCopy.draftId : undefined,
     (sent) => store.markSent(sent),
   ));
+
+  useEffect(() => {
+    latest.current = draft;
+  }, [draft]);
 
   function update(next: StoredDraft, message: Text = { key: 'logger.draftSaved' }) {
     setDraft({ ...next, savedAt: Date.now() });
@@ -149,7 +154,8 @@ export function useWorkoutDraft({ options, userId, serverCopy, syncWithServer, o
     try {
       result = await send();
     } catch (failure) {
-      if (syncWithServer) sync.push(draft);
+      // Another tab may have changed the workout meanwhile; the server gets the newest copy.
+      if (syncWithServer) sync.push(latest.current);
       throw failure;
     }
     saved.current = true;

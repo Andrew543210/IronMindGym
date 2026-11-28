@@ -181,46 +181,49 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
   }
 
   return (
-    <form className="row g-3 mb-4 workout-logger" noValidate onSubmit={finish}>
-      <div className="col-12">
-        <div className="workout-toolbar d-flex justify-content-between align-items-center gap-3">
-          <span>{t('logger.sessionTime')} <SessionClock startedAt={draft.startedAt} /></span>
-          <span className="small text-muted draft-status" role="status">{canStore ? show(status) : t('logger.storageUnavailable')}</span>
-        </div>
-      </div>
-
-      <SessionSettings options={options} draft={draft} onChange={(next) => update(next)} />
-
-      <div className="col-12">
-        <div className="card">
-          <div className="card-header">{t('logger.addHeader')}</div>
-          <div className="card-body row g-3 set-editor" ref={editorRef}>
-            <ExerciseSearch catalog={catalog} onPick={pickSearchResult} />
-            <ExercisePicker catalog={catalog} choice={choice} onChoose={choose} foldFiltersUnder={t('logger.browse')} exerciseRef={exerciseRef} />
-            <SetEditor options={options} exercise={exercise} fields={fields} onFields={setFields} editingIndex={editingIndex} error={error}
-              onSave={saveSet} onCancel={endEdit} weightRef={weightRef} durationRef={durationRef} errorRef={errorRef} />
-            <RestTimer key={draft.timerEnd} timerEnd={draft.timerEnd} onStart={startTimer} onSkip={skipRest} />
-            <SessionSets sets={draft.sets} catalog={catalog} setTypeName={setTypeName} onEdit={editSet} onRemove={removeSet} />
+    <form className="mb-4 workout-logger" noValidate onSubmit={finish}>
+      {/* Nothing changes while the workout is being saved: the request carries the draft as it was sent. */}
+      <fieldset className="row g-3" disabled={save.busy}>
+        <div className="col-12">
+          <div className="workout-toolbar d-flex justify-content-between align-items-center gap-3">
+            <span>{t('logger.sessionTime')} <SessionClock startedAt={draft.startedAt} /></span>
+            <span className="small text-muted draft-status" role="status">{canStore ? show(status) : t('logger.storageUnavailable')}</span>
           </div>
         </div>
-      </div>
 
-      <div className="col-md-2">
-        <label htmlFor="reviewRating" className="form-label">{t('logger.rating')}</label>
-        <input id="reviewRating" type="number" className="form-control" min={1} max={5} inputMode="numeric"
-          value={draft.settings.reviewRating} onChange={(e) => update({ ...draft, settings: { ...draft.settings, reviewRating: e.target.value } })} />
-      </div>
-      <div className="col-md-10">
-        <label htmlFor="reviewComment" className="form-label">{t('logger.review')}</label>
-        <input id="reviewComment" className="form-control" maxLength={800} placeholder={t('logger.reviewPlaceholder')}
-          value={draft.settings.reviewComment} onChange={(e) => update({ ...draft, settings: { ...draft.settings, reviewComment: e.target.value } })} />
-      </div>
+        <SessionSettings options={options} draft={draft} onChange={(next) => update(next)} />
 
-      <div className="col-12 d-grid gap-2">
-        <ErrorAlert error={save.error} />
-        <button type="submit" className="btn btn-success finish-workout" disabled={save.busy}>{save.busy ? t('logger.finishing') : t('logger.finish')}</button>
-        <button type="button" className="btn btn-outline-danger" disabled={save.busy} onClick={discardWorkout}>{t('logger.discard')}</button>
-      </div>
+        <div className="col-12">
+          <div className="card">
+            <div className="card-header">{t('logger.addHeader')}</div>
+            <div className="card-body row g-3 set-editor" ref={editorRef}>
+              <ExerciseSearch catalog={catalog} onPick={pickSearchResult} />
+              <ExercisePicker catalog={catalog} choice={choice} onChoose={choose} foldFiltersUnder={t('logger.browse')} exerciseRef={exerciseRef} />
+              <SetEditor options={options} exercise={exercise} fields={fields} onFields={setFields} editingIndex={editingIndex} error={error}
+                onSave={saveSet} onCancel={endEdit} weightRef={weightRef} durationRef={durationRef} errorRef={errorRef} />
+              <RestTimer key={draft.timerEnd} timerEnd={draft.timerEnd} onStart={startTimer} onSkip={skipRest} />
+              <SessionSets sets={draft.sets} catalog={catalog} setTypeName={setTypeName} onEdit={editSet} onRemove={removeSet} />
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-2">
+          <label htmlFor="reviewRating" className="form-label">{t('logger.rating')}</label>
+          <input id="reviewRating" type="number" className="form-control" min={1} max={5} inputMode="numeric"
+            value={draft.settings.reviewRating} onChange={(e) => update({ ...draft, settings: { ...draft.settings, reviewRating: e.target.value } })} />
+        </div>
+        <div className="col-md-10">
+          <label htmlFor="reviewComment" className="form-label">{t('logger.review')}</label>
+          <input id="reviewComment" className="form-control" maxLength={800} placeholder={t('logger.reviewPlaceholder')}
+            value={draft.settings.reviewComment} onChange={(e) => update({ ...draft, settings: { ...draft.settings, reviewComment: e.target.value } })} />
+        </div>
+
+        <div className="col-12 d-grid gap-2">
+          <ErrorAlert error={save.error} />
+          <button type="submit" className="btn btn-success finish-workout">{save.busy ? t('logger.finishing') : t('logger.finish')}</button>
+          <button type="button" className="btn btn-outline-danger" onClick={discardWorkout}>{t('logger.discard')}</button>
+        </div>
+      </fieldset>
     </form>
   );
 }

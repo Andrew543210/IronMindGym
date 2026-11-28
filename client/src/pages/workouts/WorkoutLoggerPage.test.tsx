@@ -41,6 +41,7 @@ const posted: unknown[] = [];
 const requests: { method: string; url: string }[] = [];
 let serverDraft: unknown;
 let draftPutStatus = 204;
+let workoutPost: Promise<Response> | undefined;
 
 const DRAFT_ID = '0f8fad5b-d9cb-469f-a165-70867728950e';
 const bench = { exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 60, reps: 5, durationSeconds: 0, intensity: 0, restSeconds: 120 };
@@ -84,6 +85,7 @@ beforeEach(() => {
   requests.length = 0;
   serverDraft = undefined;
   draftPutStatus = 204;
+  workoutPost = undefined;
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
     requests.push({ method: init?.method ?? 'GET', url });
     if (url === '/api/workouts/draft' && (init?.method ?? 'GET') === 'GET') return serverDraft ? respond(200, serverDraft) : respond(204);
@@ -99,7 +101,7 @@ beforeEach(() => {
     if (url === '/api/session/csrf') return respond(200, { token: 'token' });
     if (url === '/api/workouts' && init?.method === 'POST') {
       posted.push(JSON.parse(init.body as string));
-      return respond(200, { id: 42 });
+      return workoutPost ?? respond(200, { id: 42 });
     }
     return respond(404);
   }));
@@ -184,6 +186,23 @@ describe('workout logger', () => {
       reviewComment: 'Heavy day',
     })]);
     await waitFor(() => expect(localStorage.getItem('ironmind-workout-5')).toBeNull());
+  });
+
+  it('locks the logger while the workout is being saved and opens it again when that fails', async () => {
+    storeDraft();
+    let fail = () => {};
+    workoutPost = new Promise((resolve) => { fail = () => resolve(respond(500)); });
+    const user = userEvent.setup();
+    renderLogger();
+
+    await user.click(await screen.findByRole('button', { name: 'Finish workout' }));
+
+    expect(await screen.findByRole('button', { name: 'Saving workout…' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Log completed set' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Discard workout' })).toBeDisabled();
+    act(() => fail());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Log completed set' })).toBeEnabled());
+    expect(storedSets()).toHaveLength(1);
   });
 
   it('continues a workout started on another device and removes it there when discarded', async () => {
