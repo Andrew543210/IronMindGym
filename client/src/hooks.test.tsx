@@ -76,6 +76,21 @@ describe('useApi', () => {
     globalThis.fetch = stubbed;
   });
 
+  it('reads a url again after it was null instead of showing the old answer as current', async () => {
+    let version = 1;
+    mockApi({ 'GET /api/record': () => ({ version }) });
+    const initialProps: { url: string | null } = { url: '/api/record' };
+    const { result, rerender } = renderHook(({ url }) => useApi<{ version: number }>(url), { initialProps });
+    await waitFor(() => expect(result.current.data).toEqual({ version: 1 }));
+
+    rerender({ url: null });
+    version = 2;
+    rerender({ url: '/api/record' });
+
+    expect(result.current).toMatchObject({ data: { version: 1 }, loading: true, isStale: true });
+    await waitFor(() => expect(result.current.data).toEqual({ version: 2 }));
+  });
+
   it('reports a failed load without data', async () => {
     mockApi({ 'GET /api/broken': () => respond(500, { title: 'Broken' }) });
     const { result } = renderHook(() => useApi('/api/broken'));

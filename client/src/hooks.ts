@@ -32,7 +32,13 @@ export interface Loading<T> {
 export function useApi<T>(url: string | null, { keepPrevious = false }: ApiOptions = {}): Loading<T> {
   const [version, setVersion] = useState(0);
   const [result, setResult] = useState<Loaded<T>>();
+  const [previousUrl, setPreviousUrl] = useState(url);
   const { language } = useI18n();
+  // An answer kept from before the url was null may be out of date: the url is read again, like a reload.
+  if (url !== previousUrl) {
+    setPreviousUrl(url);
+    if (previousUrl === null) setVersion((current) => current + 1);
+  }
   const key = `${version}:${language}:${url}`;
 
   useEffect(() => {
