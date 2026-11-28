@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api } from '../../api/client';
 import type { WorkoutDetails, WorkoutHistory } from '../../api/types/workouts';
@@ -9,8 +9,8 @@ import { localDateTime } from '../../format';
 import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n } from '../../i18n/i18n';
 import { useAthlete } from '../../session';
-import { draftStore, newerDraft, validSets, type StoredValue } from './draft';
-import { readServerDraft } from './serverDraft';
+import { draftStore, newerDraft, validSets } from './draft';
+import { SERVER_DRAFT_ROUTE, type ServerDraft } from './serverDraft';
 import { WorkoutReactions, WorkoutSessionView } from './WorkoutView';
 
 export function WorkoutHistoryPage() {
@@ -23,11 +23,8 @@ export function WorkoutHistoryPage() {
   // While the next page loads, the previous one stays on screen and the pager belongs to it.
   const shownPage = data?.page ?? page;
   const [localDraft] = useState(() => draftStore(athlete.id).read());
-  const [serverDraft, setServerDraft] = useState<StoredValue | null>(null);
-  useEffect(() => {
-    readServerDraft().then(setServerDraft, () => undefined);
-  }, []);
-  const unsavedSets = validSets(newerDraft(localDraft, serverDraft)?.sets).length;
+  const { data: serverDraft } = useApi<ServerDraft | undefined>(SERVER_DRAFT_ROUTE);
+  const unsavedSets = validSets(newerDraft(localDraft, serverDraft?.content ?? null)?.sets).length;
 
   return (
     <>

@@ -1,15 +1,20 @@
 import { api, ApiError } from '../../api/client';
 import type { StoredDraft, StoredValue } from './draft';
 
-const ROUTE = '/api/workouts/draft';
+export const SERVER_DRAFT_ROUTE = '/api/workouts/draft';
+const ROUTE = SERVER_DRAFT_ROUTE;
 const DELAY_MS = 1500;
 
-interface ServerDraft {
+export interface ServerDraft {
   draftId: string;
   content: StoredValue;
   updatedAt: string;
 }
 
+/**
+ * The logger reads the server's copy once, as it opens, rather than through useApi: a change of language
+ * reloads what useApi holds, and the copy must not change under a workout being logged.
+ */
 export async function readServerDraft(): Promise<StoredValue | null> {
   const draft = await api.get<ServerDraft | undefined>(ROUTE);
   return draft?.content ?? null;

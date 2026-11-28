@@ -10,8 +10,14 @@ export interface FriendCard {
   averageKcal: number;
   lastFiveWorkouts: WorkoutListItem[];
   lastNutritionLogs: DatedIntake[];
-  personalRecords: { exerciseName: string; maxWeightKg: number; achievedAt: string }[];
+  personalRecords: FriendRecord[];
   achievements: EarnedAward[];
+}
+
+export interface FriendRecord {
+  exerciseName: string;
+  maxWeightKg: number;
+  achievedAt: string;
 }
 
 export interface FriendIndex {

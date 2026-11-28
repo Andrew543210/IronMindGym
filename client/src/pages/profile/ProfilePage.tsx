@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import type { Profile } from '../../api/types/profile';
 import { ErrorAlert, Glyph, PageState, ResponsiveTable } from '../../components/ui';
 import { formatDay, formatFixed, localDay } from '../../format';
+import { textFields } from '../../forms';
 import { useAction, useApi, usePageTitle } from '../../hooks';
 import { useI18n } from '../../i18n/i18n';
 import { useAthlete } from '../../session';
@@ -91,7 +92,8 @@ export function ProfilePage() {
 function WeightForm({ onSaved }: { onSaved: () => void }) {
   const { t } = useI18n();
   const athlete = useAthlete();
-  const [form, setForm] = useState({ weightKg: '', date: athlete.today });
+  const [form, setForm] = useState({ weightKg: '', weightDate: athlete.today });
+  const field = textFields(form, setForm);
   // The day, not the sentence: the sentence follows a change of the interface language.
   const [saved, setSaved] = useState<string>();
   const { busy, error, run } = useAction();
@@ -101,8 +103,8 @@ function WeightForm({ onSaved }: { onSaved: () => void }) {
     setSaved(undefined);
     const sent = form;
     void run(async () => {
-      await api.put(`/api/profile/weights/${sent.date}`, { weightKg: Number(sent.weightKg) });
-      setSaved(sent.date);
+      await api.put(`/api/profile/weights/${sent.weightDate}`, { weightKg: Number(sent.weightKg) });
+      setSaved(sent.weightDate);
       setForm((current) => (current.weightKg === sent.weightKg ? { ...current, weightKg: '' } : current));
       onSaved();
     });
@@ -118,13 +120,11 @@ function WeightForm({ onSaved }: { onSaved: () => void }) {
         {saved && <div className="alert alert-success" role="status">{t('profile.weightSaved', { date: formatDay(saved) })}</div>}
         <div className="col-6">
           <label htmlFor="weightKg" className="form-label">{t('field.weightKg')}</label>
-          <input id="weightKg" type="number" inputMode="decimal" step="0.1" min={30} max={250} required className="form-control"
-            value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: e.target.value })} />
+          <input {...field('weightKg')} type="number" inputMode="decimal" step="0.1" min={30} max={250} required className="form-control" />
         </div>
         <div className="col-6">
           <label htmlFor="weightDate" className="form-label">{t('common.date')}</label>
-          <input id="weightDate" type="date" required max={athlete.today} className="form-control"
-            value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+          <input {...field('weightDate')} type="date" required max={athlete.today} className="form-control" />
         </div>
         <div className="col-12">
           <button className="btn btn-primary" type="submit" disabled={busy}>{busy ? t('common.saving') : t('profile.saveWeight')}</button>
