@@ -42,6 +42,7 @@ const requests: { method: string; url: string }[] = [];
 let serverDraft: unknown;
 let draftPutStatus = 204;
 let workoutPost: Promise<Response> | undefined;
+let loggerOptions: LoggerOptions = options;
 
 const DRAFT_ID = '0f8fad5b-d9cb-469f-a165-70867728950e';
 const bench = { exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 60, reps: 5, durationSeconds: 0, intensity: 0, restSeconds: 120 };
@@ -86,13 +87,14 @@ beforeEach(() => {
   serverDraft = undefined;
   draftPutStatus = 204;
   workoutPost = undefined;
+  loggerOptions = options;
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
     requests.push({ method: init?.method ?? 'GET', url });
     if (url === '/api/workouts/draft' && (init?.method ?? 'GET') === 'GET') return serverDraft ? respond(200, serverDraft) : respond(204);
     if (url.startsWith('/api/workouts/draft')) return respond(init?.method === 'PUT' ? draftPutStatus : 204);
     if (url === '/api/workouts/logger') {
       const ukrainian = (init?.headers as Record<string, string> | undefined)?.['Accept-Language'] === 'uk';
-      return respond(200, ukrainian ? ukrainianOptions : options);
+      return respond(200, ukrainian ? ukrainianOptions : loggerOptions);
     }
     if (url === '/api/workouts/previous-set?exerciseId=9') {
       return respond(200, { weightKg: 0, reps: 0, durationSeconds: 900, intensity: 7, restSeconds: 60, setTypeId: 2, localDate: '2026-11-20' });
@@ -108,6 +110,34 @@ beforeEach(() => {
 });
 
 describe('workout logger', () => {
+  it('changes the split, its day and the duration in the session settings', async () => {
+    loggerOptions = {
+      ...options, activeSplitTypeName: null, activeSplitTypeId: null,
+      splitTypes: [...options.splitTypes, { id: 5, name: 'Full-body', days: [] }],
+    };
+    // Nine and a half minutes in: the elapsed time reads 10 for the half minute the test may take.
+    storeDraft({ startedAt: Date.now() - 570_000 });
+    const user = userEvent.setup();
+    renderLogger();
+
+    await user.click(await screen.findByText('Session settings'));
+    expect(screen.getByLabelText('Duration (min)')).toHaveValue(10);
+    await user.selectOptions(screen.getByLabelText('Split day'), 'Lower');
+    expect(storedDraft().settings).toMatchObject({ splitTypeId: '2', splitDayId: '4' });
+    await user.selectOptions(screen.getByLabelText('Split type'), 'Full-body');
+    expect(screen.getByLabelText('Split day')).toHaveDisplayValue('Training Day');
+    expect(storedDraft().settings).toMatchObject({ splitTypeId: '5', splitDayId: '' });
+
+    await user.click(screen.getByLabelText('Use elapsed time'));
+    expect(storedDraft()).toMatchObject({ autoDuration: false, settings: { durationMinutes: '10' } });
+    await user.clear(screen.getByLabelText('Duration (min)'));
+    await user.type(screen.getByLabelText('Duration (min)'), '45');
+    expect(storedDraft().settings?.durationMinutes).toBe('45');
+    await user.click(screen.getByLabelText('Use elapsed time'));
+    expect(storedDraft().autoDuration).toBe(true);
+    expect(screen.getByLabelText('Duration (min)')).toHaveValue(10);
+  });
+
   it('starts a cardio set from the last one and logs its duration and effort', async () => {
     const user = userEvent.setup();
     renderLogger();

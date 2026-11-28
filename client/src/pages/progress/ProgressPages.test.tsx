@@ -41,6 +41,41 @@ it('loads the saved results, compares them while typing and saves both columns',
   expect(saved).toEqual([{ initialValue1: 60, initialValue2: 10, currentValue1: 75, currentValue2: 12.5 }]);
 });
 
+it('retries saved results that failed to load and refuses a strength pair out of range', async () => {
+  let failing = true;
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+    if (url === '/api/progress/catalog') {
+      return respond(200, [{
+        exerciseId: 7, exerciseName: 'Flat Bench Press', exerciseType: 'StrengthTraining',
+        muscleGroupId: 1, muscleGroupName: 'Chest', muscleSubGroupId: 3, muscleSubGroupName: 'Middle Chest',
+      }]);
+    }
+    if (url === '/api/progress/7') return failing ? respond(500) : respond(204);
+    return respond(404);
+  }));
+  const router = createMemoryRouter([{ path: '/progress/track', element: <TrackExercisePage /> }], { initialEntries: ['/progress/track?exerciseId=7'] });
+  render(<RouterProvider router={router} />);
+  const user = userEvent.setup();
+
+  expect(await screen.findByText('Saved results are unavailable.')).toBeInTheDocument();
+  failing = false;
+  await user.click(screen.getByRole('button', { name: 'Retry' }));
+  expect(await screen.findByText('Enter your baseline and latest result to compare them.')).toBeInTheDocument();
+
+  const initial = within(screen.getByRole('group', { name: 'Initial results' }));
+  const current = within(screen.getByRole('group', { name: 'Current results' }));
+  await user.type(initial.getByLabelText('Load (kg)'), '60');
+  await user.type(initial.getByLabelText('Reps'), '5');
+  await user.type(current.getByLabelText('Load (kg)'), '70.25');
+  await user.type(current.getByLabelText('Reps'), '6');
+  await user.click(screen.getByRole('button', { name: 'Set result' }));
+  expect(screen.getByText('Enter valid baseline and current results in both columns.')).toBeInTheDocument();
+
+  await user.clear(current.getByLabelText('Load (kg)'));
+  await user.type(current.getByLabelText('Load (kg)'), '70');
+  expect(screen.getByText('+10 kg load; +1 reps. Compare under similar conditions.')).toBeInTheDocument();
+});
+
 describe('progress tracker', () => {
   it('updates a current result, keeps cards without one and deletes a tracker', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
