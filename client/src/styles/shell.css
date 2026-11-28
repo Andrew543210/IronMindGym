@@ -17,6 +17,8 @@
     font-size: 1.1rem;
     font-weight: 850;
     letter-spacing: 0.06em;
+    /* The name is written as a word, so a screen reader says it rather than spelling the capitals. */
+    text-transform: uppercase;
     text-decoration: none;
     line-height: 1.4;
 }
@@ -139,6 +141,7 @@
 .page-footer span:first-child {
     font-weight: 700;
     letter-spacing: 0.12em;
+    text-transform: uppercase;
 }
 .mobile-nav,
 .more-menu {

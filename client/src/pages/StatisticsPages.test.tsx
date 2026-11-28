@@ -64,5 +64,8 @@ describe('awards', () => {
     expect(screen.getByText('Current: 4 / Target: 10 (40%)')).toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: 'Ten Strong' })).toHaveAttribute('aria-valuenow', '40');
     expect(screen.getByText('Unlocks once the related step is done.')).toBeInTheDocument();
+    // The tick is drawn; a screen reader hears only the word.
+    expect(screen.getByTitle('Unlocked')).toHaveTextContent(/^✓ Unlocked$/);
+    expect(screen.getByText('✓')).toHaveAttribute('aria-hidden', 'true');
   });
 });

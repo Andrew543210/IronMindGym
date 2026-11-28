@@ -268,6 +268,7 @@ describe('workout logger', () => {
     expect(screen.getByText('Set updated · draft saved')).toBeInTheDocument();
     expect(storedSets()?.map((s) => s.weightKg)).toEqual([60, 70]);
     expect(screen.getByText('2 sets logged')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Edit set 1' }));
     await user.click(screen.getByRole('button', { name: 'Cancel edit' }));

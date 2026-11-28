@@ -28,7 +28,7 @@ export function SessionSets({ sets, catalog, setTypeName, onEdit, onRemove }: Se
             <tr>
               <th>#</th>
               {columns.map((column) => <th key={column}>{column}</th>)}
-              <th></th>
+              <th><span className="visually-hidden">{t('logger.setActions')}</span></th>
             </tr>
           </thead>
           <tbody>

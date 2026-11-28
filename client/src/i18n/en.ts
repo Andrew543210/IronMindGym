@@ -346,6 +346,7 @@ export const en = {
   'logger.repsOrEffort': 'Reps / effort',
   'logger.editSet': 'Edit set {number}',
   'logger.removeSet': 'Remove set {number}',
+  'logger.setActions': 'Actions',
   'logger.rating': 'Rating',
   'logger.review': 'Review',
   'logger.reviewPlaceholder': 'How did the workout go?',

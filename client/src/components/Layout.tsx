@@ -96,7 +96,7 @@ export function Layout() {
         <aside className="sidebar" aria-label={t('nav.main')}>
           <Link className="brand" to="/">
             <img src="/images/logo.jpg" alt="" />
-            <span>IRONMIND<small>{t('brand.tagline')}</small></span>
+            <span>IronMind<small>{t('brand.tagline')}</small></span>
           </Link>
           <p className="nav-caption">{t('nav.caption')}</p>
           <nav>
@@ -118,7 +118,7 @@ export function Layout() {
         <header className="topbar">
           {signedIn
             ? <div><span className="status-dot"></span><span className="topbar-label">{t('topbar.journal')}</span></div>
-            : <Link className="brand" to="/login">IRONMIND</Link>}
+            : <Link className="brand" to="/login">IronMind</Link>}
           <div className="d-flex align-items-center gap-3">
             <LanguageSwitch />
             {signedIn ? (
@@ -140,7 +140,7 @@ export function Layout() {
           )}
           <Outlet />
         </main>
-        <footer className="page-footer"><span>IRONMIND</span><span>{t('footer.motto')}</span></footer>
+        <footer className="page-footer"><span>IronMind</span><span>{t('footer.motto')}</span></footer>
       </div>
       {signedIn && (
         <>

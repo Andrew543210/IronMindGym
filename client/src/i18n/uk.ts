@@ -355,6 +355,7 @@ export const uk: Translation = {
   'logger.repsOrEffort': 'Повторення / зусилля',
   'logger.editSet': 'Змінити підхід {number}',
   'logger.removeSet': 'Видалити підхід {number}',
+  'logger.setActions': 'Дії',
   'logger.rating': 'Оцінка',
   'logger.review': 'Відгук',
   'logger.reviewPlaceholder': 'Як пройшло тренування?',
