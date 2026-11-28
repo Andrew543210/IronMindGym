@@ -38,7 +38,6 @@ public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, Ath
     public async Task<ProfileSettingsResponse> SettingsAsync(int userId, CancellationToken cancellationToken) =>
         new(await BuildEditAsync(userId, cancellationToken), await setup.SplitTypesAsync(cancellationToken));
 
-    /// <summary>The interface language, kept so the athlete sees it again on another device.</summary>
     public async Task SaveLanguageAsync(int userId, Language language, CancellationToken cancellationToken)
     {
         await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);
@@ -110,7 +109,6 @@ public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, Ath
         await transaction.CommitAsync(cancellationToken);
     }
 
-    /// <summary>A weigh-in for any day in the last five years. The latest one is the current bodyweight.</summary>
     public async Task LogWeightAsync(int userId, DateOnly date, double weightKg, CancellationToken cancellationToken)
     {
         (await calendars.ForAsync(userId, cancellationToken)).EnsureJournalDay(date);
@@ -122,7 +120,7 @@ public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, Ath
         await transaction.CommitAsync(cancellationToken);
     }
 
-    /// <summary>A new security stamp ends every other session of the account.</summary>
+    // A new security stamp ends every other session of the account.
     public async Task ChangePasswordAsync(int userId, ChangePasswordRequest request, CancellationToken cancellationToken)
     {
         var user = await db.Users.SingleAsync(u => u.Id == userId, cancellationToken);
@@ -133,7 +131,6 @@ public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, Ath
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>Everything the athlete recorded, without credentials, for keeping a personal copy.</summary>
     public async Task<DataExport> ExportAsync(int userId, CancellationToken cancellationToken) => new(
         clock.UtcNow(),
         await db.Users.Where(u => u.Id == userId)
@@ -159,7 +156,7 @@ public sealed class ProfileService(IronMindDbContext db, TimeProvider clock, Ath
         await db.UserGoals.Where(g => g.UserId == userId).OrderBy(g => g.Deadline)
             .Select(g => new ExportedGoal(g.Title, g.Deadline, g.IsCompleted)).ToListAsync(cancellationToken));
 
-    /// <summary>The settings form always sends the bodyweight; only a real change is today's weigh-in.</summary>
+    // The settings form always sends the bodyweight; only a real change is a weigh-in for today.
     private async Task RecordWeightIfChangedAsync(int userId, double weightKg, DateOnly today, CancellationToken cancellationToken)
     {
         var latest = await db.WeightLogs.LatestWeighInAsync(userId, cancellationToken);

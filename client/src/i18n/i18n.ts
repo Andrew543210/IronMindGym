@@ -4,11 +4,8 @@ import { en } from './en';
 import { currentLanguage, LOCALES, setLanguage, subscribeToLanguage, type Language } from './language';
 import { uk } from './uk';
 
-/**
- * Interface texts in English and Ukrainian. A text is either a string or a set of plural forms chosen by
- * the {count} parameter: English has "one" and "other", Ukrainian "one" (1, 21), "few" (2–4, 22–24),
- * "many" (5–20, 25) and "other" (fractions, 1.5). Parameters are written as {name}.
- */
+// A plural text picks its form by {count}: English has one and other, Ukrainian one (1, 21), few (2–4),
+// many (5–20) and other (fractions).
 interface EnglishPlural {
   one: string;
   other: string;
@@ -23,30 +20,26 @@ interface UkrainianPlural {
 
 export type MessageKey = keyof typeof en;
 
-/** Every English key must exist in Ukrainian, with plural forms where English has them. */
 export type Translation = { [K in MessageKey]: (typeof en)[K] extends string ? string : UkrainianPlural };
 
 export type Params = Record<string, string | number>;
 
 type Template<K extends MessageKey> = (typeof en)[K] extends string ? (typeof en)[K] : (typeof en)[K][keyof (typeof en)[K]];
 type Placeholders<S> = S extends `${string}{${infer Name}}${infer Rest}` ? Name | Placeholders<Rest> : never;
-/** The {names} of the English template; plural forms are chosen by count even where they do not show it. */
+// A plural text needs {count} even where a form does not show it.
 type ParamNames<K extends MessageKey> = Placeholders<Template<K>> | ((typeof en)[K] extends string ? never : 'count');
 
-/** The parameters a text needs. */
 export type ParamsOf<K extends MessageKey> = { [Name in ParamNames<K>]: string | number };
 
-/** No argument for a text without parameters, otherwise exactly its parameters. */
 export type ParamArgs<K extends MessageKey> = K extends MessageKey
   ? [ParamNames<K>] extends [never] ? [] : [params: ParamsOf<K>]
   : never;
 
 export type Translate = <K extends MessageKey>(key: K, ...params: ParamArgs<K>) => string;
 
-/** The texts without parameters. */
 export type PlainKey = { [K in MessageKey]: [ParamNames<K>] extends [never] ? K : never }[MessageKey];
 
-/** A text to show later, in the language of that moment: a key with exactly the parameters it needs. */
+// A text to word later, in the language of that moment.
 export type Text =
   | { key: PlainKey; params?: undefined }
   | { [K in Exclude<MessageKey, PlainKey>]: { key: K; params: ParamsOf<K> } }[Exclude<MessageKey, PlainKey>];
@@ -83,12 +76,11 @@ function render(language: Language, key: MessageKey, params?: Params): string {
   });
 }
 
-/** Words a kept text in the language chosen now, for code that is not a component. */
 export function translateText(text: Text): string {
   return render(currentLanguage(), text.key, text.params);
 }
 
-/** Translates outside of components, in the language chosen now; components use useI18n, which follows a change. */
+// For code outside components; components use useI18n, which follows a change of language.
 export function translate<K extends MessageKey>(key: K, ...params: ParamArgs<K>): string {
   return render(currentLanguage(), key, (params as [Params?])[0]);
 }

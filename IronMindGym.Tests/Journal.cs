@@ -3,7 +3,6 @@ using IronMindGym.Services;
 
 namespace IronMindGym.Tests;
 
-/// <summary>Builds training history for tests: workouts in the past go straight to the database, with their records.</summary>
 internal static class Journal
 {
     public static Task<int> AddWorkoutAsync(TestApplication app, DateTime date, int minutes,
@@ -26,7 +25,6 @@ internal static class Journal
         return session.Id;
     });
 
-    /// <summary>A request for POST /api/workouts with working sets of strength exercises.</summary>
     public static object Workout(params (int ExerciseId, double Kg, int Reps)[] sets) => new
     {
         durationMinutes = 45,

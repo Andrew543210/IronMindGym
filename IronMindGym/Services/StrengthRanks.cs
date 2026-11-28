@@ -2,14 +2,10 @@ using IronMindGym.Models;
 
 namespace IronMindGym.Services;
 
-/// <summary>
-/// The rank arithmetic. The strength coefficient is the bench press, squat and deadlift total divided by the
-/// bodyweight; the rank is the highest step of the ladder the coefficient reaches. On the rank scale every step
-/// takes the same width, whatever its coefficient range.
-/// </summary>
+// The coefficient is the bench press, squat and deadlift total per kg of bodyweight. Every step of the scale
+// has the same width, whatever its coefficient range.
 public static class StrengthRanks
 {
-    /// <summary>The top of the last step's range on the scale.</summary>
     public const double ScaleTop = 5.0;
 
     private static readonly Avatar StartingRank = new() { Name = "Noodle Nomad", NameUk = "Макаронний мандрівник", MinStrengthCoefficient = 0 };
@@ -23,7 +19,6 @@ public static class StrengthRanks
         ladder.OrderByDescending(a => a.MinStrengthCoefficient).FirstOrDefault(a => coefficient >= a.MinStrengthCoefficient)
         ?? StartingRank;
 
-    /// <summary>Where the coefficient sits on the scale, from 0 to 100, moving evenly within its step.</summary>
     public static double ScalePosition(double coefficient, IReadOnlyList<Avatar> ladder)
     {
         if (ladder.Count <= 1)

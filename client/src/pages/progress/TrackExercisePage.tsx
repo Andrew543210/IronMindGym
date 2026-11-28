@@ -33,7 +33,6 @@ function isValid(text: string, limit: Limit): boolean {
 
 type Values = [string, string, string, string];
 
-/** The saved pair of an exercise as the four form texts; undefined until the answer for this exercise arrives. */
 function useSavedResults(exerciseId: number | undefined) {
   const { data, error, loading, isStale, reload } = useApi<ResultPair | undefined>(
     exerciseId === undefined ? null : `/api/progress/${exerciseId}`);

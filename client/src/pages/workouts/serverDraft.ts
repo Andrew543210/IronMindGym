@@ -11,10 +11,7 @@ export interface ServerDraft {
   updatedAt: string;
 }
 
-/**
- * The logger reads the server's copy once, as it opens, rather than through useApi: a change of language
- * reloads what useApi holds, and the copy must not change under a workout being logged.
- */
+// Read once as the logger opens, not through useApi: a change of language reloads what useApi holds.
 export async function readServerDraft(): Promise<StoredValue | null> {
   const draft = await api.get<ServerDraft | undefined>(ROUTE);
   return draft?.content ?? null;
@@ -22,20 +19,17 @@ export async function readServerDraft(): Promise<StoredValue | null> {
 
 export interface ServerDraftSync {
   push(draft: StoredDraft): void;
-  /** Sends the waiting change now; `leaving` lets the browser finish it after the tab closes. */
+  // `leaving` lets the browser finish the request after the tab closes.
   flush(leaving?: boolean): void;
   cancel(): void;
   discard(draftId: string): void;
   stop(): void;
-  /** Sends the waiting change and resolves once the server has answered the last request. */
   settle(): Promise<void>;
-  /** Calls the listener when the server answers that the workout was saved on another device; returns its removal. */
   whenSavedElsewhere(listener: (draftId: string) => void): () => void;
 }
 
 const open = new Set<ServerDraftSync>();
 
-/** Registers the sync of an open logger until it closes, so a sign-out can wait for its last change. */
 export function holdForSignOut(sync: ServerDraftSync): () => void {
   open.add(sync);
   return () => {
@@ -43,18 +37,14 @@ export function holdForSignOut(sync: ServerDraftSync): () => void {
   };
 }
 
-/** Sends what open loggers have not sent yet; the sign-out ends the session these requests need. */
+// The sign-out ends the session these requests need.
 export async function settleServerDrafts(): Promise<void> {
   await Promise.all([...open].map((sync) => sync.settle()));
 }
 
-/**
- * Sends the newest draft once changes pause for 1.5 s. A failed request waits for the next change, because
- * the browser keeps its own copy. An empty draft is sent only once its id is known to the server,
- * so opening the logger never replaces a workout started on another device.
- * 409 means the workout was saved elsewhere. A change still waiting when the tab hides goes out with
- * keepalive, because the browser cancels an ordinary request of a closing tab.
- */
+// Sends the newest draft once changes pause for 1.5 s; a failure waits for the next change, as the browser keeps
+// its copy. An empty draft goes out only once the server knows its id, so it never replaces a workout started
+// on another device. A change still waiting when the tab hides goes out with keepalive.
 export function serverDraftSync(serverDraftId?: string, onSent?: (draft: StoredDraft) => void): ServerDraftSync {
   let onSavedElsewhere: ((draftId: string) => void) | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;

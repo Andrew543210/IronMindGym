@@ -6,7 +6,7 @@ import { useApi } from '../../../hooks';
 import { useI18n, type Text } from '../../../i18n/i18n';
 import { fieldsFrom, type SetFields } from '../draft';
 
-/** The athlete's last saved set of an exercise: undefined while it loads, null when there is none. */
+// Undefined while it loads, null when the exercise has no saved set.
 function usePreviousSet(exerciseId: number | undefined): { value?: PreviousSet | null; failed?: boolean } | undefined {
   const { data, error, loading } = useApi<PreviousSet | undefined>(
     exerciseId === undefined ? null : `/api/workouts/previous-set?exerciseId=${exerciseId}`);
@@ -19,7 +19,6 @@ interface SetEditorProps {
   exercise: CatalogExercise | undefined;
   fields: SetFields;
   onFields: (fields: SetFields) => void;
-  /** The set being changed, or null while a new one is entered. */
   editingIndex: number | null;
   error: Text | null;
   onSave: () => void;
@@ -29,7 +28,6 @@ interface SetEditorProps {
   errorRef: Ref<HTMLDivElement>;
 }
 
-/** The values of one set, with the last saved set of the exercise to start from; it renders columns of a Bootstrap row. */
 export function SetEditor({ options, exercise, fields, onFields, editingIndex, error, onSave, onCancel, weightRef, durationRef, errorRef }: SetEditorProps) {
   const { t, show } = useI18n();
   const previous = usePreviousSet(exercise?.exerciseId);

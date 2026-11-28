@@ -1,4 +1,3 @@
-/* Bootstrap components in the theme: cards, buttons, forms, alerts, tables and lists. */
 .card {
     --bs-card-bg: var(--panel);
     --bs-card-border-color: var(--line);

@@ -1,17 +1,12 @@
 import { currentLocale } from './i18n/language';
 
-/**
- * Dates follow the athlete's calendar: moments (when a workout was saved) are UTC timestamps shown in the
- * profile's time zone, and calendar days (a weigh-in date, a goal deadline) are plain yyyy-MM-dd strings.
- */
-
-/** The API writes moments in UTC, sometimes with more than three decimals or without the trailing Z. */
+// The API writes moments in UTC, sometimes with more than three decimals or without the trailing Z.
 export function parseMoment(value: string): Date {
   const trimmed = value.replace(/(\.\d{3})\d+/, '$1');
   return new Date(/[zZ]|[+-]\d{2}:\d{2}$/.test(trimmed) ? trimmed : `${trimmed}Z`);
 }
 
-/** Builds each formatter once per locale and options: tables format hundreds of cells per render. */
+// Each formatter is built once per locale and options: tables format hundreds of cells per render.
 function reused<T, O>(create: (locale: string, options: O) => T): (locale: string, options: O) => T {
   const made = new Map<string, T>();
   return (locale, options) => {
@@ -72,7 +67,6 @@ export function deviceTimeZone(): string {
   }
 }
 
-/** A change with its sign, such as +2.5 or -1; a change that rounds to nothing is 0. */
 export function formatSigned(value: number, decimals = 1): string {
   const rounded = Number(value.toFixed(decimals));
   if (rounded === 0) return '0';

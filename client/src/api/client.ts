@@ -1,16 +1,7 @@
 import { translateText, type Text } from '../i18n/i18n';
 import { currentLanguage } from '../i18n/language';
 
-/**
- * Talks to the .NET API. The session is an HttpOnly cookie the browser sends by itself;
- * every change also carries the antiforgery token in the X-CSRF-TOKEN header.
- * Accept-Language asks for names and messages in the interface language.
- */
-
-/**
- * A refused or failed request. The server words its messages in the request language; the client's own
- * message is kept as a text and worded when it is shown, so it follows a change of language.
- */
+// The client's own message is kept as a text and worded when shown, so it follows a change of language.
 export class ApiError extends Error {
   readonly status: number;
   private readonly worded: string[];
@@ -30,7 +21,6 @@ export class ApiError extends Error {
   }
 }
 
-/** A form the client refuses before sending it; its text is worded when it is shown. */
 export class FormError extends Error {
   readonly text: Text;
 
@@ -43,13 +33,10 @@ export class FormError extends Error {
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 export interface RequestOptions {
-  /** Cancels the request once its answer is no longer needed. */
   signal?: AbortSignal;
-  /** Lets the request finish after the tab closes; the browser allows it only for a small body. */
   keepalive?: boolean;
 }
 
-/** The problem type of a change refused for a missing or expired antiforgery token. */
 export const CSRF_PROBLEM = 'urn:ironmind:problem:csrf-token';
 
 interface ProblemDetails {
@@ -58,7 +45,7 @@ interface ProblemDetails {
   errors?: Record<string, string[]>;
 }
 
-/** Browsers refuse a keepalive request with a larger body instead of sending it the ordinary way. */
+// Browsers refuse a keepalive request with a larger body instead of sending it the ordinary way.
 const KEEPALIVE_LIMIT_BYTES = 64 * 1024;
 
 let csrfToken: string | null = null;
@@ -72,10 +59,7 @@ export function forgetCsrfToken() {
   csrfToken = null;
 }
 
-/**
- * Fetches the token ahead of a change that may have to go out as the tab closes. Such a keepalive request
- * cannot wait for the token: the browser cancels the ordinary request that would fetch it first.
- */
+// A keepalive request cannot wait for the token: as the tab closes, the browser cancels the request that would fetch it.
 export async function prefetchCsrfToken(): Promise<void> {
   if (csrfToken) return;
   try {
@@ -92,8 +76,7 @@ export async function request<T>(method: Method, url: string, body?: unknown, op
   } else {
     csrfToken ??= await fetchCsrfToken();
     response = await send(method, url, body, csrfToken, options);
-    // A token that expired, for example after the server's keys changed, is refused before the request
-    // does anything, so one retry with a fresh token is safe.
+    // An expired token is refused before the request does anything, so one retry with a fresh token is safe.
     if (response.status === 400 && (await problemType(response)) === CSRF_PROBLEM) {
       csrfToken = await fetchCsrfToken();
       response = await send(method, url, body, csrfToken, options);
@@ -145,7 +128,7 @@ function isJson(response: Response) {
   return response.headers.get('Content-Type')?.includes('json') ?? false;
 }
 
-/** Reads the problem type from a copy, so the body stays readable for the error message. */
+// Read from a copy, so the body stays readable for the error message.
 async function problemType(response: Response): Promise<string | undefined> {
   if (!isJson(response)) return undefined;
   try {

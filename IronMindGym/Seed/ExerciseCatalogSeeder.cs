@@ -6,10 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Seed;
 
-/// <summary>
-/// The exercise catalog from exercises.json. Rows are matched by their English name, which never changes here,
-/// so logged workouts, records and awards keep pointing at the same exercises.
-/// </summary>
 public static class ExerciseCatalogSeeder
 {
     public static readonly IReadOnlyDictionary<string, string> MuscleGroupNamesUk = new Dictionary<string, string>
@@ -65,11 +61,8 @@ public static class ExerciseCatalogSeeder
         Converters = { new JsonStringEnumConverter() }
     };
 
-    /// <summary>
-    /// Applies exercises.json on every start. Rows are matched by their English name: missing groups, subgroups
-    /// and exercises are added, and the Ukrainian names, descriptions and key-lift markers are refreshed. Nothing
-    /// is deleted, and an existing exercise keeps its type and group, because logged sets point at it.
-    /// </summary>
+    // Rows are matched by English name: missing ones are added and texts refreshed. Nothing is deleted, and an
+    // existing exercise keeps its type and group, because logged sets point at it.
     public static async Task SyncAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
         var groups = await db.MuscleGroups.ToDictionaryAsync(g => g.Name, cancellationToken);

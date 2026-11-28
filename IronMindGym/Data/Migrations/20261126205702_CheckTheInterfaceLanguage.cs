@@ -4,13 +4,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace IronMindGym.Data.Migrations
 {
-    /// <inheritdoc />
     public partial class CheckTheInterfaceLanguage : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // An unknown code means no choice yet; the client then follows the browser.
             migrationBuilder.Sql("""UPDATE "Profiles" SET "Language" = NULL WHERE "Language" NOT IN ('en', 'uk')""");
 
             migrationBuilder.AddCheckConstraint(
@@ -19,7 +16,6 @@ namespace IronMindGym.Data.Migrations
                 sql: "\"Language\" IN ('en', 'uk')");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropCheckConstraint(

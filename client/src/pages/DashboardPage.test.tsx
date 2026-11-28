@@ -17,7 +17,6 @@ it('brings the week, rank, sessions, nutrition, goals and research together and 
   const user = userEvent.setup();
 
   expect(await screen.findByText("Let's build, athlete.")).toBeInTheDocument();
-  // The greeting heads the page; the hero line is a slogan, and sections are one level below.
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent("Let's build, athlete.");
   expect(screen.getByRole('heading', { level: 2, name: 'Recent sessions' })).toBeInTheDocument();
   expect(screen.getByRole('img', { name: 'Weekly completion 66%' })).toBeInTheDocument();

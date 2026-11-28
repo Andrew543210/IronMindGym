@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-/// <summary>The server copy of the athlete's unfinished workout, so it can be continued on another device.</summary>
 public sealed class WorkoutDraftService(IronMindDbContext db, TimeProvider clock)
 {
     public const int MaxContentLength = 64_000;
@@ -20,10 +19,7 @@ public sealed class WorkoutDraftService(IronMindDbContext db, TimeProvider clock
         return new WorkoutDraftResponse(draft.DraftId, content.RootElement.Clone(), draft.UpdatedAt);
     }
 
-    /// <summary>
-    /// Saving a workout takes the same athlete lock and deletes its draft, so a late request
-    /// for an already saved workout is refused instead of bringing the draft back.
-    /// </summary>
+    // Saving a workout takes the same lock and deletes the draft, so a late update for a saved workout is refused.
     public async Task SaveAsync(int userId, Guid draftId, JsonElement content, CancellationToken cancellationToken)
     {
         if (content.ValueKind != JsonValueKind.Object)

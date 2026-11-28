@@ -4,10 +4,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace IronMindGym.Data.Migrations
 {
-    /// <inheritdoc />
     public partial class CheckExerciseOrderAndKeyLift : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddCheckConstraint(
@@ -21,7 +19,6 @@ namespace IronMindGym.Data.Migrations
                 sql: "\"KeyLift\" IN ('BenchPress', 'Squat', 'Deadlift')");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropCheckConstraint(

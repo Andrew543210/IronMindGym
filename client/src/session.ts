@@ -1,7 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Session } from './api/types/session';
 
-/** Why the last session closed; the login page explains it once. */
 export type SessionEnd = 'expired' | 'signedOut' | 'passwordChanged';
 
 export interface SessionState {
@@ -12,7 +11,6 @@ export interface SessionState {
 
 export interface SessionContextValue extends SessionState {
   signedIn: (session: Session) => void;
-  /** The server already ended the session, for example after a password change. */
   signedOut: (reason: SessionEnd) => void;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;

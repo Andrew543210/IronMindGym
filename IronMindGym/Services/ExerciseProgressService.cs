@@ -6,10 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-/// <summary>
-/// Keeps a starting and a latest result per exercise. What the two numbers of a result mean depends on the
-/// exercise: weight and repetitions for strength, duration and effort for cardio, duration and load for timed holds.
-/// </summary>
 public sealed class ExerciseProgressService(IronMindDbContext db, TimeProvider clock, FriendshipService friendships, StrengthService strength)
 {
     public async Task<List<ExerciseProgressEntry>> ListAsync(int userId, CancellationToken cancellationToken)
@@ -49,8 +45,7 @@ public sealed class ExerciseProgressService(IronMindDbContext db, TimeProvider c
         };
     }
 
-    /// <summary>Saves both results together: when either is invalid, neither changes.</summary>
-    /// <summary>The request has passed validation, so each of its values is present.</summary>
+    // Both results are saved together: when either is invalid, neither changes.
     public async Task SaveResultsAsync(int userId, int exerciseId, ProgressResultsRequest request, CancellationToken cancellationToken)
     {
         var exercise = await FindExerciseAsync(exerciseId, cancellationToken);
@@ -67,7 +62,6 @@ public sealed class ExerciseProgressService(IronMindDbContext db, TimeProvider c
         await transaction.CommitAsync(cancellationToken);
     }
 
-    /// <summary>The values the exercise type does not record may be left out.</summary>
     public async Task SaveCurrentAsync(int userId, int exerciseId, CurrentResultRequest request, CancellationToken cancellationToken)
     {
         var exercise = await FindExerciseAsync(exerciseId, cancellationToken);
@@ -80,7 +74,6 @@ public sealed class ExerciseProgressService(IronMindDbContext db, TimeProvider c
         await transaction.CommitAsync(cancellationToken);
     }
 
-    /// <summary>A friend's results and strength coefficient; null when the two are not friends.</summary>
     public async Task<FriendProgressResponse?> OfFriendAsync(int viewerId, int friendId, CancellationToken cancellationToken)
     {
         if (!await friendships.AreFriendsAsync(viewerId, friendId, cancellationToken))
@@ -117,7 +110,7 @@ public sealed class ExerciseProgressService(IronMindDbContext db, TimeProvider c
         }
     }
 
-    /// <summary>A progress result arrives as two numbers whose meaning depends on the exercise type.</summary>
+    // A result arrives as two numbers whose meaning depends on the exercise type.
     private static class Result
     {
         public static TrackedResult FromPair(ExerciseType type, double first, double second) => type switch

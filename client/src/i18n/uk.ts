@@ -1,9 +1,6 @@
 import type { Translation } from './i18n';
 
-/**
- * Ukrainian interface texts. The athlete is addressed as «ви», which also keeps the texts free of
- * gendered forms. Plurals: one (1, 21), few (2–4), many (5–20), other (fractions).
- */
+// The athlete is addressed as «ви», which also keeps the texts free of gendered forms.
 export const uk: Translation = {
   'common.loading': 'Завантаження…',
   'common.save': 'Зберегти',

@@ -47,7 +47,6 @@ let loggerOptions: LoggerOptions = options;
 const DRAFT_ID = '0f8fad5b-d9cb-469f-a165-70867728950e';
 const bench = { exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 60, reps: 5, durationSeconds: 0, intensity: 0, restSeconds: 120 };
 
-/** Puts an unfinished workout in this browser, as an earlier visit to the logger would have left it. */
 function storeDraft(overrides: object = {}) {
   const draft = {
     draftId: DRAFT_ID, sets: [bench], timerEnd: 0, startedAt: Date.now() - 600_000, savedAt: Date.now() - 60_000, autoDuration: true,
@@ -57,7 +56,6 @@ function storeDraft(overrides: object = {}) {
   return draft;
 }
 
-/** The draft this browser keeps for the signed-in athlete. */
 function storedDraft() {
   return JSON.parse(localStorage.getItem('ironmind-workout-5') ?? '{}') as Partial<StoredDraft>;
 }
@@ -172,7 +170,6 @@ describe('workout logger', () => {
     expect(screen.getByText('Set logged · draft saved')).toBeInTheDocument();
     expect(screen.getByText('1 set logged')).toBeInTheDocument();
     expect(screen.getByText(/Rest timer:/).textContent).toMatch(/0[12]:\d\d/);
-    // On a phone each set becomes a card that names the rest from the column header.
     expect(screen.getByRole('cell', { name: '120 sec' })).toHaveAttribute('data-label', 'Rest');
     const stored = storedDraft();
     expect(stored.sets).toEqual([{ exerciseId: 7, setTypeId: 1, setTypeName: 'Working', weightKg: 80, reps: 8, durationSeconds: 0, intensity: 0, restSeconds: 120 }]);
@@ -345,12 +342,10 @@ describe('workout logger', () => {
     const user = userEvent.setup();
     renderLogger();
 
-    // The timer starts once the logger is shown, so a slow first load cannot use up the rest.
     await user.clear(await screen.findByLabelText('Rest (sec)'));
     await user.type(screen.getByLabelText('Rest (sec)'), '1');
     await user.click(screen.getByRole('button', { name: 'Start timer' }));
     expect(await screen.findByText('Rest complete. Start your next set when ready.', {}, { timeout: 10_000 })).toBeInTheDocument();
-    // The vibration is an effect of the render that shows the text, so it may follow it a moment later.
     await waitFor(() => expect(vibrate).toHaveBeenCalledTimes(1));
     Reflect.deleteProperty(navigator, 'vibrate');
   });

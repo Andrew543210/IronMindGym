@@ -30,7 +30,6 @@ public sealed class StatisticsService(IronMindDbContext db, AthleteCalendars cal
         {
             Count = g.Count(),
             AverageRest = g.Average(s => (double)s.RestSeconds),
-            // Volume is external load × repetitions; cardio and timed sets have no repetitions.
             Volume = g.Sum(s => s.WeightKg * s.Reps),
             MonthVolume = g.Where(s => s.PerformedExercise.WorkoutSession.SessionDate >= monthAgo).Sum(s => s.WeightKg * s.Reps),
             WeekVolume = g.Where(s => s.PerformedExercise.WorkoutSession.SessionDate >= weekAgo).Sum(s => s.WeightKg * s.Reps)
@@ -99,7 +98,7 @@ public sealed class StatisticsService(IronMindDbContext db, AthleteCalendars cal
             .ToList();
     }
 
-    /// <summary>Largest load change between the first and latest logged set at the same repetitions.</summary>
+    // The largest load change between the first and the latest set logged at the same repetitions.
     private async Task<(string? ExerciseName, double ProgressPercent)> BestLoadChangeAsync(int userId, CancellationToken cancellationToken)
     {
         var candidates = await db.ExerciseProgress.AsNoTracking()

@@ -5,7 +5,6 @@ export interface Session {
   username: string;
   email: string;
   timeZone: string;
-  /** The athlete's calendar day in their time zone, as yyyy-MM-dd. */
   today: string;
   setupComplete: boolean;
   language: Language | null;

@@ -15,7 +15,6 @@ function openFailing(failure: () => never) {
 }
 
 describe('route errors', () => {
-  // Chrome, Firefox and Safari word the failed import of a removed bundle differently.
   it.each([
     'Failed to fetch dynamically imported module: /assets/GoalsPage-1a2b.js',
     'error loading dynamically imported module: https://ironmind.example/assets/GoalsPage-1a2b.js',

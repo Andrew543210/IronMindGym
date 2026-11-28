@@ -16,11 +16,8 @@ public sealed class NutritionProfileSnapshot
     public int WorkoutsPerWeek { get; init; }
 }
 
-/// <summary>
-/// Personal targets win. Without them, adults with an energy equation get optional estimates: Mifflin–St Jeor BMR
-/// times an activity factor from the weekly plan, 1.6 g/kg protein, 0.8 g/kg fat and carbohydrates from the
-/// remaining energy. A target counts as matched within 10%.
-/// </summary>
+// Personal targets win. Adults with an energy equation get estimates: Mifflin–St Jeor BMR times an activity
+// factor, 1.6 g/kg protein, 0.8 g/kg fat and carbohydrates from the rest. A target is matched within 10%.
 public sealed class NutritionAdviceService
 {
     private const double MatchTolerance = 0.1;

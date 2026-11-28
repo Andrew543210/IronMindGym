@@ -55,7 +55,6 @@ public class SeedingTests
             Assert.Contains(friendship.RequestedByUserId, new[] { friendship.User1Id, friendship.User2Id });
             Assert.Equal(3, db.WorkoutSessions.Count(s => s.UserId == demo.Id));
 
-            // Records and awards come from the logged sets, never from the seeder itself.
             var records = db.PersonalRecords.Where(r => r.UserId == demo.Id).ToDictionary(r => r.Exercise.Name, r => r.MaxWeightKg);
             Assert.Equal(100, records["Flat Bench Press"]);
             Assert.Equal(150, records["Barbell Back Squat"]);
@@ -148,7 +147,6 @@ public class SeedingTests
 
             Assert.Equal(0, db.Exercises.Count(e => e.NameUk == null));
             Assert.Equal("Станова тяга", db.Exercises.Single(e => e.Name == "Deadlift").NameUk);
-            // A catalog that rewords a description brings both languages up to date.
             var deadlift = ExerciseCatalogSeeder.Definitions().Single(d => d.Name == "Deadlift");
             var stored = db.Exercises.Single(e => e.Name == "Deadlift");
             Assert.Equal((deadlift.Description, deadlift.DescriptionUk), (stored.Description, stored.DescriptionUk));

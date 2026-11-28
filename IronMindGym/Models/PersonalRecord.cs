@@ -9,6 +9,5 @@ public class PersonalRecord
     public Exercise Exercise { get; set; } = null!;
     public double MaxWeightKg { get; set; }
 
-    /// <summary>When the record was first reached: the date of the earliest workout with this load.</summary>
     public DateTime AchievedAt { get; set; }
 }

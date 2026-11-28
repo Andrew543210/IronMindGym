@@ -5,10 +5,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace IronMindGym.Data.Migrations
 {
-    /// <inheritdoc />
     public partial class StoreSplitDaysAsReferenceData : Migration
     {
-        // The days of the seeded splits; startup keeps their names current afterwards.
         private const string SeededDays = """
             (VALUES
                 ('FULL_BODY', 'FULL_BODY', 1, 'Full Body', 'Усе тіло', 'Full Body day', 'День на все тіло'),
@@ -19,7 +17,6 @@ namespace IronMindGym.Data.Migrations
                 ('LEGS_BACK_CHEST', 'CHEST', 3, 'Chest', 'Груди', 'Chest day', 'День грудей'))
             """;
 
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -107,7 +104,6 @@ namespace IronMindGym.Data.Migrations
                 onDelete: ReferentialAction.Restrict);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(

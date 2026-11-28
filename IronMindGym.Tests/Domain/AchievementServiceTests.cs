@@ -69,7 +69,6 @@ public class AchievementServiceTests
         Assert.Equal(3, awards["STREAK_007"].CurrentValue);
         Assert.Equal(2, awards["LONG_005"].CurrentValue);
         Assert.Equal((2.0, 5.0, 40.0), (awards["LONG_005"].CurrentValue, awards["LONG_005"].TargetValue, awards["LONG_005"].ProgressPercent));
-        // The review and the completed setup have no scale, so they show only whether they are earned.
         Assert.True(awards["REVIEW_FIRST"].IsUnlocked);
         Assert.True(awards["PROFILE_SETUP"].IsUnlocked);
         Assert.False(awards["WORKOUT_005"].IsUnlocked);

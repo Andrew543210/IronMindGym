@@ -5,10 +5,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace IronMindGym.Data.Migrations
 {
-    /// <inheritdoc />
     public partial class FoldTheFeedIntoResearchNotes : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<DateOnly>(
@@ -63,7 +61,6 @@ namespace IronMindGym.Data.Migrations
                 sql: "\"SourceUrl\" LIKE 'https://%'");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropCheckConstraint(

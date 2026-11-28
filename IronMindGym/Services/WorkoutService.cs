@@ -11,7 +11,6 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
 {
     private const int HistoryPageSize = 20;
 
-    /// <summary>The athlete's workouts, newest first, one page at a time.</summary>
     public async Task<WorkoutHistoryResponse> HistoryAsync(int userId, int page, CancellationToken cancellationToken)
     {
         page = Math.Clamp(page, 1, 10000);
@@ -25,7 +24,6 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
         return new WorkoutHistoryResponse(rows.Take(HistoryPageSize).ToList(), page, rows.Count > HistoryPageSize);
     }
 
-    /// <summary>What the logger offers: the athlete's split with its days, the set types and the exercise catalog.</summary>
     public async Task<WorkoutLoggerResponse> LoggerOptionsAsync(int userId, CancellationToken cancellationToken)
     {
         var activePlan = await db.WorkoutPlans.AsNoTracking()
@@ -52,7 +50,6 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
             await catalog.ItemsAsync(cancellationToken));
     }
 
-    /// <summary>The last set the athlete logged for an exercise, to start the next one from.</summary>
     public async Task<PreviousSetResponse?> PreviousSetAsync(int userId, int exerciseId, CancellationToken cancellationToken)
     {
         var previous = await db.Sets.AsNoTracking()
@@ -70,10 +67,6 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
             previous.RestSeconds, previous.SetTypeId, calendar.DayOf(previous.Date));
     }
 
-    /// <summary>
-    /// A saved workout as its owner or a friend sees it. The owner also sees how many planned workouts are
-    /// left this week.
-    /// </summary>
     public async Task<WorkoutDetailsResponse?> DetailsAsync(int ownerId, int sessionId, int viewerId, CancellationToken cancellationToken)
     {
         var session = await db.WorkoutSessions.AsNoTracking()
@@ -119,10 +112,7 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
                 .ToListAsync(cancellationToken));
     }
 
-    /// <summary>
-    /// Heaviest external load per exercise compared with the best load logged before this workout.
-    /// Later workouts never change the comparison. Only strength exercises have load records.
-    /// </summary>
+    // Compared with the best load logged before this workout, so later workouts never change it.
     public async Task<List<ExerciseWorkoutSummary>> BuildExerciseStatsAsync(WorkoutSession session, CancellationToken cancellationToken)
     {
         var exerciseIds = session.PerformedExercises.Select(p => p.ExerciseId).Distinct().ToList();
@@ -156,10 +146,6 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
             }).ToList();
     }
 
-    /// <summary>
-    /// Saves a finished workout and recalculates the personal records and awards it affects.
-    /// A retry with the same draft id returns the workout saved by the first request.
-    /// </summary>
     public async Task<int> SaveAsync(int userId, SaveWorkoutRequest workout, CancellationToken cancellationToken)
     {
         var sets = await CheckWorkoutAsync(workout, cancellationToken);
@@ -194,10 +180,7 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
         return sets;
     }
 
-    /// <summary>
-    /// Consecutive sets of one exercise form one block, so supersets and circuits keep their logged order.
-    /// Set numbers count per exercise across its blocks.
-    /// </summary>
+    // Consecutive sets of one exercise form one block, so supersets and circuits keep their order.
     private WorkoutSession NewSession(int userId, SaveWorkoutRequest workout, List<(WorkoutSetInput Input, TrackedResult Result)> sets)
     {
         var session = new WorkoutSession
@@ -234,7 +217,6 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
         return session;
     }
 
-    /// <summary>Checks every set against its exercise and returns the values each one keeps.</summary>
     private async Task<List<(WorkoutSetInput Input, TrackedResult Result)>> CheckSetsAsync(List<WorkoutSetInput> sets,
         CancellationToken cancellationToken)
     {
@@ -250,15 +232,12 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
         }).ToList();
     }
 
-    /// <summary>The title of a workout without a split day, as the export keeps it.</summary>
     public const string GeneralDayName = "Training Day";
 
-    /// <summary>The title of a workout: its split day's, or a general training day's.</summary>
     public static string SessionName(string? workoutName, string? workoutNameUk) => workoutName is null
         ? Localized.Pick(GeneralDayName, "Тренувальний день")
         : Localized.Pick(workoutName, workoutNameUk);
 
-    /// <summary>A workout as the history, the dashboard and a friend's card list it.</summary>
     public static readonly Expression<Func<WorkoutSession, WorkoutSessionListItem>> ListItem = s => new WorkoutSessionListItem
     {
         Id = s.Id,
@@ -267,7 +246,6 @@ public sealed class WorkoutService(IronMindDbContext db, TimeProvider clock, Ath
         DurationMinutes = s.DurationMinutes
     };
 
-    /// <summary>A repeated delete, such as a double tap, finds nothing to delete and reports false.</summary>
     public async Task<bool> DeleteAsync(int userId, int sessionId, CancellationToken cancellationToken)
     {
         await using var transaction = await WriteLock.BeginForAthleteAsync(db, userId, cancellationToken);

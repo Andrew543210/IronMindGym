@@ -5,10 +5,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace IronMindGym.Data.Migrations
 {
-    /// <inheritdoc />
     public partial class KeyOneToOneTablesByUser : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -100,7 +98,6 @@ namespace IronMindGym.Data.Migrations
                 sql: "\"Rating\" BETWEEN 1 AND 5");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropCheckConstraint(

@@ -41,10 +41,7 @@ public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars cal
 
     private const int PreviewSize = 5;
 
-    /// <summary>
-    /// A friend's card shows their latest training, nutrition, records and awards. At most 20 cards are shown, and
-    /// each preview is a small indexed LIMIT query, which stays bounded however long a friend's history grows.
-    /// </summary>
+    // Each preview is a small indexed LIMIT query, so a card stays cheap however long a friend's history grows.
     private async Task<FriendCard> WithPreviewsAsync(FriendCard card, DateOnly firstNutritionDay, CancellationToken cancellationToken)
     {
         var workouts = await db.WorkoutSessions.AsNoTracking().Where(s => s.UserId == card.UserId)
@@ -77,10 +74,7 @@ public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars cal
     }
 
 
-    /// <summary>
-    /// Sends a request, or accepts the other user's pending request when both want to connect.
-    /// The lock serializes a double tap, so the second request sees the first one's row.
-    /// </summary>
+    // Accepts the other user's pending request when both want to connect; the lock serializes a double tap.
     public async Task<FriendRequestResult> SendRequestAsync(int userId, int otherId, CancellationToken cancellationToken)
     {
         if (userId == otherId || !await db.Users.AnyAsync(u => u.Id == otherId, cancellationToken))
@@ -137,10 +131,8 @@ public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars cal
     public async Task<bool> RemoveAsync(int userId, int otherId, CancellationToken cancellationToken) =>
         await Between(userId, otherId).ExecuteDeleteAsync(cancellationToken) > 0;
 
-    /// <summary>
-    /// Usernames may contain "_", which LIKE would otherwise treat as a wildcard. The escape character is named
-    /// in the query, because Npgsql turns escaping off for a pattern that is not a constant.
-    /// </summary>
+    // Usernames may contain "_", a LIKE wildcard. The escape character is named in the query,
+    // because Npgsql turns escaping off for a pattern that is not a constant.
     private const string LikeEscape = @"\";
 
     private static string EscapeLike(string text) => text
@@ -151,7 +143,6 @@ public sealed class FriendshipService(IronMindDbContext db, AthleteCalendars cal
     private Task<Friendship?> FindAsync(int userId, int otherId, CancellationToken cancellationToken) =>
         Between(userId, otherId).FirstOrDefaultAsync(cancellationToken);
 
-    /// <summary>The row of two athletes, which always stores the lower id first.</summary>
     private IQueryable<Friendship> Between(int userId, int otherId)
     {
         var (first, second) = userId < otherId ? (userId, otherId) : (otherId, userId);

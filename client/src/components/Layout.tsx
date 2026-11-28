@@ -27,10 +27,7 @@ const quickLinks: { to: string; label: MessageKey; icon: string }[] = [
   { to: '/nutrition', label: 'nav.nutrition', icon: '◉' },
 ];
 
-/**
- * Shows the message passed with a navigation until the athlete moves to another page. The message is taken out of
- * the history entry, so reloading the page or coming back to it later does not show it again.
- */
+// The message is taken out of the history entry, so a reload or a later visit does not show it again.
 function useFlash(): FlashState {
   const location = useLocation();
   const navigate = useNavigate();
@@ -54,7 +51,6 @@ function useFlash(): FlashState {
   return flash;
 }
 
-/** After a move to another page, focus goes to its content, so keyboard and screen reader users start there. */
 function useFocusAfterNavigation() {
   const { pathname } = useLocation();
   const main = useRef<HTMLElement>(null);

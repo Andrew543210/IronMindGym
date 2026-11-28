@@ -53,7 +53,6 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
             user.HasOne(u => u.Benchmarks).WithOne(b => b.User).HasForeignKey<InitialBenchmarks>(b => b.UserId).OnDelete(DeleteBehavior.Cascade);
             user.HasOne(u => u.Plan).WithOne(p => p.User).HasForeignKey<WorkoutPlan>(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
         });
-        // A user has at most one of each: the user id is the key.
         modelBuilder.Entity<Profile>(profile =>
         {
             profile.HasKey(p => p.UserId);
@@ -65,12 +64,10 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         modelBuilder.Entity<InitialBenchmarks>().HasKey(b => b.UserId);
         modelBuilder.Entity<WorkoutPlan>().HasKey(p => p.UserId);
 
-        // Moments are timestamptz in UTC; calendar days in the athlete's time zone are DateOnly, stored as date.
         modelBuilder.Entity<WeightLog>().HasIndex(w => new { w.UserId, w.Date }).IsUnique();
         modelBuilder.Entity<DailyNutrition>().HasIndex(n => new { n.UserId, n.Date }).IsUnique();
 
-        // Reference rows are found by a stable key: a code where the code relies on the row, otherwise the
-        // English name. The seeder matches on the same keys, so every key is unique.
+        // The seeder matches reference rows on these keys: a code where the code relies on the row, otherwise the English name.
         modelBuilder.Entity<SplitType>(split =>
         {
             split.HasIndex(s => s.Code).IsUnique();
@@ -99,8 +96,7 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         modelBuilder.Entity<ResearchItem>().HasIndex(r => r.Title).IsUnique();
         modelBuilder.Entity<Achievement>().HasIndex(a => a.Code).IsUnique();
 
-        // Reference data is shared by every athlete. Deleting a row that is still in use fails
-        // instead of taking the workouts, records and awards that point at it along.
+        // A reference row still in use cannot be deleted, so no athlete's workouts, records or awards go with it.
         modelBuilder.Entity<MuscleSubGroup>().HasOne(s => s.MuscleGroup).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Exercise>().HasOne(e => e.MuscleSubGroup).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<PerformedExercise>().HasOne(p => p.Exercise).WithMany().OnDelete(DeleteBehavior.Restrict);
@@ -123,7 +119,6 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         });
 
         modelBuilder.Entity<PersonalRecord>().HasIndex(r => new { r.UserId, r.ExerciseId }).IsUnique();
-        // Exercise history and statistics look up the workouts of an exercise.
         modelBuilder.Entity<PerformedExercise>().HasIndex(p => new { p.ExerciseId, p.WorkoutSessionId });
         modelBuilder.Entity<ExerciseProgress>(progress =>
         {
@@ -133,8 +128,7 @@ public class IronMindDbContext(DbContextOptions<IronMindDbContext> options) : Db
         });
         modelBuilder.Entity<UserAchievement>().HasIndex(a => new { a.UserId, a.AchievementId }).IsUnique();
 
-        // Invariants every row keeps, whoever writes it. Request validation, with tighter limits and
-        // messages for the athlete, stays in the contracts and services.
+        // Invariants every row keeps, whoever writes it; the contracts hold the tighter request rules.
         Checks<Profile>(modelBuilder, "Profiles",
             ("Age", "\"Age\" >= 0"),
             ("HeightCm", "\"HeightCm\" > 0"),

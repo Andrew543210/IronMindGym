@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace IronMindGym.Data.Migrations
 {
-    /// <inheritdoc />
     public partial class NameColumnsAfterWhatTheyHold : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
@@ -37,7 +35,6 @@ namespace IronMindGym.Data.Migrations
                 nullable: false,
                 defaultValueSql: "now()");
 
-            // The account's creation time moves from the profile to the user.
             migrationBuilder.Sql("""
                 UPDATE "Users" account SET "CreatedAt" = profile."AccountCreatedAt"
                 FROM "Profiles" profile WHERE profile."UserId" = account."Id";
@@ -63,7 +60,6 @@ namespace IronMindGym.Data.Migrations
                 columns: new[] { "ExerciseId", "WorkoutSessionId" });
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropCheckConstraint(

@@ -96,7 +96,6 @@ export function NutritionPage() {
   );
 }
 
-/** What the last change did; the message is worded when shown, so it follows a change of the interface language. */
 interface DayChange {
   day: string;
   deleted: boolean;

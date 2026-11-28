@@ -4,7 +4,6 @@ import { useApi } from './hooks';
 import { setLanguage } from './i18n/language';
 import { mockApi, respond } from './test/harness';
 
-/** A reply that waits until the test lets it through. */
 function held<T>(body: T) {
   let release = () => {};
   const reply = new Promise<T>((resolve) => {

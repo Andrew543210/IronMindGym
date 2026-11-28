@@ -1,6 +1,5 @@
 namespace IronMindGym.Models;
 
-/// <summary>The unfinished workout of an athlete, kept on the server so another device can continue it.</summary>
 public class WorkoutDraft
 {
     public int UserId { get; set; }

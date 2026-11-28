@@ -5,10 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Security;
 
-/// <summary>
-/// The API answers 401 and 403 instead of redirecting to a sign-in page, and a session ends as soon as the
-/// account's security stamp changes, which happens when the password is changed.
-/// </summary>
+// Answers 401 and 403 instead of redirecting, and ends a session once the security stamp changes.
 public sealed class SessionCookieEvents(IronMindDbContext db) : CookieAuthenticationEvents
 {
     public override Task RedirectToLogin(RedirectContext<CookieAuthenticationOptions> context)

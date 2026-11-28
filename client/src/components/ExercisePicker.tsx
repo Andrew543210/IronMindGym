@@ -8,12 +8,10 @@ interface ExercisePickerProps {
   choice: ExerciseChoice;
   onChoose: (next: ExerciseChoice) => void;
   disabled?: boolean;
-  /** Folds the group filters under this summary and leaves the exercise list in view. */
   foldFiltersUnder?: string;
   exerciseRef?: Ref<HTMLSelectElement>;
 }
 
-/** Narrows the catalog by muscle group and focus area to one exercise; it renders columns of a Bootstrap row. */
 export function ExercisePicker({ catalog, choice, onChoose, disabled = false, foldFiltersUnder, exerciseRef }: ExercisePickerProps) {
   const { t, language } = useI18n();
   const groups = [...new Map(catalog.map((e) => [e.muscleGroupId, e.muscleGroupName]))].sort((a, b) => a[1].localeCompare(b[1], language));

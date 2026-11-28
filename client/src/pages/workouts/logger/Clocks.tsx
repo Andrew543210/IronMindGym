@@ -11,13 +11,12 @@ export function SessionClock({ startedAt }: { startedAt: number }) {
 }
 
 interface RestTimerProps {
-  /** When the rest ends; 0 before the first rest. Render the timer with it as the key, so each rest starts a new count. */
+  // Render the timer with it as the key, so each rest starts a new count.
   timerEnd: number;
   onStart: () => void;
   onSkip: () => void;
 }
 
-/** Counts the rest down in the page and the tab title, and buzzes once when a rest it saw running is over. */
 export function RestTimer({ timerEnd, onStart, onSkip }: RestTimerProps) {
   const { t } = useI18n();
   const now = useNow(500);

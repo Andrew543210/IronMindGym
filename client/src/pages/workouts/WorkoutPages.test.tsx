@@ -25,7 +25,6 @@ describe('workout history', () => {
     expect(await screen.findByText(/Session 1/)).toBeInTheDocument();
     expect(screen.getByText('2026-11-19 19:00')).toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: 'Older' }));
-    // Page 2 is on its way: the pager still belongs to page 1 on screen.
     expect(await screen.findByText('Loading…')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Older' })).toHaveAttribute('href', '/workouts?page=2');
     act(() => showPageTwo());

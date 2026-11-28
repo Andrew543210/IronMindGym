@@ -3,7 +3,6 @@ using Npgsql;
 
 namespace IronMindGym.Tests.Data;
 
-/// <summary>The database refuses rows that break its invariants, whatever code writes them.</summary>
 public class SchemaRulesTests
 {
     private static PostgresException Refused(TestApplication app, string sql) =>

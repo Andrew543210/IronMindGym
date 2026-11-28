@@ -6,10 +6,7 @@ namespace IronMindGym.Data;
 
 public static class DatabaseMigrations
 {
-    /// <summary>
-    /// Applies every pending migration. Migrate() would create the database and the history table anyway;
-    /// doing it first keeps the PostgreSQL provider from logging the missing history table of a new database as an error.
-    /// </summary>
+    // Creating the database first keeps the provider from logging its missing history table as an error.
     public static async Task ApplyAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
         var creator = db.GetService<IRelationalDatabaseCreator>();

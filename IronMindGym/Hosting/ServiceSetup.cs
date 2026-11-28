@@ -11,18 +11,15 @@ namespace IronMindGym.Hosting;
 
 public static class ServiceSetup
 {
-    /// <summary>Controllers with their filters, the database and the domain services.</summary>
     public static IServiceCollection AddIronMindServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers(options =>
             {
                 options.Filters.Add<CsrfProtectionFilter>();
                 options.Filters.Add<DomainExceptionFilter>();
-                // Every contract states [Required] with its own message. The implicit one would only repeat an
-                // unreadable body as "The request field is required." in English.
+                // Every contract states [Required] with its own message.
                 options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
-                // The binder's own messages quote the value and the parameter name in English, such as a page
-                // number that is not a number; the athlete gets the generic, translated one.
+                // The framework's messages are English and name parameters or types; the athlete gets the translated generic one.
                 var binding = options.ModelBindingMessageProvider;
                 binding.SetAttemptedValueIsInvalidAccessor((_, _) => ServerMessages.InvalidInput);
                 binding.SetNonPropertyAttemptedValueIsInvalidAccessor(_ => ServerMessages.InvalidInput);
@@ -38,9 +35,7 @@ public static class ServiceSetup
             })
             .AddJsonOptions(options =>
             {
-                // Choices travel as their names; a number is refused instead of becoming an undefined value.
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
-                // The serializer's own messages name .NET types; the athlete gets the generic, translated one.
                 options.AllowInputFormatterExceptionMessages = false;
             })
             .ConfigureApiBehaviorOptions(options =>
@@ -81,10 +76,6 @@ public static class ServiceSetup
         return services;
     }
 
-    /// <summary>
-    /// The session cookie, the CSRF token header, the signed-in requirement for every endpoint that does not
-    /// opt out, and the rate limit for sign-in.
-    /// </summary>
     public static IServiceCollection AddSessionSecurity(this IServiceCollection services, IWebHostEnvironment environment)
     {
         services.AddAntiforgery(options => options.HeaderName = CsrfProtectionFilter.HeaderName);
@@ -116,10 +107,7 @@ public static class ServiceSetup
         "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; " +
         "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 
-    /// <summary>
-    /// Headers every response carries. The client is one bundle from this origin, and Bootstrap's icons are data: images.
-    /// They are added as the response starts, because the error handler clears the headers of a failed request.
-    /// </summary>
+    // Set as the response starts, because the error handler clears the headers of a failed request.
     public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app) => app.Use((context, next) =>
     {
         var response = context.Response;

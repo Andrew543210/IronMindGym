@@ -6,10 +6,6 @@ public enum FriendshipStatus
     Accepted
 }
 
-/// <summary>
-/// One row per pair of athletes, stored with the smaller id first; the requester is one of the two.
-/// Check constraints in the database hold both rules.
-/// </summary>
 public class Friendship
 {
     public int Id { get; set; }

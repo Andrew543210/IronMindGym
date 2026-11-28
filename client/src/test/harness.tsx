@@ -35,19 +35,14 @@ type Answer = Response | object | null;
 type Later = () => Answer | Promise<Answer>;
 type Reply = Answer | Later;
 
-/** A function is an object too, so the guard tells a reply given later from a plain answer. */
 function isLater(reply: Reply): reply is Later {
   return typeof reply === 'function';
 }
 
-/** Requests of the running test that no route answered; the test setup fails the test on them. */
 export const unmocked: string[] = [];
 
-/**
- * Answers fetch from a table keyed by "METHOD /url". A plain value becomes a 200 JSON response, null a 204;
- * a function may answer later. The antiforgery token is always available; every other request is recorded in order.
- * A request without a route gets a 404 and fails the test once it ends.
- */
+// A plain value answers 200 with JSON, null 204, and a function may answer later; a request without a route
+// gets a 404 and fails the test once it ends.
 export function mockApi(routes: Record<string, Reply>) {
   const calls: ApiCall[] = [];
   vi.stubGlobal('fetch', vi.fn(async (url: string, init: RequestInit = {}) => {
@@ -74,7 +69,6 @@ function CurrentLocation() {
   return <p data-testid="location">{location.pathname}{location.search}{state?.message ? ` ${show(state.message)}` : ''}</p>;
 }
 
-/** Renders the given routes in memory; any other path shows where the page navigated and its flash message. */
 export function renderRoutes(routes: RouteObject[], at: string, session: SessionContextValue = sessionContext()) {
   const router = createMemoryRouter([...routes, { path: '*', element: <CurrentLocation /> }], { initialEntries: [at] });
   render(<SessionContext.Provider value={session}><RouterProvider router={router} /></SessionContext.Provider>);

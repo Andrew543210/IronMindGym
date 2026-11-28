@@ -1,7 +1,4 @@
-/**
- * English interface texts. Every key needs a Ukrainian text in uk.ts; the compiler checks it.
- * Names of exercises, muscle groups, ranks and awards come from the API in the requested language.
- */
+// Every key needs a Ukrainian text in uk.ts; the compiler checks it.
 export const en = {
   'common.loading': 'Loading…',
   'common.save': 'Save',

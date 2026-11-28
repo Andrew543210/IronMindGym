@@ -44,7 +44,6 @@ public sealed class DashboardService(IronMindDbContext db, AthleteCalendars cale
     public Task<DashboardResearchItem?> ResearchNoteAsync(int id, CancellationToken cancellationToken) =>
         ResearchNotes(db.ResearchItems.Where(r => r.Id == id)).SingleOrDefaultAsync(cancellationToken);
 
-    /// <summary>Research notes in the request language.</summary>
     private static IQueryable<DashboardResearchItem> ResearchNotes(IQueryable<ResearchItem> items) => items.AsNoTracking()
         .Select(r => new DashboardResearchItem
         {

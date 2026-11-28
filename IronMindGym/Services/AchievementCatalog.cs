@@ -26,13 +26,11 @@ public sealed class AchievementDefinition
     public required AchievementMetricType MetricType { get; init; }
     public required double TargetValue { get; init; }
 
-    /// <summary>False for a yes-or-no award, which shows no count towards its target.</summary>
     public bool ShowsProgress { get; init; } = true;
 }
 
 public static class AchievementCatalog
 {
-    /// <summary>A workout of at least this many minutes counts towards the endurance awards.</summary>
     public const int LongWorkoutMinutes = 60;
 
     public static IReadOnlyList<AchievementDefinition> All

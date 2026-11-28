@@ -7,7 +7,6 @@ import { PageLoading } from './components/ui';
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages';
 import { NotFoundPage } from './pages/NotFoundPage';
 
-/** Each section is its own bundle, loaded the first time the athlete opens it. */
 function page<M>(load: () => Promise<M>, name: keyof M): RouteObject['lazy'] {
   return async () => ({ Component: (await load())[name] as ComponentType });
 }
@@ -20,8 +19,7 @@ export const routes: RouteObject[] = [
   {
     element: <Layout />,
     hydrateFallbackElement: <PageLoading />,
-    // A page that fails, such as a section bundle a release removed, is replaced inside the layout,
-    // so the navigation stays; a failure of the layout itself falls back to the outer handler.
+    // A failing page is replaced inside the layout, so the navigation stays usable.
     errorElement: <RouteError />,
     children: [
       {

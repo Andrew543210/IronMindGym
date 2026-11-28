@@ -1,4 +1,3 @@
-/** Answers of the API as pages receive them; typed, so a changed contract fails the tests that use them. */
 import type { Overview, ResearchNote } from '../api/types/dashboard';
 import type { ProgressEntry } from '../api/types/progress';
 import type { WorkoutDetails } from '../api/types/workouts';

@@ -15,10 +15,6 @@ namespace IronMindGym.Api;
 [AllowAnonymous]
 public class SessionController(AccountService accounts, IAntiforgery antiforgery, TimeProvider clock) : ApiController
 {
-    /// <summary>
-    /// The token the client sends in the X-CSRF-TOKEN header with every change.
-    /// It belongs to the signed-in user, so the client asks again after signing in or out.
-    /// </summary>
     [HttpGet("csrf")]
     public CsrfTokenResponse Csrf() => new(antiforgery.GetAndStoreTokens(HttpContext).RequestToken!);
 
@@ -57,7 +53,6 @@ public class SessionController(AccountService accounts, IAntiforgery antiforgery
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString(CultureInfo.InvariantCulture)),
             new(ClaimTypes.Name, user.Username),
-            // Changing the password changes the stamp, which signs out every other session.
             new(SessionClaims.SecurityStamp, user.SecurityStamp)
         };
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));

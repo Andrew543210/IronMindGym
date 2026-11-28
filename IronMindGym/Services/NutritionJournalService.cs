@@ -5,12 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-/// <summary>One entry per calendar day. Saving a day again replaces it, so a missed day can be filled in later.</summary>
 public sealed class NutritionJournalService(IronMindDbContext db, NutritionAdviceService advice, AthleteCalendars calendars, AchievementService achievements)
 {
     private const int RecentDays = 30;
 
-    /// <summary>The day with its advice and the recent log; without a date, the athlete's today.</summary>
     public async Task<NutritionDay> DayAsync(int userId, DateOnly? date, CancellationToken cancellationToken)
     {
         var day = date ?? (await calendars.ForAsync(userId, cancellationToken)).Today;

@@ -1,4 +1,3 @@
-/** Shapes the API uses in several areas. Names, units and dates come as the server sends them. */
 
 export interface NamedOption {
   id: number;
@@ -7,7 +6,6 @@ export interface NamedOption {
 
 export type ExerciseType = 'StrengthTraining' | 'Cardio' | 'Timed';
 
-/** The four totals of a day of the nutrition journal. */
 export interface Intake {
   caloriesKcal: number;
   proteinG: number;

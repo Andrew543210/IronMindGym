@@ -19,7 +19,6 @@ export function ExercisesPage() {
   // The subgroup is kept by id: its name changes with the interface language.
   const [subGroupId, setSubGroupId] = useState('');
   const [search, setSearch] = useState('');
-  // A filter over the catalog's hundred-odd exercises is cheap enough to run on every keystroke.
   const query = search.trim().toLocaleLowerCase(language);
 
   const groupNames = useMemo(() => new Map(data?.muscleGroups.map((g) => [g.id, g.name])), [data]);

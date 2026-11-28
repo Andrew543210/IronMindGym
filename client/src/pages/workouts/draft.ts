@@ -1,4 +1,3 @@
-/** The unsaved workout lives in the browser, so a closed tab or a lost connection does not lose sets. */
 
 import type { CatalogExercise } from '../../api/types/exercises';
 import type { PlainKey, Translate } from '../../i18n/i18n';
@@ -14,10 +13,9 @@ export interface DraftSet {
   restSeconds: number;
 }
 
-/** Form values as typed, so a half-typed number survives a reload. */
+// Form values as typed, so a half-typed number survives a reload.
 export interface DraftSettings {
   splitTypeId: string;
-  /** Empty for a general training day, when the split has no days. */
   splitDayId: string;
   durationMinutes: string;
   reviewRating: string;
@@ -44,9 +42,7 @@ export interface DraftStore {
   read(): StoredValue | null;
   write(state: StoredDraft): boolean;
   clear(): void;
-  /** Notes that the server holds this version of the draft. */
   markSent(state: StoredDraft): void;
-  /** Removes the draft from this browser unless it has sets the server has not received; true when nothing is left. */
   forgetIfSent(): boolean;
 }
 
@@ -54,7 +50,6 @@ function version(state: StoredValue): string {
   return `${String(state.draftId)}:${Number(state.savedAt) || 0}:${Array.isArray(state.sets) ? state.sets.length : 0}`;
 }
 
-/** The draft is kept in localStorage per athlete, so it survives a reload, a closed tab or a tab the phone discarded. */
 export function draftStore(userId: number): DraftStore {
   const key = `ironmind-workout-${userId}`;
   const sentKey = `${key}-sent`;
@@ -135,7 +130,7 @@ export function freshDraft(defaults: DraftSettings, now = Date.now()): StoredDra
   return { draftId: newDraftId(), sets: [], timerEnd: 0, startedAt: now, savedAt: now, autoDuration: true, settings: { ...defaults } };
 }
 
-/** A draft with sets wins over one without; otherwise the later change wins, and a tie keeps this device's copy. */
+// A draft with sets wins over one without; otherwise the later change wins, and a tie keeps this device's copy.
 export function newerDraft(local: StoredValue | null, server: StoredValue | null): StoredValue | null {
   if (!local || !server) return local ?? server;
   const localHasSets = validSets(local.sets).length > 0;
@@ -143,10 +138,7 @@ export function newerDraft(local: StoredValue | null, server: StoredValue | null
   return (Number(server.savedAt) || 0) > (Number(local.savedAt) || 0) ? server : local;
 }
 
-/**
- * Takes over what another tab or an earlier visit stored. Settings missing in the stored draft keep
- * the defaults, and a start time in the future (a wrong device clock) is ignored.
- */
+// Settings missing in the stored draft keep the defaults; a start time in the future (a wrong device clock) is ignored.
 export function applyStored(stored: StoredValue, base: StoredDraft, now = Date.now()): StoredDraft {
   const startedAt = Number(stored.startedAt);
   const settings = { ...base.settings };

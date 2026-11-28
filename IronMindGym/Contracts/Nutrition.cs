@@ -31,7 +31,6 @@ public enum TargetSource
 
 public sealed record NutritionTarget(double Value, TargetSource Source);
 
-/// <summary>A day's intake compared with the athlete's targets. The client words it in the interface language.</summary>
 public sealed record NutritionAdvice(
     NutritionTarget Calories,
     NutritionTarget Protein,

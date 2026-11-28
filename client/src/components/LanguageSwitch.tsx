@@ -15,8 +15,7 @@ export function LanguageSwitch() {
   function choose(next: Language) {
     if (next === language) return;
     setLanguage(next);
-    // The choice already applies on this device; if saving fails, the account keeps the old one
-    // until the next change, which is not worth an error message.
+    // If saving fails, the account keeps the old choice until the next change; that is not worth an error message.
     if (session) api.put('/api/profile/language', { language: next }).catch(() => undefined);
   }
 

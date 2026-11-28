@@ -3,7 +3,6 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace IronMindGym.Hosting;
 
-/// <summary>The application is healthy when it can reach its database.</summary>
 public sealed class DatabaseHealthCheck(IronMindDbContext db) : IHealthCheck
 {
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default) =>
@@ -12,10 +11,7 @@ public sealed class DatabaseHealthCheck(IronMindDbContext db) : IHealthCheck
             : HealthCheckResult.Unhealthy("The database cannot be reached.");
 }
 
-/// <summary>
-/// Run as <c>dotnet IronMindGym.dll --check-health</c> by the container health check: the runtime image has no
-/// curl, so the application asks its own <c>/healthz</c> endpoint and exits with 0 when it is healthy.
-/// </summary>
+// The runtime image has no curl, so the container health check runs the app with --check-health.
 public static class HealthProbe
 {
     public const string Argument = "--check-health";
@@ -40,10 +36,6 @@ public static class HealthProbe
         }
     }
 
-    /// <summary>
-    /// A host the AllowedHosts setting accepts: its first plain name, or a name under its first wildcard domain.
-    /// Null when every host is allowed or the setting is empty.
-    /// </summary>
     public static string? HostFor(string? allowedHosts)
     {
         var hosts = (allowedHosts ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -53,7 +45,6 @@ public static class HealthProbe
             ?? "health" + hosts[0][1..];
     }
 
-    /// <summary>The setting comes from the same sources as the application's: its settings files and the environment.</summary>
     private static IConfiguration Configuration()
     {
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")

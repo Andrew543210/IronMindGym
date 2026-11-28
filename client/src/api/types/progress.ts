@@ -21,7 +21,6 @@ export interface ProgressEntry {
   cardioIntensityProgressCount: number;
 }
 
-/** The starting and the latest result of an exercise, in the two columns its type uses. */
 export interface ResultPair {
   initialValue1: number;
   initialValue2: number;

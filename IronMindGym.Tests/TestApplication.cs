@@ -8,12 +8,10 @@ using Microsoft.Extensions.Logging;
 
 namespace IronMindGym.Tests;
 
-/// <summary>The real application on its own database copy, reached in memory over HTTPS.</summary>
 public sealed class TestApplication(string? webRoot = null) : WebApplicationFactory<Program>
 {
     private readonly string connectionString = TestDatabase.Create();
 
-    /// <summary>The clock the application reads; set it before the first request to fix "now".</summary>
     public TestClock Clock { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

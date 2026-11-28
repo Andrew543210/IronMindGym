@@ -1,6 +1,5 @@
 namespace IronMindGym.Contracts;
 
-/// <summary>Everything the athlete recorded, without credentials, for keeping a personal copy.</summary>
 public sealed record DataExport(
     DateTime ExportedAtUtc,
     ExportedAccount Account,

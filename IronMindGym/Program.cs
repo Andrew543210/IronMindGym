@@ -41,7 +41,6 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler();
     app.UseHsts();
 }
-// Only the wording follows Accept-Language; numbers and dates are always read in the invariant English form.
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture("en-US", "en"),
@@ -50,7 +49,7 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     RequestCultureProviders = [new AcceptLanguageHeaderRequestCultureProvider()]
 });
 
-// The React client is built into wwwroot. Its hashed bundles never change, while index.html is always revalidated.
+// Hashed bundles never change; index.html is revalidated on every visit.
 var clientFiles = new StaticFileOptions
 {
     OnPrepareResponse = file => file.Context.Response.Headers.CacheControl =

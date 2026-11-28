@@ -1,6 +1,5 @@
 namespace IronMindGym.Models;
 
-/// <summary>A starting result and the latest result of one exercise, compared on the progress tracker.</summary>
 public class ExerciseProgress
 {
     public int Id { get; set; }

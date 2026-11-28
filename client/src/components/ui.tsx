@@ -21,10 +21,7 @@ export function PageLoading() {
   return <p className="text-muted" role="status">{t('common.loading')}</p>;
 }
 
-/**
- * What a page shows before its data: the error or the loading note. A page that has no heading of its own
- * until the data comes passes its `title`, so the page always has its h1.
- */
+// A page without a heading until its data comes passes `title`, so it always has its h1.
 export function PageState({ error, loading, title }: { error: unknown; loading: boolean; title?: string }) {
   const state = error ? <ErrorAlert error={error} /> : loading ? <PageLoading /> : null;
   if (title === undefined) return state;
@@ -45,7 +42,6 @@ export function EmptyState({ title, children }: { title: string; children: React
   );
 }
 
-/** A symbol that only decorates its text, such as an arrow; screen readers skip it. */
 export function Glyph({ children }: { children: string }) {
   return <span aria-hidden="true">{children}</span>;
 }

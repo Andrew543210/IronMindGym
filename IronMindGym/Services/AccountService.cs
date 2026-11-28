@@ -6,17 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-/// <summary>Registration and the password check at sign-in. The session cookie itself is the controller's work.</summary>
 public sealed class AccountService(IronMindDbContext db, AthleteCalendars calendars, TimeProvider clock)
 {
-    /// <summary>The account with this email and password; any mismatch is refused with the same message.</summary>
     public async Task<User> AuthenticateAsync(string email, string password, CancellationToken cancellationToken)
     {
         var address = email.Trim();
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == address, cancellationToken);
         if (user is null)
         {
-            // The same hashing work as for a wrong password, so the answer time does not tell which emails are registered.
+            // The same hashing work as for a wrong password, so the answer time does not reveal registered emails.
             PasswordHashUtility.CheckWithoutAccount(password);
             throw new DomainValidationException("Invalid email or password.");
         }
@@ -25,7 +23,7 @@ public sealed class AccountService(IronMindDbContext db, AthleteCalendars calend
             throw new DomainValidationException("Invalid email or password.");
         if (check == PasswordCheck.ValidButOutdated)
         {
-            // The hash was made with older settings; the password is known now, so it is stored with the current ones.
+            // The hash was made with older settings; the password is known now, so it is stored again.
             user.PasswordHash = PasswordHashUtility.Hash(password);
             await db.SaveChangesAsync(cancellationToken);
         }

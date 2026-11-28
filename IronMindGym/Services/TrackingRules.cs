@@ -2,15 +2,9 @@ using IronMindGym.Models;
 
 namespace IronMindGym.Services;
 
-/// <summary>The values a result keeps for its exercise type; the ones the type does not record are zero.</summary>
 public readonly record struct TrackedResult(double WeightKg, int Reps, int DurationSeconds, int Intensity);
 
-/// <summary>
-/// What a result of each exercise type records and the allowed range of each value. The workout journal and the
-/// progress page both check results here, so a value is refused with the same message wherever it is entered.
-/// These limits are the athlete's rules; the database only refuses values no result can have, such as a negative
-/// load or an effort above 10.
-/// </summary>
+// The journal and the progress page both check results here, so a value gets the same message wherever it is entered.
 public static class TrackingRules
 {
     public const double MaxLoadKg = 500;
@@ -19,10 +13,6 @@ public static class TrackingRules
     public const int MaxIntensity = 10;
     public const int MaxRestSeconds = 3600;
 
-    /// <summary>
-    /// Strength results record load and reps, cardio records duration and effort, and timed exercises
-    /// record duration and an optional external load.
-    /// </summary>
     public static TrackedResult Check(ExerciseType type, double weightKg, int reps, int durationSeconds, int intensity)
     {
         switch (type)

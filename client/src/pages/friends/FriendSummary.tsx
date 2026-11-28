@@ -20,7 +20,6 @@ interface FriendSummaryProps {
   onRemove: (friend: FriendCard) => void;
 }
 
-/** A connection or a search result: the status, the actions, and what a friend shares. */
 export function FriendSummary({ friend, busy, onAccept, onAdd, onRemove }: FriendSummaryProps) {
   const { t } = useI18n();
   const athlete = useAthlete();

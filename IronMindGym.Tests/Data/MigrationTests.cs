@@ -7,9 +7,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace IronMindGym.Tests.Data;
 
-/// <summary>
-/// Migrations that move data are checked against a database that holds rows written under the previous schema.
-/// </summary>
 public sealed class MigrationTests : IDisposable
 {
     private readonly string connectionString = TestDatabase.CreateEmpty();

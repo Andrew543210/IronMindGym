@@ -5,10 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-/// <summary>
-/// The whole exercise catalog in the request language. It is small, so the client filters and searches it locally.
-/// Names are sorted here rather than in SQL: the database collation does not know the request language.
-/// </summary>
+// Names are sorted here rather than in SQL: the database collation does not know the request language.
 public sealed class ExerciseCatalog(IronMindDbContext db)
 {
     public async Task<List<ExerciseCatalogItem>> ItemsAsync(CancellationToken cancellationToken)

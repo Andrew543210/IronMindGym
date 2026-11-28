@@ -28,7 +28,6 @@ describe('layout', () => {
 
     await userEvent.setup().click(screen.getByRole('link', { name: 'Open the awards' }));
     expect(await screen.findByText('Awards page')).toBeInTheDocument();
-    // The next page starts where its content does.
     await vi.waitFor(() => expect(screen.getByRole('main')).toHaveFocus());
     expect(screen.queryByText('Profile updated.')).not.toBeInTheDocument();
 

@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IronMindGym.Contracts;
 
-/// <summary>The body, starting lifts and plan that the first setup asks for and the settings form can change.</summary>
 public abstract record AthleteBasics
 {
     [Range(30, 250, ErrorMessage = "Enter a weight between 30 and 250 kg.")]

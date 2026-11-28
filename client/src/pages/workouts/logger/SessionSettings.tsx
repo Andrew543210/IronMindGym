@@ -10,7 +10,6 @@ interface SessionSettingsProps {
   onChange: (next: StoredDraft) => void;
 }
 
-/** The split, its day and the duration, folded away: most sessions keep the defaults. */
 export function SessionSettings({ options, draft, onChange }: SessionSettingsProps) {
   const { t } = useI18n();
   const splitDays = options.splitTypes.find((s) => String(s.id) === draft.settings.splitTypeId)?.days ?? [];
@@ -71,7 +70,7 @@ interface DurationInputProps {
   onChange: (value: string) => void;
 }
 
-/** The duration; while it follows the elapsed time, only this field renders again every second. */
+// While it follows the elapsed time, only this field renders again every second.
 function DurationInput({ startedAt, auto, value, onChange }: DurationInputProps) {
   const now = useNow(1000);
   return (

@@ -10,7 +10,6 @@ interface Loaded<T> {
 }
 
 export interface ApiOptions {
-  /** Keeps the answer of the previous url on screen while the next one loads, for a list filtered or paged in place. */
   keepPrevious?: boolean;
 }
 
@@ -18,17 +17,11 @@ export interface Loading<T> {
   data: T | undefined;
   error: unknown;
   loading: boolean;
-  /** The data shown belongs to an earlier request: the url changed with `keepPrevious`, or a reload is running. */
   isStale: boolean;
   reload: () => void;
 }
 
-/**
- * Loads JSON for a page; a null url waits. A new url starts without data, so a form never shows or changes
- * the record of another address, unless `keepPrevious` asks to keep the last answer. `reload` reads the same
- * url again and keeps its data meanwhile. Names such as exercises come translated from the API, so a new
- * interface language loads them again. A request the page no longer needs is aborted.
- */
+// A new url starts without data, so a form never shows another address's record, unless `keepPrevious` keeps it.
 export function useApi<T>(url: string | null, { keepPrevious = false }: ApiOptions = {}): Loading<T> {
   const [version, setVersion] = useState(0);
   const [result, setResult] = useState<Loaded<T>>();
@@ -59,10 +52,7 @@ export function useApi<T>(url: string | null, { keepPrevious = false }: ApiOptio
   return { data: earlier, error: undefined, loading: true, isStale: earlier !== undefined, reload };
 }
 
-/**
- * Runs one change at a time and remembers its error. A second tap while the first request is running
- * is ignored, which keeps a double tap from saving twice.
- */
+// A second tap while the first request runs is ignored, so a double tap cannot save twice.
 export function useAction() {
   const running = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -92,10 +82,7 @@ export function usePageTitle(title: string) {
   }, [title]);
 }
 
-/**
- * The current time, refreshed every interval and as soon as a hidden tab is shown again.
- * Only the components that show a clock use it, so the rest of a page does not render on every tick.
- */
+// Only the components that show a clock use it, so the rest of a page does not render on every tick.
 export function useNow(intervalMs: number): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {

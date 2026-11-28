@@ -6,12 +6,8 @@ using Testcontainers.PostgreSql;
 
 namespace IronMindGym.Tests;
 
-/// <summary>
-/// One PostgreSQL server for the whole test run, started in Docker by Testcontainers.
-/// Every test application gets its own database copied from a migrated and seeded template,
-/// so tests never share data or touch a working database.
-/// Set IRONMIND_TEST_POSTGRES to a server connection string to use an existing server instead of Docker.
-/// </summary>
+// One PostgreSQL server per test run; every test application gets its own copy of a migrated template.
+// Set IRONMIND_TEST_POSTGRES to a server connection string to use an existing server instead of Docker.
 internal static class TestDatabase
 {
     private const string TemplateName = "ironmind_test_template";
@@ -27,7 +23,6 @@ internal static class TestDatabase
         return WithDatabase(Server.Value, name);
     }
 
-    /// <summary>A database without any migration, for tests that migrate it step by step.</summary>
     public static string CreateEmpty()
     {
         var name = $"ironmind_test_{Guid.NewGuid():N}";

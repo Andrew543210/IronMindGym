@@ -4,14 +4,9 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace IronMindGym.Data.Migrations
 {
-    /// <summary>
-    /// Records were kept by two different calculations before, and a record's date used to be the moment it was
-    /// last updated. They are rebuilt once from the logged sets with the rule the application uses now: the
-    /// heaviest strength set of each exercise, dated by the first workout that reached it.
-    /// </summary>
+    // Rebuilds every record from the logged sets: the heaviest strength set of an exercise, dated by the first workout that reached it.
     public partial class RecalculatePersonalRecords : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("""
@@ -28,7 +23,6 @@ namespace IronMindGym.Data.Migrations
                 """);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             // The rebuilt records follow from the sets, so there is nothing to restore.

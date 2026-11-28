@@ -4,15 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-/// <summary>An athlete's current lifts, bodyweight, strength coefficient and rank, with the whole ladder.</summary>
 public sealed record StrengthRank(double? BodyweightKg, double Coefficient, Avatar Rank, IReadOnlyList<Avatar> Ladder);
 
 public sealed class StrengthService(IronMindDbContext db)
 {
-    /// <summary>
-    /// The rank counts each key lift at the higher of the setup result and the personal record, against the
-    /// latest weigh-in.
-    /// </summary>
+    // Each key lift counts at the higher of the setup result and the personal record.
     public async Task<StrengthRank> RankAsync(int userId, CancellationToken cancellationToken)
     {
         var baseline = await db.InitialBenchmarks.AsNoTracking().FirstOrDefaultAsync(b => b.UserId == userId, cancellationToken);

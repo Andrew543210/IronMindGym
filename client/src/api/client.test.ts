@@ -18,7 +18,6 @@ describe('api', () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).messages).toEqual(['Choose a valid training split.']);
-    // A refused value is not a token problem, so the request is not sent again.
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const [, init] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect((init.headers as Record<string, string>)['X-CSRF-TOKEN']).toBe('token-1');

@@ -58,7 +58,6 @@ function WorkoutLogger({ options, userId, serverCopy, syncWithServer }: WorkoutL
   const { t, show } = useI18n();
   const catalog = options.exercises;
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  // Errors are kept as text keys, so they follow a change of the interface language.
   const [error, setError] = useState<Text | null>(null);
   const { draft, status, canStore, update, discard, submit } = useWorkoutDraft({
     options, userId, serverCopy, syncWithServer,

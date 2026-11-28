@@ -1,9 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
-// In development the app runs on port 5173 and forwards /api to the .NET server on 5270.
-// The browser sees one origin, so the session cookie and the CSRF header work as in production.
-// A build goes into the server's wwwroot, which the API serves in production.
+// In development /api goes to the .NET server on 5270, so the browser sees one origin, as in production.
 export default defineConfig({
   plugins: [react()],
   server: {

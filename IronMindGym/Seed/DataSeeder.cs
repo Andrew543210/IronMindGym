@@ -10,8 +10,7 @@ public static class DataSeeder
 
     public sealed record SplitTypeDefinition(string Code, string Name, string NameUk, SplitDayDefinition[] Days);
 
-    // Rows are matched by code and their names are refreshed on every start.
-    // The order is the order of the ids in a new database.
+    // Matched by code on every start; the order gives the ids of a new database.
     public static readonly SplitTypeDefinition[] SplitTypes =
     [
         new(SplitTypeCode.FullBody, "Full-body", "Усе тіло",
@@ -36,7 +35,6 @@ public static class DataSeeder
         (SetTypeCode.Failure, "Failure", "До відмови")
     ];
 
-    /// <summary>Brings the reference catalog up to date; in development it can also add two demo athletes.</summary>
     public static async Task SeedAsync(IronMindDbContext db, bool includeDemoData, TimeProvider clock, CancellationToken cancellationToken)
     {
         await using var transaction = await WriteLock.BeginForSeedingAsync(db, cancellationToken);
@@ -114,10 +112,7 @@ public static class DataSeeder
         ("Omnipotent Origin", "Всемогутнє першоджерело", 5.0)
     ];
 
-    /// <summary>
-    /// Nothing points at a rank, so the table follows the ladder exactly: a rank renamed or left out of it is removed,
-    /// and the ladder never has two steps at one threshold.
-    /// </summary>
+    // Nothing points at a rank, so a rank left out of the ladder is removed.
     private static async Task EnsureAvatarLadderAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
         var existing = await db.Avatars.ToListAsync(cancellationToken);
@@ -134,7 +129,7 @@ public static class DataSeeder
     public sealed record ResearchNote(
         string Title, string Summary, string TitleUk, string SummaryUk, string SourceName, string SourceUrl, DateOnly PublishedAt);
 
-    // The research notes are content rather than data anything points at: a note left out of this list is removed.
+    // Nothing points at a note, so a note left out of this list is removed.
     public static readonly ResearchNote[] ResearchNotes =
     [
         new("Build movement into your week",

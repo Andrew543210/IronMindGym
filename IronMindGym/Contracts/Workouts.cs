@@ -9,7 +9,6 @@ public sealed record SaveWorkoutRequest
     [Range(1, 600, ErrorMessage = "A workout must last between 1 and 600 minutes.")]
     public int DurationMinutes { get; init; } = 60;
 
-    /// <summary>The split day trained; empty for a general training day.</summary>
     public int? SplitDayId { get; init; }
 
     public Guid? DraftId { get; init; }

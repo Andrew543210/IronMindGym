@@ -4,10 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Seed;
 
-/// <summary>
-/// Two connected athletes for trying the app locally. The demo athlete's records and awards are derived
-/// from its workouts the same way as for anyone else, so the demo never shows a result it did not log.
-/// </summary>
+// The demo athlete's records and awards are derived from its workouts, like anyone else's.
 public static class DemoDataSeeder
 {
     public static async Task SeedAsync(IronMindDbContext db, TimeProvider clock, CancellationToken cancellationToken)

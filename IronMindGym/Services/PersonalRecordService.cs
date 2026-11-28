@@ -4,14 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-/// <summary>
-/// A personal record is the heaviest strength set an athlete has logged for an exercise, dated by the
-/// first workout that reached it. The table is a summary of the logged sets, so it is recalculated from
-/// them whenever workouts are saved or deleted instead of being adjusted step by step.
-/// </summary>
+// Records are recalculated from the logged sets whenever workouts change, instead of being adjusted step by step.
 public sealed class PersonalRecordService(IronMindDbContext db)
 {
-    /// <summary>Brings the records of the given exercises in line with the sets. The caller saves the changes.</summary>
     public async Task RecalculateAsync(int userId, IEnumerable<int> exerciseIds, CancellationToken cancellationToken)
     {
         var ids = exerciseIds.Distinct().ToArray();

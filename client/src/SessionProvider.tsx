@@ -6,10 +6,7 @@ import { draftStore } from './pages/workouts/draft';
 import { settleServerDrafts } from './pages/workouts/serverDraft';
 import { SessionContext, type SessionContextValue, type SessionEnd, type SessionState } from './session';
 
-/**
- * The account's saved language wins after sign-in, so every device shows the same one.
- * An account without a choice yet keeps the language of this device.
- */
+// The account's saved language wins after sign-in, so every device shows the same one.
 function adoptLanguage(session: Session | null | undefined) {
   if (!session) return;
   if (session.language) setLanguage(session.language);

@@ -2,16 +2,11 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace IronMindGym.Localization;
 
-/// <summary>
-/// The Ukrainian wording of every message the API sends to the athlete. Services and contracts write their
-/// messages in English, like resource keys, and the responses translate them for a Ukrainian request.
-/// A message without a translation is sent in English.
-/// </summary>
+// Services write their messages in English and use them as keys; a Ukrainian request gets these texts.
 public static class ServerMessages
 {
     private static readonly Dictionary<string, string> Ukrainian = new(StringComparer.Ordinal)
     {
-        // Accounts and sessions
         ["Invalid email or password."] = "Неправильна пошта або пароль.",
         ["A user with this email already exists."] = "Користувач із такою поштою вже існує.",
         ["This username is already taken."] = "Це ім'я користувача вже зайняте.",
@@ -35,7 +30,6 @@ public static class ServerMessages
         ["Enter a time zone such as Europe/Kyiv, or leave it empty to use UTC."] = "Вкажіть часовий пояс, наприклад Europe/Kyiv, або залиште поле порожнім, щоб використовувати UTC.",
         ["Choose English or Ukrainian."] = "Оберіть англійську або українську.",
 
-        // Profile, setup and nutrition targets
         ["Complete your profile first."] = "Спершу заповніть профіль.",
         ["Enter a weight between 30 and 250 kg."] = "Введіть вагу від 30 до 250 кг.",
         ["Enter a height between 120 and 230 cm."] = "Введіть зріст від 120 до 230 см.",
@@ -55,14 +49,12 @@ public static class ServerMessages
         ["Fat must be 0–300 g."] = "Жири мають бути в межах 0–300 г.",
         ["Carbs must be 0–1000 g."] = "Вуглеводи мають бути в межах 0–1000 г.",
 
-        // Goals
         ["Enter a goal."] = "Введіть ціль.",
         ["A goal must be 3–80 characters long."] = "Ціль має містити від 3 до 80 символів.",
         ["Choose a deadline between today and five years from now."] = "Оберіть термін від сьогодні до п'яти років наперед.",
         [$"Finish or remove an existing goal before adding more. You can have {GoalService.MaxActiveGoals} active goals."] =
             $"Завершіть або видаліть одну з цілей, перш ніж додавати нову. Активних цілей може бути до {GoalService.MaxActiveGoals}.",
 
-        // Workouts, drafts and progress
         ["A workout must last between 1 and 600 minutes."] = "Тренування має тривати від 1 до 600 хвилин.",
         ["Rate the workout from 1 to 5."] = "Оцініть тренування від 1 до 5.",
         ["Reviews are limited to 800 characters."] = "Відгук — не довше 800 символів.",
@@ -86,10 +78,8 @@ public static class ServerMessages
         ["Write a comment first."] = "Спершу напишіть коментар.",
         [$"Comments are limited to {WorkoutSocialService.MaxCommentLength} characters."] = $"Коментар — не довше {WorkoutSocialService.MaxCommentLength} символів.",
 
-        // Friends
         ["Choose another registered user."] = "Оберіть іншого зареєстрованого користувача.",
 
-        // Requests the framework refuses before an action runs
         [InvalidInput] = "Дані запиту некоректні.",
         [UnverifiedRequest] = "Не вдалося перевірити запит. Оновіть сторінку й спробуйте ще раз.",
         ["A non-empty request body is required."] = "Запит не містить даних.",
@@ -103,7 +93,6 @@ public static class ServerMessages
     public static string Translate(string english) =>
         Localized.IsUkrainian && Ukrainian.TryGetValue(english, out var ukrainian) ? ukrainian : english;
 
-    /// <summary>Translates the messages of a refused request; an error without a message gets the framework's generic one.</summary>
     public static void TranslateErrors(ModelStateDictionary modelState)
     {
         foreach (var entry in modelState.Values)

@@ -6,13 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-/// <summary>
-/// Every award in <see cref="AchievementCatalog"/> is earned once its metric reaches the target. The metrics are
-/// counted from the athlete's saved data, and an earned award stays earned even if the metric later drops.
-/// </summary>
+// An earned award stays earned even if its metric later drops.
 public sealed class AchievementService(IronMindDbContext db, AthleteCalendars calendars)
 {
-    /// <summary>Adds the awards whose target the athlete has reached since the last check.</summary>
     public async Task AwardEarnedAsync(int userId, CancellationToken cancellationToken)
     {
         var earned = await EarnedCodesAsync(userId, cancellationToken);

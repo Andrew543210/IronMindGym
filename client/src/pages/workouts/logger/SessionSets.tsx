@@ -10,7 +10,7 @@ interface SessionSetsProps {
   onRemove: (index: number) => void;
 }
 
-/** The sets logged so far; on a phone each row becomes a card that names its cells from the column headers. */
+// On a phone each row becomes a card that names its cells from the column headers.
 export function SessionSets({ sets, catalog, setTypeName, onEdit, onRemove }: SessionSetsProps) {
   const { t } = useI18n();
   const columns = [t('common.exercise'), t('workout.type'), t('logger.loadOrDuration'), t('logger.repsOrEffort'), t('workout.rest')];

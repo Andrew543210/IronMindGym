@@ -6,12 +6,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace IronMindGym.Api;
 
-/// <summary>
-/// Requires the antiforgery token in the X-CSRF-TOKEN header for every change. The session is a cookie the
-/// browser attaches by itself, so without the token another site could send changes on the athlete's behalf.
-/// A refused request gets a 400 with the <see cref="ProblemType"/> problem type, which tells the client to fetch
-/// a fresh token and retry once.
-/// </summary>
+// The browser sends the session cookie by itself, so every change must also carry the antiforgery token.
 public sealed class CsrfProtectionFilter(IAntiforgery antiforgery, ProblemDetailsFactory problems) : IAsyncAuthorizationFilter
 {
     public const string HeaderName = "X-CSRF-TOKEN";

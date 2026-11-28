@@ -6,10 +6,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace IronMindGym.Data.Migrations
 {
-    /// <inheritdoc />
     public partial class KeepBodyweightInWeighIns : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<double>(
@@ -52,7 +50,6 @@ namespace IronMindGym.Data.Migrations
                 sql: "\"HeightCm\" > 0");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropCheckConstraint(

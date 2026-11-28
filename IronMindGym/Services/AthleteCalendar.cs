@@ -3,10 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-/// <summary>
-/// Calendar rules for one athlete. Timestamps are stored in UTC; "today", training weeks
-/// and streaks follow the time zone saved in the athlete's profile (UTC when unset).
-/// </summary>
 public sealed class AthleteCalendar(TimeZoneInfo zone, TimeProvider clock)
 {
     public TimeZoneInfo Zone { get; } = zone;
@@ -15,22 +11,18 @@ public sealed class AthleteCalendar(TimeZoneInfo zone, TimeProvider clock)
 
     public DateOnly Today => DayOf(UtcNow);
 
-    /// <summary>The start of the last 30 days, over which the statistics and the awards count monthly tonnage.</summary>
     public DateTime MonthAgoUtc => UtcNow.AddDays(-30);
 
-    /// <summary>Weigh-ins and nutrition days can be entered for the last five years, up to today.</summary>
     public void EnsureJournalDay(DateOnly day)
     {
         if (day > Today || day < Today.AddYears(-5))
             throw new DomainValidationException("Choose a date within the last five years, up to today.", "Date");
     }
 
-    /// <summary>The start of the current Monday-based week, in UTC.</summary>
     public DateTime CurrentWeekStartUtc => WeekStartUtc(UtcNow);
 
     public string IanaZoneId => TimeZoneInfo.TryConvertWindowsIdToIanaId(Zone.Id, out var iana) ? iana : Zone.Id;
 
-    /// <summary>The calendar of a time zone id, or UTC when the id is empty or unknown.</summary>
     public static AthleteCalendar InZone(string? timeZoneId, TimeProvider clock) =>
         new(TryFindZone(timeZoneId, out var zone) ? zone : TimeZoneInfo.Utc, clock);
 
@@ -81,10 +73,7 @@ public sealed class AthleteCalendar(TimeZoneInfo zone, TimeProvider clock)
     }
 }
 
-/// <summary>
-/// The calendars of the athletes one request works with. Each athlete's time zone is read from the profile
-/// once per request; <see cref="Forget"/> drops it after the athlete chooses another zone.
-/// </summary>
+// Reads each athlete's time zone once per request; Forget drops it after the athlete picks another zone.
 public sealed class AthleteCalendars(IronMindDbContext db, TimeProvider clock)
 {
     private readonly Dictionary<int, AthleteCalendar> calendars = [];
@@ -106,6 +95,5 @@ public sealed class AthleteCalendars(IronMindDbContext db, TimeProvider clock)
 
 public static class Clock
 {
-    /// <summary>The current moment as a UTC <see cref="DateTime"/>, the form every timestamp column holds.</summary>
     public static DateTime UtcNow(this TimeProvider clock) => clock.GetUtcNow().UtcDateTime;
 }

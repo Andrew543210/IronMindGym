@@ -4,7 +4,6 @@ namespace IronMindGym.Contracts;
 
 public sealed record ExerciseLibraryResponse(List<OptionResponse> MuscleGroups, List<ExerciseCatalogItem> Exercises);
 
-/// <summary>An exercise of the catalog in the request language, with its English name, which the search also matches.</summary>
 public sealed record ExerciseCatalogItem
 {
     public int ExerciseId { get; init; }

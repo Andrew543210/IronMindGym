@@ -9,7 +9,6 @@ public sealed class WorkoutSocialService(IronMindDbContext db, TimeProvider cloc
 {
     public const int MaxCommentLength = 500;
 
-    /// <summary>A friend's workout with its likes and comments; null unless the two are friends and the workout is the friend's.</summary>
     public async Task<FriendWorkoutResponse?> FriendWorkoutAsync(int viewerId, int friendId, int sessionId, CancellationToken cancellationToken)
     {
         if (!await friendships.AreFriendsAsync(viewerId, friendId, cancellationToken))
@@ -23,7 +22,6 @@ public sealed class WorkoutSocialService(IronMindDbContext db, TimeProvider cloc
 
     public async Task<bool> SetLikeAsync(int viewerId, int ownerId, int sessionId, bool like, CancellationToken cancellationToken)
     {
-        // Athletes like their friends' workouts, not their own.
         var mayLike = viewerId != ownerId && await friendships.AreFriendsAsync(viewerId, ownerId, cancellationToken);
         if (!mayLike || !await SessionExistsAsync(ownerId, sessionId, cancellationToken))
             return false;

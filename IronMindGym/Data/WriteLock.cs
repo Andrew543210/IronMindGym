@@ -3,13 +3,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace IronMindGym.Data;
 
-/// <summary>
-/// Serializes writes that check existing rows before inserting and recalculate an athlete's
-/// records and awards. Without it, two parallel requests (a double tap, a retry after a lost
-/// response) could both see "nothing saved yet" and both insert.
-/// The locks belong to the transaction that is started with them, and PostgreSQL releases them when it ends.
-/// A lock that is not taken, for example because the request was cancelled while waiting, ends that transaction at once.
-/// </summary>
+// Serializes an athlete's check-then-insert writes, so a double tap or a retry cannot save twice.
+// The lock belongs to the transaction, and PostgreSQL releases it when the transaction ends.
 public static class WriteLock
 {
     private const int AthleteScope = 1;
@@ -18,7 +13,7 @@ public static class WriteLock
     public static Task<IDbContextTransaction> BeginForAthleteAsync(IronMindDbContext db, int userId, CancellationToken cancellationToken) =>
         BeginForAthletesAsync(db, [userId], cancellationToken);
 
-    /// <summary>Ids are locked in ascending order, so two requests never wait on each other.</summary>
+    // Ids are locked in ascending order, so two requests never deadlock.
     public static async Task<IDbContextTransaction> BeginForAthletesAsync(IronMindDbContext db, int[] userIds, CancellationToken cancellationToken)
     {
         var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -35,7 +30,6 @@ public static class WriteLock
         }
     }
 
-    /// <summary>Two instances starting together seed one after the other.</summary>
     public static async Task<IDbContextTransaction> BeginForSeedingAsync(IronMindDbContext db, CancellationToken cancellationToken)
     {
         var transaction = await db.Database.BeginTransactionAsync(cancellationToken);

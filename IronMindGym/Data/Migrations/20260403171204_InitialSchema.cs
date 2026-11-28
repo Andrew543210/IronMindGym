@@ -6,10 +6,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace IronMindGym.Data.Migrations
 {
-    /// <inheritdoc />
     public partial class InitialSchema : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterDatabase()
@@ -828,7 +826,6 @@ namespace IronMindGym.Data.Migrations
                 columns: new[] { "UserId", "SessionDate" });
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

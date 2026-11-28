@@ -5,7 +5,7 @@ import type { Text } from '../../../i18n/i18n';
 import { applyStored, draftStore, freshDraft, isDraftId, newerDraft, restoreDraft, type DraftSettings, type StoredDraft, type StoredValue } from '../draft';
 import { holdForSignOut, serverDraftSync } from '../serverDraft';
 
-/** The day ids of a split; a split without days logs a general training day, kept as an empty id. */
+// A split without days logs a general training day, kept as an empty id.
 export function dayIds(options: LoggerOptions, splitTypeId: string): [string, ...string[]] {
   const [first, ...rest] = (options.splitTypes.find((s) => String(s.id) === splitTypeId)?.days ?? []).map((day) => String(day.id));
   return first === undefined ? [''] : [first, ...rest];
@@ -36,18 +36,14 @@ function emptied(draft: StoredDraft): StoredDraft {
 interface WorkoutDraftOptions {
   options: LoggerOptions;
   userId: number;
-  /** The draft the server kept, read before the logger opened. */
   serverCopy: StoredValue | null;
-  /** False when the server could not be asked, so the device copy is not sent over a draft the server may have. */
+  // False when the server could not be asked, so the device copy is not sent over a draft the server may have.
   syncWithServer: boolean;
-  /** Called when another tab or device replaced the draft, so the logger drops what it was editing. */
   onReplaced: () => void;
 }
 
-/**
- * The unfinished workout: restored from this device or the server, kept on the device after every change,
- * sent to the server, followed across tabs and guarded against closing the page.
- */
+// Restored from this device or the server, saved on the device after every change, sent to the server,
+// followed across tabs and guarded against closing the page.
 export function useWorkoutDraft({ options, userId, serverCopy, syncWithServer, onReplaced }: WorkoutDraftOptions) {
   const store = useMemo(() => draftStore(userId), [userId]);
   const defaults = useMemo<DraftSettings>(() => {
@@ -56,7 +52,6 @@ export function useWorkoutDraft({ options, userId, serverCopy, syncWithServer, o
   }, [options]);
 
   const [draft, setDraft] = useState(() => withValidSplit(restoreDraft(newerDraft(store.read(), serverCopy), defaults), options));
-  // The status is kept as a text key, so it follows a change of the interface language.
   const [status, setStatus] = useState<Text>(() => (draft.sets.length
     ? { key: 'logger.restored', params: { count: draft.sets.length } }
     : { key: 'logger.draftSaved' }));
@@ -145,14 +140,13 @@ export function useWorkoutDraft({ options, userId, serverCopy, syncWithServer, o
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [draft.sets.length]);
 
-  /** Starts an empty workout with the same settings; the server forgets the old draft. */
   function discard() {
     store.clear();
     sync.discard(draft.draftId);
     update(emptied(draft), { key: 'logger.newWorkout' });
   }
 
-  /** Sends the finished workout; while it is on its way the draft is not synced, and a failure keeps it. */
+  // While the workout is on its way the draft is not synced, and a failure keeps it.
   async function submit<T>(send: () => Promise<T>): Promise<T> {
     sync.cancel();
     let result: T;

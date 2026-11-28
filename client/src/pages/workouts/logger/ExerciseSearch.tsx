@@ -4,7 +4,6 @@ import { useI18n } from '../../../i18n/i18n';
 
 const MAX_MATCHES = 8;
 
-/** Finds an exercise by its name in either language; Enter takes the first match. */
 export function ExerciseSearch({ catalog, onPick }: { catalog: CatalogExercise[]; onPick: (exercise: CatalogExercise) => void }) {
   const { t, language } = useI18n();
   const [query, setQuery] = useState('');

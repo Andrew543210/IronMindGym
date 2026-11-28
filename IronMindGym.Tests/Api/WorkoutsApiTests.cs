@@ -28,7 +28,6 @@ public class WorkoutsApiTests
         Assert.Null(details.Notes);
         Assert.Equal(75.5, Assert.Single(Assert.Single(details.Exercises).Sets).WeightKg);
         Assert.True(Assert.Single(details.ExerciseStats).IsNewRecord);
-        // The plan asks for 3 workouts a week and one is done.
         Assert.Equal(2, details.RemainingWorkoutsThisWeek);
         Assert.DoesNotContain("passwordHash", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("securityStamp", json, StringComparison.OrdinalIgnoreCase);

@@ -5,10 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IronMindGym.Services;
 
-/// <summary>
-/// Setup is complete once the athlete has a height, starting lifts and at least one weigh-in. The first setup and
-/// the settings form both write those values here, so they keep the same rules.
-/// </summary>
 public static class AthleteSetup
 {
     public static Task<bool> IsCompleteAsync(IronMindDbContext db, int userId, CancellationToken cancellationToken) => db.Users.AnyAsync(u =>
@@ -20,10 +16,7 @@ public static class AthleteSetup
             throw new DomainValidationException("Choose a valid training split.", nameof(AthleteBasics.SplitTypeId));
     }
 
-    /// <summary>
-    /// Writes the height, the starting lifts and the plan; the bodyweight is a weigh-in, which the caller dates.
-    /// The user comes with its profile and benchmarks, and the caller holds the athlete's lock and saves.
-    /// </summary>
+    // The caller holds the athlete's lock and saves; the bodyweight is a weigh-in the caller dates.
     public static async Task ApplyAsync(IronMindDbContext db, User user, AthleteBasics basics, CancellationToken cancellationToken)
     {
         user.Profile ??= new Profile { UserId = user.Id };
@@ -39,7 +32,6 @@ public static class AthleteSetup
         plan.SplitTypeId = basics.SplitTypeId;
     }
 
-    /// <summary>The weigh-in of a day, added or corrected. The caller saves.</summary>
     public static async Task SaveWeighInAsync(IronMindDbContext db, int userId, double weightKg, DateOnly date, CancellationToken cancellationToken)
     {
         var weighIn = await db.WeightLogs.FirstOrDefaultAsync(w => w.UserId == userId && w.Date == date, cancellationToken);
